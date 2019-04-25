@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
@@ -58,6 +59,7 @@ namespace Nemesis.TextParsers
         protected virtual string FormatString { get; } = null;
     }
 
+    [UsedImplicitly]
     public sealed class ByteParser : SimpleFormattableTransformer<byte>
     {
         public override byte Parse(ReadOnlySpan<char> input) =>
@@ -71,6 +73,7 @@ namespace Nemesis.TextParsers
 
     }
 
+    [UsedImplicitly]
     public sealed class SByteParser : SimpleFormattableTransformer<sbyte>
     {
         public override sbyte Parse(ReadOnlySpan<char> input) =>
@@ -83,6 +86,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class Int16Parser : SimpleFormattableTransformer<short>
     {
         public override short Parse(ReadOnlySpan<char> input) =>
@@ -95,6 +99,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class UInt16Parser : SimpleFormattableTransformer<ushort>
     {
         public override ushort Parse(ReadOnlySpan<char> input) =>
@@ -107,6 +112,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class Int32Parser : SimpleFormattableTransformer<int>
     {
         public override int Parse(ReadOnlySpan<char> input) =>
@@ -119,6 +125,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class UInt32Parser : SimpleFormattableTransformer<uint>
     {
         public override uint Parse(ReadOnlySpan<char> input) =>
@@ -131,6 +138,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class Int64Parser : SimpleFormattableTransformer<long>
     {
         public override long Parse(ReadOnlySpan<char> input) =>
@@ -143,6 +151,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class UInt64Parser : SimpleFormattableTransformer<ulong>
     {
         public override ulong Parse(ReadOnlySpan<char> input) =>
@@ -155,6 +164,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Integer, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class SingleParser : SimpleFormattableTransformer<float>
     {
         public override float Parse(ReadOnlySpan<char> input) =>
@@ -167,6 +177,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class DoubleParser : SimpleFormattableTransformer<double>
     {
         public override double Parse(ReadOnlySpan<char> input) =>
@@ -179,6 +190,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class DecimalParser : SimpleFormattableTransformer<decimal>
     {
         public override decimal Parse(ReadOnlySpan<char> input) =>
@@ -191,6 +203,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Number, InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class TimeSpanParser : SimpleFormattableTransformer<TimeSpan>
     {
         public override TimeSpan Parse(ReadOnlySpan<char> input) =>
@@ -203,6 +216,7 @@ namespace Nemesis.TextParsers
                 , InvCult);
     }
 
+    [UsedImplicitly]
     public sealed class DateTimeParser : SimpleFormattableTransformer<DateTime>
     {
         public override DateTime Parse(ReadOnlySpan<char> input) =>
@@ -217,6 +231,7 @@ namespace Nemesis.TextParsers
         protected override string FormatString { get; } = "o";
     }
 
+    [UsedImplicitly]
     public sealed class DateTimeOffsetParser : SimpleFormattableTransformer<DateTimeOffset>
     {
         public override DateTimeOffset Parse(ReadOnlySpan<char> input) =>
