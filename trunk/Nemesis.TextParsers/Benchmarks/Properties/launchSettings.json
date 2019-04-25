@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Benchmarks": {
+      "commandName": "Project",
+      "commandLineArgs": "dotnet run -c Release --framework net472 -- --runtimes net472 netcoreapp2.2"
+    }
+  }
+}

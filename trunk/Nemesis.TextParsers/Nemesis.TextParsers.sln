@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers", "Neme
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.Tests", "Nemesis.TextParsers.Tests\Nemesis.TextParsers.Tests.csproj", "{33257181-82F8-43E8-B947-A7C736D0A901}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{BF38E5BE-AB8D-48DF-ABC1-4B49D8DA99D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{33257181-82F8-43E8-B947-A7C736D0A901}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33257181-82F8-43E8-B947-A7C736D0A901}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33257181-82F8-43E8-B947-A7C736D0A901}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF38E5BE-AB8D-48DF-ABC1-4B49D8DA99D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF38E5BE-AB8D-48DF-ABC1-4B49D8DA99D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF38E5BE-AB8D-48DF-ABC1-4B49D8DA99D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF38E5BE-AB8D-48DF-ABC1-4B49D8DA99D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

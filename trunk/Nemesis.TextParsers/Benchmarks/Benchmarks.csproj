@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.2;net472</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
+  </ItemGroup>
+
+  <ItemGroup>    
+    <ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+    <PackageReference Include="System.Memory" Version="4.5.2" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>
