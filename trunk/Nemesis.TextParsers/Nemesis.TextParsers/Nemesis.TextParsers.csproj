@@ -22,17 +22,6 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   
-  <!--TODO remove-->
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp2.2|AnyCPU'">
-    <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
-
-
-
-  
-  
-  
-  
   
   
   <ItemGroup>
@@ -42,33 +31,19 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
     <PackageReference Include="Nemesis.Essentials" Version="1.0.5" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="System.Memory" Version="4.5.2" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
  
   
-
-
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>$(MSBuildProjectName).Tests, PublicKey=0024000004800000140200000602000000240000525341310010000001000100a929b80d5af1e6e17694f40b53e4804647bc329fc0244cbb33e4c7acfbe38f8bb4f1343a132a5b308b3cb89229357eb5592d47a42bea65e5e051d4b8fffe4fd4a9d90e6589f06b99256f6e192729352167d404a830f5a903449b9ae0de3844593d0c19274f76172abf778e7e6a7d80546aaeb402e192ed1e3ababd2fa2d55cb1a6bd340e950f6b34a350bd56a578abde4cf09a42724c5bb2784eff249721b565ab7f7a94a31e0f8ed62d437bd932aff140bc7d79fb224f9ad0bc6ab94cc680a34999e6638f0f5a33606e2786524c8cf1d6195d44429bcfaecc71336552ae023f59302acb18252f853a41b1064d8d25c52c1b190621425286b7a4109b8b97b543964abf93d6b8b96a23871feb4fd2ae241ee0beb9fb75fe45d58ef6c6d7fd1f2854c0742329dfcf257f24703f2932531c8d335c21c7ea8386271bb3c270c3df4e18b32ab8099423c17048a339153278c61bdade3ab7c10c15cdf869814a1df46effeae2363d5f6367debd10d554784e9ddaee8f7601943b67d57b34edeb8a48a1e2b64bef630e6e3dde7bf0fae59ede4aeb665eabb90a12776fff51e3ddf90ffdaf0e4f397f4d8666e5f18c7992217fb805ec2b0fd5b4977fda91ce4922a63ac95a4069d07b43a4683bd7f20006751ee30dafddb6b9a56f212cd5705138caa228c5962d96eda87b7f8ff66f62291902ebcd47b58e5114414aaf3521081c86c8ca</_Parameter1>
     </AssemblyAttribute>
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="Legacy\" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>C:\Users\micha\.nuget\packages\system.runtime.compilerservices.unsafe\4.5.2\ref\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

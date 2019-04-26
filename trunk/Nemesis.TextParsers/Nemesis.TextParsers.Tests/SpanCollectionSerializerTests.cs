@@ -10,6 +10,9 @@ using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 namespace Nemesis.TextParsers.Tests
 {
     //TODO negative tests for generic type definition
+    //TODO test strings in collection with leading and trailing white
+
+
     [TestFixture]
     public class SpanCollectionSerializerTests
     {
@@ -153,8 +156,49 @@ namespace Nemesis.TextParsers.Tests
 
 
         //TODO add various list, dict, array etc
+        //TODO tests for parsing bool + whole numbers byte, sbyte etc
+        //TODO negative tests for parsing bool + whole numbers byte, sbyte etc
+
+        private static IReadOnlyList<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
+            where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
+        {
+            var result = new List<TNumber>();
+            for (var i = from; i.CompareTo(to) <= 0; i = addFunc(i, increment))
+                result.Add(i);
+
+            return result;
+
+        }
+
+        [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
+        [SuppressMessage("ReSharper", "RedundantCast")]
         internal static IEnumerable<(Type, IEnumerable, string)> ListCompoundData() => new (Type, IEnumerable, string)[]
         {
+         /* (typeof(byte), GetTestNumbers<byte>(byte.MinValue, byte.MaxValue, 1, (n1, n2) => (byte)(n1+n2)),
+                @"0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89|90|91|92|93|94|95|96|97|98|99|100|101|102|103|104|105|106|107|108|109|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|128|129|130|131|132|133|134|135|136|137|138|139|140|141|142|143|144|145|146|147|148|149|150|151|152|153|154|155|156|157|158|159|160|161|162|163|164|165|166|167|168|169|170|171|172|173|174|175|176|177|178|179|180|181|182|183|184|185|186|187|188|189|190|191|192|193|194|195|196|197|198|199|200|201|202|203|204|205|206|207|208|209|210|211|212|213|214|215|216|217|218|219|220|221|222|223|224|225|226|227|228|229|230|231|232|233|234|235|236|237|238|239|240|241|242|243|244|245|246|247|248|249|250|251|252|253|254" ),
+
+            (typeof(sbyte), GetTestNumbers<sbyte>(sbyte.MinValue, sbyte.MaxValue, 1, (n1, n2) => (sbyte)(n1+n2)),
+                @"" ),
+
+            (typeof(short), GetTestNumbers<short>(short.MinValue, short.MaxValue-short.MaxValue/100, short.MaxValue/100, (n1, n2) => (short)(n1+n2)),
+                @"" ),
+
+            (typeof(ushort), GetTestNumbers<ushort>(ushort.MinValue, ushort.MaxValue-ushort.MaxValue/100, ushort.MaxValue/100, (n1, n2) => (ushort)(n1+n2)),
+                @"" ),
+
+            (typeof(int), GetTestNumbers<int>(int.MinValue, int.MaxValue-int.MaxValue/10, int.MaxValue/10, (n1, n2) => (int)(n1+n2)),
+                @"" ),
+
+            (typeof(uint), GetTestNumbers<uint>(uint.MinValue, uint.MaxValue-uint.MaxValue/10, uint.MaxValue/10, (n1, n2) => (uint)(n1+n2)),
+                @"" ),
+
+            (typeof(long), GetTestNumbers<long>(long.MinValue, long.MaxValue-long.MaxValue/10, long.MaxValue/10, (n1, n2) => (long)(n1+n2)),
+                @"" ),
+
+            (typeof(ulong), GetTestNumbers<ulong>(ulong.MinValue, ulong.MaxValue-ulong.MaxValue/10, ulong.MaxValue/10, (n1, n2) => (ulong)(n1+n2)),
+                @"" ),
+
+            
             (typeof(TimeSpan), Enumerable.Range(1, 7).Select(i => new TimeSpan(i, i + 1, i + 2, i + 3)).ToList(),
             @"1.02:03:04|2.03:04:05|3.04:05:06|4.05:06:07|5.06:07:08|6.07:08:09|7.08:09:10" ),
 
@@ -282,10 +326,11 @@ namespace Nemesis.TextParsers.Tests
                             new[]{i*100 + 0.5f,i*100 + 1.5f},
                             new[]{i*100 + 2.5f},
                             new[]{i*100 + 3.5f}),
-                        
+
                     }
                 ).ToList(),
                 @"A=10.5\|11.5#12.5#13.5;B=100.5\|101.5#102.5#103.5|D=20.5\|21.5#22.5#23.5;E=200.5\|201.5#202.5#203.5|G=30.5\|31.5#32.5#33.5;H=300.5\|301.5#302.5#303.5"),
+            */
         };
 
         [TestCaseSource(nameof(ListCompoundData))]
@@ -319,6 +364,7 @@ namespace Nemesis.TextParsers.Tests
             string text = (string)formatMethod.Invoke(_sut, new[] { genericList });
             Console.WriteLine(data.input);
             Console.WriteLine(text);
+            Console.WriteLine(textExpected);
 
             var parsed2 = (IEnumerable)parseMethod.Invoke(this, new object[] { text });
             Assert.That(parsed2, Is.EquivalentTo(data.expectedOutput));

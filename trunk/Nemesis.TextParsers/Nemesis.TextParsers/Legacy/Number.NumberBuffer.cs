@@ -1,17 +1,17 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-
-
 #if NETSTANDARD2_0
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 // ReSharper disable once CheckNamespace
 namespace Legacy
 {
-    internal static partial class Number
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public static partial class Number
     {
         private const int NumberMaxDigits = 50; // needs to == NUMBER_MAXDIGITS in coreclr's src/classlibnative/bcltype/number.h.
 
