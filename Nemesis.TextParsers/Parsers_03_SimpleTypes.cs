@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
@@ -18,6 +19,7 @@ namespace Nemesis.TextParsers
         public override string ToString() => $"Transform {Type.Name}";
     }
 
+    [UsedImplicitly]
     public sealed class StringParser : SimpleTransformer<string>
     {
         public override string Parse(ReadOnlySpan<char> input) => input.ToString();
@@ -27,20 +29,103 @@ namespace Nemesis.TextParsers
 
     #region Structs
 
+    [UsedImplicitly]
     public sealed class BooleanParser : SimpleTransformer<bool>
     {
+#if NETSTANDARD2_0
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
+        {
+            if (span.Length != value.Length)
+                return false;
+            if (value.Length == 0)  // span.Length == value.Length == 0
+                return true;
+            for (int i = span.Length - 1; i >= 0; i--)
+                if (char.ToUpperInvariant(span[i]) != char.ToUpperInvariant(value[i]))
+                    return false;
+
+            return true;
+        }
+
+        internal const string TrueLiteral = "True";
+        internal const string FalseLiteral = "False";
+        public static bool TryParseBool(ReadOnlySpan<char> value, out bool result)
+        {
+            ReadOnlySpan<char> trueSpan = TrueLiteral.AsSpan();
+            if (EqualsOrdinalIgnoreCase(trueSpan, value))
+            {
+                result = true;
+                return true;
+            }
+
+            ReadOnlySpan<char> falseSpan = FalseLiteral.AsSpan();
+            if (EqualsOrdinalIgnoreCase(falseSpan, value))
+            {
+                result = false;
+                return true;
+            }
+
+            // Special case: Trim whitespace as well as null characters.
+            value = TrimWhiteSpaceAndNull(value);
+
+            if (EqualsOrdinalIgnoreCase(trueSpan, value))
+            {
+                result = true;
+                return true;
+            }
+
+            if (EqualsOrdinalIgnoreCase(falseSpan, value))
+            {
+                result = false;
+                return true;
+            }
+
+            result = false;
+            return false;
+        }
+
+        public static bool ParseBool(ReadOnlySpan<char> value) =>
+            TryParseBool(value, out bool result) ? result : throw new FormatException($"Boolean supports only case insensitive '{TrueLiteral}' or '{FalseLiteral}'");
+
+        private static ReadOnlySpan<char> TrimWhiteSpaceAndNull(ReadOnlySpan<char> value)
+        {
+            const char NULL_CHAR = (char)0x0000;
+
+            int start = 0;
+            while (start < value.Length)
+            {
+                if (!Char.IsWhiteSpace(value[start]) && value[start] != NULL_CHAR)
+                {
+                    break;
+                }
+                start++;
+            }
+
+            int end = value.Length - 1;
+            while (end >= start)
+            {
+                if (!Char.IsWhiteSpace(value[end]) && value[end] != NULL_CHAR)
+                {
+                    break;
+                }
+                end--;
+            }
+
+            return value.Slice(start, end - start + 1);
+        }
+#endif
+
         public override bool Parse(ReadOnlySpan<char> input)
         {
             input = input.Trim();
             try
             {
-                return bool.Parse(
+                return
 #if NETSTANDARD2_0
-                input.ToString()
+                ParseBool(input);
 #else
-                input
+                bool.Parse(input);
 #endif
-                    );
             }
             catch (FormatException e)
             {
@@ -63,105 +148,89 @@ namespace Nemesis.TextParsers
     public sealed class ByteParser : SimpleFormattableTransformer<byte>
     {
         public override byte Parse(ReadOnlySpan<char> input) =>
-            byte.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
-#else           
-                input
+            Legacy.ByteParser.Parse(input, NumberStyles.Integer, Culture.InvCult);
+#else
+            byte.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-          , NumberStyles.Integer, InvCult);
-
     }
 
     [UsedImplicitly]
     public sealed class SByteParser : SimpleFormattableTransformer<sbyte>
     {
         public override sbyte Parse(ReadOnlySpan<char> input) =>
-            sbyte.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.SByteParser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
-                input
+            sbyte.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
     }
 
     [UsedImplicitly]
     public sealed class Int16Parser : SimpleFormattableTransformer<short>
     {
         public override short Parse(ReadOnlySpan<char> input) =>
-            short.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Int16Parser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
-                input
+            short.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
+
     }
 
     [UsedImplicitly]
     public sealed class UInt16Parser : SimpleFormattableTransformer<ushort>
     {
         public override ushort Parse(ReadOnlySpan<char> input) =>
-            ushort.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.UInt16Parser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
-                input
+            ushort.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
     }
 
     [UsedImplicitly]
     public sealed class Int32Parser : SimpleFormattableTransformer<int>
     {
         public override int Parse(ReadOnlySpan<char> input) =>
-            int.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.ParseInt32(input, NumberStyles.Integer, Culture.InvInfo);
 #else
-                input
+            int.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
     }
 
     [UsedImplicitly]
     public sealed class UInt32Parser : SimpleFormattableTransformer<uint>
     {
         public override uint Parse(ReadOnlySpan<char> input) =>
-            uint.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.ParseUInt32(input, NumberStyles.Integer, Culture.InvInfo);
 #else
-                input
+            uint.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
     }
 
     [UsedImplicitly]
     public sealed class Int64Parser : SimpleFormattableTransformer<long>
     {
         public override long Parse(ReadOnlySpan<char> input) =>
-            long.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.ParseInt64(input, NumberStyles.Integer, Culture.InvInfo);
 #else
-                input
+            long.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
     }
 
     [UsedImplicitly]
     public sealed class UInt64Parser : SimpleFormattableTransformer<ulong>
     {
         public override ulong Parse(ReadOnlySpan<char> input) =>
-            ulong.Parse(
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.ParseUInt64(input, NumberStyles.Integer, Culture.InvInfo);
 #else
-                input
+            ulong.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
-                , NumberStyles.Integer, InvCult);
     }
 
     [UsedImplicitly]

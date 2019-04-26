@@ -28,7 +28,7 @@ namespace Legacy
     // NaNs or Infinities.
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal partial class Number
+    public static partial class Number
     {
         private const int Int32Precision = 10;
         private const int UInt32Precision = Int32Precision;
@@ -305,6 +305,9 @@ namespace Legacy
             return true;
         }
 
+        internal static Exception GetOverflowException(Type type) =>
+            new OverflowException($"Parsed number is either to small or to big for '{type.Name}' type");
+
         internal static unsafe int ParseInt32(ReadOnlySpan<char> s, NumberStyles style, NumberFormatInfo info)
         {
             NumberBuffer number = default;
@@ -316,14 +319,14 @@ namespace Legacy
             {
                 if (!HexNumberToInt32(ref number, ref i))
                 {
-                    throw new OverflowException(SR.Overflow_Int32);
+                    throw GetOverflowException(typeof(int));
                 }
             }
             else
             {
                 if (!NumberToInt32(ref number, ref i))
                 {
-                    throw new OverflowException(SR.Overflow_Int32);
+                    throw GetOverflowException(typeof(int));
                 }
             }
             return i;
@@ -340,14 +343,14 @@ namespace Legacy
             {
                 if (!HexNumberToInt64(ref number, ref i))
                 {
-                    throw new OverflowException(SR.Overflow_Int64);
+                    throw GetOverflowException(typeof(long));
                 }
             }
             else
             {
                 if (!NumberToInt64(ref number, ref i))
                 {
-                    throw new OverflowException(SR.Overflow_Int64);
+                    throw GetOverflowException(typeof(long));
                 }
             }
             return i;
@@ -364,14 +367,14 @@ namespace Legacy
             {
                 if (!HexNumberToUInt32(ref number, ref i))
                 {
-                    throw new OverflowException(SR.Overflow_UInt32);
+                    throw GetOverflowException(typeof(uint));
                 }
             }
             else
             {
                 if (!NumberToUInt32(ref number, ref i))
                 {
-                    throw new OverflowException(SR.Overflow_UInt32);
+                    throw GetOverflowException(typeof(uint));
                 }
             }
 
@@ -387,16 +390,12 @@ namespace Legacy
             if ((options & NumberStyles.AllowHexSpecifier) != 0)
             {
                 if (!HexNumberToUInt64(ref number, ref i))
-                {
-                    throw new OverflowException(SR.Overflow_UInt64);
-                }
+                    throw GetOverflowException(typeof(ulong));
             }
             else
             {
                 if (!NumberToUInt64(ref number, ref i))
-                {
-                    throw new OverflowException(SR.Overflow_UInt64);
-                }
+                    throw GetOverflowException(typeof(ulong));
             }
             return i;
         }
@@ -527,11 +526,11 @@ namespace Legacy
                 {
                     char* temp = p;
                     ch = ++p < strEnd ? *p : '\0';
-                    if ((next = MatchChars(p, strEnd, numfmt.positiveSign)) != null)
+                    if ((next = MatchChars(p, strEnd, numfmt.PositiveSign)) != null)
                     {
                         ch = (p = next) < strEnd ? *p : '\0';
                     }
-                    else if ((next = MatchChars(p, strEnd, numfmt.negativeSign)) != null)
+                    else if ((next = MatchChars(p, strEnd, numfmt.NegativeSign)) != null)
                     {
                         ch = (p = next) < strEnd ? *p : '\0';
                         negExp = true;
@@ -718,150 +717,6 @@ namespace Legacy
             return true;
         }
 
-        internal static unsafe decimal ParseDecimal(ReadOnlySpan<char> value, NumberStyles options, NumberFormatInfo numfmt)
-        {
-            NumberBuffer number = default;
-            decimal result = 0;
-
-            StringToNumber(value, options, ref number, numfmt, true);
-
-            if (!NumberBufferToDecimal(ref number, ref result))
-            {
-                throw new OverflowException(SR.Overflow_Decimal);
-            }
-            return result;
-        }
-
-        internal static unsafe double ParseDouble(ReadOnlySpan<char> value, NumberStyles options, NumberFormatInfo numfmt)
-        {
-            NumberBuffer number = default;
-            double d = 0;
-
-            if (!TryStringToNumber(value, options, ref number, numfmt, false))
-            {
-                //If we failed TryStringToNumber, it may be from one of our special strings.
-                //Check the three with which we're concerned and rethrow if it's not one of
-                //those strings.
-                ReadOnlySpan<char> sTrim = value.Trim();
-                if (sTrim.EqualsOrdinal(numfmt.PositiveInfinitySymbol))
-                {
-                    return double.PositiveInfinity;
-                }
-                if (sTrim.EqualsOrdinal(numfmt.NegativeInfinitySymbol))
-                {
-                    return double.NegativeInfinity;
-                }
-                if (sTrim.EqualsOrdinal(numfmt.NaNSymbol))
-                {
-                    return double.NaN;
-                }
-                throw new FormatException(SR.Format_InvalidString);
-            }
-
-            if (!NumberBufferToDouble(ref number, ref d))
-            {
-                throw new OverflowException(SR.Overflow_Double);
-            }
-
-            return d;
-        }
-
-        internal static unsafe float ParseSingle(ReadOnlySpan<char> value, NumberStyles options, NumberFormatInfo numfmt)
-        {
-            NumberBuffer number = default;
-            double d = 0;
-
-            if (!TryStringToNumber(value, options, ref number, numfmt, false))
-            {
-                //If we failed TryStringToNumber, it may be from one of our special strings.
-                //Check the three with which we're concerned and rethrow if it's not one of
-                //those strings.
-                ReadOnlySpan<char> sTrim = value.Trim();
-                if (sTrim.EqualsOrdinal(numfmt.PositiveInfinitySymbol))
-                {
-                    return float.PositiveInfinity;
-                }
-                if (sTrim.EqualsOrdinal(numfmt.NegativeInfinitySymbol))
-                {
-                    return float.NegativeInfinity;
-                }
-                if (sTrim.EqualsOrdinal(numfmt.NaNSymbol))
-                {
-                    return float.NaN;
-                }
-                throw new FormatException(SR.Format_InvalidString);
-            }
-
-            if (!NumberBufferToDouble(ref number, ref d))
-            {
-                throw new OverflowException(SR.Overflow_Single);
-            }
-            float castSingle = (float)d;
-            if (float.IsInfinity(castSingle))
-            {
-                throw new OverflowException(SR.Overflow_Single);
-            }
-            return castSingle;
-        }
-
-        internal static unsafe bool TryParseDecimal(ReadOnlySpan<char> value, NumberStyles options, NumberFormatInfo numfmt, out decimal result)
-        {
-            NumberBuffer number = default;
-            result = 0;
-
-            if (!TryStringToNumber(value, options, ref number, numfmt, true))
-            {
-                return false;
-            }
-
-            if (!NumberBufferToDecimal(ref number, ref result))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        internal static unsafe bool TryParseDouble(ReadOnlySpan<char> value, NumberStyles options, NumberFormatInfo numfmt, out double result)
-        {
-            NumberBuffer number = default;
-            result = 0;
-
-
-            if (!TryStringToNumber(value, options, ref number, numfmt, false))
-            {
-                return false;
-            }
-            if (!NumberBufferToDouble(ref number, ref result))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        internal static unsafe bool TryParseSingle(ReadOnlySpan<char> value, NumberStyles options, NumberFormatInfo numfmt, out float result)
-        {
-            NumberBuffer number = default;
-            result = 0;
-            double d = 0;
-
-            if (!TryStringToNumber(value, options, ref number, numfmt, false))
-            {
-                return false;
-            }
-            if (!NumberBufferToDouble(ref number, ref d))
-            {
-                return false;
-            }
-            float castSingle = (float)d;
-            if (float.IsInfinity(castSingle))
-            {
-                return false;
-            }
-
-            result = castSingle;
-            return true;
-        }
-
         private static unsafe void StringToNumber(ReadOnlySpan<char> str, NumberStyles options, ref NumberBuffer number, NumberFormatInfo info, bool parseDecimal)
         {
             Debug.Assert(info != null);
@@ -871,7 +726,7 @@ namespace Legacy
                 if (!ParseNumber(ref p, p + str.Length, options, ref number, info, parseDecimal)
                     || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
                 {
-                    throw new FormatException(SR.Format_InvalidString);
+                    throw new FormatException("Text is not valid number");
                 }
             }
         }
@@ -922,7 +777,7 @@ namespace Legacy
             {
                 return null;
             }
-            
+
             // We only hurt the failure case
             // This fix is for French or Kazakh cultures. Since a user cannot type 0xA0 as a
             // space character we use 0x20 space character instead to mean the same.
@@ -942,38 +797,6 @@ namespace Legacy
         }
 
         private static bool IsWhite(char ch) => ch == 0x20 || (ch >= 0x09 && ch <= 0x0D);
-
-        private static bool NumberBufferToDouble(ref NumberBuffer number, ref double value)
-        {
-            double d = NumberToDouble(ref number);
-            uint e = DoubleHelper.Exponent(d);
-            ulong m = DoubleHelper.Mantissa(d);
-
-            if (e == 0x7FF)
-            {
-                return false;
-            }
-
-            if (e == 0 && m == 0)
-            {
-                d = 0;
-            }
-
-            value = d;
-            return true;
-        }
-
-        private static class DoubleHelper
-        {
-            public static unsafe uint Exponent(double d) =>
-                (*((uint*)&d + 1) >> 20) & 0x000007ff;
-
-            public static unsafe ulong Mantissa(double d) =>
-                *((ulong*)&d) & 0x000fffffffffffff;
-
-            public static unsafe bool Sign(double d) =>
-                (*((uint*)&d + 1) >> 31) != 0;
-        }
     }
 }
 #endif

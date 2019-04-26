@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
 
@@ -37,6 +38,9 @@ namespace Nemesis.TextParsers
         TNumber MinValue { get; }
         TNumber MaxValue { get; }
 
+        TNumber FromInt64(long value);
+        long ToInt64(TNumber value);
+
         TNumber Or(TNumber left, TNumber right);
         TNumber And(TNumber left, TNumber right);
         TNumber Not(TNumber value);
@@ -52,6 +56,12 @@ namespace Nemesis.TextParsers
         bool TryParse(in ReadOnlySpan<char> input, out TNumber value);
     }
 
+    internal static class Culture
+    {
+        internal static CultureInfo InvCult => CultureInfo.InvariantCulture;
+        internal static NumberFormatInfo InvInfo = NumberFormatInfo.InvariantInfo;
+    }
+
     [UsedImplicitly]
     public sealed class ByteNumber : INumber<byte>
     {
@@ -60,6 +70,9 @@ namespace Nemesis.TextParsers
         public byte One => 1;
         public byte MinValue => byte.MinValue;
         public byte MaxValue => byte.MaxValue;
+
+        public byte FromInt64(long value) => (byte)value;
+        public long ToInt64(byte value) => value;
 
         public byte Or(byte left, byte right) => (byte)(left | right);
         public byte And(byte left, byte right) => (byte)(left & right);
@@ -73,13 +86,14 @@ namespace Nemesis.TextParsers
         public byte Mul(byte left, byte right) => (byte)(left * right);
         public byte Div(byte left, byte right) => (byte)(left / right);
 
-        public bool TryParse(in ReadOnlySpan<char> input, out byte value) => byte.TryParse(
+
+        public bool TryParse(in ReadOnlySpan<char> input, out byte value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.ByteParser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
-                input
+            byte.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
+
     }
 
     [UsedImplicitly]
@@ -90,6 +104,9 @@ namespace Nemesis.TextParsers
         public sbyte One => 1;
         public sbyte MinValue => sbyte.MinValue;
         public sbyte MaxValue => sbyte.MaxValue;
+
+        public sbyte FromInt64(long value) => (sbyte)value;
+        public long ToInt64(sbyte value) => value;
 
         public sbyte Or(sbyte left, sbyte right) => (sbyte)(left | right);
         public sbyte And(sbyte left, sbyte right) => (sbyte)(left & right);
@@ -103,13 +120,12 @@ namespace Nemesis.TextParsers
         public sbyte Mul(sbyte left, sbyte right) => (sbyte)(left * right);
         public sbyte Div(sbyte left, sbyte right) => (sbyte)(left / right);
 
-        public bool TryParse(in ReadOnlySpan<char> input, out sbyte value) => sbyte.TryParse(
+        public bool TryParse(in ReadOnlySpan<char> input, out sbyte value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.SByteParser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
-                input
+            sbyte.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
     [UsedImplicitly]
@@ -120,6 +136,9 @@ namespace Nemesis.TextParsers
         public short One => 1;
         public short MinValue => short.MinValue;
         public short MaxValue => short.MaxValue;
+
+        public short FromInt64(long value) => (short)value;
+        public long ToInt64(short value) => value;
 
         public short Or(short left, short right) => (short)(left | right);
         public short And(short left, short right) => (short)(left & right);
@@ -133,13 +152,12 @@ namespace Nemesis.TextParsers
         public short Mul(short left, short right) => (short)(left * right);
         public short Div(short left, short right) => (short)(left / right);
 
-        public bool TryParse(in ReadOnlySpan<char> input, out short value) => short.TryParse(
+        public bool TryParse(in ReadOnlySpan<char> input, out short value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Int16Parser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
-                input
+            short.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
     [UsedImplicitly]
@@ -150,6 +168,9 @@ namespace Nemesis.TextParsers
         public ushort One => 1;
         public ushort MinValue => ushort.MinValue;
         public ushort MaxValue => ushort.MaxValue;
+
+        public ushort FromInt64(long value) => (ushort)value;
+        public long ToInt64(ushort value) => value;
 
         public ushort Or(ushort left, ushort right) => (ushort)(left | right);
         public ushort And(ushort left, ushort right) => (ushort)(left & right);
@@ -163,13 +184,12 @@ namespace Nemesis.TextParsers
         public ushort Mul(ushort left, ushort right) => (ushort)(left * right);
         public ushort Div(ushort left, ushort right) => (ushort)(left / right);
 
-        public bool TryParse(in ReadOnlySpan<char> input, out ushort value) => ushort.TryParse(
+        public bool TryParse(in ReadOnlySpan<char> input, out ushort value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.UInt16Parser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
-                input
+            ushort.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
     [UsedImplicitly]
@@ -180,6 +200,9 @@ namespace Nemesis.TextParsers
         public int One => 1;
         public int MinValue => int.MinValue;
         public int MaxValue => int.MaxValue;
+
+        public int FromInt64(long value) => (int)value;
+        public long ToInt64(int value) => value;
 
         public int Or(int left, int right) => left | right;
         public int And(int left, int right) => left & right;
@@ -193,13 +216,13 @@ namespace Nemesis.TextParsers
         public int Mul(int left, int right) => left * right;
         public int Div(int left, int right) => left / right;
 
-        public bool TryParse(in ReadOnlySpan<char> input, out int value) => int.TryParse(
+
+        public bool TryParse(in ReadOnlySpan<char> input, out int value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.TryParseInt32(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
-                input
+            int.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
     [UsedImplicitly]
@@ -210,6 +233,9 @@ namespace Nemesis.TextParsers
         public uint One => 1;
         public uint MinValue => uint.MinValue;
         public uint MaxValue => uint.MaxValue;
+
+        public uint FromInt64(long value) => (uint)value;
+        public long ToInt64(uint value) => value;
 
         public uint Or(uint left, uint right) => left | right;
         public uint And(uint left, uint right) => left & right;
@@ -223,13 +249,12 @@ namespace Nemesis.TextParsers
         public uint Mul(uint left, uint right) => left * right;
         public uint Div(uint left, uint right) => left / right;
 
-        public bool TryParse(in ReadOnlySpan<char> input, out uint value) => uint.TryParse(
+        public bool TryParse(in ReadOnlySpan<char> input, out uint value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.TryParseUInt32(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
-                input
+            uint.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
     [UsedImplicitly]
@@ -240,6 +265,9 @@ namespace Nemesis.TextParsers
         public long One => 1;
         public long MinValue => long.MinValue;
         public long MaxValue => long.MaxValue;
+
+        public long FromInt64(long value) => value;
+        public long ToInt64(long value) => value;
 
         public long Or(long left, long right) => left | right;
         public long And(long left, long right) => left & right;
@@ -253,13 +281,12 @@ namespace Nemesis.TextParsers
         public long Mul(long left, long right) => left * right;
         public long Div(long left, long right) => left / right;
 
-        public bool TryParse(in ReadOnlySpan<char> input, out long value) => long.TryParse(
+        public bool TryParse(in ReadOnlySpan<char> input, out long value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.TryParseInt64(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
-                input
+            long.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
     [UsedImplicitly]
@@ -270,6 +297,9 @@ namespace Nemesis.TextParsers
         public ulong One => 1;
         public ulong MinValue => ulong.MinValue;
         public ulong MaxValue => ulong.MaxValue;
+
+        public ulong FromInt64(long value) => (ulong)value;
+        public long ToInt64(ulong value) => (long)value;
 
         public ulong Or(ulong left, ulong right) => left | right;
         public ulong And(ulong left, ulong right) => left & right;
@@ -283,13 +313,12 @@ namespace Nemesis.TextParsers
         public ulong Mul(ulong left, ulong right) => left * right;
         public ulong Div(ulong left, ulong right) => left / right;
 
-        public bool TryParse(in ReadOnlySpan<char> input, out ulong value) => ulong.TryParse(
+        public bool TryParse(in ReadOnlySpan<char> input, out ulong value) =>
 #if NETSTANDARD2_0
-                input.ToString()
+            Legacy.Number.TryParseUInt64(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
-                input
+            ulong.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #endif
-            , out value);
     }
 
 
