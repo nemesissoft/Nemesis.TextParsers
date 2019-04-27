@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
@@ -244,6 +245,8 @@ namespace Nemesis.TextParsers
                 input
 #endif
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
+
+        protected override string FormatString { get; } = "G9";
     }
 
     [UsedImplicitly]
@@ -257,6 +260,8 @@ namespace Nemesis.TextParsers
                 input
 #endif
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
+
+        protected override string FormatString { get; } = "G17";
     }
 
     [UsedImplicitly]
@@ -320,12 +325,21 @@ namespace Nemesis.TextParsers
         public override Guid Parse(ReadOnlySpan<char> input) => Guid.Parse(input);
 
         protected override string FormatString { get; } = "D";
-    }
-
-    public sealed class BigIntegerParser : SimpleFormattableTransformer<System.Numerics.BigInteger>
-    {
-        public override System.Numerics.BigInteger Parse(ReadOnlySpan<char> input) => System.Numerics.BigInteger.Parse(input, NumberStyles.Integer, InvCult);        
     }*/
+
+    [UsedImplicitly]
+    public sealed class BigIntegerParser : SimpleFormattableTransformer<BigInteger>
+    {
+        public override BigInteger Parse(ReadOnlySpan<char> input) => BigInteger.Parse(
+#if NETSTANDARD2_0
+                input.ToString()
+#else
+            input
+#endif
+            , NumberStyles.Integer, InvCult);
+
+        protected override string FormatString { get; } = "R";
+    }
 
     #endregion
 }

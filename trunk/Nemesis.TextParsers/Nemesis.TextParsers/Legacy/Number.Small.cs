@@ -250,8 +250,8 @@ namespace Legacy
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class UInt16Parser
     {
-        private static uint MinValue => uint.MinValue;
-        private static uint MaxValue => uint.MaxValue;
+        private static ushort MinValue => ushort.MinValue;
+        private static ushort MaxValue => ushort.MaxValue;
 
         public static ushort Parse(ReadOnlySpan<char> s, NumberStyles style = NumberStyles.Integer, IFormatProvider provider = null)
         {
