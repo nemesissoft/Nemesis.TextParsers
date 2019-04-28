@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Nemesis.TextParsers
@@ -65,6 +66,24 @@ namespace Nemesis.TextParsers
             return parsed;
         }
 
+        public string FormatCollection<TElement>(LeanCollection<TElement> coll)
+        {
+            if (coll.Size == 0) return "";
+
+            IFormatter<TElement> formatter = TextTransformer.Default.GetTransformer<TElement>();
+
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            var enumerator = coll.GetEnumerator();
+            while (enumerator.MoveNext())
+                FormatElement(formatter, enumerator.Current, ref accumulator);
+
+            var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
+            accumulator.Dispose();
+            return text;
+        }
+
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public string FormatCollection<TElement>(IEnumerable<TElement> coll)
         {
@@ -77,31 +96,34 @@ namespace Nemesis.TextParsers
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
             using (var enumerator = coll.GetEnumerator())
-            {
                 while (enumerator.MoveNext())
-                {
-                    string elementText = formatter.Format(enumerator.Current);
-                    if (elementText == null)
-                        accumulator.Append(NullElementMarker);
-                    else
-                    {
-                        foreach (char c in elementText)
-                        {
-                            if (c == EscapingSequenceStart || c == NullElementMarker || c == ListDelimiter)
-                                accumulator.Append(EscapingSequenceStart);
+                    FormatElement(formatter, enumerator.Current, ref accumulator);
 
-                            accumulator.Append(c);
-                        }
-                    }
-
-                    accumulator.Append(ListDelimiter);
-                }
-            }
-
-            var text = accumulator.AsSpanTo(accumulator.Length - 1).ToString();
+            var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
             accumulator.Dispose();
             return text;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
+        {
+            string elementText = formatter.Format(element);
+            if (elementText == null)
+                accumulator.Append(NullElementMarker);
+            else
+            {
+                foreach (char c in elementText)
+                {
+                    if (c == EscapingSequenceStart || c == NullElementMarker || c == ListDelimiter)
+                        accumulator.Append(EscapingSequenceStart);
+
+                    accumulator.Append(c);
+                }
+            }
+
+            accumulator.Append(ListDelimiter);
+        }
+
         #endregion
 
         #region Dictionary

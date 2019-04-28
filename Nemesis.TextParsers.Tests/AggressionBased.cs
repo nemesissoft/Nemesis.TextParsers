@@ -13,6 +13,9 @@ namespace Nemesis.TextParsers.Tests
 {
     public interface IAggressionValuesProvider<out TValue>
     {
+        /// <summary>
+        /// For introspection and test purposes. This will allocate a new list
+        /// </summary>
         IReadOnlyList<TValue> Values { get; }
 
         string ToString();
@@ -38,9 +41,9 @@ namespace Nemesis.TextParsers.Tests
 
     internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
     {
-        IReadOnlyList<TValue> IAggressionValuesProvider<TValue>.Values => GetValues();
+        IReadOnlyList<TValue> IAggressionValuesProvider<TValue>.Values => GetValues().ToList();
 
-        protected abstract IReadOnlyList<TValue> GetValues();
+        protected abstract LeanCollection<TValue> GetValues();
 
         protected static bool IsEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
@@ -77,7 +80,7 @@ namespace Nemesis.TextParsers.Tests
     {
         public TValue One { get; }
 
-        protected override IReadOnlyList<TValue> GetValues() => new[] { One };
+        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
 
         public TValue PassiveValue => One;
         public TValue NormalValue => One;
@@ -104,7 +107,7 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased3<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
-        protected override IReadOnlyList<TValue> GetValues() => new[] { PassiveValue, NormalValue, AggressiveValue };
+        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
 
         public TValue PassiveValue { get; }
         public TValue NormalValue { get; }
@@ -173,15 +176,15 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased9<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
-        private readonly IReadOnlyList<TValue> _values;
+        private readonly TValue[] _values;
 
-        protected override IReadOnlyList<TValue> GetValues() => _values;
+        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(_values.AsSpan());
 
         public TValue PassiveValue => GetValueFor(StrategyAggression.Passive);
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
         public TValue AggressiveValue => GetValueFor(StrategyAggression.Aggressive);
 
-        public AggressionBased9([NotNull] IReadOnlyList<TValue> values) => _values = values ?? throw new ArgumentNullException(nameof(values));
+        public AggressionBased9([NotNull] TValue[] values) => _values = values ?? throw new ArgumentNullException(nameof(values));
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
 
@@ -192,7 +195,7 @@ namespace Nemesis.TextParsers.Tests
 
             if (aggression == 0) aggression = 5;
 
-            if (_values == null || _values.Count != 9) throw new InvalidOperationException("Internal state of values is compromised");
+            if (_values == null || _values.Length != 9) throw new InvalidOperationException("Internal state of values is compromised");
             else
                 return _values[aggression - 1];
         }
@@ -215,8 +218,8 @@ namespace Nemesis.TextParsers.Tests
 
             if (ReferenceEquals(_values, o9Values)) return true;
 
-            using (var enumerator = _values.GetEnumerator())
-            using (var enumerator2 = o9Values.GetEnumerator())
+            using (var enumerator = ((IReadOnlyList<TValue>)_values).GetEnumerator())
+            using (var enumerator2 = ((IReadOnlyList<TValue>)o9Values).GetEnumerator())
             {
                 while (enumerator.MoveNext())
                     if (!enumerator2.MoveNext() || !IsEqual(enumerator.Current, enumerator2.Current))

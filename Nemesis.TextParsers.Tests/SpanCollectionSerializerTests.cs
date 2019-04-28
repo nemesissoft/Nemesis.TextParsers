@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 
@@ -163,6 +165,8 @@ namespace Nemesis.TextParsers.Tests
             (typeof(bool), @"no", typeof(FormatException)),
             (typeof(bool), @"0", typeof(FormatException)),
 
+#if !DEBUG
+            (typeof(byte), @"", typeof(FormatException)),
             (typeof(byte), @"abc", typeof(FormatException)),
             (typeof(byte), @"17|", typeof(FormatException)),
             (typeof(byte), @"17abc", typeof(FormatException)),
@@ -198,8 +202,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(float), @"abc", typeof(FormatException)),
             (typeof(float), @"17|", typeof(FormatException)),
             (typeof(float), @"17abc", typeof(FormatException)),
-
-            
+#endif
 
             (typeof(byte), @"-1|0", typeof(OverflowException)),
             (typeof(byte), @"255|256", typeof(OverflowException)),
@@ -243,7 +246,7 @@ namespace Nemesis.TextParsers.Tests
             IEnumerable parsed = null;
             try
             {
-                parsed = (IEnumerable)parseMethod.Invoke(this, new object[] { data.input });
+                parsed = (IEnumerable) parseMethod.Invoke(this, new object[] {data.input});
                 passed = true;
             }
             catch (Exception e)
@@ -482,8 +485,8 @@ namespace Nemesis.TextParsers.Tests
                     ?? throw new MissingMethodException("Method Enumerable.Cast does not exist"))
                 .MakeGenericMethod(data.elementType);
 
-            var formatMethod = (typeof(SpanCollectionSerializer).GetMethods(ALL_FLAGS)
-                                    .SingleOrDefault(mi => mi.Name == nameof(SpanCollectionSerializer.FormatCollection) && mi.IsGenericMethod)
+            var formatMethod = (typeof(SpanCollectionSerializerTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi => 
+                    mi.Name == nameof(FormatCollection) && mi.IsGenericMethod)
                     ?? throw new MissingMethodException("Method FormatCollection does not exist"))
                 .MakeGenericMethod(data.elementType);
 
@@ -493,7 +496,7 @@ namespace Nemesis.TextParsers.Tests
                 .MakeGenericMethod(data.elementType);
 
             var genericListExpected = castMethod.Invoke(null, new object[] { data.expectedOutput });
-            string textExpected = (string)formatMethod.Invoke(_sut, new[] { genericListExpected });
+            string textExpected = (string)formatMethod.Invoke(this, new[] { genericListExpected });
             Console.WriteLine(textExpected);
 
             var parsed = (IEnumerable)parseMethod.Invoke(this, new object[] { data.input });
@@ -501,7 +504,7 @@ namespace Nemesis.TextParsers.Tests
 
             var genericList = castMethod.Invoke(null, new object[] { parsed });
 
-            string text = (string)formatMethod.Invoke(_sut, new[] { genericList });
+            string text = (string)formatMethod.Invoke(this, new[] { genericList });
             Console.WriteLine(data.input);
             Console.WriteLine(text);
 
@@ -519,6 +522,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         private ICollection<TElement> ParseCollection<TElement>(string text) => _sut.ParseCollection<TElement>(text);
+        private string FormatCollection<TElement>(ICollection<TElement> coll) => _sut.FormatCollection(coll);
 
         [Test]
         public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long
