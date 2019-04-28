@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
+    //todo create ICanCreateTransformer for simple types 
     public abstract class SimpleTransformer<TElement> : ICanTransformType, ITransformer<TElement>
     {
         public bool CanHandle(Type type) => typeof(TElement) == type;
@@ -320,12 +321,19 @@ namespace Nemesis.TextParsers
         protected override string FormatString { get; } = "o";
     }
 
-    /*public sealed class GuidParser : SimpleFormattableTransformer<Guid>
+    [UsedImplicitly]
+    public sealed class GuidParser : SimpleFormattableTransformer<Guid>
     {
-        public override Guid Parse(ReadOnlySpan<char> input) => Guid.Parse(input);
+        public override Guid Parse(ReadOnlySpan<char> input) => Guid.Parse(
+#if NETSTANDARD2_0
+                input.ToString()
+#else
+            input
+#endif
+            );
 
         protected override string FormatString { get; } = "D";
-    }*/
+    }
 
     [UsedImplicitly]
     public sealed class BigIntegerParser : SimpleFormattableTransformer<BigInteger>

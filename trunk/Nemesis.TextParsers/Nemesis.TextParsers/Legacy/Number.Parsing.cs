@@ -726,7 +726,7 @@ namespace Legacy
                 if (!ParseNumber(ref p, p + str.Length, options, ref number, info, parseDecimal)
                     || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
                 {
-                    throw new FormatException("Text is not valid number");
+                    throw new FormatException($"'{str.ToString()}' is not valid number");
                 }
             }
         }

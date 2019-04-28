@@ -141,7 +141,8 @@ namespace Nemesis.TextParsers.Tests
 
             const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
 
-            var parseMethod = (typeof(ParsedSequenceTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi => mi.Name == nameof(ParseCollection) && mi.IsGenericMethod)
+            var parseMethod = (typeof(ParsedSequenceTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi => 
+                    mi.Name == nameof(ParseCollection) && mi.IsGenericMethod)
                     ?? throw new MissingMethodException("Method ParseCollection does not exist"))
                 .MakeGenericMethod(data.elementType);
 
