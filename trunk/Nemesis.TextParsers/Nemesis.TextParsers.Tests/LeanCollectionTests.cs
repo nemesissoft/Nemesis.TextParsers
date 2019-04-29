@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -6,8 +7,6 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture(TestOf = typeof(LeanCollection<>))]
     public class LeanCollectionTests
     {
-        
-
         [Test]
         public void Iterate_OneElement()
         {
@@ -59,6 +58,30 @@ namespace Nemesis.TextParsers.Tests
 
             if (elements != null)
                 Assert.That(actual, Is.EquivalentTo(elements));
+        }
+
+        [Test]
+        public void Conversions()
+        {
+            LeanCollection<float> coll1 = 100.1f;
+            Assert.That(coll1.Size, Is.EqualTo(1));
+            Assert.That(coll1.ToList(), Is.EqualTo(new[] { 100.1f }));
+
+
+            LeanCollection<float> coll2 = (1000, 2000);
+            Assert.That(coll2.Size, Is.EqualTo(2));
+            Assert.That(coll2.ToList(), Is.EqualTo(new[] { 1000, 2000 }));
+
+
+            LeanCollection<float> coll3 = (100,200,300);
+            Assert.That(coll3.Size, Is.EqualTo(3));
+            Assert.That(coll3.ToList(), Is.EqualTo(new[] { 100, 200, 300 }));
+            
+
+            ReadOnlySpan<float> array = new[] { 15.5f, 25.6f, 35.99f, 50, 999 };
+            LeanCollection<float> collMore = array;
+            Assert.That(collMore.Size, Is.EqualTo(5));
+            Assert.That(collMore.ToList(), Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }));
         }
     }
 }

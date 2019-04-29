@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers
 {
-    public ref struct ParsedPairSequence<TKey, TValue>
+    public readonly ref struct ParsedPairSequence<TKey, TValue>
     {
         #region Fields and properties
         private readonly TokenSequence<char> _tokenSource;
@@ -24,7 +24,7 @@ namespace Nemesis.TextParsers
             _valueParser = TextTransformer.Default.GetTransformer<TValue>();
         }
 
-        public ParsedPairSequence(TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter)
+        public ParsedPairSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter)
         {
             _tokenSource = tokenSource;
             _escapingSequenceStart = escapingSequenceStart;
@@ -47,7 +47,7 @@ namespace Nemesis.TextParsers
             private readonly char _dictionaryKeyValueDelimiter;
             #endregion
 
-            public ParsedPairSequenceEnumerator(TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter) : this()
+            public ParsedPairSequenceEnumerator(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter) : this()
             {
                 _tokenSequenceEnumerator = tokenSource.GetEnumerator();
 

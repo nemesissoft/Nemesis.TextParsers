@@ -67,7 +67,7 @@ namespace Nemesis.TextParsers
 
             public T Current { get; private set; }
 
-            public LeanCollectionEnumerator(LeanCollection<T> leanCollection)
+            public LeanCollectionEnumerator(in LeanCollection<T> leanCollection)
             {
                 _leanCollection = leanCollection;
                 Current = default;
@@ -115,6 +115,9 @@ namespace Nemesis.TextParsers
             }
         }
 
+        /// <summary>
+        /// Convert <see cref="LeanCollection{T}"/> to <see cref="List{T}"/>. This obviously allocates. For tests only
+        /// </summary>
         public IReadOnlyList<T> ToList()
         {
             var list = new List<T>(Size);
@@ -122,5 +125,11 @@ namespace Nemesis.TextParsers
                 list.Add(element);
             return list;
         }
+
+        public static implicit operator LeanCollection<T>(T one) => new LeanCollection<T>(one);
+        public static implicit operator LeanCollection<T>((T, T) pair) => new LeanCollection<T>(pair.Item1, pair.Item2);
+        public static implicit operator LeanCollection<T>((T, T, T) triple) => new LeanCollection<T>(triple.Item1, triple.Item2, triple.Item3);
+        
+        public static implicit operator LeanCollection<T>(ReadOnlySpan<T> span) => new LeanCollection<T>(span);
     }
 }

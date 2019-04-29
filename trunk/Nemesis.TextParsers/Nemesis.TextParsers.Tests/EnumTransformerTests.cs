@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers.Tests
     internal enum UInt64Enum : ulong { Ul_1 = 0, Ul_2 = 1, Ul_3 = 50 }
 
     [Flags]
-    internal enum Fruits : short
+    internal enum Fruits : ushort
     {
         None = 0,
         Apple = 1,
@@ -61,7 +61,7 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture(TypeArgs = new[] { typeof(SByteEnum), typeof(sbyte), typeof(SByteNumber) })]
     [TestFixture(TypeArgs = new[] { typeof(Int64Enum), typeof(long), typeof(Int64Number) })]
     [TestFixture(TypeArgs = new[] { typeof(UInt64Enum), typeof(ulong), typeof(UInt64Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(Fruits), typeof(short), typeof(Int16Number) })]
+    [TestFixture(TypeArgs = new[] { typeof(Fruits), typeof(ushort), typeof(UInt16Number) })]
     [TestFixture(TypeArgs = new[] { typeof(FruitsWeirdAll), typeof(short), typeof(Int16Number) })]
     public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         where TEnum : Enum
@@ -107,24 +107,50 @@ namespace Nemesis.TextParsers.Tests
         private static string ToTick(bool result) => result ? "✔" : "✖";
         private static string ToOperator(bool result) => result ? "==" : "!=";
 
-        [Test]
-        public void NonFlagEnums_NegativeTests()
+        [TestCase(",,,")]
+        [TestCase("1,2,3,4")]
+        public void NonFlagEnums_NegativeTests(string input)
         {
             var isFlag = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
             Assert.That(_sut.IsFlagEnum, Is.EqualTo(isFlag), "Flags attribute is badly retrieved");
 
-            if (!isFlag)
+            if (isFlag)
+                Assert.DoesNotThrow(() => _sut.Parse(input.AsSpan()));
+            else
+                Assert.Throws<FormatException>(() => _sut.Parse(input.AsSpan()));
+        }
+
+        [TestCase(" | ")]
+        [TestCase("|")]
+        [TestCase("Mississippi")]
+        public void BadSource_NegativeTests(string input)
+        {
+            if (typeof(TEnum) != typeof(EmptyEnum))
+                Assert.Throws<FormatException>(() => _sut.Parse(input.AsSpan()));
+            else
             {
-                var text = "1,2,3,4";
-                Assert.Throws<FormatException>(() => _sut.Parse(text.AsSpan()));
+                TEnum actual = _sut.Parse(input.AsSpan());
+                Assert.That(actual, Is.EqualTo((EmptyEnum)0));
             }
         }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
+        public void EmptySource_ShouldReturnDefaultValue(string input)
+        {
+            var actual = _sut.Parse(input.AsSpan());
+            var defaultValue = _sut.ToEnum(_numberHandler.Zero);
+
+            Assert.That(actual, Is.EqualTo(defaultValue));
+        }
+
 
         [Test]
         public void ParseNumberFlags() //7 = 1,2,4
         {
             if (!_sut.IsFlagEnum)
-                Assert.Inconclusive("Test is not supported for non-flag enums");
+                Assert.Pass("Test is not supported for non-flag enums");
 
             var sb = new StringBuilder();
             bool allPassed = true;
@@ -283,7 +309,7 @@ namespace Nemesis.TextParsers.Tests
             return (DaysOfWeek)currentValue;
 
         }
-        
+
         private static byte ParseDaysOfWeekElement(ReadOnlySpan<char> input)
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;

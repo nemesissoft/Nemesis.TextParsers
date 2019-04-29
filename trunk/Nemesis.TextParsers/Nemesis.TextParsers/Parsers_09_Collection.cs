@@ -6,6 +6,7 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    //TODO add CollectionMeta DictionaryMeta here
     [UsedImplicitly]
     public sealed class CollectionTransformerCreator : ICanCreateTransformer
     {
@@ -23,7 +24,6 @@ namespace Nemesis.TextParsers
             var transType = typeof(InnerCollectionTransformer<,>).MakeGenericType(elementType, collectionType);
 
             return (ITransformer<TCollection>)Activator.CreateInstance(transType, kind);
-
         }
 
         private static CollectionKind GetCollectionKind(Type collectionType)
@@ -32,9 +32,15 @@ namespace Nemesis.TextParsers
                 return CollectionKind.LinkedList;
             else if (collectionType.DerivesOrImplementsGeneric(typeof(SortedSet<>)))
                 return CollectionKind.SortedSet;
-            else if (collectionType.DerivesOrImplementsGeneric(typeof(HashSet<>)))//TODO or equal to ISet<>
+            else if (collectionType.DerivesOrImplementsGeneric(typeof(HashSet<>))
+                     ||
+                     collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(ISet<>)
+                    )
                 return CollectionKind.HashSet;
-            else if (collectionType.DerivesOrImplementsGeneric(typeof(ReadOnlyCollection<>))) //TODO or equal to IReadOnlyCollection<>
+            else if (collectionType.DerivesOrImplementsGeneric(typeof(ReadOnlyCollection<>))
+                     ||
+                     collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)
+                    )
                 return CollectionKind.ReadOnlyCollection;
             else
                 return CollectionKind.List;
