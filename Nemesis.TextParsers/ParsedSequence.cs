@@ -3,14 +3,14 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers
 {
-    public ref struct ParsedSequence<TTo>
+    public readonly ref struct ParsedSequence<TTo>
     {
         private static readonly ISpanParser<TTo> _parser;
 
         static ParsedSequence() => _parser = TextTransformer.Default.GetTransformer<TTo>();
         /*var parserType = typeof(ISpanParser<>).MakeGenericType(typeof(TTo)); var type = parserType.Assembly.GetTypes().First(t => parserType.IsAssignableFrom(t));_parser = (ISpanParser<TTo>)Activator.CreateInstance(type);*/
 
-        public ParsedSequence(TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1 = default)
+        public ParsedSequence(in TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1 = default)
         {
             _tokenSource = tokenSource;
             _escapingElement = escapingElement;
@@ -27,7 +27,7 @@ namespace Nemesis.TextParsers
 
         public ref struct ParsedSequenceEnumerator
         {
-            public ParsedSequenceEnumerator(TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1)
+            public ParsedSequenceEnumerator(in TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1)
             {
                 _tokenSequenceEnumerator = tokenSource.GetEnumerator();
                 _escapingElement = escapingElement;

@@ -17,18 +17,23 @@ namespace Nemesis.TextParsers
                 ?? throw new InvalidOperationException("Type has to implement IDictionary<,>");
 
             Type keyType = genericInterfaceType.GenericTypeArguments[0],
-                valueType = genericInterfaceType.GenericTypeArguments[1];
+               valueType = genericInterfaceType.GenericTypeArguments[1];
 
-            var kind = dictType.DerivesOrImplementsGeneric(typeof(SortedDictionary<,>))
-                ? DictionaryKind.SortedDictionary
-                : dictType.DerivesOrImplementsGeneric(typeof(ReadOnlyDictionary<,>))
-                    ? DictionaryKind.ReadOnlyDictionary
-                    : DictionaryKind.Dictionary;
+            var kind = GetDictionaryKind(dictType);
 
             var transType = typeof(InnerDictionaryTransformer<,,>).MakeGenericType(keyType, valueType, dictType);
 
             return (ITransformer<TDictionary>)Activator.CreateInstance(transType, kind);
         }
+
+        private static DictionaryKind GetDictionaryKind(Type dictType) =>
+            dictType.DerivesOrImplementsGeneric(typeof(SortedDictionary<,>))
+                ? DictionaryKind.SortedDictionary
+                : (dictType.DerivesOrImplementsGeneric(typeof(ReadOnlyDictionary<,>)) 
+                   || 
+                   dictType.IsGenericType && dictType.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))
+                    ? DictionaryKind.ReadOnlyDictionary
+                    : DictionaryKind.Dictionary;
 
         private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>
             where TDict : IDictionary<TKey, TValue>

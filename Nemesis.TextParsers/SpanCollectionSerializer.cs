@@ -58,7 +58,7 @@ namespace Nemesis.TextParsers
             ParseStream<TTo>(text).ToCollection(kind, potentialLength);
 
         [PureMethod]
-        public ParsedSequence<TTo> ParseStream<TTo>(ReadOnlySpan<char> text)
+        public ParsedSequence<TTo> ParseStream<TTo>(in ReadOnlySpan<char> text)
         {
             var tokens = text.Tokenize(ListDelimiter, EscapingSequenceStart, true);
             var parsed = tokens.Parse<TTo>(EscapingSequenceStart, NullElementMarker, ListDelimiter);
@@ -66,7 +66,7 @@ namespace Nemesis.TextParsers
             return parsed;
         }
 
-        public string FormatCollection<TElement>(LeanCollection<TElement> coll)
+        public string FormatCollection<TElement>(in LeanCollection<TElement> coll)
         {
             if (coll.Size == 0) return "";
 

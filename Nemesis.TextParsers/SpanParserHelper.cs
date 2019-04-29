@@ -10,20 +10,20 @@ namespace Nemesis.TextParsers
     public static class SpanParserHelper
     {
         [PureMethod]
-        public static TokenSequence<T> Tokenize<T>(this ReadOnlySpan<T> sequence, T separator, T escapingElement,
+        public static TokenSequence<T> Tokenize<T>(this in ReadOnlySpan<T> sequence, T separator, T escapingElement,
             bool emptySequenceYieldsEmpty)
             where T : IEquatable<T> =>
             new TokenSequence<T>(sequence, separator, escapingElement, emptySequenceYieldsEmpty);
 
         [PureMethod]
-        public static ParsedSequence<TTo> Parse<TTo>(this TokenSequence<char> tokenSource, char escapingElement,
+        public static ParsedSequence<TTo> Parse<TTo>(this in TokenSequence<char> tokenSource, char escapingElement,
             char nullElement,
             char allowedEscapeCharacter1 = default) =>
             new ParsedSequence<TTo>(tokenSource, escapingElement, nullElement, allowedEscapeCharacter1);
 
         //TODO ToArray - 2 versions from managed and unmanaged. ToArrayUnmanaged - copy to buffer bool TryCopyTo(buffer, out int count
         [PureMethod]
-        public static TTo[] ToArray<TTo>(this ParsedSequence<TTo> parsedSequence, ushort potentialLength = 8)
+        public static TTo[] ToArray<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort potentialLength = 8)
         {
             var initialBuffer = ArrayPool<TTo>.Shared.Rent(potentialLength);
             try
@@ -45,7 +45,7 @@ namespace Nemesis.TextParsers
 
         //TODO functional tests + max capacity test + benchmark with standard ToArray
         [PureMethod]
-        public static TTo[] ToArrayUnmanaged<TTo>(this ParsedSequence<TTo> parsedSequence, ushort potentialLength = 8)
+        public static TTo[] ToArrayUnmanaged<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort potentialLength = 8)
             where TTo : unmanaged
         {
             var elementSize = Marshal.SizeOf<TTo>();
@@ -73,7 +73,7 @@ namespace Nemesis.TextParsers
 
         //TODO test concrete implementation as (sorted)set, read only collection, linked list etc
         [PureMethod]
-        public static ICollection<TTo> ToCollection<TTo>(this ParsedSequence<TTo> parsedSequence,
+        public static ICollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
             CollectionKind kind = CollectionKind.List, ushort potentialLength = 8)
         {
             if (kind == CollectionKind.List || kind == CollectionKind.ReadOnlyCollection)
@@ -118,7 +118,7 @@ namespace Nemesis.TextParsers
         }
 
         [PureMethod]
-        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this ParsedPairSequence<TKey, TValue> parsedPairs,
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this in ParsedPairSequence<TKey, TValue> parsedPairs,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
             ushort potentialLength = 8)
         {

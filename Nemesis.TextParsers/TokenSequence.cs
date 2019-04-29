@@ -6,7 +6,7 @@ namespace Nemesis.TextParsers
     /// <summary>
     /// Aids user in tokenization or arbitrary sequence. Returns tokens with potentially unescaped separator element
     /// </summary>
-    public ref struct TokenSequence<TElement> where TElement : IEquatable<TElement>
+    public readonly ref struct TokenSequence<TElement> where TElement : IEquatable<TElement>
     {
         public TokenSequence(ReadOnlySpan<TElement> sequence, TElement separator, TElement escapingElement, bool emptySequenceYieldsEmpty)
         {
