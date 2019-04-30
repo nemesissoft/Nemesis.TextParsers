@@ -61,7 +61,7 @@ namespace Nemesis.TextParsers
                 _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
 
         //check performance comparison in Benchmark project - ToEnumBench
-        internal TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
+        internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
         
         //TODO check Echo for EnumBehaviour and other nonstandard formatting/parsing
         public TEnum Parse(ReadOnlySpan<char> input)

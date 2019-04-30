@@ -532,7 +532,7 @@ namespace Benchmarks
 
         static ToEnumBench()
         {
-            Console.WriteLine(_enumTransformer.ToEnum(15));
+            //Console.WriteLine(_enumTransformer.ToEnum(15));
         }
 
         public static byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
@@ -649,28 +649,17 @@ namespace Benchmarks
             return current;
         }
 
-        private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _enumTransformer = 
-            new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
+        private static DaysOfWeek ToEnum(byte value) => EnumTransformer<DaysOfWeek, byte, ByteNumber>.ToEnum(value);
 
         [Benchmark]
         public DaysOfWeek SelectedSolution()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
-                current |= _enumTransformer.ToEnum(AllEnumValues[i]);
+                current |= ToEnum(AllEnumValues[i]);
             return current;
         }
-
-        [Benchmark]
-        public DaysOfWeek SelectedSolutionCache()
-        {
-            var trans = _enumTransformer;
-            DaysOfWeek current = default;
-            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
-                current |= trans.ToEnum(AllEnumValues[i]);
-            return current;
-        }
-
+        
         /*[MethodImpl(MethodImplOptions.ForwardRef)]
         public static extern TEnum ToEnumIl<TEnum, TUnderlying>(TUnderlying number)
             where TEnum : Enum
