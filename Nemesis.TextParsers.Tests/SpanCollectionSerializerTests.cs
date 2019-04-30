@@ -13,8 +13,6 @@ using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 
 namespace Nemesis.TextParsers.Tests
 {
-    //TODO negative tests for generic type definition
-    //TODO test strings in collection with leading and trailing white
     [TestFixture]
     public class SpanCollectionSerializerTests
     {
@@ -76,6 +74,7 @@ namespace Nemesis.TextParsers.Tests
             (@"\∅ |B", new[]{ "∅ ", "B"}),
             (@"A| ∅ |B", new[]{"A", " ∅ ", "B"}),
             (@"A| \∅ |B", new[]{"A", " ∅ ", "B"}),
+            (@" A | \∅ | B ", new[]{" A ", " ∅ ", " B "}),
 
 
 
@@ -156,9 +155,10 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        
+
         internal static IEnumerable<(Type, string, Type)> Bad_ListParseData() => new[]
         {
+            (typeof(IList<>), @"A|B|C", typeof(InvalidOperationException)),
             // ReSharper disable once StringLiteralTypo
             (typeof(bool), @"falsee", typeof(FormatException)),
             (typeof(bool), @"yes", typeof(FormatException)),
@@ -245,17 +245,22 @@ namespace Nemesis.TextParsers.Tests
             IEnumerable parsed = null;
             try
             {
-                parsed = (IEnumerable) parseMethod.Invoke(this, new object[] {data.input});
+                parsed = (IEnumerable)parseMethod.Invoke(this, new object[] { data.input });
                 passed = true;
             }
             catch (Exception e)
             {
-                if (e is TargetInvocationException tie && data.expectedException == tie.InnerException?.GetType())
+                if (e is TargetInvocationException tie)
+                    e = tie.InnerException;
+
+                if (data.expectedException == e.GetType())
                 {
-                    if (tie.InnerException is OverflowException oe)
+                    if (e is OverflowException oe)
                         Console.WriteLine("Expected overflow: " + oe.Message);
-                    else if (tie.InnerException is FormatException fe)
+                    else if (e is FormatException fe)
                         Console.WriteLine("Expected bad format: " + fe.Message);
+                    else if (e is InvalidOperationException ioe)
+                        Console.WriteLine("Expected invalid operation: " + ioe.Message);
                     else
                         Console.WriteLine("Expected: " + e.Message);
                 }
@@ -484,7 +489,7 @@ namespace Nemesis.TextParsers.Tests
                     ?? throw new MissingMethodException("Method Enumerable.Cast does not exist"))
                 .MakeGenericMethod(data.elementType);
 
-            var formatMethod = (typeof(SpanCollectionSerializerTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi => 
+            var formatMethod = (typeof(SpanCollectionSerializerTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
                     mi.Name == nameof(FormatCollection) && mi.IsGenericMethod)
                     ?? throw new MissingMethodException("Method FormatCollection does not exist"))
                 .MakeGenericMethod(data.elementType);

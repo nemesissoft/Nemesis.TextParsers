@@ -51,7 +51,7 @@ namespace Nemesis.TextParsers
         }
 
 
-        public object GetTransformer(Type type)
+        /*public object GetTransformer(Type type)
         {
             var getTransformerMethod = typeof(TextTransformer).GetMethods()
                 .SingleOrDefault(m => m.IsGenericMethod && m.Name == nameof(GetTransformer)) ??
@@ -59,16 +59,18 @@ namespace Nemesis.TextParsers
 
             getTransformerMethod = getTransformerMethod.MakeGenericMethod(type);
             return getTransformerMethod.Invoke(null, null);
-        }
+        }*/
 
         public ITransformer<TElement> GetTransformer<TElement>() =>
             (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), type =>
             {
+                if (type.IsGenericTypeDefinition)
+                    throw new NotSupportedException($"Parsing GenericTypeDefinition is not supported: {type.FullName}");
+
                 foreach (var canParseByDelegate in _canParseByDelegateContracts)
-                {
                     if (canParseByDelegate.CanHandle(type))
                         return canParseByDelegate.CreateTransformer<TElement>();
-                }
+
                 throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
             });
     }

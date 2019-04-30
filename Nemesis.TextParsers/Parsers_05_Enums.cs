@@ -63,7 +63,6 @@ namespace Nemesis.TextParsers
         //check performance comparison in Benchmark project - ToEnumBench
         internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
         
-        //TODO check Echo for EnumBehaviour and other nonstandard formatting/parsing
         public TEnum Parse(ReadOnlySpan<char> input)
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
