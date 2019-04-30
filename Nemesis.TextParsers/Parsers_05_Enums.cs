@@ -60,17 +60,9 @@ namespace Nemesis.TextParsers
         public EnumTransformer([NotNull]TNumberHandler numberHandler) =>
                 _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
 
-
-        private static readonly Func<TUnderlying, TEnum> _converter = EnumTransformerHelper.GetNumberConverter<TEnum, TUnderlying>();
         //check performance comparison in Benchmark project - ToEnumBench
-        internal TEnum ToEnum(TUnderlying value)
-        {
-            return _converter(value);
-        }
-
-        // byte value = AllEnumValues[i];
-        //current |= Unsafe.As<byte, DaysOfWeek>(ref value);
-
+        internal TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
+        
         //TODO check Echo for EnumBehaviour and other nonstandard formatting/parsing
         public TEnum Parse(ReadOnlySpan<char> input)
         {
