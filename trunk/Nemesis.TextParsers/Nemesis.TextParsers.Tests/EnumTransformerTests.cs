@@ -335,8 +335,7 @@ namespace Nemesis.TextParsers.Tests
             return input.Length > 0 && (char.IsDigit(firstChar = input[0]) || firstChar == '-' || firstChar == '+');
         }
 
-        // ReSharper disable once UnusedMember.Local
-        private static byte ParseDaysOfWeekByLabelStd(ReadOnlySpan<char> text)
+        /*private static byte ParseDaysOfWeekByLabelStd(ReadOnlySpan<char> text)
         {
             if (text.Length == 4 && char.ToUpper(text[0]) == 'N' && char.ToUpper(text[1]) == 'O' &&
                 char.ToUpper(text[2]) == 'N' && char.ToUpper(text[3]) == 'E'
@@ -404,7 +403,6 @@ namespace Nemesis.TextParsers.Tests
             //return 0;
         }
 
-        // ReSharper disable once UnusedMember.Local
         private static byte ParseDaysOfWeekByLabelSwitch(ReadOnlySpan<char> text)
         {
             switch (text.Length)
@@ -467,7 +465,7 @@ namespace Nemesis.TextParsers.Tests
             }
             throw new FormatException("Enum of type 'DaysOfWeek' cannot be parsed. Valid values are: None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All or number within Byte range.");
 
-        }
+        }*/
 
         private static byte ParseDaysOfWeekByLabelOr(ReadOnlySpan<char> input)
         {

@@ -6,7 +6,24 @@ using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
-    //todo create ICanCreateTransformer for simple types 
+    /*[UsedImplicitly]
+    public sealed class SimpleTransformerCreator : ICanCreateTransformer
+    {
+        public ITransformer<TNullable> CreateTransformer<TNullable>()
+        {
+            var underlyingType = Nullable.GetUnderlyingType(typeof(TNullable));
+
+            var transType = typeof(InnerNullableTransformer<>).MakeGenericType(underlyingType);
+
+            return (ITransformer<TNullable>)Activator.CreateInstance(transType);
+        }
+        
+        public bool CanHandle(Type type) => //type.IsValueType && Nullable.GetUnderlyingType(type) != null;
+
+        public sbyte Priority => 10;
+    }*/
+
+
     public abstract class SimpleTransformer<TElement> : ICanTransformType, ITransformer<TElement>
     {
         public bool CanHandle(Type type) => typeof(TElement) == type;
