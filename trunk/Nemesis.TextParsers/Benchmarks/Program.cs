@@ -1,6 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Nemesis.TextParsers;
@@ -34,7 +38,7 @@ namespace Benchmarks
             int result = 0;
             var parsed = _collSer.ParseCollection<int>(Numbers);
             foreach (int num in parsed)
-                result += (int)num;
+                result += num;
 
             return result;
         }
@@ -299,7 +303,7 @@ namespace Benchmarks
 
         public static string[] AllEnums =
             //Enumerable.Range(0, 130).Select(i => i.ToString()).ToArray();
-            Enumerable.Range(0, 130).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ","")).ToArray();
+            Enumerable.Range(0, 130).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
 
         private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _parser = new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
 
@@ -357,8 +361,8 @@ namespace Benchmarks
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
             input = input.Trim();
 
-            return IsNumeric(input)&& byte.TryParse(
-#if NET472
+            return IsNumeric(input) && byte.TryParse(
+#if NET48
                 input.ToString()
 #else
                 input
@@ -475,7 +479,7 @@ namespace Benchmarks
             return current;
         }
 
-        /*[Benchmark]
+        [Benchmark]
         public DaysOfWeek NativeEnumIgnoreCase()
         {
             DaysOfWeek current = default;
@@ -487,6 +491,7 @@ namespace Benchmarks
             return current;
         }
 
+#if !NET48
         [Benchmark]
         public DaysOfWeek NativeEnumObserveCase()
         {
@@ -497,20 +502,133 @@ namespace Benchmarks
                 current = Enum.Parse<DaysOfWeek>(text, false);
             }
             return current;
+        }
+#endif
+    }
+
+    [MemoryDiagnoser]
+    public class ToEnumBench
+    {
+        [Flags]
+        public enum DaysOfWeek : byte
+        {
+            None = 0,
+            Monday
+                = 0b0000_0001,
+            Tuesday
+                = 0b0000_0010,
+            Wednesday
+                = 0b0000_0100,
+            Thursday
+                = 0b0000_1000,
+            Friday
+                = 0b0001_0000,
+            Saturday
+                = 0b0010_0000,
+            Sunday
+                = 0b0100_0000,
+
+            Weekdays = Monday | Tuesday | Wednesday | Thursday | Friday,
+            Weekends = Saturday | Sunday,
+            All = Weekdays | Weekends
+        }
+
+        public static byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
+
+        internal static Func<byte, DaysOfWeek> GetNumberConverterExpression()
+        {
+            var input = Expression.Parameter(typeof(byte), "input");
+
+            var λ = Expression.Lambda<Func<byte, DaysOfWeek>>(
+                Expression.Convert(input, typeof(DaysOfWeek)),
+                input);
+            return λ.Compile();
+        }
+
+        internal static Func<byte, DaysOfWeek> GetNumberConverterDynamicMethod()
+        {
+            var method = new DynamicMethod("Convert", typeof(DaysOfWeek), new[] { typeof(byte) }, true);
+            var il = method.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ret);
+            return (Func<byte, DaysOfWeek>)method.CreateDelegate(typeof(Func<byte, DaysOfWeek>));
+        }
+
+        private static readonly Func<byte, DaysOfWeek> _expressionFunc = GetNumberConverterExpression();
+        private static readonly Func<byte, DaysOfWeek> _dynamicMethodFunc = GetNumberConverterDynamicMethod();
+
+
+        [Benchmark(Baseline = true)]
+        public DaysOfWeek NativeTest()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= (DaysOfWeek) AllEnumValues[i];
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek ExpressionTest()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= _expressionFunc(AllEnumValues[i]);
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek DynamicMethod()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+            {
+                current |= _dynamicMethodFunc(AllEnumValues[i]);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek UnsafeAsTest()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+            {
+                byte value = AllEnumValues[i];
+
+                current |= Unsafe.As<byte, DaysOfWeek>(ref value);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek UnsafeAsRefTest()
+        {
+            Span<DaysOfWeek> enums= MemoryMarshal.Cast<byte, DaysOfWeek>(AllEnumValues.AsSpan());
+
+            DaysOfWeek current = default;
+            for (int i = enums.Length - 1; i >= 0; i--)
+                current |= enums[i];
+            return current;
+        }
+
+        /*[MethodImpl(MethodImplOptions.ForwardRef)]
+        static extern DaysOfWeek ConvertExtern(byte value);
+
+        [Benchmark]
+        public DaysOfWeek ExternTest()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= ConvertExtern(AllEnumValues[i]);
+            return current;
         }*/
     }
 
+    //dotnet run -c Release --framework net472 -- --runtimes net472 netcoreapp2.2
     internal class Program
     {
         private static void Main(string[] args)
         {
-            /*new BenchmarkSwitcher(new[]
-            {
-                typeof(EnumParserBench),
-                typeof(ArrayParserBench),
-                typeof(CollectionParserBench),
-                typeof(AggressionBasedBench),
-            }).Run(new[] { "*" });*/
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
