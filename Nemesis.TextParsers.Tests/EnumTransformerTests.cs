@@ -74,6 +74,8 @@ namespace Nemesis.TextParsers.Tests
         private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
             (EnumTransformer<TEnum, TUnderlying, TNumberHandler>)new EnumTransformerCreator().CreateTransformer<TEnum>();
 
+        private static TEnum ToEnum(TUnderlying value) => EnumTransformer<TEnum, TUnderlying, TNumberHandler>.ToEnum(value);
+
 
         private static IReadOnlyList<TUnderlying> GetEnumValues()
         {
@@ -102,7 +104,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         private static IReadOnlyList<(TEnum Enum, string Text)> GetEnumToText() =>
-            GetEnumValues().Select(v => (_sut.ToEnum(v), _sut.ToEnum(v).ToString("G"))).ToList();
+            GetEnumValues().Select(v => (ToEnum(v), ToEnum(v).ToString("G"))).ToList();
 
         private static string ToTick(bool result) => result ? "✔" : "✖";
         private static string ToOperator(bool result) => result ? "==" : "!=";
@@ -140,7 +142,7 @@ namespace Nemesis.TextParsers.Tests
         public void EmptySource_ShouldReturnDefaultValue(string input)
         {
             var actual = _sut.Parse(input.AsSpan());
-            var defaultValue = _sut.ToEnum(_numberHandler.Zero);
+            var defaultValue = ToEnum(_numberHandler.Zero);
 
             Assert.That(actual, Is.EqualTo(defaultValue));
             Assert.That((TUnderlying)(object)actual, Is.EqualTo(_numberHandler.Zero));
@@ -180,7 +182,7 @@ namespace Nemesis.TextParsers.Tests
                 //var native1 = (TEnum)Enum.Parse(typeof(TEnum), text, true);
                 var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
                 bool pass = Equals(actual, native);
-                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number}");
+                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number} ({text})");
 
                 if (!pass)
                     allPassed = false;
@@ -213,7 +215,9 @@ namespace Nemesis.TextParsers.Tests
         {
             bool allPassed = true;
 
-            foreach (var (enumValue, text) in GetEnumToText())
+            IReadOnlyList<(TEnum Enum, string Text)> enumToText = GetEnumToText();
+            
+            foreach (var (enumValue, text) in enumToText)
             {
                 var actual = _sut.Parse(text.AsSpan());
                 var actualNative = (TEnum)Enum.Parse(typeof(TEnum), text, true);
@@ -295,7 +299,7 @@ namespace Nemesis.TextParsers.Tests
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
 
-            var enumStream = input.Split(',', false).GetEnumerator();
+            var enumStream = input.Split(',').GetEnumerator();
 
             if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {typeof(DaysOfWeek).Name} enum");
             byte currentValue = ParseDaysOfWeekElement(enumStream.Current);
@@ -331,6 +335,7 @@ namespace Nemesis.TextParsers.Tests
             return input.Length > 0 && (char.IsDigit(firstChar = input[0]) || firstChar == '-' || firstChar == '+');
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static byte ParseDaysOfWeekByLabelStd(ReadOnlySpan<char> text)
         {
             if (text.Length == 4 && char.ToUpper(text[0]) == 'N' && char.ToUpper(text[1]) == 'O' &&
@@ -399,6 +404,7 @@ namespace Nemesis.TextParsers.Tests
             //return 0;
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static byte ParseDaysOfWeekByLabelSwitch(ReadOnlySpan<char> text)
         {
             switch (text.Length)
@@ -550,8 +556,6 @@ namespace Nemesis.TextParsers.Tests
             else
                 throw new FormatException(
                     "Enum of type 'DaysOfWeek' cannot be parsed.Valid values are: None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All or number within Byte range.");
-
-            ;
         }
     }
 }
