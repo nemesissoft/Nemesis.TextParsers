@@ -4,7 +4,18 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.2;net48</TargetFrameworks>
     <LangVersion>latest</LangVersion>
+
+
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\Releases\Nemesis.snk</AssemblyOriginatorKeyFile>
+    
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="CodeGen\**" />
+    <EmbeddedResource Remove="CodeGen\**" />
+    <None Remove="CodeGen\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
@@ -18,6 +29,12 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
     <PackageReference Include="System.Memory" Version="4.5.2" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="EnumConverter">
+      <HintPath>CodeGen\EnumConverter.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

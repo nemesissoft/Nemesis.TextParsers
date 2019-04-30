@@ -143,6 +143,7 @@ namespace Nemesis.TextParsers.Tests
             var defaultValue = _sut.ToEnum(_numberHandler.Zero);
 
             Assert.That(actual, Is.EqualTo(defaultValue));
+            Assert.That((TUnderlying)(object)actual, Is.EqualTo(_numberHandler.Zero));
         }
 
 
@@ -316,7 +317,7 @@ namespace Nemesis.TextParsers.Tests
             input = input.Trim();
 
             return IsNumeric(input) && byte.TryParse(
-#if NET472
+#if NET472|| NET48
                 input.ToString()
 #else
                 input
