@@ -353,7 +353,7 @@ namespace Nemesis.TextParsers.Tests
                    (input[5] == 'n' || input[5] == 'N') &&
 
                    int.TryParse(
-#if NET472
+#if NET472 || NET48
                 input.Slice(6, 1).ToString()
 #else
                 input.Slice(6, 1)
@@ -364,7 +364,7 @@ namespace Nemesis.TextParsers.Tests
                 return new Option((OptionEnum)i2);
             else
                 return int.TryParse(
-#if NET472
+#if NET472|| NET48
                 input.ToString()
 #else
                 input

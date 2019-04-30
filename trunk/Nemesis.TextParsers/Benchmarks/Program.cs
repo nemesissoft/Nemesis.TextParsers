@@ -307,10 +307,7 @@ namespace Benchmarks
 
         private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _parser = new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
 
-        static EnumParserBench()
-        {
-            var tt = _parser.Parse("10".AsSpan());
-        }
+        static EnumParserBench() => _parser.Parse("10".AsSpan());
 
         [Benchmark(Baseline = true)]
         public DaysOfWeek EnumParser()
@@ -554,7 +551,7 @@ namespace Benchmarks
             return (Func<byte, DaysOfWeek>)method.CreateDelegate(typeof(Func<byte, DaysOfWeek>));
         }
 
-        private static readonly Func<byte, DaysOfWeek> _expressionFunc = GetNumberConverterExpression();
+        private static readonly Func<byte, DaysOfWeek> _expressionFunc =EnumTransformerHelper.GetNumberConverter<DaysOfWeek, byte>();
         private static readonly Func<byte, DaysOfWeek> _dynamicMethodFunc = GetNumberConverterDynamicMethod();
 
 
@@ -563,7 +560,22 @@ namespace Benchmarks
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
-                current |= (DaysOfWeek) AllEnumValues[i];
+                current |= (DaysOfWeek)AllEnumValues[i];
+            return current;
+        }
+
+        private static TEnum ToEnumCast<TEnum, TUnderlying>(TUnderlying number)
+            where TEnum : Enum
+            where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>,
+            IFormattable =>
+            (TEnum)(object)number;
+
+        [Benchmark]
+        public DaysOfWeek CastTest()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= ToEnumCast<DaysOfWeek, byte>(AllEnumValues[i]);
             return current;
         }
 
@@ -603,16 +615,39 @@ namespace Benchmarks
         [Benchmark]
         public DaysOfWeek UnsafeAsRefTest()
         {
-            Span<DaysOfWeek> enums= MemoryMarshal.Cast<byte, DaysOfWeek>(AllEnumValues.AsSpan());
+            Span<DaysOfWeek> enums = MemoryMarshal.Cast<byte, DaysOfWeek>(AllEnumValues.AsSpan());
 
             DaysOfWeek current = default;
             for (int i = enums.Length - 1; i >= 0; i--)
                 current |= enums[i];
             return current;
         }
+        
+        [Benchmark]
+        public DaysOfWeek IlGenericTest()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= EnumConverter.Convert.ToEnumIl<DaysOfWeek, byte>(AllEnumValues[i]);
+                    
+            return current;
+        }
+
+        [Benchmark]
+        public DayOfWeek IlDedicatedTest()
+        {
+            DayOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                current |= EnumConverter.Convert.ToEnumIlConcrete(AllEnumValues[i]);
+                    
+            return current;
+        }
 
         /*[MethodImpl(MethodImplOptions.ForwardRef)]
-        static extern DaysOfWeek ConvertExtern(byte value);
+        public static extern TEnum ToEnumIl<TEnum, TUnderlying>(TUnderlying number)
+            where TEnum : Enum
+            where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable;
 
         [Benchmark]
         public DaysOfWeek ExternTest()
@@ -627,9 +662,6 @@ namespace Benchmarks
     //dotnet run -c Release --framework net472 -- --runtimes net472 netcoreapp2.2
     internal class Program
     {
-        private static void Main(string[] args)
-        {
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
-        }
+        private static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
     }
 }

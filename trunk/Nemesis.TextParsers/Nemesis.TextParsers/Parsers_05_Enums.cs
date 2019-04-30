@@ -49,20 +49,27 @@ namespace Nemesis.TextParsers
     public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : ITransformer<TEnum>
         where TEnum : Enum
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
-        where TNumberHandler : class, INumber<TUnderlying> //making number handler a concrete specification can win additional up to 3% in speed
+        where TNumberHandler : class, INumber<TUnderlying> //PERF: making number handler a concrete specification can win additional up to 3% in speed
     {
         private readonly TNumberHandler _numberHandler;
 
         public bool IsFlagEnum { get; } = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
-
-        private static readonly Func<TUnderlying, TEnum> _converter = EnumTransformerHelper.GetNumberConverter<TEnum, TUnderlying>();
-
+        
         private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>();
 
         public EnumTransformer([NotNull]TNumberHandler numberHandler) =>
                 _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
 
-        internal TEnum ToEnum(TUnderlying value) => _converter(value);//FIX this can be weaved by Fody
+
+        private static readonly Func<TUnderlying, TEnum> _converter = EnumTransformerHelper.GetNumberConverter<TEnum, TUnderlying>();
+        //check performance comparison in Benchmark project - ToEnumBench
+        internal TEnum ToEnum(TUnderlying value)
+        {
+            return _converter(value);
+        }
+
+        // byte value = AllEnumValues[i];
+        //current |= Unsafe.As<byte, DaysOfWeek>(ref value);
 
         //TODO check Echo for EnumBehaviour and other nonstandard formatting/parsing
         public TEnum Parse(ReadOnlySpan<char> input)
@@ -118,7 +125,7 @@ namespace Nemesis.TextParsers
 
             // ReSharper disable once CommentTypo
             /* //DynamicMethod is not present in .net Standard 2.0
-            var method = new DynamicMethod("Conv", typeof(TEnum), new[] { typeof(TUnderlying) }, true);
+            var method = new DynamicMethod("Convert", typeof(TEnum), new[] { typeof(TUnderlying) }, true);
             var il = method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ret);

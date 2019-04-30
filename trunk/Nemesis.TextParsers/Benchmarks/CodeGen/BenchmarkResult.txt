@@ -1,0 +1,9 @@
+|          Method |        Mean |      Error |     StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
+|---------------- |------------:|-----------:|-----------:|------:|--------:|-------:|----------:|
+|      NativeTest |    81.02 ns |  1.0548 ns |  0.9351 ns |  1.00 |    0.00 |      - |         - |
+|  ExpressionTest |   265.71 ns |  3.5956 ns |  3.3633 ns |  3.28 |    0.05 |      - |         - |
+|   DynamicMethod |   387.20 ns |  7.2299 ns |  9.8964 ns |  4.77 |    0.15 |      - |         - |
+|    UnsafeAsTest |    83.28 ns |  0.9080 ns |  0.8049 ns |  1.03 |    0.02 |      - |         - |
+| UnsafeAsRefTest |    77.81 ns |  0.8887 ns |  0.7421 ns |  0.96 |    0.01 |      - |         - |
+|        CastTest | 2,325.22 ns | 31.7643 ns | 28.1582 ns | 28.70 |    0.48 | 0.7401 |    3120 B |
+|   IlGenericTest |    83.26 ns |  0.9036 ns |  0.8452 ns |  1.03 |    0.02 |      - |         - |
