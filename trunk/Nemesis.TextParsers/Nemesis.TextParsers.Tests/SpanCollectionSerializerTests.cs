@@ -166,7 +166,6 @@ namespace Nemesis.TextParsers.Tests
             (typeof(bool), @"0", typeof(FormatException)),
 
 #if !DEBUG
-            (typeof(byte), @"", typeof(FormatException)),
             (typeof(byte), @"abc", typeof(FormatException)),
             (typeof(byte), @"17|", typeof(FormatException)),
             (typeof(byte), @"17abc", typeof(FormatException)),
