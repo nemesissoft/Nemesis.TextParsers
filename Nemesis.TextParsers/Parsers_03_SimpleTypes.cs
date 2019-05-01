@@ -1,27 +1,53 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
-    /*[UsedImplicitly]
+    [UsedImplicitly]
     public sealed class SimpleTransformerCreator : ICanCreateTransformer
     {
-        public ITransformer<TNullable> CreateTransformer<TNullable>()
+        private readonly IReadOnlyDictionary<Type, object> _simpleTransformers;
+
+        public SimpleTransformerCreator() : this(GetDefaultTransformers()) { }
+
+        public SimpleTransformerCreator([NotNull] IReadOnlyDictionary<Type, object> simpleTransformers) =>
+            _simpleTransformers = simpleTransformers ?? throw new ArgumentNullException(nameof(simpleTransformers));
+
+        private static IReadOnlyDictionary<Type, object> GetDefaultTransformers()
         {
-            var underlyingType = Nullable.GetUnderlyingType(typeof(TNullable));
+            var types = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
-            var transType = typeof(InnerNullableTransformer<>).MakeGenericType(underlyingType);
+            var simpleTransformers = new Dictionary<Type, object>(30);
 
-            return (ITransformer<TNullable>)Activator.CreateInstance(transType);
+            foreach (var type in types)
+                if (typeof(ICanTransformType).IsAssignableFrom(type) &&
+                    type.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
+                {
+                    var instance = (ICanTransformType)Activator.CreateInstance(type);
+                    simpleTransformers[instance.Type] = instance;
+                }
+
+            return simpleTransformers;
         }
-        
-        public bool CanHandle(Type type) => //type.IsValueType && Nullable.GetUnderlyingType(type) != null;
+
+        public ITransformer<TSimpleType> CreateTransformer<TSimpleType>() =>
+            _simpleTransformers.TryGetValue(typeof(TSimpleType), out var transformer)
+                ? (ITransformer<TSimpleType>)transformer
+                : throw new InvalidOperationException(
+                    $"Internal state of {nameof(SimpleTransformerCreator)} was compromised");
+
+        public bool CanHandle(Type type) => _simpleTransformers.ContainsKey(type);
 
         public sbyte Priority => 10;
-    }*/
+    }
 
 
     public abstract class SimpleTransformer<TElement> : ICanTransformType, ITransformer<TElement>

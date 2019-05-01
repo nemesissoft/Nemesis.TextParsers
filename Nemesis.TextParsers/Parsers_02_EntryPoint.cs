@@ -3,64 +3,46 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Nemesis.Essentials.Runtime;
+using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
-    public class TextTransformer
+    public interface ITextTransformer
     {
-        private readonly ConcurrentDictionary<Type, object> _transformerCache;
-        private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;
+        ITransformer<TElement> GetTransformer<TElement>();
+    }
 
-        private TextTransformer(ConcurrentDictionary<Type, object> transformerCache, IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts)
+    public sealed class TextTransformer : ITextTransformer
+    {
+        private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;
+        private readonly ConcurrentDictionary<Type, object> _transformerCache;
+
+        private TextTransformer([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, object> transformerCache=null)
         {
-            _transformerCache = transformerCache;
-            _canParseByDelegateContracts = canParseByDelegateContracts;
+            _canParseByDelegateContracts = canParseByDelegateContracts ?? throw new ArgumentNullException(nameof(canParseByDelegateContracts));
+            _transformerCache = transformerCache?? new ConcurrentDictionary<Type, object>();
         }
 
-        public static TextTransformer Default { get; } = GetDefaultTextTransformer();
+        public static ITextTransformer Default { get; } = GetDefaultTextTransformer();
 
-        private static TextTransformer GetDefaultTextTransformer()
+        private static ITextTransformer GetDefaultTextTransformer()
         {
-            var transformerCache = new ConcurrentDictionary<Type, object>();
-
             var types = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
-            var byDelegateList = new List<ICanCreateTransformer>(8);
+            var byDelegateList = new List<ICanCreateTransformer>(16);
 
             foreach (var type in types)
-            {
-                if (typeof(ICanTransformType).IsAssignableFrom(type) &&
-                    type.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
-                {
-                    var instance = (ICanTransformType)Activator.CreateInstance(type);
-                    transformerCache.TryAdd(instance.Type, instance);
-                }
-                else if (typeof(ICanCreateTransformer).IsAssignableFrom(type))
-                {
-                    byDelegateList.Add((ICanCreateTransformer)Activator.CreateInstance(type));
-                }
-            }
+                if (typeof(ICanCreateTransformer).IsAssignableFrom(type))
+                    byDelegateList.Add((ICanCreateTransformer) Activator.CreateInstance(type));
 
             byDelegateList.Sort((i1, i2) => i1.Priority.CompareTo(i2.Priority));
 
             var canParseByDelegateContracts = byDelegateList;
 
-            return new TextTransformer(transformerCache, canParseByDelegateContracts);
+            return new TextTransformer(canParseByDelegateContracts);
         }
-
-
-        /*public object GetTransformer(Type type)
-        {
-            var getTransformerMethod = typeof(TextTransformer).GetMethods()
-                .SingleOrDefault(m => m.IsGenericMethod && m.Name == nameof(GetTransformer)) ??
-                    throw new MissingMethodException(nameof(TextTransformer), nameof(GetTransformer));
-
-            getTransformerMethod = getTransformerMethod.MakeGenericMethod(type);
-            return getTransformerMethod.Invoke(null, null);
-        }*/
-
+        
         public ITransformer<TElement> GetTransformer<TElement>() =>
             (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), type =>
             {
@@ -73,5 +55,15 @@ namespace Nemesis.TextParsers
 
                 throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
             });
+
+        /*public object GetTransformer(Type type)
+        {
+            var getTransformerMethod = typeof(TextTransformer).GetMethods()
+                .SingleOrDefault(m => m.IsGenericMethod && m.Name == nameof(GetTransformer)) ??
+                    throw new MissingMethodException(nameof(TextTransformer), nameof(GetTransformer));
+
+            getTransformerMethod = getTransformerMethod.MakeGenericMethod(type);
+            return getTransformerMethod.Invoke(null, null);
+        }*/
     }
 }
