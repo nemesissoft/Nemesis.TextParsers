@@ -67,7 +67,6 @@ namespace Nemesis.TextParsers
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
 
-            //TODO "" || null => default(Enum) ? + additional questions from mail
             var enumStream = input.Split(',').GetEnumerator();
 
             if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {typeof(TEnum).Name} enum");

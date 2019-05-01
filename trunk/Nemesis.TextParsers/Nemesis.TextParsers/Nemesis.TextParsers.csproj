@@ -5,32 +5,30 @@
     <LangVersion>latest</LangVersion>
 
     <Authors>Michał Bryłka</Authors>
-    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <PackageTags>parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
+    <Copyright>Copyright (c) Michał Bryłka. Icon by Custom Icon Design (http://www.iconarchive.com/artist/custom-icon-design.html)</Copyright>
+    <Description>Contains various parser optimized for speed and no allocation</Description>
+
+
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageIconUrl>http://icons.iconarchive.com/icons/custom-icon-design/flatastic-1/512/search-icon.png</PackageIconUrl>
-    <Description>Contains various parser optimized for speed and no allocation</Description>
-
+    
+    
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\Releases\Nemesis.snk</AssemblyOriginatorKeyFile>
 
-    <Version>1.0.5</Version> 
+    <Version>0.9.5</Version> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-  
-  
-  
-  <ItemGroup>
-    <None Include="License.txt" Pack="true" PackagePath="License.txt" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
-    <PackageReference Include="Nemesis.Essentials" Version="1.0.5" />
+  <ItemGroup>    
+    <PackageReference Include="Nemesis.Essentials" Version="1.0.10" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
 

@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
-    //TODO eTypes converter 
     [UsedImplicitly]
     public sealed class AnyTransformerCreator : ICanCreateTransformer
     {
