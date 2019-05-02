@@ -69,6 +69,7 @@ namespace Nemesis.TextParsers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private KeyValuePair<TKey, TValue> ParsePair(in ReadOnlySpan<char> input)
             {
+                var delimiter = _dictionaryKeyValueDelimiter;
                 var unescapedKvp = input.UnescapeCharacter(_escapingSequenceStart, _dictionaryPairsDelimiter);
 
                 var kvpTokens = unescapedKvp.Tokenize(_dictionaryKeyValueDelimiter, _escapingSequenceStart, true);
@@ -76,10 +77,10 @@ namespace Nemesis.TextParsers
                 var enumerator = kvpTokens.GetEnumerator();
 
                 if (!enumerator.MoveNext()) throw GetArgumentException();
-                var key = ParseKey(enumerator.Current);
+                var key = ParseElement(enumerator.Current, _keyParser, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
                 if (!enumerator.MoveNext()) throw GetArgumentException();
-                var value = ParseValue(enumerator.Current);
+                var value = ParseElement(enumerator.Current, _valueParser, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
                 if (enumerator.MoveNext()) throw GetArgumentException();
 
@@ -87,38 +88,26 @@ namespace Nemesis.TextParsers
 
                 return new KeyValuePair<TKey, TValue>(key, value);
 
-                Exception GetArgumentException() => new ArgumentException(@"Key to value pair expects token collection to be of length 2 with first part not being null");
+                Exception GetArgumentException() => new ArgumentException($@"Key to value pair expects '{delimiter}' delimited collection to be of length 2 with first part not being null");
             }
 
-            private TKey ParseKey(in ReadOnlySpan<char> input)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static TElement ParseElement<TElement>(in ReadOnlySpan<char> input, ISpanParser<TElement> parser,
+                char escapingSequenceStart, char dictionaryKeyValueDelimiter, char nullElementMarker)
             {
-                var unescapedInput = input.UnescapeCharacter(_escapingSequenceStart, _dictionaryKeyValueDelimiter);
+                var unescapedInput = input.UnescapeCharacter(escapingSequenceStart, dictionaryKeyValueDelimiter);
 
-                if (unescapedInput.Length == 1 && unescapedInput[0].Equals(_nullElementMarker))
+                if (unescapedInput.Length == 1 && unescapedInput[0].Equals(nullElementMarker))
                     return default;
                 else
                 {
-                    unescapedInput = unescapedInput.UnescapeCharacter(_escapingSequenceStart, _nullElementMarker);
-                    unescapedInput = unescapedInput.UnescapeCharacter(_escapingSequenceStart, _escapingSequenceStart);
-                    return _keyParser.Parse(unescapedInput);
-                }
-            }
-
-            private TValue ParseValue(in ReadOnlySpan<char> input)
-            {
-                var unescapedInput = input.UnescapeCharacter(_escapingSequenceStart, _dictionaryKeyValueDelimiter);
-
-                if (unescapedInput.Length == 1 && unescapedInput[0].Equals(_nullElementMarker))
-                    return default;
-                else
-                {
-                    unescapedInput = unescapedInput.UnescapeCharacter(_escapingSequenceStart, _nullElementMarker);
-                    unescapedInput = unescapedInput.UnescapeCharacter(_escapingSequenceStart, _escapingSequenceStart);
-                    return _valueParser.Parse(unescapedInput);
+                    unescapedInput = unescapedInput.UnescapeCharacter(escapingSequenceStart, nullElementMarker);
+                    unescapedInput = unescapedInput.UnescapeCharacter(escapingSequenceStart, escapingSequenceStart);
+                    return parser.Parse(unescapedInput);
                 }
             }
 
             public KeyValuePair<TKey, TValue> Current { get; private set; }
         }
-    }   
+    }
 }

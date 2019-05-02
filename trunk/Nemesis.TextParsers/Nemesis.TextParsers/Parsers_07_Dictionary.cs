@@ -26,14 +26,19 @@ namespace Nemesis.TextParsers
             return (ITransformer<TDictionary>)Activator.CreateInstance(transType, kind);
         }
 
-        private static DictionaryKind GetDictionaryKind(Type dictType) =>
-            dictType.DerivesOrImplementsGeneric(typeof(SortedDictionary<,>))
-                ? DictionaryKind.SortedDictionary
-                : (dictType.DerivesOrImplementsGeneric(typeof(ReadOnlyDictionary<,>)) 
-                   || 
-                   dictType.IsGenericType && dictType.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))
-                    ? DictionaryKind.ReadOnlyDictionary
-                    : DictionaryKind.Dictionary;
+        private static DictionaryKind GetDictionaryKind(Type dictType)
+        {
+            if (dictType.DerivesOrImplementsGeneric(typeof(SortedDictionary<,>)))
+                return DictionaryKind.SortedDictionary;
+            else if (dictType.DerivesOrImplementsGeneric(typeof(SortedList<,>)))
+                return DictionaryKind.SortedList;
+            else if (dictType.DerivesOrImplementsGeneric(typeof(ReadOnlyDictionary<,>))
+                     ||
+                     dictType.IsGenericType && dictType.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))
+                return DictionaryKind.ReadOnlyDictionary;
+            else
+                return DictionaryKind.Dictionary;
+        }
 
         private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>
             where TDict : IDictionary<TKey, TValue>
@@ -53,7 +58,11 @@ namespace Nemesis.TextParsers
             public override string ToString() => $"Transform IDictionary<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>, {_kind}";
         }
 
-        public bool CanHandle(Type type) => type.DerivesOrImplementsGeneric(typeof(IDictionary<,>));
+        public bool CanHandle(Type type) =>
+            type.DerivesOrImplementsGeneric(typeof(IDictionary<,>))
+                ||
+            type.DerivesOrImplementsGeneric(typeof(IReadOnlyDictionary<,>))
+        ;
 
         public sbyte Priority => 50;
     }

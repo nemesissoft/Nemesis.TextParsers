@@ -281,14 +281,19 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class SingleParser : SimpleFormattableTransformer<float>
     {
-        public override float Parse(ReadOnlySpan<char> input) =>
-            float.Parse(
+        public override float Parse(ReadOnlySpan<char> input)
+        {
+            if (input.Length == 1 && input[0] == '∞') return float.PositiveInfinity;
+            else if (input.Length == 2 && input[0] == '-' && input[1] == '∞') return float.NegativeInfinity;
+            else
+                return float.Parse(
 #if NETSTANDARD2_0
                 input.ToString()
 #else
                 input
 #endif
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
+        }
 
         protected override string FormatString { get; } = "G9";
     }
@@ -296,14 +301,19 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class DoubleParser : SimpleFormattableTransformer<double>
     {
-        public override double Parse(ReadOnlySpan<char> input) =>
-            double.Parse(
+        public override double Parse(ReadOnlySpan<char> input)
+        {
+            if (input.Length == 1 && input[0] == '∞') return double.PositiveInfinity;
+            else if (input.Length == 2 && input[0] == '-' && input[1] == '∞') return double.NegativeInfinity;
+            else
+                return double.Parse(
 #if NETSTANDARD2_0
                 input.ToString()
 #else
                 input
 #endif
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
+        }
 
         protected override string FormatString { get; } = "G17";
     }
