@@ -103,7 +103,7 @@ namespace Nemesis.TextParsers
             accumulator.Dispose();
             return text;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
         {

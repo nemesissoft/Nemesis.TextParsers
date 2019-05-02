@@ -17,8 +17,7 @@ namespace Nemesis.TextParsers
 
         [PureMethod]
         public static ParsedSequence<TTo> Parse<TTo>(this in TokenSequence<char> tokenSource, char escapingElement,
-            char nullElement,
-            char allowedEscapeCharacter1 = default) =>
+            char nullElement, char allowedEscapeCharacter1 = default) =>
             new ParsedSequence<TTo>(tokenSource, escapingElement, nullElement, allowedEscapeCharacter1);
 
         //TODO ToArray - 2 versions from managed and unmanaged. ToArrayUnmanaged - copy to buffer bool TryCopyTo(buffer, out int count
@@ -72,6 +71,7 @@ namespace Nemesis.TextParsers
         }
 
         //TODO test concrete implementation as (sorted)set, read only collection, linked list etc
+        //TODO add ToConcreteCollection method 
         [PureMethod]
         public static ICollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
             CollectionKind kind = CollectionKind.List, ushort potentialLength = 8)
@@ -113,6 +113,15 @@ namespace Nemesis.TextParsers
 
                 return result;
             }
+            /*else if (kind == CollectionKind.Stack)
+            {
+                var result = new Stack<TTo>();
+
+                foreach (TTo part in parsedSequence)
+                    result.Push(part);
+
+                return result;
+            }*/
             else
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
@@ -148,6 +157,8 @@ namespace Nemesis.TextParsers
                 //TODO test empty SortedDictionary+ReadOnlyDictionary and empty collection i.e. hash set
                 case DictionaryKind.SortedDictionary:
                     return new SortedDictionary<TKey, TValue>(result);
+                case DictionaryKind.SortedList:
+                    return new SortedList<TKey, TValue>(result); //TODO - construct that not from dictionary 
                 case DictionaryKind.ReadOnlyDictionary:
                     return new ReadOnlyDictionary<TKey, TValue>(result);
                 default:
@@ -158,8 +169,7 @@ namespace Nemesis.TextParsers
 
         //TODO add UnescapeCharacter with 2 characters + optimize appending to accumulator 
         [PureMethod]
-        public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart,
-            char character)
+        public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
         {
             int idx = input.IndexOfAny(escapingSequenceStart, character);
             if (idx < 0) return input;
@@ -207,12 +217,15 @@ namespace Nemesis.TextParsers
         HashSet,
         SortedSet,
         LinkedList,
+        Stack, //TODO add support + Coll_Parser
+        Queue
     }
 
     public enum DictionaryKind : byte
     {
         Dictionary,
         SortedDictionary,
+        SortedList, 
         ReadOnlyDictionary
     }
 

@@ -476,6 +476,23 @@ namespace Nemesis.TextParsers.Tests
                     }
                 ).ToList(),
                 @"A=10.5\|11.5#12.5#13.5;B=100.5\|101.5#102.5#103.5|D=20.5\|21.5#22.5#23.5;E=200.5\|201.5#202.5#203.5|G=30.5\|31.5#32.5#33.5;H=300.5\|301.5#302.5#303.5"),
+
+            (typeof(KeyValuePair<string, float?>),
+                new[]
+                {
+                    new KeyValuePair<string, float?>("PI", 3.14f),
+                    new KeyValuePair<string, float?>("PI", null),
+                    new KeyValuePair<string, float?>("", 3.14f),
+                    new KeyValuePair<string, float?>(null, 3.14f),
+
+                    new KeyValuePair<string, float?>(null, null),
+                    new KeyValuePair<string, float?>(null, null),
+                    default,
+                    default,
+                    new KeyValuePair<string, float?>("", null),
+                    new KeyValuePair<string, float?>("", 0),
+                }.ToList(),
+                @"PI,3.14|PI,∅|,3.14|∅,3.14||∅,∅||∅,∅|,∅|,0"),
         };
 
         static TimeSpan Divide(TimeSpan dividend, long divisor) => TimeSpan.FromTicks((long)(dividend.Ticks / (double)divisor));
@@ -526,7 +543,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         private ICollection<TElement> ParseCollection<TElement>(string text) => _sut.ParseCollection<TElement>(text);
-        private string FormatCollection<TElement>(ICollection<TElement> coll) => _sut.FormatCollection(coll);
+        private string FormatCollection<TElement>(IEnumerable<TElement> coll) => _sut.FormatCollection(coll);
 
         [Test]
         public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long

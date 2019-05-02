@@ -1,59 +1,156 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
-    /* TODO ?
-     public static class Linq
+    public static class Linq
     {
-
-
-
-
-        public readonly ref struct WhereSequence<T>
+        public static (bool success, double result) Sum(this ParsedSequence<double> values)
         {
-            private readonly ParsedSequence<T> _sequence;
-            private readonly Func<T, bool> _predicate;
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext()) return (false, 0);
 
-            public WhereSequence(ParsedSequence<T> sequence, [NotNull] Func<T, bool> predicate)
-            {
-                _sequence = sequence;
-                _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
-            }
+            double sum = 0;
 
-            public WhereIterator GetEnumerator() => new WhereIterator(_sequence, _predicate);
+            do
+                sum += enumerator.Current;
+            while (enumerator.MoveNext());
 
-            public ref struct WhereIterator
-            {
-                private ParsedSequence<T>.ParsedSequenceEnumerator _sequenceEnumerator;
-                private readonly Func<T, bool> _predicate;
-                public T Current { get; private set; }
 
-                public WhereIterator(ParsedSequence<T> sequence, Func<T, bool> predicate)
-                {
-                    _sequenceEnumerator = sequence.GetEnumerator();
-                    _predicate = predicate;
-                    Current = default;
-                }
-
-                public bool MoveNext()
-                {
-                    while (_sequenceEnumerator.MoveNext())
-                    {
-                        T current = _sequenceEnumerator.Current;
-                        if (_predicate(current))
-                        {
-                            Current = current;
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }
+            return (true, sum);
         }
-    }*/
+
+        public static (bool success, double result) Average(this ParsedSequence<double> values)
+        {
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext()) return (false, 0);
+
+            double avg = enumerator.Current;
+            int count = 1;
+
+            while (enumerator.MoveNext())
+                avg += (enumerator.Current - avg) / ++count;
+            return (true, avg);
+        }
+
+        public static (bool success, double result) Variance(this ParsedSequence<double> values)
+        {
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext()) return (false, 0);
+
+            double mean = 0;
+            // ReSharper disable once InconsistentNaming
+            double Σ = 0;
+            uint i = 0;
+
+            double current;
+            do
+            {
+                current = enumerator.Current;
+                i++;
+
+                var δ = current - mean;
+
+                mean = mean + δ / i;
+                Σ += δ * (current - mean);
+            } while (enumerator.MoveNext());
+
+            return (true,
+                i == 1 ?
+                    current :
+                    Σ / (i - 1)
+                );
+        }
+        
+        public static (bool success, double result) StdDev(this ParsedSequence<double> values)
+        {
+            var (success, result) = Variance(values);
+
+            return (success, success ? Math.Sqrt(result) : 0);
+        }
+
+
+        public static (bool success, double result) Max(this ParsedSequence<double> values)
+        {
+            var e = values.GetEnumerator();
+            if (!e.MoveNext()) return (false, 0);
+
+            double max = e.Current;
+
+            while (double.IsNaN(max))
+            {
+                if (!e.MoveNext())
+                    return (true, max);
+                max = e.Current;
+            }
+
+            while (e.MoveNext())
+            {
+                double current = e.Current;
+                if (max < current)
+                    max = current;
+            }
+
+            return (true, max);
+        }
+
+        public static (bool success, double result) Min(this ParsedSequence<double> values)
+        {
+            var e = values.GetEnumerator();
+            if (!e.MoveNext()) return (false, 0);
+
+            double min = e.Current;
+            while (e.MoveNext())
+            {
+                double current = e.Current;
+                if (min > current)
+                    min = current;
+                else if (double.IsNaN(current))
+                    return (true, current);
+            }
+
+            return (true, min);
+        }
+
+        public static (bool success, TSource result)  Aggregate<TSource>(this ParsedSequence<TSource> source, [NotNull] Func<TSource, TSource, TSource> func)
+        {
+            if (func == null) throw new ArgumentNullException(nameof(func));
+
+            var e = source.GetEnumerator();
+
+            if (!e.MoveNext())
+                return (false, default);
+
+            TSource result = e.Current;
+            while (e.MoveNext())
+                result = func(result, e.Current);
+
+            return (true, result);
+        }
+
+        public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsedSequence<TSource> source, TAccumulate seed, [NotNull] Func<TAccumulate, TSource, TAccumulate> func)
+        {
+            if (func == null) throw new ArgumentNullException(nameof(func));
+
+            TAccumulate result = seed;
+            foreach (TSource element in source)
+                result = func(result, element);
+
+            return result;
+        }
+
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ParsedSequence<TSource> source, TAccumulate seed,
+            [NotNull] Func<TAccumulate, TSource, TAccumulate> func, [NotNull] Func<TAccumulate, TResult> resultSelector)
+        {
+            if (func == null) throw new ArgumentNullException(nameof(func));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+
+            TAccumulate result = seed;
+            foreach (TSource element in source)
+                result = func(result, element);
+
+            return resultSelector(result);
+        }
+    }
 }
+
