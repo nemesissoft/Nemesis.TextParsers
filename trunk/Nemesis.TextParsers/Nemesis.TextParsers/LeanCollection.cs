@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
+    //TODO measure perf
     /// <summary>
     /// Stores up to 3 elements or an array
     /// </summary>
-    public readonly ref struct LeanCollection<T>
+    public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>
     {
-        enum CollectionSize : byte { More = 0, One, Two, Three }
+        enum CollectionSize : sbyte { More = -1, [UsedImplicitly] Zero = 0, One = 1, Two = 2, Three = 3 }
 
         private readonly CollectionSize _size;
         public int Size => _size == CollectionSize.More ? _items.Length : (int)_size;
@@ -16,7 +18,8 @@ namespace Nemesis.TextParsers
         private readonly T _item1;
         private readonly T _item2;
         private readonly T _item3;
-        private readonly ReadOnlySpan<T> _items;
+        private readonly T[] _items;
+
 
         public LeanCollection(T item1)
         {
@@ -48,14 +51,45 @@ namespace Nemesis.TextParsers
             _size = CollectionSize.Three;
         }
 
-        public LeanCollection(ReadOnlySpan<T> items)
+        public LeanCollection(T[] items)
         {
             _item1 = default;
             _item2 = default;
             _item3 = default;
+            _items = default;
 
-            _items = items;
-            _size = CollectionSize.More;
+
+            int? length = items?.Length;
+            switch (length)
+            {
+                case null:
+                case 0:
+                    _size = CollectionSize.Zero;
+                    break;
+
+                case 1:
+                    _size = CollectionSize.One;
+                    _item1 = items[0];
+                    break;
+
+                case 2:
+                    _size = CollectionSize.Two;
+                    _item1 = items[0];
+                    _item2 = items[1];
+                    break;
+
+                case 3:
+                    _size = CollectionSize.Three;
+                    _item1 = items[0];
+                    _item2 = items[1];
+                    _item3 = items[2];
+                    break;
+
+                default:
+                    _size = CollectionSize.More;
+                    _items = items;
+                    break;
+            }
         }
 
         public LeanCollectionEnumerator GetEnumerator() => new LeanCollectionEnumerator(this);
@@ -129,7 +163,46 @@ namespace Nemesis.TextParsers
         public static implicit operator LeanCollection<T>(T one) => new LeanCollection<T>(one);
         public static implicit operator LeanCollection<T>((T, T) pair) => new LeanCollection<T>(pair.Item1, pair.Item2);
         public static implicit operator LeanCollection<T>((T, T, T) triple) => new LeanCollection<T>(triple.Item1, triple.Item2, triple.Item3);
-        
-        public static implicit operator LeanCollection<T>(ReadOnlySpan<T> span) => new LeanCollection<T>(span);
+
+        public static implicit operator LeanCollection<T>(T[] span) => new LeanCollection<T>(span);
+
+
+        public static implicit operator T(LeanCollection<T> one) => one._item1;
+        public static implicit operator (T, T) (LeanCollection<T> pair) => (pair._item1, pair._item2);
+        public static implicit operator (T, T, T) (LeanCollection<T> triple) => (triple._item1, triple._item2, triple._item3);
+
+        public static implicit operator T[] (LeanCollection<T> more) => more._items;
+
+
+
+        public bool Equals(LeanCollection<T> other)
+        {
+            if (_size != other._size) return false;
+            var equalityComparer = EqualityComparer<T>.Default;
+
+            var enumerator = GetEnumerator();
+            var enumerator2 = other.GetEnumerator();
+            {
+                while (enumerator.MoveNext())
+                    if (!enumerator2.MoveNext() || !equalityComparer.Equals(enumerator.Current, enumerator2.Current))
+                        return false;
+
+                if (enumerator2.MoveNext())
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj) => !(obj is null) && obj is LeanCollection<T> other && Equals(other);
+
+        public override int GetHashCode() => unchecked((int) _size * 397); //size is enough for GetHashCode. After all LeanCollection is not supposed to be used as dictionary key 
+
+        public static bool operator ==(LeanCollection<T> left, LeanCollection<T> right) => left.Equals(right);
+
+        public static bool operator !=(LeanCollection<T> left, LeanCollection<T> right) => !left.Equals(right);
+
+
+        public override string ToString() => SpanCollectionSerializer.DefaultInstance.FormatCollection(this);
     }
 }

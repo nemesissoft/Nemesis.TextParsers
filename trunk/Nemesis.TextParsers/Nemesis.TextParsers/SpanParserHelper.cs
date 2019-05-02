@@ -70,10 +70,9 @@ namespace Nemesis.TextParsers
             }
         }
 
-        //TODO test concrete implementation as (sorted)set, read only collection, linked list etc
-        //TODO add ToConcreteCollection method 
+
         [PureMethod]
-        public static ICollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
+        public static IReadOnlyCollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
             CollectionKind kind = CollectionKind.List, ushort potentialLength = 8)
         {
             if (kind == CollectionKind.List || kind == CollectionKind.ReadOnlyCollection)
@@ -84,7 +83,7 @@ namespace Nemesis.TextParsers
                     result.Add(part);
 
                 return kind == CollectionKind.List ?
-                    (ICollection<TTo>)result :
+                    (IReadOnlyCollection<TTo>)result :
                     result.AsReadOnly();
             }
             else if (kind == CollectionKind.HashSet || kind == CollectionKind.SortedSet)
@@ -96,13 +95,13 @@ namespace Nemesis.TextParsers
 #else
                 potentialLength
 #endif
-                        ) 
+                        )
                     : new SortedSet<TTo>();
 
                 foreach (TTo part in parsedSequence)
                     result.Add(part);
 
-                return result;
+                return (IReadOnlyCollection<TTo>)result;
             }
             else if (kind == CollectionKind.LinkedList)
             {
@@ -113,7 +112,7 @@ namespace Nemesis.TextParsers
 
                 return result;
             }
-            /*else if (kind == CollectionKind.Stack)
+            else if (kind == CollectionKind.Stack)
             {
                 var result = new Stack<TTo>();
 
@@ -121,7 +120,16 @@ namespace Nemesis.TextParsers
                     result.Push(part);
 
                 return result;
-            }*/
+            }
+            else if (kind == CollectionKind.Queue)
+            {
+                var result = new Queue<TTo>();
+
+                foreach (TTo part in parsedSequence)
+                    result.Enqueue(part);
+
+                return result;
+            }
             else
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
@@ -131,7 +139,13 @@ namespace Nemesis.TextParsers
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
             ushort potentialLength = 8)
         {
-            var result = new Dictionary<TKey, TValue>(potentialLength);
+            IDictionary<TKey, TValue> result =
+                kind == DictionaryKind.SortedDictionary ? new SortedDictionary<TKey, TValue>() :
+                 (
+                     kind == DictionaryKind.SortedList
+                     ? new SortedList<TKey, TValue>(potentialLength)
+                     : (IDictionary<TKey, TValue>)new Dictionary<TKey, TValue>(potentialLength)
+                 );
 
             foreach (var pair in parsedPairs)
             {
@@ -154,11 +168,6 @@ namespace Nemesis.TextParsers
 
             switch (kind)
             {
-                //TODO test empty SortedDictionary+ReadOnlyDictionary and empty collection i.e. hash set
-                case DictionaryKind.SortedDictionary:
-                    return new SortedDictionary<TKey, TValue>(result);
-                case DictionaryKind.SortedList:
-                    return new SortedList<TKey, TValue>(result); //TODO - construct that not from dictionary 
                 case DictionaryKind.ReadOnlyDictionary:
                     return new ReadOnlyDictionary<TKey, TValue>(result);
                 default:
@@ -166,6 +175,45 @@ namespace Nemesis.TextParsers
             }
         }
 
+
+        [PureMethod]
+        public static LeanCollection<T> ToLeanCollection<T>(this in ParsedSequence<T> parsedSequence)
+        {
+            var enumerator = parsedSequence.GetEnumerator();
+
+            if (!enumerator.MoveNext()) return new LeanCollection<T>();
+            var first = enumerator.Current;
+
+            if (!enumerator.MoveNext()) return new LeanCollection<T>(first);
+            var second = enumerator.Current;
+
+            if (!enumerator.MoveNext()) return new LeanCollection<T>(first, second);
+            var third = enumerator.Current;
+
+            if (!enumerator.MoveNext()) return new LeanCollection<T>(first, second, third);
+
+
+            var initialBuffer = ArrayPool<T>.Shared.Rent(8);
+            try
+            {
+                var accumulator = new ValueSequenceBuilder<T>(initialBuffer);
+                accumulator.Append(first);
+                accumulator.Append(second);
+                accumulator.Append(third);
+                accumulator.Append(enumerator.Current); //fourth
+
+                if (enumerator.MoveNext())
+                    accumulator.Append(enumerator.Current);
+
+                var array = accumulator.AsSpan().ToArray();
+                accumulator.Dispose();
+                return new LeanCollection<T>(array);
+            }
+            finally
+            {
+                ArrayPool<T>.Shared.Return(initialBuffer);
+            }
+        }
 
         //TODO add UnescapeCharacter with 2 characters + optimize appending to accumulator 
         [PureMethod]
@@ -217,7 +265,7 @@ namespace Nemesis.TextParsers
         HashSet,
         SortedSet,
         LinkedList,
-        Stack, //TODO add support + Coll_Parser
+        Stack,
         Queue
     }
 
@@ -225,7 +273,7 @@ namespace Nemesis.TextParsers
     {
         Dictionary,
         SortedDictionary,
-        SortedList, 
+        SortedList,
         ReadOnlyDictionary
     }
 

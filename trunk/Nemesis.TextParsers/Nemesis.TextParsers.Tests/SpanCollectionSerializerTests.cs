@@ -542,7 +542,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(parsed, Is.EquivalentTo(parsed3));
         }
 
-        private ICollection<TElement> ParseCollection<TElement>(string text) => _sut.ParseCollection<TElement>(text);
+        private IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) => _sut.ParseCollection<TElement>(text);
         private string FormatCollection<TElement>(IEnumerable<TElement> coll) => _sut.FormatCollection(coll);
 
         [Test]

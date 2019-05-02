@@ -13,8 +13,10 @@ namespace Nemesis.TextParsers
         {
             var dictType = typeof(TDictionary);
 
-            var genericInterfaceType = TypeMeta.GetConcreteInterfaceOfType(dictType, typeof(IDictionary<,>))
-                ?? throw new InvalidOperationException("Type has to implement IDictionary<,>");
+            var genericInterfaceType = dictType.IsGenericType && (dictType.GetGenericTypeDefinition() == typeof(IDictionary<,>) || dictType.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))
+                ? dictType
+                : TypeMeta.GetConcreteInterfaceOfType(dictType, typeof(IDictionary<,>))
+                    ?? throw new InvalidOperationException("Type has to be or implement IDictionary<,>");
 
             Type keyType = genericInterfaceType.GenericTypeArguments[0],
                valueType = genericInterfaceType.GenericTypeArguments[1];
@@ -40,12 +42,15 @@ namespace Nemesis.TextParsers
                 return DictionaryKind.Dictionary;
         }
 
-        private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>
-            where TDict : IDictionary<TKey, TValue>
+        private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, IParser<TDict>
+            where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             private readonly DictionaryKind _kind;
 
             public InnerDictionaryTransformer(DictionaryKind kind) => _kind = kind;
+
+
+            TDict IParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
 
             public TDict Parse(ReadOnlySpan<char> input) =>
                 //input.IsEmpty ? default :
