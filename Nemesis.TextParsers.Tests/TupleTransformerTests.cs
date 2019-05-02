@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
@@ -28,12 +27,21 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅,∅"),
             (typeof(KeyValuePair<string, float>),  new KeyValuePair<string, float>(null, 0), @"∅,∅"),
 
-
-
+            
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, "PI"), @"3.14,PI"),
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(null, "PI"), @"∅,PI"),
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, ""), @"3.14,"),
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, null), @"3.14,∅"),
+
+            //escaping tests
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(null, null), @"∅,∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>("∅", null), @"\∅,∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(" ∅ ", null), @" ∅ ,∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" ∅ ", null), @" \∅ ,∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@",", null), @"\,,∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" , ", null), @" \, ,∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅,\∅,\", @"\,∅"), @"\∅\,\\\∅\,\\,\\\,\∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅,\∅,\ ", @" \,∅"), @"\∅\,\\\∅\,\\ , \\\,\∅"),
         };
 
         [TestCaseSource(nameof(Correct_KeyValuePair_Data))]
@@ -54,9 +62,10 @@ namespace Nemesis.TextParsers.Tests
                     mi.Name == nameof(ITransformer<object>.Format))
                     ?? throw new MissingMethodException("Method Format does not exist");
 
-            var parseMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                    mi.Name == nameof(KeyValuePairTransformerCreator.InnerPairTransformer<object, object>.ParseText))
-                    ?? throw new MissingMethodException("Method ParseText does not exist");
+            var parseMethod = typeof(IParser<>).MakeGenericType(data.kvpType)
+                                  .GetMethods(ALL_FLAGS)
+                                  .SingleOrDefault(mi => mi.Name == nameof(IParser<object>.ParseText))
+                              ?? throw new MissingMethodException("Method ParseText does not exist");
 
 
             string textExpected = (string)formatMethod.Invoke(transformer, new[] { data.pair });
@@ -110,9 +119,10 @@ namespace Nemesis.TextParsers.Tests
                 .MakeGenericMethod(data.kvpType);
 
             var transformer = createTransformer.Invoke(creator, null);
-            
-            var parseMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                  mi.Name == nameof(KeyValuePairTransformerCreator.InnerPairTransformer<object, object>.ParseText))
+
+            var parseMethod = typeof(IParser<>).MakeGenericType(data.kvpType)
+                                  .GetMethods(ALL_FLAGS)
+                                  .SingleOrDefault(mi => mi.Name == nameof(IParser<object>.ParseText))
                               ?? throw new MissingMethodException("Method ParseText does not exist");
 
             bool passed = false;

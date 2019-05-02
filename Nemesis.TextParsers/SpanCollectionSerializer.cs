@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -48,14 +49,21 @@ namespace Nemesis.TextParsers
 
 
         [PureMethod]
-        public ICollection<TTo> ParseCollection<TTo>(string text,
+        public IReadOnlyCollection<TTo> ParseCollection<TTo>(string text,
             CollectionKind kind = CollectionKind.List, ushort potentialLength = 8) =>
             text == null ? null : ParseCollection<TTo>(text.AsSpan(), kind, potentialLength);
 
         [PureMethod]
-        public ICollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text,
+        public IReadOnlyCollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text,
             CollectionKind kind = CollectionKind.List, ushort potentialLength = 8) =>
             ParseStream<TTo>(text).ToCollection(kind, potentialLength);
+
+
+        public LeanCollection<T> ParseLeanCollection<T>(string text) =>
+            text == null ? new LeanCollection<T>() : ParseLeanCollection<T>(text.AsSpan());
+
+        public LeanCollection<T> ParseLeanCollection<T>(ReadOnlySpan<char> text) =>
+            ParseStream<T>(text).ToLeanCollection();
 
         [PureMethod]
         public ParsedSequence<TTo> ParseStream<TTo>(in ReadOnlySpan<char> text)
@@ -103,7 +111,7 @@ namespace Nemesis.TextParsers
             accumulator.Dispose();
             return text;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
         {
@@ -153,10 +161,11 @@ namespace Nemesis.TextParsers
             return parsedPairs;
         }
 
-        public string FormatDictionary<TKey, TValue>(IDictionary<TKey, TValue> dict)
+        public string FormatDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dict)
         {
             if (dict == null) return null;
-            if (dict.Count == 0) return "";
+            if (dict is IReadOnlyCollection<KeyValuePair<TKey, TValue>> roColl && roColl.Count == 0) return "";
+            if (dict is ICollection<KeyValuePair<TKey, TValue>> coll && coll.Count == 0) return "";
 
             IFormatter<TKey> keyFormatter = TextTransformer.Default.GetTransformer<TKey>();
             IFormatter<TValue> valueFormatter = TextTransformer.Default.GetTransformer<TValue>();
@@ -198,7 +207,7 @@ namespace Nemesis.TextParsers
                 accumulator.Append(DictionaryPairsDelimiter);
             }
 
-            var text = accumulator.AsSpanTo(accumulator.Length - 1).ToString();
+            var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
             accumulator.Dispose();
             return text;
         }
