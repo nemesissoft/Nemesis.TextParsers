@@ -207,7 +207,7 @@ namespace Nemesis.TextParsers
 
                 var array = accumulator.AsSpan().ToArray();
                 accumulator.Dispose();
-                return new LeanCollection<T>(array);
+                return LeanCollection<T>.FromArrayChecked(array);
             }
             finally
             {

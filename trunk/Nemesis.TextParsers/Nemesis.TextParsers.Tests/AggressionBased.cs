@@ -178,7 +178,7 @@ namespace Nemesis.TextParsers.Tests
     {
         private readonly TValue[] _values;
 
-        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(_values);
+        protected override LeanCollection<TValue> GetValues() => LeanCollection<TValue>.FromArrayChecked(_values);
 
         public TValue PassiveValue => GetValueFor(StrategyAggression.Passive);
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
