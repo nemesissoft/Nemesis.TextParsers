@@ -203,7 +203,6 @@ namespace Nemesis.TextParsers
 
         public LeanCollection<T> Sort(IComparer<T> comparer = null)
         {
-            //TODO
             var size = _size;
             switch (size)
             {
@@ -213,21 +212,34 @@ namespace Nemesis.TextParsers
 
                 case CollectionSize.Two:
                     comparer = comparer ?? Comparer<T>.Default;
-                    if(comparer.Compare(_item1, _item2) <=0)
-                    return this;
-                    else
-                    {
-                        
-                    }
+                    return comparer.Compare(_item1, _item2) <= 0 ? this : new LeanCollection<T>(_item2, _item1);
 
                 case CollectionSize.Three:
-                    return this;
+                    comparer = comparer ?? Comparer<T>.Default;
+                    if (comparer.Compare(_item1, _item2) <= 0 && comparer.Compare(_item2, _item3) <= 0)
+                        return this;
+                    else
+                    {
+                        T a = _item1, b = _item2, c = _item3;
+
+                        if (a > c)
+                            swap(a, c);
+
+                        if (a > b)
+                            swap(a, b);
+
+
+                        if (b > c)
+                            swap(b, c);
+
+                    }
                 default:
+                    comparer = comparer ?? Comparer<T>.Default;
                     Array.Sort(_items, comparer);
                     return new LeanCollection<T>(_items);
             }
 
-            comparer = comparer ?? Comparer<T>.Default;
+
             /*if (size == CollectionSize.Zero || size == CollectionSize.One)
               
             else
