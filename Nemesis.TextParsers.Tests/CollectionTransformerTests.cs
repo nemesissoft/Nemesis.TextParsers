@@ -26,8 +26,8 @@ namespace Nemesis.TextParsers.Tests
             (typeof(IReadOnlyList<int>), @"36|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
 
             (typeof(ISet<int>), @"17|2|3|5", 4, typeof(HashSet<int>)),
-            (typeof(SortedSet<int>), @"27|2|3|5", 4, typeof(SortedSet<int>)),
             (typeof(HashSet<int>), @"37|2|3|5", 4, typeof(HashSet<int>)),
+            (typeof(SortedSet<int>), @"27|2|3|5", 4, typeof(SortedSet<int>)),
 
             (typeof(LinkedList<int>), @"37|2|3|5|16", 5, typeof(LinkedList<int>)),
             (typeof(Stack<int>), @"37|2|3|5|26", 5, typeof(Stack<int>)),
@@ -56,19 +56,8 @@ namespace Nemesis.TextParsers.Tests
             (typeof(IDictionary<int, string>), @"", 0, typeof(Dictionary<int, string>)),
             (typeof(SortedList<int, string>), @"", 0, typeof(SortedList<int, string>)),
             (typeof(SortedDictionary<int, string>), @"", 0, typeof(SortedDictionary<int, string>)),
-
-
-            (typeof(StringKeyedDict<int>), @"One=1;Two=2;Zero=0", 3, typeof(StringKeyedDict<int>)),
         };
-
-        class StringKeyedDict<TValue> : Dictionary<string, TValue>
-        {
-
-        }
-        /*TODO <>, StringList  ReadOnlyStringKeyedDictionary      
         
-        */
-
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type concreteType) data)
         {

@@ -6,6 +6,7 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    //TODO dict meta + fixes like in coll meta
     [UsedImplicitly]
     public sealed class DictionaryTransformerCreator : ICanCreateTransformer
     {

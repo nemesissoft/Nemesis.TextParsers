@@ -2,7 +2,9 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Runtime.InteropServices;
+using Nemesis.Essentials.Runtime;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Nemesis.TextParsers
@@ -75,63 +77,68 @@ namespace Nemesis.TextParsers
         public static IReadOnlyCollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
             CollectionKind kind = CollectionKind.List, ushort potentialLength = 8)
         {
-            if (kind == CollectionKind.List || kind == CollectionKind.ReadOnlyCollection)
+            switch (kind)
             {
-                var result = new List<TTo>(potentialLength);
+                case CollectionKind.List:
+                case CollectionKind.ReadOnlyCollection:
+                    {
+                        var result = new List<TTo>(potentialLength);
 
-                foreach (TTo part in parsedSequence)
-                    result.Add(part);
+                        foreach (TTo part in parsedSequence)
+                            result.Add(part);
 
-                return kind == CollectionKind.List ?
-                    (IReadOnlyCollection<TTo>)result :
-                    result.AsReadOnly();
-            }
-            else if (kind == CollectionKind.HashSet || kind == CollectionKind.SortedSet)
-            {
-                ISet<TTo> result = kind == CollectionKind.HashSet
-                    ? (ISet<TTo>)new HashSet<TTo>(
+                        return kind == CollectionKind.List ?
+                            (IReadOnlyCollection<TTo>)result :
+                            result.AsReadOnly();
+                    }
+                case CollectionKind.HashSet:
+                case CollectionKind.SortedSet:
+                    {
+                        ISet<TTo> result = kind == CollectionKind.HashSet
+                            ? (ISet<TTo>)new HashSet<TTo>(
 #if NETSTANDARD2_0
                 
 #else
-                potentialLength
+                            potentialLength
 #endif
                         )
-                    : new SortedSet<TTo>();
+                            : new SortedSet<TTo>();
 
-                foreach (TTo part in parsedSequence)
-                    result.Add(part);
+                        foreach (TTo part in parsedSequence)
+                            result.Add(part);
 
-                return (IReadOnlyCollection<TTo>)result;
+                        return (IReadOnlyCollection<TTo>)result;
+                    }
+                case CollectionKind.LinkedList:
+                    {
+                        var result = new LinkedList<TTo>();
+
+                        foreach (TTo part in parsedSequence)
+                            result.AddLast(part);
+
+                        return result;
+                    }
+                case CollectionKind.Stack:
+                    {
+                        var result = new Stack<TTo>(potentialLength);
+
+                        foreach (TTo part in parsedSequence)
+                            result.Push(part);
+
+                        return result;
+                    }
+                case CollectionKind.Queue:
+                    {
+                        var result = new Queue<TTo>(potentialLength);
+
+                        foreach (TTo part in parsedSequence)
+                            result.Enqueue(part);
+
+                        return result;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
-            else if (kind == CollectionKind.LinkedList)
-            {
-                var result = new LinkedList<TTo>();
-
-                foreach (TTo part in parsedSequence)
-                    result.AddLast(part);
-
-                return result;
-            }
-            else if (kind == CollectionKind.Stack)
-            {
-                var result = new Stack<TTo>();
-
-                foreach (TTo part in parsedSequence)
-                    result.Push(part);
-
-                return result;
-            }
-            else if (kind == CollectionKind.Queue)
-            {
-                var result = new Queue<TTo>();
-
-                foreach (TTo part in parsedSequence)
-                    result.Enqueue(part);
-
-                return result;
-            }
-            else
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
 
         [PureMethod]
@@ -256,21 +263,27 @@ namespace Nemesis.TextParsers
                 return array;
             }
         }
-    }
 
-    public enum CollectionKind : byte
-    {
-        List,
-        ReadOnlyCollection,
-        HashSet,
-        SortedSet,
-        LinkedList,
-        Stack,
-        Queue
+        internal static TDest ConvertElement<TDest>(object element)
+        {
+            try
+            {
+                if (element is TDest dest)
+                    return dest;
+                else if (element is null)
+                    return default;
+                else if (typeof(TDest) == typeof(string) && element is IFormattable formattable)
+                    return (TDest)(object)formattable.ToString(null, CultureInfo.InvariantCulture);
+                else
+                    return (TDest)TypeMeta.GetDefault(typeof(TDest));
+            }
+            catch (Exception) { return default; }
+        }
     }
-
+    
     public enum DictionaryKind : byte
     {
+        Unknown,
         Dictionary,
         SortedDictionary,
         SortedList,
