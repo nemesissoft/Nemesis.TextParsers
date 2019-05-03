@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -530,11 +531,6 @@ namespace Benchmarks
             All = Weekdays | Weekends
         }
 
-        static ToEnumBench()
-        {
-            //Console.WriteLine(_enumTransformer.ToEnum(15));
-        }
-
         public static byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
 
         internal static Func<byte, DaysOfWeek> GetNumberConverterExpression()
@@ -556,7 +552,7 @@ namespace Benchmarks
             return (Func<byte, DaysOfWeek>)method.CreateDelegate(typeof(Func<byte, DaysOfWeek>));
         }
 
-        private static readonly Func<byte, DaysOfWeek> _expressionFunc =EnumTransformerHelper.GetNumberConverter<DaysOfWeek, byte>();
+        private static readonly Func<byte, DaysOfWeek> _expressionFunc = EnumTransformerHelper.GetNumberConverter<DaysOfWeek, byte>();
         private static readonly Func<byte, DaysOfWeek> _dynamicMethodFunc = GetNumberConverterDynamicMethod();
 
 
@@ -627,14 +623,14 @@ namespace Benchmarks
                 current |= enums[i];
             return current;
         }
-        
+
         [Benchmark]
         public DaysOfWeek IlGenericTest()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
                 current |= EnumConverter.Convert.ToEnumIl<DaysOfWeek, byte>(AllEnumValues[i]);
-                    
+
             return current;
         }
 
@@ -645,7 +641,7 @@ namespace Benchmarks
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
                 // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                 current |= EnumConverter.Convert.ToEnumIlConcrete(AllEnumValues[i]);
-                    
+
             return current;
         }
 
@@ -659,7 +655,7 @@ namespace Benchmarks
                 current |= ToEnum(AllEnumValues[i]);
             return current;
         }
-        
+
         /*[MethodImpl(MethodImplOptions.ForwardRef)]
         public static extern TEnum ToEnumIl<TEnum, TUnderlying>(TUnderlying number)
             where TEnum : Enum
@@ -669,6 +665,83 @@ namespace Benchmarks
         public DaysOfWeek ExternTest()
         {
         }*/
+    }
+
+    [MemoryDiagnoser]
+    public class LeanCollection
+    {
+        //  [BenchmarkCategory("Slow"), Benchmark(Baseline = true)]
+        // alloc+enumeration+operation, Sort
+        [ParamsSource(nameof(Sources))]
+        public int[] Source { get; set; }
+
+        public IEnumerable<int[]> Sources => new[]
+        {
+            new[] {10},
+            new[] {20, 10},
+            new[] {30, 20, 10},
+            new[] {90, 80, 70, 60, 50, 40, 30, 20, 10},
+        };
+
+
+        [BenchmarkCategory("Sum"), Benchmark(Baseline = true)]
+        public int NativeSum()
+        {
+            int sum = 0;
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            // ReSharper disable once ForCanBeConvertedToForeach
+            for (int i = 0; i < Source.Length; i++)
+                sum += Source[i];
+            return sum;
+        }
+
+        [BenchmarkCategory("Sum"), Benchmark]
+        public int LeanSum()
+        {
+            var coll = LeanCollection<int>.FromArray(Source);
+
+            var enumerator = coll.GetEnumerator();
+            if (!enumerator.MoveNext()) return 0;
+
+            int sum = 0;
+            do
+                sum += enumerator.Current;
+            while (enumerator.MoveNext());
+
+            return sum;
+        }
+
+        [BenchmarkCategory("Sum"), Benchmark]
+        public int ListSum()
+        {
+            var coll = new List<int>(Source);
+
+            int sum = 0;
+            foreach (int i in coll)
+                sum += i;
+
+            return sum;
+        }
+
+        [BenchmarkCategory("Sort"), Benchmark]
+        public int LeanSort()
+        {
+            var coll = LeanCollection<int>.FromArray(Source);
+
+            coll.Sort();
+
+            return coll.Size;
+        }
+
+        [BenchmarkCategory("Sort"), Benchmark]
+        public int ListSort()
+        {
+            var coll = new List<int>(Source);
+
+            coll.Sort();
+
+            return coll.Count;
+        }
     }
 
     //dotnet run -c Release --framework net472 -- --runtimes net472 netcoreapp2.2

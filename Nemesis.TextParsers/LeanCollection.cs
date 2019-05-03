@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
-    //TODO measure perf
     /// <summary>
     /// Stores up to 3 elements or an array
     /// </summary>
@@ -215,6 +214,12 @@ namespace Nemesis.TextParsers
                     return comparer.Compare(_item1, _item2) <= 0 ? this : new LeanCollection<T>(_item2, _item1);
 
                 case CollectionSize.Three:
+                    void Swap(ref T t1, ref T t2)
+                    {
+                        var temp = t2;
+                        t2 = t1;
+                        t1 = temp;
+                    }
                     comparer = comparer ?? Comparer<T>.Default;
                     if (comparer.Compare(_item1, _item2) <= 0 && comparer.Compare(_item2, _item3) <= 0)
                         return this;
@@ -222,33 +227,21 @@ namespace Nemesis.TextParsers
                     {
                         T a = _item1, b = _item2, c = _item3;
 
-                        if (a > c)
-                            swap(a, c);
+                        if (comparer.Compare(a, c) > 0)
+                            Swap(ref a, ref c);
 
-                        if (a > b)
-                            swap(a, b);
+                        if (comparer.Compare(a, b) > 0)
+                            Swap(ref a, ref b);
 
-
-                        if (b > c)
-                            swap(b, c);
-
+                        if (comparer.Compare(b, c) > 0)
+                            Swap(ref b, ref c);
+                        return new LeanCollection<T>(a, b, c);
                     }
                 default:
                     comparer = comparer ?? Comparer<T>.Default;
                     Array.Sort(_items, comparer);
                     return new LeanCollection<T>(_items);
             }
-
-
-            /*if (size == CollectionSize.Zero || size == CollectionSize.One)
-              
-            else
-            {
-                
-            }*/
-
-
-
         }
     }
 }
