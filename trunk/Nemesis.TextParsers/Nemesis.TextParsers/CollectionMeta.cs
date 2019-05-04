@@ -58,23 +58,6 @@ namespace Nemesis.TextParsers
         public static bool operator !=(CollectionMeta left, CollectionMeta right) => !left.Equals(right);
         #endregion
 
-        public static CollectionMeta GetCollectionMeta(Type collectionType)
-        {
-            if (collectionType != null)
-            {
-                if (collectionType.IsArray && collectionType.GetElementType() is Type arrayElementType)
-                    return new CollectionMeta(true, CollectionKind.Unknown, arrayElementType);
-                else if (CollectionMetaHelper.IsTypeSupported(collectionType))
-                {
-                    var kind = CollectionMetaHelper.GetCollectionKind(collectionType);
-                    Type elementType = CollectionMetaHelper.GetElementType(collectionType);
-                    return new CollectionMeta(false, kind, elementType);
-                }
-            }
-
-            return default;
-        }
-
         public object CreateCollection(IList sourceElements)
         {
             if (!IsValid) return null;
@@ -159,15 +142,35 @@ namespace Nemesis.TextParsers
 
                         return result;
                     }
+                //case CollectionKind.Unknown:
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(Kind), Kind, null);
+                    throw new ArgumentOutOfRangeException(nameof(Kind), Kind, $"{nameof(Kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
             }
         }
     }
 
     internal static class CollectionMetaHelper
     {
-        public static CollectionKind GetCollectionKind(Type collectionType)
+        public static CollectionMeta GetCollectionMeta(Type collectionType)
+        {
+            if (collectionType != null)
+            {
+                if (collectionType.IsArray && collectionType.GetElementType() is Type arrayElementType)
+                    return new CollectionMeta(true, CollectionKind.Unknown, arrayElementType);
+                else if (IsTypeSupported(collectionType) &&
+                         GetCollectionKind(collectionType) is CollectionKind kind &&
+                         kind != CollectionKind.Unknown
+                        )
+                {
+                    Type elementType = GetElementType(collectionType);
+                    return new CollectionMeta(false, kind, elementType);
+                }
+            }
+
+            return default;
+        }
+
+        private static CollectionKind GetCollectionKind(Type collectionType)
         {
             if (collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() is Type definition)
             {
@@ -202,6 +205,17 @@ namespace Nemesis.TextParsers
                 return CollectionKind.Unknown;
         }
 
+        private static Type GetElementType(Type collectionType)
+        {
+            var genericInterfaceType =
+                collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                    ? collectionType
+                    : TypeMeta.GetConcreteInterfaceOfType(collectionType, typeof(IEnumerable<>))
+                      ?? throw new InvalidOperationException("Type has to be or implement IEnumerable<>");
+
+            return genericInterfaceType.GenericTypeArguments[0];
+        }
+
         private static readonly HashSet<Type> _supportedCollectionTypes = new HashSet<Type>()
         {
             typeof(IEnumerable<>),
@@ -223,20 +237,10 @@ namespace Nemesis.TextParsers
         };
 
         public static bool IsTypeSupported(Type collectionType) =>
+            collectionType != null &&
             collectionType.IsGenericType &&
             collectionType.GetGenericTypeDefinition() is Type definition &&
             _supportedCollectionTypes.Contains(definition);
-
-        public static Type GetElementType(Type collectionType)
-        {
-            var genericInterfaceType =
-                collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-                    ? collectionType
-                    : TypeMeta.GetConcreteInterfaceOfType(collectionType, typeof(IEnumerable<>))
-                        ?? throw new InvalidOperationException("Type has to be or implement IEnumerable<>");
-
-            return genericInterfaceType.GenericTypeArguments[0];
-        }
     }
 
     public enum CollectionKind : byte
