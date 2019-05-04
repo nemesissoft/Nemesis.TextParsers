@@ -8,6 +8,9 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    /// <summary>
+    /// Aids in providing metadata for GUI applications 
+    /// </summary>
     public readonly struct CollectionMeta : IEquatable<CollectionMeta>
     {
         public bool IsArray { get; }

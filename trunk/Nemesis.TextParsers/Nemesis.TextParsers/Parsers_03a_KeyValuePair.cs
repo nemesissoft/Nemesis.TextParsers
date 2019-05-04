@@ -23,7 +23,7 @@ namespace Nemesis.TextParsers
 
         private class InnerPairTransformer<TKey, TValue> : ITransformer<KeyValuePair<TKey, TValue>>, IParser<KeyValuePair<TKey, TValue>>
         {
-            private const char TUPLE_DELIMITER = ',';
+            private const char TUPLE_DELIMITER = '=';
             private const char NULL_ELEMENT_MARKER = '∅';
             private const char ESCAPING_SEQUENCE_START = '\\';
 

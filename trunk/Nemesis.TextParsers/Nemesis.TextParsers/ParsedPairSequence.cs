@@ -76,19 +76,20 @@ namespace Nemesis.TextParsers
 
                 var enumerator = kvpTokens.GetEnumerator();
 
-                if (!enumerator.MoveNext()) throw GetArgumentException();
+                if (!enumerator.MoveNext()) throw GetArgumentException(0);
                 var key = ParseElement(enumerator.Current, _keyParser, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
-                if (!enumerator.MoveNext()) throw GetArgumentException();
+                if (!enumerator.MoveNext()) throw GetArgumentException(1);
                 var value = ParseElement(enumerator.Current, _valueParser, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
-                if (enumerator.MoveNext()) throw GetArgumentException();
+                if (enumerator.MoveNext()) throw GetArgumentException(3);
 
-                if (key == null) throw GetArgumentException();
+                if (key == null) throw GetArgumentException(null);
 
                 return new KeyValuePair<TKey, TValue>(key, value);
 
-                Exception GetArgumentException() => new ArgumentException($@"Key to value pair expects '{delimiter}' delimited collection to be of length 2 with first part not being null");
+                Exception GetArgumentException(byte? count) => 
+                    new ArgumentException($@"Key to value pair expects '{delimiter}' delimited collection to be of length 2 (with first part not being null), but was {count?.ToString() ?? "NULL"}");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

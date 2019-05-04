@@ -34,7 +34,7 @@ namespace Nemesis.TextParsers
             public string Format(TDict dict) =>//dict == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
 
-            public override string ToString() => $"Transform IDictionary<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>, {_kind}";
+            public override string ToString() => $"Transform {typeof(TDict).GetFriendlyName()} AS {_kind}<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>";
         }
 
         public bool CanHandle(Type type) => DictionaryKindHelper.IsTypeSupported(type);

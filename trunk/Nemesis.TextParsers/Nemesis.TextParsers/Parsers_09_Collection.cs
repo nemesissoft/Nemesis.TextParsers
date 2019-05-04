@@ -34,7 +34,7 @@ namespace Nemesis.TextParsers
             public string Format(TCollection coll) => //coll == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
-            public override string ToString() => $"Transform IEnumerable<{typeof(TElement).GetFriendlyName()}> as {typeof(TCollection).GetFriendlyName()}, {_kind}";
+            public override string ToString() => $"Transform {typeof(TCollection).GetFriendlyName()} AS {_kind}<{typeof(TElement).GetFriendlyName()}>";
         }
 
         public bool CanHandle(Type type) => CollectionMetaHelper.IsTypeSupported(type);

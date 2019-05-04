@@ -10,38 +10,41 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     class TupleTransformerTests
     {
-        internal static IEnumerable<(Type, object, string)> Correct_KeyValuePair_Data() => new (Type, object, string)[]
+        private static IEnumerable<(Type, object, string)> Correct_KeyValuePair_Data() => new (Type, object, string)[]
         {
-            (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04,∅"),
-            (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(TimeSpan.Zero, 15), @"∅,15"),
-            (typeof(KeyValuePair<TimeSpan?, int>), new KeyValuePair<TimeSpan?, int>(null, 15), @"∅,15"),
+            (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04=∅"),
+            (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(TimeSpan.Zero, 15), @"∅=15"),
+            (typeof(KeyValuePair<TimeSpan?, int>), new KeyValuePair<TimeSpan?, int>(null, 15), @"∅=15"),
 
 
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("PI", 3.14f), @"PI,3.14"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("PI", null), @"PI,∅"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", 3.14f), @",3.14"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), @",∅"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, 3.14f), @"∅,3.14"),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("PI", 3.14f), @"PI=3.14"),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("PI", null), @"PI=∅"),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", 3.14f), @"=3.14"),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), @"=∅"),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, 3.14f), @"∅=3.14"),
 
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), null),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @""),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅,∅"),
-            (typeof(KeyValuePair<string, float>),  new KeyValuePair<string, float>(null, 0), @"∅,∅"),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅=∅"),
+            (typeof(KeyValuePair<string, float>),  new KeyValuePair<string, float>(null, 0), @"∅=∅"),
 
             
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, "PI"), @"3.14,PI"),
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(null, "PI"), @"∅,PI"),
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, ""), @"3.14,"),
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, null), @"3.14,∅"),
-
+            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, "PI"), @"3.14=PI"),
+            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(null, "PI"), @"∅=PI"),
+            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, ""), @"3.14="),
+            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, null), @"3.14=∅"),
+        
             //escaping tests
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(null, null), @"∅,∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>("∅", null), @"\∅,∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(" ∅ ", null), @" ∅ ,∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" ∅ ", null), @" \∅ ,∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@",", null), @"\,,∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" , ", null), @" \, ,∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅,\∅,\", @"\,∅"), @"\∅\,\\\∅\,\\,\\\,\∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅,\∅,\ ", @" \,∅"), @"\∅\,\\\∅\,\\ , \\\,\∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(null, null), @"∅=∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅", null), @"\∅=∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" ∅ ", null), @" ∅ =∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" ∅ ", null), @" \∅ =∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"=", null), @"\==∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" = ", null), @" \= =∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\", @"\=∅"), @"\∅\=\\\∅\=\\=\\\=\∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\,", @"\=∅"), @"\∅\=\\\∅\=\\,=\\\=\∅"),
+            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\, ", @" \=∅"), @"\∅\=\\\∅\=\\, = \\\=\∅"),
+
         };
 
         [TestCaseSource(nameof(Correct_KeyValuePair_Data))]
@@ -95,15 +98,16 @@ namespace Nemesis.TextParsers.Tests
 
         internal static IEnumerable<(Type, string, Type)> Bad_KeyValuePair_Data() => new[]
        {
-            (typeof(KeyValuePair<float?, string>), @"abc,ABC", typeof(FormatException)),
+            (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException)),
             (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException)),
+            (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException)),
             
-            (typeof(KeyValuePair<float?, string>), @"15,ABC,TooMuch", typeof(ArgumentException)),
+            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException)),
             (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException)),
             (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException)),
             (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException)),
 
-            (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999,OK", typeof(OverflowException)),
+            (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999=OK", typeof(OverflowException)),
         };
 
         [TestCaseSource(nameof(Bad_KeyValuePair_Data))]
