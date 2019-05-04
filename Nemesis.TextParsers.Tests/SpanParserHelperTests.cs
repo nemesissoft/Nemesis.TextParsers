@@ -9,8 +9,22 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"ABC", @"ABC", ';')]
         [TestCase(@"ABC\\;", @"ABC\\;", ';')]
         [TestCase(@"ABC\\\;", @"ABC\\;", ';')]
+
+        [TestCase(@"ABC\\;DEF", @"ABC\\;DEF", ';')]
+        [TestCase(@"ABC\\\;DEF", @"ABC\\;DEF", ';')]
+
+        [TestCase(@"ABC\\;DE\F", @"ABC\\;DE\F", ';')]
+        [TestCase(@"ABC\\\;DE\F", @"ABC\\;DE\F", ';')]
+        [TestCase(@"ABC\\\;DE\F\;", @"ABC\\;DE\F;", ';')]
+        [TestCase(@"ABC\\\;DE\F\;", @"ABC\\;DE\F\;", '\\')]
+
         [TestCase(@"\ABC\", @"\ABC\", ';')]
         [TestCase(@"\A\B\C", @"\A\B\C", ';')]
+
+        [TestCase(@"\A\B\C", @"A\B\C", 'A')]
+        [TestCase(@"\A\B\C", @"\AB\C", 'B')]
+        [TestCase(@"\A\B\C", @"\A\BC", 'C')]
+
         [TestCase(@"ABC\;", @"ABC;", ';')]
         [TestCase(@"\\ABC\\\;", @"\\ABC\\;", ';')]
 

@@ -4,7 +4,6 @@ using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {
-    //TODO test for FindUnescapedSeparator for | at the end 
     [TestFixture]
     public class TokenSequenceTests
     {
@@ -32,6 +31,11 @@ namespace Nemesis.TextParsers.Tests
             (@"\\|", new []{@"\\", ""}),
             (@"|", new []{@"", ""}),
             (@" |", new []{@" ", ""}),
+            (@"|ABC", new []{@"", "ABC"}),
+            (@"ABC|", new []{@"ABC", ""}),
+            (@"ABC||", new []{@"ABC", "", ""}),
+            (@"ABC|\|", new []{@"ABC", @"\|"}),
+            (@"ABC||\|", new []{@"ABC", "", @"\|"}),
 
             (@" |\\", new []{@" ", @"\\"}),
             (@" |\", new []{@" ", @"\"}),
