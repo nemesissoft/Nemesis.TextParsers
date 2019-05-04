@@ -641,8 +641,6 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"key1", typeof(ArgumentException), "'key1' has no matching value")]//no value
         [TestCase(@";", typeof(ArgumentException), "Key=Value part was not found")]//no pairs
         [TestCase(@"key1 ; key2", typeof(ArgumentException), "'key1 ' has no matching value")]//no values
-
-        //TODO instances of ROS<>.IsEmpty
         [TestCase(@"key1=value1;", typeof(ArgumentException), "Key=Value part was not found")]//non terminated sequence
         [TestCase(@"ke=y1=value1", typeof(ArgumentException), "ke=y1 pair cannot have more than 2 elements: 'value1'")]//too many separators
         [TestCase(@"SameKey=value1;SameKey=value2", typeof(ArgumentException), "The key 'SameKey' has already been added")] //An item with the same key has already been added. (DictionaryBehaviour.ThrowOnDuplicate)

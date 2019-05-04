@@ -226,7 +226,7 @@ namespace Nemesis.TextParsers
             }
         }
 
-        //TODO add UnescapeCharacter with 2 characters + optimize appending to accumulator 
+        //TODO add UnescapeCharacter with 2 characters + use in ParsePair / KVP
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
         {
