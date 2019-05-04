@@ -107,8 +107,9 @@ namespace Nemesis.TextParsers
                     return default;
                 else
                 {
-                    unescapedInput = unescapedInput.UnescapeCharacter(escapingSequenceStart, nullElementMarker);
-                    unescapedInput = unescapedInput.UnescapeCharacter(escapingSequenceStart, escapingSequenceStart);
+                    unescapedInput = unescapedInput
+                        .UnescapeCharacter(escapingSequenceStart, nullElementMarker, escapingSequenceStart);
+                    
                     return parser.Parse(unescapedInput);
                 }
             }

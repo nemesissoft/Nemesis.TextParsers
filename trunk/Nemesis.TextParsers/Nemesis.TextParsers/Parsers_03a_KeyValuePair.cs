@@ -74,8 +74,9 @@ namespace Nemesis.TextParsers
                     return default;
                 else
                 {
-                    unescapedInput = unescapedInput.UnescapeCharacter(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER);
-                    unescapedInput = unescapedInput.UnescapeCharacter(ESCAPING_SEQUENCE_START, ESCAPING_SEQUENCE_START);
+                    unescapedInput = unescapedInput.UnescapeCharacter
+                            (ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, ESCAPING_SEQUENCE_START);
+                    
                     return parser.Parse(unescapedInput);
                 }
             }
