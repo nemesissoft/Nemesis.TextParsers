@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers
 
         public bool IsValid => (IsArray || Kind != CollectionKind.Unknown) && ElementType != null;
 
-        public CollectionMeta(bool isArray, CollectionKind kind, Type elementType)
+        internal CollectionMeta(bool isArray, CollectionKind kind, Type elementType)
         {
             if (!Enum.IsDefined(typeof(CollectionKind), kind))
                 throw new InvalidEnumArgumentException(nameof(kind), (int)kind, typeof(CollectionKind));
