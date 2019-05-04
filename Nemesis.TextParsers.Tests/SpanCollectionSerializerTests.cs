@@ -2,12 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 
@@ -250,8 +248,8 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception e)
             {
-                if (e is TargetInvocationException tie)
-                    e = tie.InnerException;
+                if (e is TargetInvocationException tie && tie.InnerException is Exception inner)
+                    e = inner;
 
                 if (data.expectedException == e.GetType())
                 {
@@ -268,7 +266,7 @@ namespace Nemesis.TextParsers.Tests
                     Assert.Fail($@"Unexpected external exception: {e}");
             }
             if (passed)
-                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>()?.Select(r => $"'{r}'") ?? new string[0])}");
+                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? new string[0])}");
         }
 
         private static IReadOnlyList<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
@@ -640,37 +638,51 @@ namespace Nemesis.TextParsers.Tests
         }
 
         #region Negative tests
-        [TestCase(@"key1")]//no value
-        [TestCase(@";")]//no values
-        [TestCase(@"key1 ; key2")]
+        [TestCase(@"key1", typeof(ArgumentException), "'key1' has no matching value")]//no value
+        [TestCase(@";", typeof(ArgumentException), "Key=Value part was not found")]//no pairs
+        [TestCase(@"key1 ; key2", typeof(ArgumentException), "'key1 ' has no matching value")]//no values
 
-        //TODO check below if that's ok
-        [TestCase(@"key1=value1;")]//non terminated sequence
-        [TestCase(@"ke=y1=value1")]//too many separators
-        [TestCase(@"key1=value1;key1=value2")] //An item with the same key has already been added.
-        [TestCase(@"∅=value")]//Key element in dictionary cannot be null
-        [TestCase(@"∅")]//null dictionary can only be mapped as null string  
+        //TODO instances of ROS<>.IsEmpty
+        [TestCase(@"key1=value1;", typeof(ArgumentException), "Key=Value part was not found")]//non terminated sequence
+        [TestCase(@"ke=y1=value1", typeof(ArgumentException), "ke=y1 pair cannot have more than 2 elements: 'value1'")]//too many separators
+        [TestCase(@"SameKey=value1;SameKey=value2", typeof(ArgumentException), "The key 'SameKey' has already been added")] //An item with the same key has already been added. (DictionaryBehaviour.ThrowOnDuplicate)
+        [TestCase(@"∅=value", typeof(ArgumentException), "Key equal to NULL is not supported")]//Key element in dictionary cannot be null
+        [TestCase(@"∅", typeof(ArgumentException), "'' has no matching value")]//null dictionary can only be mapped as null string  
         #endregion
-        public void Dict_Parse_NegativeTest(string input)
+        public void Dict_Parse_NegativeTest(string input, Type expectedException, string expectedErrorMessagePart)
         {
+            IDictionary<string, string> result = null;
+            bool passed = false;
             try
             {
-                var result = _sut.ParseDictionary<string, string>(input, DictionaryKind.Dictionary, DictionaryBehaviour.ThrowOnDuplicate).ToList();
-                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(kvp => $"[{kvp.Key}] = '{kvp.Value}'"))}");
+                result = _sut.ParseDictionary<string, string>(input, DictionaryKind.Dictionary, DictionaryBehaviour.ThrowOnDuplicate);
+                passed = true;
             }
-            catch (ArgumentException ae) when (ae.TargetSite?.Name == "ParseDictionary")
+            catch (Exception actual)
             {
-                Console.WriteLine($@"Expected exception from implementation: {ae.Message}");
-            }
-            catch (ArgumentException ae)
-            {
-                Console.WriteLine($@"Expected external exception: {ae.Message}");
-            }
-            catch (Exception e)
-            {
-                Assert.Fail($@"Unexpected external exception: {e.Message}");
+                if (actual is TargetInvocationException tie && tie.InnerException is Exception inner)
+                    actual = inner;
+
+                Assert.That(actual, Is.TypeOf(expectedException));
+                Assert.That(actual?.Message, Does.Contain(expectedErrorMessagePart));
+
+                if (actual is OverflowException oe)
+                    Console.WriteLine("Expected overflow: " + oe.Message);
+                else if (actual is FormatException fe)
+                    Console.WriteLine("Expected bad format: " + fe.Message);
+                else if (actual is ArgumentException ae)
+                    Console.WriteLine("Expected argument exception: " + ae.Message);
+                else if (actual is InvalidOperationException ioe)
+                    Console.WriteLine("Expected invalid operation: " + ioe.Message);
+                else
+                    Console.WriteLine("Expected other: " + actual.Message);
+
+                if(actual.TargetSite?.Name == nameof(_sut.ParseDictionary))
+                    Console.WriteLine($@"Expected exception from implementation: {actual.GetType().Name}=>{actual.Message}");
             }
 
+            if (passed)
+                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(kvp => $"[{kvp.Key}] = '{kvp.Value}'"))}");
         }
 
         [Test]

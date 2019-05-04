@@ -138,8 +138,8 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception e)
             {
-                if (e is TargetInvocationException tie)
-                    e = tie.InnerException;
+                if (e is TargetInvocationException tie && tie.InnerException is Exception inner)
+                    e = inner;
 
                 if (data.expectedException == e.GetType())
                 {

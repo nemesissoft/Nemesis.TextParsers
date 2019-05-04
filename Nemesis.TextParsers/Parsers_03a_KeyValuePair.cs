@@ -46,17 +46,23 @@ namespace Nemesis.TextParsers
 
                 var enumerator = kvpTokens.GetEnumerator();
 
-                if (!enumerator.MoveNext()) throw GetArgumentException(0);
+                if (!enumerator.MoveNext())
+                    throw new ArgumentException($@"Key{TUPLE_DELIMITER}Value part was not found");
                 var key = ParseElement(enumerator.Current, _keyTransformer);
 
-                if (!enumerator.MoveNext()) throw GetArgumentException(1);
+                if (!enumerator.MoveNext())
+                    throw new ArgumentException($"'{key}' has no matching value");
                 var value = ParseElement(enumerator.Current, _valueTransformer);
 
-                if (enumerator.MoveNext()) throw GetArgumentException(3);
+                if (enumerator.MoveNext())
+                {
+                    var remaining = enumerator.Current.ToString();
+                    throw new ArgumentException($@"{key}{TUPLE_DELIMITER}{value} pair cannot have more than 2 elements: '{remaining}'");
+                }
 
                 return new KeyValuePair<TKey, TValue>(key, value);
 
-                Exception GetArgumentException(byte count, char delimiter = TUPLE_DELIMITER) => new ArgumentException($@"Key to value pair expects '{delimiter}' delimited collection to be of length 2, but was {count}");
+                //Exception GetArgumentException(byte count, char delimiter = TUPLE_DELIMITER) => new ArgumentException($@"Key to value pair expects '{delimiter}' delimited collection to be of length 2, but was {count}");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
