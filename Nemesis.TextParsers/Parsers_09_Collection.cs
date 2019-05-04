@@ -12,9 +12,7 @@ namespace Nemesis.TextParsers
         {
             var collectionType = typeof(TCollection);
 
-            Type elementType = CollectionMetaHelper.GetElementType(collectionType);
-
-            var kind = CollectionMetaHelper.GetCollectionKind(collectionType);
+            var (_, kind, elementType) = CollectionMetaHelper.GetCollectionMeta(collectionType);
 
             var transType = typeof(InnerCollectionTransformer<,>).MakeGenericType(elementType, collectionType);
 

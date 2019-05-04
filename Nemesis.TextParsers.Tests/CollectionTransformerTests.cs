@@ -56,6 +56,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(IDictionary<int, string>), @"", 0, typeof(Dictionary<int, string>)),
             (typeof(SortedList<int, string>), @"", 0, typeof(SortedList<int, string>)),
             (typeof(SortedDictionary<int, string>), @"", 0, typeof(SortedDictionary<int, string>)),
+            //TODO test IEnumerable<KeyValuePair<TKey, TValue>>
         };
         
         [TestCaseSource(nameof(Correct_Data))]

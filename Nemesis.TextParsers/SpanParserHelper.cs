@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Nemesis.Essentials.Runtime;
@@ -137,7 +138,7 @@ namespace Nemesis.TextParsers
                         return result;
                     }
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
             }
         }
 
@@ -146,6 +147,9 @@ namespace Nemesis.TextParsers
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
             ushort capacity = 8)
         {
+            if (kind == DictionaryKind.Unknown)
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported");
+
             IDictionary<TKey, TValue> result =
                 kind == DictionaryKind.SortedDictionary ? new SortedDictionary<TKey, TValue>() :
                  (
@@ -173,13 +177,9 @@ namespace Nemesis.TextParsers
                 }
             }
 
-            switch (kind)
-            {
-                case DictionaryKind.ReadOnlyDictionary:
-                    return new ReadOnlyDictionary<TKey, TValue>(result);
-                default:
-                    return result;
-            }
+            return kind == DictionaryKind.ReadOnlyDictionary
+                ? new ReadOnlyDictionary<TKey, TValue>(result)
+                : result;
         }
 
 
@@ -279,15 +279,6 @@ namespace Nemesis.TextParsers
             }
             catch (Exception) { return default; }
         }
-    }
-    
-    public enum DictionaryKind : byte
-    {
-        Unknown,
-        Dictionary,
-        SortedDictionary,
-        SortedList,
-        ReadOnlyDictionary
     }
 
     public enum DictionaryBehaviour : byte
