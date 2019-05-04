@@ -24,9 +24,9 @@ namespace Nemesis.TextParsers
 
         //TODO ToArray - 2 versions from managed and unmanaged. ToArrayUnmanaged - copy to buffer bool TryCopyTo(buffer, out int count
         [PureMethod]
-        public static TTo[] ToArray<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort potentialLength = 8)
+        public static TTo[] ToArray<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort capacity = 8)
         {
-            var initialBuffer = ArrayPool<TTo>.Shared.Rent(potentialLength);
+            var initialBuffer = ArrayPool<TTo>.Shared.Rent(capacity);
             try
             {
                 var accumulator = new ValueSequenceBuilder<TTo>(initialBuffer);
@@ -46,14 +46,14 @@ namespace Nemesis.TextParsers
 
         //TODO functional tests + max capacity test + benchmark with standard ToArray
         [PureMethod]
-        public static TTo[] ToArrayUnmanaged<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort potentialLength = 8)
+        public static TTo[] ToArrayUnmanaged<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort capacity = 8)
             where TTo : unmanaged
         {
             var elementSize = Marshal.SizeOf<TTo>();
             TTo[] rentedBuffer = null;
-            Span<TTo> initialBuffer = potentialLength * elementSize <= 512
-                ? stackalloc TTo[potentialLength]
-                : (rentedBuffer = ArrayPool<TTo>.Shared.Rent(potentialLength));
+            Span<TTo> initialBuffer = capacity * elementSize <= 512
+                ? stackalloc TTo[capacity]
+                : (rentedBuffer = ArrayPool<TTo>.Shared.Rent(capacity));
             try
             {
                 var accumulator = new ValueSequenceBuilder<TTo>(initialBuffer);
@@ -75,14 +75,14 @@ namespace Nemesis.TextParsers
 
         [PureMethod]
         public static IReadOnlyCollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
-            CollectionKind kind = CollectionKind.List, ushort potentialLength = 8)
+            CollectionKind kind = CollectionKind.List, ushort capacity = 8)
         {
             switch (kind)
             {
                 case CollectionKind.List:
                 case CollectionKind.ReadOnlyCollection:
                     {
-                        var result = new List<TTo>(potentialLength);
+                        var result = new List<TTo>(capacity);
 
                         foreach (TTo part in parsedSequence)
                             result.Add(part);
@@ -99,7 +99,7 @@ namespace Nemesis.TextParsers
 #if NETSTANDARD2_0
                 
 #else
-                            potentialLength
+                            capacity
 #endif
                         )
                             : new SortedSet<TTo>();
@@ -120,7 +120,7 @@ namespace Nemesis.TextParsers
                     }
                 case CollectionKind.Stack:
                     {
-                        var result = new Stack<TTo>(potentialLength);
+                        var result = new Stack<TTo>(capacity);
 
                         foreach (TTo part in parsedSequence)
                             result.Push(part);
@@ -129,7 +129,7 @@ namespace Nemesis.TextParsers
                     }
                 case CollectionKind.Queue:
                     {
-                        var result = new Queue<TTo>(potentialLength);
+                        var result = new Queue<TTo>(capacity);
 
                         foreach (TTo part in parsedSequence)
                             result.Enqueue(part);
@@ -144,14 +144,14 @@ namespace Nemesis.TextParsers
         [PureMethod]
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this in ParsedPairSequence<TKey, TValue> parsedPairs,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort potentialLength = 8)
+            ushort capacity = 8)
         {
             IDictionary<TKey, TValue> result =
                 kind == DictionaryKind.SortedDictionary ? new SortedDictionary<TKey, TValue>() :
                  (
                      kind == DictionaryKind.SortedList
-                     ? new SortedList<TKey, TValue>(potentialLength)
-                     : (IDictionary<TKey, TValue>)new Dictionary<TKey, TValue>(potentialLength)
+                     ? new SortedList<TKey, TValue>(capacity)
+                     : (IDictionary<TKey, TValue>)new Dictionary<TKey, TValue>(capacity)
                  );
 
             foreach (var pair in parsedPairs)

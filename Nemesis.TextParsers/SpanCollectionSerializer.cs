@@ -40,23 +40,23 @@ namespace Nemesis.TextParsers
 
         #region Collection
         [PureMethod]
-        public TTo[] ParseArray<TTo>(string text, ushort potentialLength = 8) =>
-            text == null ? null : ParseArray<TTo>(text.AsSpan(), potentialLength);
+        public TTo[] ParseArray<TTo>(string text, ushort capacity = 8) =>
+            text == null ? null : ParseArray<TTo>(text.AsSpan(), capacity);
 
         [PureMethod]
-        public TTo[] ParseArray<TTo>(ReadOnlySpan<char> text, ushort potentialLength = 8) =>
-            text.IsEmpty ? new TTo[0] : ParseStream<TTo>(text).ToArray(potentialLength);
+        public TTo[] ParseArray<TTo>(ReadOnlySpan<char> text, ushort capacity = 8) =>
+            text.IsEmpty ? new TTo[0] : ParseStream<TTo>(text).ToArray(capacity);
 
 
         [PureMethod]
         public IReadOnlyCollection<TTo> ParseCollection<TTo>(string text,
-            CollectionKind kind = CollectionKind.List, ushort potentialLength = 8) =>
-            text == null ? null : ParseCollection<TTo>(text.AsSpan(), kind, potentialLength);
+            CollectionKind kind = CollectionKind.List, ushort capacity = 8) =>
+            text == null ? null : ParseCollection<TTo>(text.AsSpan(), kind, capacity);
 
         [PureMethod]
         public IReadOnlyCollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text,
-            CollectionKind kind = CollectionKind.List, ushort potentialLength = 8) =>
-            ParseStream<TTo>(text).ToCollection(kind, potentialLength);
+            CollectionKind kind = CollectionKind.List, ushort capacity = 8) =>
+            ParseStream<TTo>(text).ToCollection(kind, capacity);
 
 
         public LeanCollection<T> ParseLeanCollection<T>(string text) =>
@@ -138,17 +138,17 @@ namespace Nemesis.TextParsers
 
         public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort potentialLength = 8)
+            ushort capacity = 8)
             => text == null ? null :
-                ParseDictionary<TKey, TValue>(text.AsSpan(), kind, behaviour, potentialLength);
+                ParseDictionary<TKey, TValue>(text.AsSpan(), kind, behaviour, capacity);
 
 
         public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(ReadOnlySpan<char> text,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort potentialLength = 8)
+            ushort capacity = 8)
         {
             var parsedPairs = ParsePairsStream<TKey, TValue>(text);
-            return parsedPairs.ToDictionary(kind, behaviour, potentialLength);
+            return parsedPairs.ToDictionary(kind, behaviour, capacity);
         }
 
         public ParsedPairSequence<TKey, TValue> ParsePairsStream<TKey, TValue>(ReadOnlySpan<char> text)
