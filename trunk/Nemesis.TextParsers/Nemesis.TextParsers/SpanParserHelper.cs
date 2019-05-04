@@ -171,7 +171,11 @@ namespace Nemesis.TextParsers
                             result.Add(key, value);
                         break;
                     case DictionaryBehaviour.ThrowOnDuplicate:
-                        result.Add(key, value); break;
+                        if (!result.ContainsKey(key))
+                            result.Add(key, value);
+                        else
+                            throw new ArgumentException($"The key '{key}' has already been added");
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(behaviour), behaviour, null);
                 }
