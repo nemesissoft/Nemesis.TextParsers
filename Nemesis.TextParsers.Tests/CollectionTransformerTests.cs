@@ -14,8 +14,11 @@ namespace Nemesis.TextParsers.Tests
     {
         internal static IEnumerable<(Type, string, int, Type)> Correct_Data() => new[]
         {
+            //array
             (typeof(float[][]), @"1\|2\|3 | 4\|5\|6\|7", 2, typeof(float[][])),
             (typeof(int[]), @"10|2|3", 3, typeof(int[])),
+
+            //collections
             (typeof(List<int>), @"10|2|3", 3, typeof(List<int>)),
             (typeof(IList<int>), @"15|2|3|5", 4, typeof(List<int>)),
             (typeof(ICollection<int>), @"44|2|3|5", 4, typeof(List<int>)),
@@ -33,6 +36,8 @@ namespace Nemesis.TextParsers.Tests
             (typeof(Stack<int>), @"37|2|3|5|26", 5, typeof(Stack<int>)),
             (typeof(Queue<int>), @"37|2|3|5|36", 5, typeof(Queue<int>)),
 
+
+            //lean collection
             (typeof(LeanCollection<byte>), @"", 0, typeof(LeanCollection<byte>)),
             (typeof(LeanCollection<int>), @"1", 1, typeof(LeanCollection<int>)),
             (typeof(LeanCollection<uint>), @"1|2", 2, typeof(LeanCollection<uint>)),
@@ -41,14 +46,20 @@ namespace Nemesis.TextParsers.Tests
             (typeof(LeanCollection<float>), @"1|2|3|4|5", 5, typeof(LeanCollection<float>)),
 
 
+            //dictionary like collection
+            (typeof(IEnumerable<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(List<KeyValuePair<int, string>>)),
+            (typeof(ICollection<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(List<KeyValuePair<int, string>>)),
+            (typeof(IReadOnlyCollection<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(ReadOnlyCollection<KeyValuePair<int, string>>)),
+            (typeof(IReadOnlyList<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(ReadOnlyCollection<KeyValuePair<int, string>>)),
 
 
+            //dictionary
             (typeof(Dictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
             (typeof(IDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
-
+            
             (typeof(ReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
             (typeof(IReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
-
+            
             (typeof(SortedList<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedList<int, string>)),
             (typeof(SortedDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedDictionary<int, string>)),
 
@@ -56,7 +67,6 @@ namespace Nemesis.TextParsers.Tests
             (typeof(IDictionary<int, string>), @"", 0, typeof(Dictionary<int, string>)),
             (typeof(SortedList<int, string>), @"", 0, typeof(SortedList<int, string>)),
             (typeof(SortedDictionary<int, string>), @"", 0, typeof(SortedDictionary<int, string>)),
-            //TODO test IEnumerable<KeyValuePair<TKey, TValue>>
         };
         
         [TestCaseSource(nameof(Correct_Data))]

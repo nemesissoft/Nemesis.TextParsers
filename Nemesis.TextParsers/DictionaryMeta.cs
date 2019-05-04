@@ -8,6 +8,9 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    /// <summary>
+    /// Aids in providing metadata for GUI applications 
+    /// </summary>
     public struct DictionaryMeta : IEquatable<DictionaryMeta>
     {
         public DictionaryKind Kind { get; }

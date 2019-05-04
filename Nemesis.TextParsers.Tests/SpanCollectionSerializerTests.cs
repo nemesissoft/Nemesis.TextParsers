@@ -492,7 +492,7 @@ namespace Nemesis.TextParsers.Tests
                     new KeyValuePair<string, float?>("", null),
                     new KeyValuePair<string, float?>("", 0),
                 }.ToList(),
-                @"PI,3.14|PI,∅|,3.14|∅,3.14||∅,∅||∅,∅|,∅|,0"),
+                @"PI=3.14|PI=∅|=3.14|∅=3.14||∅=∅||∅=∅|=∅|=0"),
         };
 
         static TimeSpan Divide(TimeSpan dividend, long divisor) => TimeSpan.FromTicks((long)(dividend.Ticks / (double)divisor));
