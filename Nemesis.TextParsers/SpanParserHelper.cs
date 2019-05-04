@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Nemesis.Essentials.Runtime;
@@ -226,25 +225,29 @@ namespace Nemesis.TextParsers
             }
         }
 
-        //TODO add UnescapeCharacter with 2 characters + use in ParsePair / KVP
+        //TODO UnescapeCharacterTo(span, ValueSequenceBuilder) + ShouldUnescapeCharacter?
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
         {
-            int idx = input.IndexOfAny(escapingSequenceStart, character);
-            if (idx < 0) return input;
-            else
+            int length = input.Length;
+            if (length < 2) return input;
+
+            if (input.IndexOf(escapingSequenceStart) is int escapeStart &&
+                escapeStart >= 0 && escapeStart < length - 1 &&
+                input.Slice(escapeStart).IndexOf(character) >= 0
+            ) //is it worth looking for escape sequence ?
             {
-                Span<char> initialBuffer = stackalloc char[Math.Min(input.Length, 256)];
+                Span<char> initialBuffer = stackalloc char[Math.Min(length, 256)];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
 
-                for (int i = 0; i < input.Length; i++)
+                for (int i = 0; i < length; i++)
                 {
                     var current = input[i];
                     if (current == escapingSequenceStart)
                     {
                         i++;
-                        if (i == input.Length)
+                        if (i == length)
                             accumulator.Append(current);
                         else
                         {
@@ -266,6 +269,53 @@ namespace Nemesis.TextParsers
                 accumulator.Dispose();
                 return array;
             }
+            else return input;
+        }
+
+        [PureMethod]
+        public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character1, char character2)
+        {
+            int length = input.Length;
+            if (length < 2) return input;
+
+            if (input.IndexOf(escapingSequenceStart) is int escapeStart &&
+                escapeStart >= 0 && escapeStart < length - 1 &&
+                input.Slice(escapeStart).IndexOfAny(character1, character2) >= 0
+            ) //is it worth looking for escape sequence ?
+            {
+                Span<char> initialBuffer = stackalloc char[Math.Min(length, 256)];
+                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+
+                for (int i = 0; i < length; i++)
+                {
+                    var current = input[i];
+                    if (current == escapingSequenceStart)
+                    {
+                        i++;
+                        if (i == length)
+                            accumulator.Append(current);
+                        else
+                        {
+                            current = input[i];
+                            if (current == character1 || current == character2)
+                                accumulator.Append(current);
+                            else
+                            {
+                                accumulator.Append(escapingSequenceStart);
+                                accumulator.Append(current);
+                            }
+                        }
+                    }
+                    else
+                        accumulator.Append(current);
+                }
+
+                var array = accumulator.AsSpan().ToArray();
+                accumulator.Dispose();
+                return array;
+            }
+            else return input;
         }
 
         internal static TDest ConvertElement<TDest>(object element)
