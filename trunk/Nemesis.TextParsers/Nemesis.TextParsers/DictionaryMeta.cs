@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers
 
         public bool IsValid => Kind != DictionaryKind.Unknown && KeyType != null && ValueType != null;
 
-        public DictionaryMeta(DictionaryKind kind, Type keyType, Type valueType)
+        internal DictionaryMeta(DictionaryKind kind, Type keyType, Type valueType)
         {
             if (!Enum.IsDefined(typeof(DictionaryKind), kind))
                 throw new InvalidEnumArgumentException(nameof(kind), (int)kind, typeof(DictionaryKind));

@@ -44,7 +44,6 @@ namespace Nemesis.TextParsers
             }
         }
 
-        //TODO functional tests + max capacity test + benchmark with standard ToArray
         [PureMethod]
         public static TTo[] ToArrayUnmanaged<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort capacity = 8)
             where TTo : unmanaged

@@ -17,6 +17,8 @@ namespace Nemesis.TextParsers.Tests
             //array
             (typeof(float[][]), @"1\|2\|3 | 4\|5\|6\|7", 2, typeof(float[][])),
             (typeof(int[]), @"10|2|3", 3, typeof(int[])),
+            (typeof(int[]), @"", 0, typeof(int[])),
+            (typeof(int[]), null, 0, typeof(int[])),
 
             //collections
             (typeof(List<int>), @"10|2|3", 3, typeof(List<int>)),

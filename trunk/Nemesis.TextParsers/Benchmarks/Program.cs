@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -154,6 +154,7 @@ namespace Benchmarks
         }
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public interface IAggressionBased<out TValue>
     {
         TValue PassiveValue { get; }
@@ -225,46 +226,64 @@ namespace Benchmarks
 
             return result;
         }
-
-
     }
 
     [MemoryDiagnoser]
     public class ArrayParserBench
     {
-        private const int POTENTIAL_LENGTH = 50;
+        public struct TestData
+        {
+            public ushort Capacity { get; }
+            public string Text { get; }
 
-        public string Numbers { get; set; } =
-            "1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50";
+            public TestData(ushort capacity, string text)
+            {
+                Capacity = capacity;
+                Text = text;
+            }
+
+            public static TestData FromCapacity(ushort capacity) => new TestData(
+                capacity,
+                string.Join("|", Enumerable.Range(1, capacity).Select(i => i.ToString()))
+            );
+
+            public override string ToString() => Capacity.ToString();
+        }
+
+        [ParamsSource(nameof(ValuesForData))]
+        public TestData Data;
+
+        // public property
+        public IEnumerable<TestData> ValuesForData => new[]
+        {
+            new TestData(10,"1|2|3|4|5|6|7|8|9|10"),
+        };
+
 
         [Benchmark]
-        public int[] ToArray_Test()
+        public int ToArray_Test()
         {
-            var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
-                    .Parse<int>('\\', '∅')
-                ;
-
-            return parsed.ToArray(POTENTIAL_LENGTH);
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true)
+                .Parse<int>('\\', '∅');
+            var parsed = stream.ToArray(Data.Capacity);
+            return parsed[0];
         }
 
         [Benchmark(Baseline = true)]
-        public int[] ToArrayUnmanaged_Test()
+        public int ToArrayUnmanaged_Test()
         {
-            var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
-                    .Parse<int>('\\', '∅')
-                ;
-
-            return parsed.ToArrayUnmanaged(POTENTIAL_LENGTH);
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true)
+                .Parse<int>('\\', '∅');
+            var parsed = stream.ToArrayUnmanaged(Data.Capacity);
+            return parsed[0];
         }
 
         [Benchmark]
         public int Sum_ToArray_Test()
         {
-            var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
-                    .Parse<int>('\\', '∅')
-                ;
-
-            var array = parsed.ToArray(POTENTIAL_LENGTH);
+            var parsed = Data.Text.AsSpan().Tokenize('|', '\\', true)
+                    .Parse<int>('\\', '∅');
+            var array = parsed.ToArray(Data.Capacity);
 
             int result = 0;
             foreach (int num in array)
@@ -276,11 +295,9 @@ namespace Benchmarks
         [Benchmark]
         public int Sum_ToArrayUnmanaged_Test()
         {
-            var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
-                    .Parse<int>('\\', '∅')
-                ;
-
-            var array = parsed.ToArrayUnmanaged(POTENTIAL_LENGTH);
+            var parsed = Data.Text.AsSpan().Tokenize('|', '\\', true)
+                    .Parse<int>('\\', '∅');
+            var array = parsed.ToArrayUnmanaged(Data.Capacity);
 
             int result = 0;
             foreach (int num in array)
@@ -353,7 +370,7 @@ namespace Benchmarks
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
 
-            var enumStream = input.Split(',', false).GetEnumerator();
+            var enumStream = input.Split(',').GetEnumerator();
 
             if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {typeof(DaysOfWeek).Name} enum");
             byte currentValue = ParseDaysOfWeekElement(enumStream.Current);
@@ -476,8 +493,6 @@ namespace Benchmarks
             else
                 throw new FormatException(
                     "Enum of type 'DaysOfWeek' cannot be parsed.Valid values are: None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All or number within Byte range.");
-
-            ;
         }
 
         [Benchmark]
@@ -547,16 +562,6 @@ namespace Benchmarks
         }
 
         public static byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
-
-        internal static Func<byte, DaysOfWeek> GetNumberConverterExpression()
-        {
-            var input = Expression.Parameter(typeof(byte), "input");
-
-            var λ = Expression.Lambda<Func<byte, DaysOfWeek>>(
-                Expression.Convert(input, typeof(DaysOfWeek)),
-                input);
-            return λ.Compile();
-        }
 
         internal static Func<byte, DaysOfWeek> GetNumberConverterDynamicMethod()
         {
