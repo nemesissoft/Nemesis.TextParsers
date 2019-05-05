@@ -26,11 +26,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"10", true, 10)]
         [TestCase(@"1|-1|2|-2", true, 0)]
         [TestCase(@"1|2|3|4|5|6|7|8|9", true, 5)]
-        public void Average(string text, bool success, double result)
+        public void Average(string text, bool expectedSuccess, double expectedResult)
         {
-            var pair = GetSequence(text).Average();
-            Assert.That(pair.success, Is.EqualTo(success));
-            Assert.That(pair.result, Is.EqualTo(result));
+            var (success, result) = GetSequence(text).Average();
+            Assert.That(success, Is.EqualTo(expectedSuccess));
+            Assert.That(result, Is.EqualTo(expectedResult));
         }
 
 
