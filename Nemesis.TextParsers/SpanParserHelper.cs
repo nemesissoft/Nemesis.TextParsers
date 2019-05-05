@@ -22,7 +22,6 @@ namespace Nemesis.TextParsers
             char nullElement, char allowedEscapeCharacter1 = default) =>
             new ParsedSequence<TTo>(tokenSource, escapingElement, nullElement, allowedEscapeCharacter1);
 
-        //TODO ToArray - 2 versions from managed and unmanaged. ToArrayUnmanaged - copy to buffer bool TryCopyTo(buffer, out int count
         [PureMethod]
         public static TTo[] ToArray<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort capacity = 8)
         {
@@ -43,35 +42,7 @@ namespace Nemesis.TextParsers
                 ArrayPool<TTo>.Shared.Return(initialBuffer);
             }
         }
-
-        [PureMethod]
-        public static TTo[] ToArrayUnmanaged<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort capacity = 8)
-            where TTo : unmanaged
-        {
-            var elementSize = Marshal.SizeOf<TTo>();
-            TTo[] rentedBuffer = null;
-            Span<TTo> initialBuffer = capacity * elementSize <= 512
-                ? stackalloc TTo[capacity]
-                : (rentedBuffer = ArrayPool<TTo>.Shared.Rent(capacity));
-            try
-            {
-                var accumulator = new ValueSequenceBuilder<TTo>(initialBuffer);
-
-                foreach (TTo part in parsedSequence)
-                    accumulator.Append(part);
-
-                var array = accumulator.AsSpan().ToArray();
-                accumulator.Dispose();
-                return array;
-            }
-            finally
-            {
-                if (rentedBuffer != null)
-                    ArrayPool<TTo>.Shared.Return(rentedBuffer);
-            }
-        }
-
-
+        
         [PureMethod]
         public static IReadOnlyCollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
             CollectionKind kind = CollectionKind.List, ushort capacity = 8)
