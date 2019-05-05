@@ -20,7 +20,10 @@
     <AssemblyOriginatorKeyFile>..\..\Releases\Nemesis.snk</AssemblyOriginatorKeyFile>
 
     <Version>0.9.5</Version> 
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
+    <RepositoryType>Github</RepositoryType> 
+    <RepositoryUrl>https://github.com/nemesissoft/Nemesis.TextParsers</RepositoryUrl> 
+    <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
