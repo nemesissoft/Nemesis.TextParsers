@@ -58,10 +58,10 @@ namespace Nemesis.TextParsers.Tests
             //dictionary
             (typeof(Dictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
             (typeof(IDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
-            
+
             (typeof(ReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
             (typeof(IReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
-            
+
             (typeof(SortedList<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedList<int, string>)),
             (typeof(SortedDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedDictionary<int, string>)),
 
@@ -69,8 +69,15 @@ namespace Nemesis.TextParsers.Tests
             (typeof(IDictionary<int, string>), @"", 0, typeof(Dictionary<int, string>)),
             (typeof(SortedList<int, string>), @"", 0, typeof(SortedList<int, string>)),
             (typeof(SortedDictionary<int, string>), @"", 0, typeof(SortedDictionary<int, string>)),
+
+
+            //custom collections 
+            (typeof(StringList), @"ABC|DEF|GHI", 3, typeof(StringList)),
+            (typeof(StringList), @"", 0, typeof(StringList)),
         };
-        
+
+        class StringList : List<string> { }
+
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type concreteType) data)
         {
@@ -102,8 +109,8 @@ namespace Nemesis.TextParsers.Tests
                 .FirstOrDefault(p => p.Name == "Size" || p.Name == "Count" || p.Name == "Length");
             Assert.That(cardinalityProp, Is.Not.Null, "cardinality property not found");
             var cardinality = cardinalityProp.GetValue(parsed);
-            Assert.That(cardinality,Is.EqualTo(data.cardinality));
-            
+            Assert.That(cardinality, Is.EqualTo(data.cardinality));
+
 
             string text = (string)formatMethod.Invoke(transformer, new[] { parsed });
             Console.WriteLine(text);

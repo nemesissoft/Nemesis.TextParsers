@@ -53,7 +53,7 @@ namespace Nemesis.TextParsers
                 m.ReturnType == returnType
                 ||
                 m.ReturnType.IsGenericTypeDefinition && returnType.DerivesOrImplementsGeneric(m.ReturnType)
-            //TODO test for non-generic factory with generic methods
+            //TODO more test for non-generic factory with generic methods
             );
 
         protected const BindingFlags STATIC_METHOD_FLAGS = BindingFlags.Public | BindingFlags.Static;
@@ -133,7 +133,7 @@ namespace Nemesis.TextParsers
 
     public interface ITextFactorySpan<out TElement> { TElement FromText(ReadOnlySpan<char> text); }
 
-    //TODO support non static factory classes via ITextFactoryString+ITextFactorySpan
+    //TODO support non static factory classes via ITextFactoryString+ITextFactorySpan?
     public sealed class TextFactoryTransformer : FactoryMethodTransformer
     {
         protected override ISpanParser<TElement> GetParser<TElement>(Type elementType)
