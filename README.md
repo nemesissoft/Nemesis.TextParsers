@@ -68,7 +68,7 @@ But imagine a service application like exchange trading suite that has to perfor
    * User defined collections 
    * everything mentioned above but combined with inner elements properly escaped in final string i.e. **SortedDictionary&lt;char, IList&lt;float[][]&gt;&gt;**
 5. has to be able to fallback to TypeConverter if no parsing/formatting strategy was found 
-6. has to be **fast** to parse while allocating as little memory as possible upon parsing 
+6. has to be **fast** to parse while allocating as little memory as possible upon parsing. The follwing benchmark illustrates this speed via parsing 1000 element array 
 
 |                     Method |        Mean | Ratio |    Gen 0 |  Gen 1 | Allocated | Remarks |
 |--------------------------- |-------------|-------|----------|--------|-----------|-----------|

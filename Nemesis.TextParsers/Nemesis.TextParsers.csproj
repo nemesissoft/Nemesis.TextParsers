@@ -7,19 +7,19 @@
     <Authors>Michał Bryłka</Authors>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <PackageTags>parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
-    <Copyright>Copyright (c) Michał Bryłka. Icon by Custom Icon Design (http://www.iconarchive.com/artist/custom-icon-design.html)</Copyright>
+    <Copyright>Copyright (c) Michał Bryłka. Icon by Google (http://www.iconarchive.com/artist/google.html)</Copyright>
     <Description>Contains various parser optimized for speed and no allocation</Description>
 
 
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageIconUrl>http://icons.iconarchive.com/icons/custom-icon-design/flatastic-1/512/search-icon.png</PackageIconUrl>
+    <PackageIconUrl>http://icons.iconarchive.com/icons/google/noto-emoji-animals-nature/1024/22215-dog-icon.png</PackageIconUrl>
     
     
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\Releases\Nemesis.snk</AssemblyOriginatorKeyFile>
 
-    <Version>0.9.5</Version> 
+    <Version>0.9.7</Version> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
     <RepositoryType>Github</RepositoryType> 
     <RepositoryUrl>https://github.com/nemesissoft/Nemesis.TextParsers</RepositoryUrl> 
