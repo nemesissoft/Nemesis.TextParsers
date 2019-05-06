@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 
 namespace Nemesis.TextParsers.Tests
@@ -74,9 +75,53 @@ namespace Nemesis.TextParsers.Tests
             //custom collections 
             (typeof(StringList), @"ABC|DEF|GHI", 3, typeof(StringList)),
             (typeof(StringList), @"", 0, typeof(StringList)),
+            (typeof(Times10NumberList), @"2|5|99", 3, typeof(Times10NumberList)),
+            (typeof(ImmutableIntCollection ), @"1|22|333|4444|55555", 5, typeof(ImmutableIntCollection )),
+            (typeof(ImmutableNullableIntCollection ), @"1|2|3|4|5||7|∅|9", 9, typeof(ImmutableNullableIntCollection )),
         };
 
         class StringList : List<string> { }
+        class Times10NumberList : ICollection<int>, IDeserializationCallback
+        {
+            private readonly List<int> _items = new List<int>();
+
+            public void OnDeserialization(object sender)
+            {
+                for (int i = 0; i < _items.Count; i++) _items[i] *= 10;
+            }
+
+
+            public IEnumerator<int> GetEnumerator() => _items.Select(i => i / 10).GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
+
+            public void Add(int item) => _items.Add(item);
+
+            public void Clear() => _items.Clear();
+
+            public bool Contains(int item) => _items.Contains(item);
+
+            public void CopyTo(int[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
+
+            public bool Remove(int item) => _items.Remove(item);
+
+            public int Count => _items.Count;
+
+            public bool IsReadOnly => false;
+        }
+
+        class ImmutableIntCollection : ReadOnlyCollection<int>
+        {
+            public ImmutableIntCollection(IList<int> list) : base(list)
+            {
+            }
+        }
+        class ImmutableNullableIntCollection : ReadOnlyCollection<int?>
+        {
+            public ImmutableNullableIntCollection(IList<int?> list) : base(list)
+            {
+            }
+        }
 
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type concreteType) data)
