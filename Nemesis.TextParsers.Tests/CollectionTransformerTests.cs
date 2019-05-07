@@ -78,6 +78,11 @@ namespace Nemesis.TextParsers.Tests
             (typeof(Times10NumberList), @"2|5|99", 3, typeof(Times10NumberList)),
             (typeof(ImmutableIntCollection ), @"1|22|333|4444|55555", 5, typeof(ImmutableIntCollection )),
             (typeof(ImmutableNullableIntCollection ), @"1|2|3|4|5||7|∅|9", 9, typeof(ImmutableNullableIntCollection )),
+
+            //custom dictionary
+            (typeof(StringKeyedDictionary<int>), @"One=1;Two=2;Zero=0;Four=4", 4, typeof(StringKeyedDictionary<int>)),
+            (typeof(FloatValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(FloatValuedDictionary<int>)),
+            (typeof(ImmutableDecimalValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(ImmutableDecimalValuedDictionary<int>)),
         };
 
         class StringList : List<string> { }
@@ -119,6 +124,15 @@ namespace Nemesis.TextParsers.Tests
         class ImmutableNullableIntCollection : ReadOnlyCollection<int?>
         {
             public ImmutableNullableIntCollection(IList<int?> list) : base(list)
+            {
+            }
+        }
+
+        class StringKeyedDictionary<TValue>: SortedDictionary<string, TValue> { }
+        class FloatValuedDictionary<TKey>: Dictionary<TKey, float> { }
+        class ImmutableDecimalValuedDictionary<TKey>: ReadOnlyDictionary<TKey, decimal>
+        {
+            public ImmutableDecimalValuedDictionary(IDictionary<TKey, decimal> dictionary) : base(dictionary)
             {
             }
         }

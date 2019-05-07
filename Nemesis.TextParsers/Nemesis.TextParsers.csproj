@@ -19,7 +19,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\Releases\Nemesis.snk</AssemblyOriginatorKeyFile>
 
-    <Version>0.9.7</Version> 
+    <Version>0.9.8</Version> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
     <RepositoryType>Github</RepositoryType> 
     <RepositoryUrl>https://github.com/nemesissoft/Nemesis.TextParsers</RepositoryUrl> 
