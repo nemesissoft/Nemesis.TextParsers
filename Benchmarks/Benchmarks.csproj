@@ -6,8 +6,11 @@
     <LangVersion>latest</LangVersion>
 
 
+   
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\Releases\Nemesis.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
     
   </PropertyGroup>
 
