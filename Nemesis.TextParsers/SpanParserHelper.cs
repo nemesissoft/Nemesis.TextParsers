@@ -110,7 +110,7 @@ namespace Nemesis.TextParsers
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
             }
         }
-
+        //TODO try to calculate capacity at calling site
         [PureMethod]
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this in ParsedPairSequence<TKey, TValue> parsedPairs,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,

@@ -10,6 +10,35 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     class TupleTransformerTests
     {
+        (object transformer, MethodInfo formatMethod, MethodInfo parseMethod) GetSut(Type tupleType)
+        {
+            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
+            var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
+                          tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
+                ? new KeyValuePairTransformerCreator()
+                : (ICanCreateTransformer)new TupleTransformerCreator();
+
+            Assert.That(creator.CanHandle(tupleType));
+
+            var createTransformer = (creator.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
+                                    mi.Name == nameof(ICanCreateTransformer.CreateTransformer) && mi.IsGenericMethod)
+                                ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
+                    .MakeGenericMethod(tupleType);
+
+            object transformer = createTransformer.Invoke(creator, null);
+
+            MethodInfo formatMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
+                    mi.Name == nameof(ITransformer<object>.Format))
+                    ?? throw new MissingMethodException("Method Format does not exist");
+
+            MethodInfo parseMethod = typeof(IParser<>).MakeGenericType(tupleType)
+                                  .GetMethods(ALL_FLAGS)
+                                  .SingleOrDefault(mi => mi.Name == nameof(IParser<object>.ParseText))
+                              ?? throw new MissingMethodException("Method ParseText does not exist");
+
+            return (transformer, formatMethod, parseMethod);
+        }
+
         private static IEnumerable<(Type, object, string)> Correct_KeyValuePair_Data() => new (Type, object, string)[]
         {
             (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04=∅"),
@@ -28,7 +57,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅=∅"),
             (typeof(KeyValuePair<string, float>),  new KeyValuePair<string, float>(null, 0), @"∅=∅"),
 
-            
+
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, "PI"), @"3.14=PI"),
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(null, "PI"), @"∅=PI"),
             (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, ""), @"3.14="),
@@ -45,38 +74,31 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\,", @"\=∅"), @"\∅\=\\\∅\=\\,=\\\=\∅"),
             (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\, ", @" \=∅"), @"\∅\=\\\∅\=\\, = \\\=\∅"),
 
+
+            //Tuples
+            (typeof((TimeSpan, int)), (new TimeSpan(3,14,15,9), 3), @"3.14:15:09,3"),
+            (typeof((TimeSpan, int, float)), (new TimeSpan(3,14,15,9), 3, 3.14f), @"3.14:15:09,3,3.14"),
+            (typeof((TimeSpan, int, float, string)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi"), @"3.14:15:09,3,3.14,Pi"),
+            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"3.14:15:09,3,3.14,Pi,3.14"),
+
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"00:00:00,0,0,,0"),
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"00:00:00,0,0,∅,0"),
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @""),
+
+            (typeof((string, string, string, string, string)), (@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅"),
         };
 
         [TestCaseSource(nameof(Correct_KeyValuePair_Data))]
-        public void KeyValuePairTransformer_CompoundTest((Type kvpType, object pair, string input) data)
+        public void KeyValuePairTransformer_CompoundTest((Type tupleType, object tuple, string input) data)
         {
-            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
-            var creator = new KeyValuePairTransformerCreator();
-            Assert.That(creator.CanHandle(data.kvpType));
+            var (transformer, formatMethod, parseMethod) = GetSut(data.tupleType);
 
-            var createTransformer = (creator.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                    mi.Name == nameof(ICanCreateTransformer.CreateTransformer) && mi.IsGenericMethod)
-                                ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
-                    .MakeGenericMethod(data.kvpType);
-
-            var transformer = createTransformer.Invoke(creator, null);
-
-            var formatMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                    mi.Name == nameof(ITransformer<object>.Format))
-                    ?? throw new MissingMethodException("Method Format does not exist");
-
-            var parseMethod = typeof(IParser<>).MakeGenericType(data.kvpType)
-                                  .GetMethods(ALL_FLAGS)
-                                  .SingleOrDefault(mi => mi.Name == nameof(IParser<object>.ParseText))
-                              ?? throw new MissingMethodException("Method ParseText does not exist");
-
-
-            string textExpected = (string)formatMethod.Invoke(transformer, new[] { data.pair });
+            string textExpected = (string)formatMethod.Invoke(transformer, new[] { data.tuple });
             Console.WriteLine(textExpected);
 
             var parsed = parseMethod.Invoke(transformer, new object[] { data.input });
             Console.WriteLine(data.input);
-            Assert.That(parsed, Is.EqualTo(data.pair));
+            Assert.That(parsed, Is.EqualTo(data.tuple));
 
 
             string text = (string)formatMethod.Invoke(transformer, new[] { parsed });
@@ -84,11 +106,11 @@ namespace Nemesis.TextParsers.Tests
 
 
             var parsed2 = parseMethod.Invoke(transformer, new object[] { text });
-            Assert.That(parsed2, Is.EqualTo(data.pair));
+            Assert.That(parsed2, Is.EqualTo(data.tuple));
 
 
             var parsed3 = parseMethod.Invoke(transformer, new object[] { textExpected });
-            Assert.That(parsed3, Is.EqualTo(data.pair));
+            Assert.That(parsed3, Is.EqualTo(data.tuple));
 
 
             Assert.That(parsed, Is.EqualTo(parsed2));
@@ -96,38 +118,32 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
-        internal static IEnumerable<(Type, string, Type)> Bad_KeyValuePair_Data() => new[]
-       {
-            (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException)),
-            (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException)),
-            (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException)),
-            
-            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException)),
-            (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException)),
-            (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException)),
-            (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException)),
+        internal static IEnumerable<(Type, string, Type, string)> Bad_KeyValuePair_Data() => new[]
+        {
+            (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
+            (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
+            (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException), @"Input string was not in a correct format"),
 
-            (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999=OK", typeof(OverflowException)),
+            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"15=ABC pair cannot have more than 2 elements: 'TooMuch'"),
+            (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"'15' has no matching value"),
+            (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"'' has no matching value"),
+            (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"' ' has no matching value"),
+
+            (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999=OK", typeof(OverflowException), @"Value was either too large or too small for a Single"),
+
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:99,3,3.14,Pi,3.14",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi",typeof(ArgumentException), @"5th tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14",typeof(ArgumentException), @"4th tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3",typeof(ArgumentException), @"3rd tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09",typeof(ArgumentException), @"2nd tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
         };
 
         [TestCaseSource(nameof(Bad_KeyValuePair_Data))]
-        public void KeyValuePairTransformer_NegativeTest((Type kvpType, string input, Type expectedException) data)
+        public void KeyValuePairTransformer_NegativeTest((Type tupleType, string input, Type expectedException, string expectedErrorMessagePart) data)
         {
-            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
-            var creator = new KeyValuePairTransformerCreator();
-            Assert.That(creator.CanHandle(data.kvpType));
-
-            var createTransformer = (creator.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                         mi.Name == nameof(ICanCreateTransformer.CreateTransformer) && mi.IsGenericMethod)
-                                     ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
-                .MakeGenericMethod(data.kvpType);
-
-            var transformer = createTransformer.Invoke(creator, null);
-
-            var parseMethod = typeof(IParser<>).MakeGenericType(data.kvpType)
-                                  .GetMethods(ALL_FLAGS)
-                                  .SingleOrDefault(mi => mi.Name == nameof(IParser<object>.ParseText))
-                              ?? throw new MissingMethodException("Method ParseText does not exist");
+            var (transformer, _, parseMethod) = GetSut(data.tupleType);
 
             bool passed = false;
             object parsed = null;
@@ -136,24 +152,9 @@ namespace Nemesis.TextParsers.Tests
                 parsed = parseMethod.Invoke(transformer, new object[] { data.input });
                 passed = true;
             }
-            catch (Exception e)
+            catch (Exception actual)
             {
-                if (e is TargetInvocationException tie && tie.InnerException is Exception inner)
-                    e = inner;
-
-                if (data.expectedException == e.GetType())
-                {
-                    if (e is OverflowException oe)
-                        Console.WriteLine("Expected overflow: " + oe.Message);
-                    else if (e is FormatException fe)
-                        Console.WriteLine("Expected bad format: " + fe.Message);
-                    else if (e is InvalidOperationException ioe)
-                        Console.WriteLine("Expected invalid operation: " + ioe.Message);
-                    else
-                        Console.WriteLine("Expected: " + e.Message);
-                }
-                else
-                    Assert.Fail($@"Unexpected external exception: {e}");
+                TestHelper.AssertException(actual, data.expectedException, data.expectedErrorMessagePart);
             }
             if (passed)
                 Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine}\t{parsed}");

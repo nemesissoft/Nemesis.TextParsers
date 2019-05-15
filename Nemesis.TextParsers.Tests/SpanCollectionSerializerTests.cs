@@ -491,6 +491,21 @@ namespace Nemesis.TextParsers.Tests
                     new KeyValuePair<string, float?>("", 0),
                 }.ToList(),
                 @"PI=3.14|PI=∅|=3.14|∅=3.14||∅=∅||∅=∅|=∅|=0"),
+
+            (typeof( (TimeSpan, int, float, string, decimal?) ),
+                new[]
+                {
+                    (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m),
+                    (new TimeSpan(31,14,15,9), 3, 3.14f, "Pi", (decimal?)null),
+                    (TimeSpan.MinValue, 3, 3.14f, "Pi", (decimal?)null),
+
+                    (TimeSpan.Zero, 0, 0f, "", 0m),
+                    (TimeSpan.Zero, 0, 0f, (string)null, (decimal?)null),
+                    default,
+                    default,
+                    default,
+                }.ToList(),
+                @"3.14:15:09,3,3.1400001,Pi,3.14|31.14:15:09,3,3.1400001,Pi,\∅|-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅|00:00:00,0,0,,0|00:00:00,0,0,\∅,\∅|00:00:00,0,0,\∅,\∅|∅|"),
         };
 
         static TimeSpan Divide(TimeSpan dividend, long divisor) => TimeSpan.FromTicks((long)(dividend.Ticks / (double)divisor));
@@ -658,24 +673,9 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception actual)
             {
-                if (actual is TargetInvocationException tie && tie.InnerException is Exception inner)
-                    actual = inner;
+                TestHelper.AssertException(actual, expectedException, expectedErrorMessagePart);
 
-                Assert.That(actual, Is.TypeOf(expectedException));
-                Assert.That(actual?.Message, Does.Contain(expectedErrorMessagePart));
-
-                if (actual is OverflowException oe)
-                    Console.WriteLine("Expected overflow: " + oe.Message);
-                else if (actual is FormatException fe)
-                    Console.WriteLine("Expected bad format: " + fe.Message);
-                else if (actual is ArgumentException ae)
-                    Console.WriteLine("Expected argument exception: " + ae.Message);
-                else if (actual is InvalidOperationException ioe)
-                    Console.WriteLine("Expected invalid operation: " + ioe.Message);
-                else
-                    Console.WriteLine("Expected other: " + actual.Message);
-
-                if(actual.TargetSite?.Name == nameof(_sut.ParseDictionary))
+                if (actual.TargetSite?.Name == nameof(_sut.ParseDictionary))
                     Console.WriteLine($@"Expected exception from implementation: {actual.GetType().Name}=>{actual.Message}");
             }
 

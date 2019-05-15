@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Nemesis.TextParsers;
@@ -14,6 +16,28 @@ using Nemesis.TextParsers;
 
 namespace Benchmarks
 {
+    [MemoryDiagnoser]
+    public class Md5VsSha256
+    {
+        private const int N = 10000;
+        private readonly byte[] _data;
+
+        private readonly SHA256 _sha256 = SHA256.Create();
+        private readonly MD5 _md5 = MD5.Create();
+
+        public Md5VsSha256()
+        {
+            _data = new byte[N];
+            new Random(42).NextBytes(_data);
+        }
+
+        [Benchmark]
+        public byte[] Sha256() => _sha256.ComputeHash(_data);
+
+        [Benchmark]
+        public byte[] Md5() => _md5.ComputeHash(_data);
+    }
+
     [MemoryDiagnoser]
     //[HardwareCounters(HardwareCounter.BranchMispredictions,HardwareCounter.BranchInstructions, HardwareCounter.Timer)]
     //[InliningDiagnoser]
@@ -813,6 +837,77 @@ namespace Benchmarks
 
             return coll.Count;
         }
+    }
+
+    /*|           Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
+      |----------------- |----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
+      |   HasFlag_Native | 0.2870 ns | 0.0053 ns | 0.0047 ns |  0.97 |    0.02 |     - |     - |     - |         - |
+      | HasFlags_Dynamic | 7.2089 ns | 0.1653 ns | 0.2806 ns | 24.34 |    0.68 |     - |     - |     - |         - |
+      | HasFlags_Bitwise | 0.2960 ns | 0.0024 ns | 0.0020 ns |  1.00 |    0.00 |     - |     - |     - |         - |*/
+    [MemoryDiagnoser]
+    [ClrJob, CoreJob]
+    public class HasFlagBench
+    {
+        private const int OPERATIONS_PER_INVOKE = 10_000;
+
+        public static Func<T, long> CreateConvertToLong<T>() where T : struct, Enum
+        {
+            var generator = DynamicMethodGenerator.Create<Func<T, long>>("ConvertEnumToLong");
+
+            var ilGen = generator.GetMsilGenerator();
+
+            ilGen.Emit(OpCodes.Ldarg_0);
+            ilGen.Emit(OpCodes.Conv_I8);
+            ilGen.Emit(OpCodes.Ret);
+            return generator.Generate();
+        }
+
+        public static readonly Func<FileAccess, long> ConverterFunc = CreateConvertToLong<FileAccess>();
+
+        public static bool HasFlags(FileAccess left, FileAccess right)
+        {
+            var fn = ConverterFunc;
+            return (fn(left) & fn(right)) != 0;
+        }
+
+        [Benchmark(OperationsPerInvoke = OPERATIONS_PER_INVOKE)]
+        public bool HasFlag_Native()
+        {
+            const FileAccess VALUE = FileAccess.ReadWrite;
+            var result = true;
+
+            for (var i = 0; i < OPERATIONS_PER_INVOKE; i++)
+                result &= VALUE.HasFlag(FileAccess.Read);
+
+            return result;
+        }
+
+        [Benchmark(OperationsPerInvoke = OPERATIONS_PER_INVOKE)]
+        public bool HasFlags_Dynamic()
+        {
+            const FileAccess VALUE = FileAccess.ReadWrite;
+            var result = true;
+
+            for (var i = 0; i < OPERATIONS_PER_INVOKE; i++)
+                result &= HasFlags(VALUE, FileAccess.Read);
+
+            return result;
+        }
+
+        [Benchmark(OperationsPerInvoke = OPERATIONS_PER_INVOKE, Baseline = true)]
+        public bool HasFlags_Bitwise()
+        {
+            const FileAccess VALUE = FileAccess.ReadWrite;
+            var result = true;
+
+            for (var i = 0; i < OPERATIONS_PER_INVOKE; i++)
+                result &= ((VALUE & FileAccess.Read) != 0);
+
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            return result;
+        }
+
+
     }
 
     //dotnet run -c Release --framework net472 -- --runtimes net472 netcoreapp2.2

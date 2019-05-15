@@ -50,6 +50,7 @@ namespace Nemesis.TextParsers
                 ArrayPool<T>.Shared.Return(_arrayFromPool);
                 _arrayFromPool = null;
             }
+            this = default;
         }
 
         private void Grow()
