@@ -8,6 +8,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Nemesis.TextParsers;
@@ -839,11 +840,6 @@ namespace Benchmarks
         }
     }
 
-    /*|           Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
-      |----------------- |----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
-      |   HasFlag_Native | 0.2870 ns | 0.0053 ns | 0.0047 ns |  0.97 |    0.02 |     - |     - |     - |         - |
-      | HasFlags_Dynamic | 7.2089 ns | 0.1653 ns | 0.2806 ns | 24.34 |    0.68 |     - |     - |     - |         - |
-      | HasFlags_Bitwise | 0.2960 ns | 0.0024 ns | 0.0020 ns |  1.00 |    0.00 |     - |     - |     - |         - |*/
     [MemoryDiagnoser]
     [ClrJob, CoreJob]
     public class HasFlagBench
@@ -908,6 +904,178 @@ namespace Benchmarks
         }
 
 
+    }
+
+    [MemoryDiagnoser]
+    public class StringConcatBench
+    {
+        private const int ITERATIONS = 500;
+
+        [Benchmark]
+        public string StringConcat()
+        {
+            string s = "";
+            for (char c = 'A'; c < 'A' + ITERATIONS; c++)
+                s += c.ToString();
+            return s;
+        }
+
+        [Benchmark(Baseline = true)]
+        public string StringBuilderNew()
+        {
+            var sb = new StringBuilder();
+            for (char c = 'A'; c < 'A' + ITERATIONS; c++)
+                sb.Append(c);
+            return sb.ToString();
+        }
+
+        private readonly StringBuilder _builderCache = new StringBuilder();
+        [Benchmark]
+        public string StringBuilderPool()
+        {
+            var sb = _builderCache;
+            sb.Length = 0;
+            for (char c = 'A'; c < 'A' + ITERATIONS; c++)
+                sb.Append(c);
+            return sb.ToString();
+        }
+
+        private readonly StringBuilder _builderCacheLarge = new StringBuilder(1000);
+        [Benchmark]
+        public string StringBuilderPoolLarge()
+        {
+            var sb = _builderCacheLarge;
+            sb.Length = 0;
+            for (char c = 'A'; c < 'A' + ITERATIONS; c++)
+                sb.Append(c);
+            return sb.ToString();
+        }
+
+        [Benchmark]
+        public string ValueStringBuilder()
+        {
+            Span<char> initialBuffer = stackalloc char[1000];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            for (char c = 'A'; c < 'A' + ITERATIONS; c++)
+                accumulator.Append(c);
+
+            var text = accumulator.AsSpan().ToString();
+            accumulator.Dispose();
+            return text;
+        }
+    }
+
+    [MemoryDiagnoser]
+    public class MultiKeyDictionaryBench
+    {
+        private const int COUNT = 500;
+
+        private static readonly Dictionary<string, int> _string = GetStringDict();
+        private static readonly Dictionary<Tuple<int, int>, int> _tuple = GetTupleDict();
+        private static readonly Dictionary<(int, int), int> _valueTuple = GetValueTupleDict();
+
+        private static Dictionary<string, int> GetStringDict()
+        {
+            var dict = new Dictionary<string, int>(COUNT);
+            for (int i = 0; i < COUNT; i++)
+            {
+                var key = "Client=" + i + "Username" + (i * 10);
+                dict[key] = i;
+            }
+
+            return dict;
+        }
+
+        private static Dictionary<Tuple<int, int>, int> GetTupleDict()
+        {
+            var dict = new Dictionary<Tuple<int, int>, int>(COUNT);
+            for (int i = 0; i < COUNT; i++)
+            {
+                var key = new Tuple<int, int>(i, i * 10);
+                dict[key] = i;
+            }
+
+            return dict;
+        }
+
+        private static Dictionary<(int, int), int> GetValueTupleDict()
+        {
+            var dict = new Dictionary<(int, int), int>(COUNT);
+            for (int i = 0; i < COUNT; i++)
+            {
+                var key = (i, i * 10);
+                dict[key] = i;
+            }
+
+            return dict;
+        }
+
+        [BenchmarkCategory("Build"), Benchmark(Baseline = true)]
+        public int MakeStringDictionary()
+        {
+            var dict = GetStringDict();
+            return dict.Count;
+        }
+
+        [BenchmarkCategory("Build"), Benchmark]
+        public int MakeTupleDictionary()
+        {
+            var dict = GetTupleDict();
+            return dict.Count;
+        }
+
+        [BenchmarkCategory("Build"), Benchmark]
+        public int MakeValueTupleDictionary()
+        {
+            var dict = GetValueTupleDict();
+            return dict.Count;
+        }
+
+        [BenchmarkCategory("Retrieval"), Benchmark]
+        public int FromStringDictionary()
+        {
+            var dict = _string;
+            int value = 0;
+
+            for (int i = 0; i < COUNT; i++)
+            {
+                var key = "Client=" + i + "Username" + (i * 10);
+                value = dict[key];
+            }
+
+            return value;
+        }
+
+        [BenchmarkCategory("Retrieval"), Benchmark]
+        public int FromTupleDictionary()
+        {
+            var dict = _tuple;
+            int value = 0;
+
+            for (int i = 0; i < COUNT; i++)
+            {
+                var key = new Tuple<int, int>(i,i*10);
+                value = dict[key];
+            }
+
+            return value;
+        }
+
+        [BenchmarkCategory("Retrieval"), Benchmark]
+        public int FromValueTupleDictionary()
+        {
+            var dict = _valueTuple;
+            int value = 0;
+
+            for (int i = 0; i < COUNT; i++)
+            {
+                var key = (i,i*10);
+                value = dict[key];
+            }
+
+            return value;
+        }
     }
 
     //dotnet run -c Release --framework net472 -- --runtimes net472 netcoreapp2.2
