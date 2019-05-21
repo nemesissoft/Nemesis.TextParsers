@@ -74,13 +74,15 @@ namespace Nemesis.TextParsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
 
                 Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                
 
-
+                Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -129,16 +131,18 @@ namespace Nemesis.TextParsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
 
                 Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                
 
-
+                Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -192,19 +196,21 @@ namespace Nemesis.TextParsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
 
                 Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                
 
-
+                Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -263,22 +269,24 @@ namespace Nemesis.TextParsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
 
                 Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-                accumulator.Append(Helper.TUPLE_DELIMITER);
+                Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
 
 
+                Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -289,12 +297,28 @@ namespace Nemesis.TextParsers
 
         private static class Helper
         {
-            public const char TUPLE_DELIMITER = ',';
+            private const char TUPLE_DELIMITER = ',';
             private const char NULL_ELEMENT_MARKER = '∅';
             private const char ESCAPING_SEQUENCE_START = '\\';
+            private const char TUPLE_START = '(';
+            private const char TUPLE_END = ')';
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void StartFormat(ref ValueSequenceBuilder<char> accumulator) =>
+                accumulator.Append(TUPLE_START);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void EndFormat(ref ValueSequenceBuilder<char> accumulator) =>
+                accumulator.Append(TUPLE_END);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) =>
+                accumulator.Append(TUPLE_DELIMITER);
+
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity)
             {
+                input = UnParenthesize(input);
+
                 var kvpTokens = input.Tokenize(TUPLE_DELIMITER, ESCAPING_SEQUENCE_START, true);
                 var enumerator = kvpTokens.GetEnumerator();
 
@@ -304,6 +328,37 @@ namespace Nemesis.TextParsers
                 return enumerator;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
+            {
+                int length = span.Length;
+                if (length < 2) throw GetStateException();
+
+                int start = 0;
+                for (; start < length; start++)
+                    if (!char.IsWhiteSpace(span[start]))
+                        break;
+
+                bool tupleStartsWithParenthesis = start < span.Length && span[start] == TUPLE_START;
+
+                if (!tupleStartsWithParenthesis) throw GetStateException();
+
+                int end = span.Length - 1;
+                for (; end > start; end--)
+                    if (!char.IsWhiteSpace(span[end]))
+                        break;
+
+                bool tupleEndsWithParenthesis = end > 0 && span[end] == TUPLE_END;
+
+                if (!tupleEndsWithParenthesis) throw GetStateException();
+
+                return span.Slice(start + 1, end - start - 1);
+
+                Exception GetStateException() => new ArgumentException(
+                         "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
             {
                 string ToOrdinal(byte number)
@@ -328,6 +383,7 @@ namespace Nemesis.TextParsers
                     throw new ArgumentException($"{ToOrdinal(index)} tuple element was not found");
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity)
             {
                 if (enumerator.MoveNext())

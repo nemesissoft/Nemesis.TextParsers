@@ -54,7 +54,8 @@ namespace Benchmarks
 
         public CollectionParserBench()
         {
-            SpanSplitTest();
+            SpanSplit();
+            SpanTokenize();
             TextTransformer.Default.GetTransformer<int[]>();
         }
 
@@ -111,8 +112,23 @@ namespace Benchmarks
             return result;
         }
 
+        private static readonly ITransformer<int> _intParser = TextTransformer.Default.GetTransformer<int>();
+
+        [Benchmark]
+        public int SpanSplit()
+        {
+            int result = 0;
+
+            var split = Numbers.AsSpan().Split('|');
+
+            foreach (var text in split)
+                result += _intParser.Parse(text);
+
+            return result;
+        }
+
         [Benchmark(Baseline = true)]
-        public int SpanSplitTest()
+        public int SpanTokenize()
         {
             int result = 0;
             var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
@@ -125,7 +141,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public int SpanSplitTest_Alloc()
+        public int SpanTokenize_Alloc()
         {
             var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
                     .Parse<int>('\\', '∅')
@@ -1055,7 +1071,7 @@ namespace Benchmarks
 
             for (int i = 0; i < COUNT; i++)
             {
-                var key = new Tuple<int, int>(i,i*10);
+                var key = new Tuple<int, int>(i, i * 10);
                 value = dict[key];
             }
 
@@ -1070,7 +1086,7 @@ namespace Benchmarks
 
             for (int i = 0; i < COUNT; i++)
             {
-                var key = (i,i*10);
+                var key = (i, i * 10);
                 value = dict[key];
             }
 

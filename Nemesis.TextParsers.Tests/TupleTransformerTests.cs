@@ -76,18 +76,34 @@ namespace Nemesis.TextParsers.Tests
 
 
             //Tuples
-            (typeof((TimeSpan, int)), (new TimeSpan(3,14,15,9), 3), @"3.14:15:09,3"),
-            (typeof((TimeSpan, int, float)), (new TimeSpan(3,14,15,9), 3, 3.14f), @"3.14:15:09,3,3.14"),
-            (typeof((TimeSpan, int, float, string)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi"), @"3.14:15:09,3,3.14,Pi"),
-            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"3.14:15:09,3,3.14,Pi,3.14"),
-
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"00:00:00,0,0,,0"),
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"00:00:00,0,0,∅,0"),
+            (typeof((TimeSpan, int)), (new TimeSpan(3,14,15,9), 3), @"(3.14:15:09,3)"),
+            (typeof((TimeSpan, int, float)), (new TimeSpan(3,14,15,9), 3, 3.14f), @"(3.14:15:09,3,3.14)"),
+            (typeof((TimeSpan, int, float, string)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi"), @"(3.14:15:09,3,3.14,Pi)"),
+            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)"),
+            
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @""),
 
-            (typeof((string, string, string, string, string)), (@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅"),
-        };
+            (typeof((string, string, string, string, string)), (@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"(\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅)"),
 
+            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @" (3.14:15:09,3,3.14,Pi,3.14)"),
+            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @" (3.14:15:09,3,3.14,Pi,3.14)  "),
+            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)  "),
+
+            (typeof((string, string)), ("A","B"), @"(A,B)"),
+            (typeof((string, string, string)), ("A","B","C"), @"(A,B,C)"),
+            (typeof((string, string, string, string)), ("A","B","C","D"), @"(A,B,C,D)"),
+            (typeof((string, string, string, string, string)), ("A","B","C","D","E"), @"(A,B,C,D,E)"),
+            //rare case then brackets are actually used inside tuple values 
+            (typeof((string, string)), ("(A","B)"), @"((A,B))"),
+            (typeof((string, string, string)), ("(A","B","C)"), @"((A,B,C))"),
+            (typeof((string, string, string, string)), ("(A","B","(C)","D)"), @"((A,B,(C),D))"),
+            (typeof((string, string, string, string, string)), ("(A","(B","C)","D","E)"), @"((A,(B,C),D,E))"),
+            //Tuple with tuple fields
+            (typeof( ((string, string), (string, string), string) ), (("N", "e"), ("s", "t") , "ed"), @"((N\,e),(s\,t),ed)"),
+        };
+         
         [TestCaseSource(nameof(Correct_KeyValuePair_Data))]
         public void KeyValuePairTransformer_CompoundTest((Type tupleType, object tuple, string input) data)
         {
@@ -117,7 +133,8 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(parsed, Is.EqualTo(parsed3));
         }
 
-
+        private const string NO_PARENTHESES_ERROR =
+            "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace";
         internal static IEnumerable<(Type, string, Type, string)> Bad_KeyValuePair_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
@@ -130,14 +147,28 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"' ' has no matching value"),
 
             (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999=OK", typeof(OverflowException), @"Value was either too large or too small for a Single"),
+            
 
-            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:99,3,3.14,Pi,3.14",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi",typeof(ArgumentException), @"5th tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14",typeof(ArgumentException), @"4th tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3",typeof(ArgumentException), @"3rd tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09",typeof(ArgumentException), @"2nd tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
+            (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
+
+
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:16,3,3.14,Pi,3.14",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:99,3,3.14,Pi,3.14",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+
+
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
+            (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi)",typeof(ArgumentException), @"5th tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14)",typeof(ArgumentException), @"4th tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3)",typeof(ArgumentException), @"3rd tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09)",typeof(ArgumentException), @"2nd tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi,3.14,MorePie)",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
         };
 
         [TestCaseSource(nameof(Bad_KeyValuePair_Data))]

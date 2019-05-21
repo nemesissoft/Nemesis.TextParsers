@@ -505,7 +505,22 @@ namespace Nemesis.TextParsers.Tests
                     default,
                     default,
                 }.ToList(),
-                @"3.14:15:09,3,3.1400001,Pi,3.14|31.14:15:09,3,3.1400001,Pi,\∅|-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅|00:00:00,0,0,,0|00:00:00,0,0,\∅,\∅|00:00:00,0,0,\∅,\∅|∅|"),
+                @"(3.14:15:09,3,3.1400001,Pi,3.14)|(31.14:15:09,3,3.1400001,Pi,\∅)|(-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅)|(00:00:00,0,0,,0)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)"),
+
+            (typeof( (TimeSpan, int, float, string, decimal?) ),
+                new[]
+                {
+                    (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m),
+                    (new TimeSpan(31,14,15,9), 3, 3.14f, "Pi", (decimal?)null),
+                    (TimeSpan.MinValue, 3, 3.14f, "Pi", (decimal?)null),
+
+                    (TimeSpan.Zero, 0, 0f, "", 0m),
+                    (TimeSpan.Zero, 0, 0f, (string)null, (decimal?)null),
+                    default,
+                    default,
+                    default,
+                }.ToList(),
+                @"(3.14:15:09,3,3.1400001,Pi,3.14)|(31.14:15:09,3,3.1400001,Pi,\∅)|(-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅)|(00:00:00,0,0,,0)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)|∅|"),
         };
 
         static TimeSpan Divide(TimeSpan dividend, long divisor) => TimeSpan.FromTicks((long)(dividend.Ticks / (double)divisor));
