@@ -169,7 +169,7 @@ namespace Benchmarks
             return result;
         }
 
-        [Benchmark]
+        /*[Benchmark]
         public int SpanCollectionSerializer_ParseKnownLength()
         {
             var parsed = SpanCollectionSerializer.DefaultInstance.ParseArray<int>(Numbers, 1000);
@@ -177,7 +177,7 @@ namespace Benchmarks
             foreach (int num in parsed)
                 result += num;
             return result;
-        }
+        }*/
 
         [Benchmark]
         public int GetTransformer()

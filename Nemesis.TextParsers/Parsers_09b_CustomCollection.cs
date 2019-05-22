@@ -25,13 +25,13 @@ namespace Nemesis.TextParsers
             else if (IsReadOnlyCollection(collectionType, out var meta))
             {
                 var transType = typeof(ReadOnlyCollectionTransformer<,>).MakeGenericType(meta.elementType, collectionType);
-                var getListConverterMethod = 
+                var getListConverterMethod =
                         (GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                            .SingleOrDefault(mi =>mi.Name == nameof(GetListConverter))
+                            .SingleOrDefault(mi => mi.Name == nameof(GetListConverter))
                         ?? throw new MissingMethodException($"Method {nameof(GetListConverter)} does not exist"))
                     .MakeGenericMethod(meta.elementType, collectionType);
 
-                var funcConverter = getListConverterMethod.Invoke(null, new object[] {meta.ctor});
+                var funcConverter = getListConverterMethod.Invoke(null, new object[] { meta.ctor });
 
                 return (ITransformer<TCollection>)Activator.CreateInstance(transType, supportsDeserializationLogic, funcConverter);
             }
@@ -62,7 +62,7 @@ namespace Nemesis.TextParsers
 
             public TCollection Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {
-                var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input);
+                var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
                 TCollection result = GetCollection(stream);
 
                 if (_supportsDeserializationLogic && result is IDeserializationCallback callback)

@@ -42,7 +42,7 @@ namespace Nemesis.TextParsers
                 ArrayPool<TTo>.Shared.Return(initialBuffer);
             }
         }
-        
+
         [PureMethod]
         public static IReadOnlyCollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
             CollectionKind kind = CollectionKind.List, ushort capacity = 8)
@@ -110,7 +110,7 @@ namespace Nemesis.TextParsers
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
             }
         }
-        //TODO try to calculate capacity at calling site for ToCollection + ToDictionary+ToArray
+
         [PureMethod]
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this in ParsedPairSequence<TKey, TValue> parsedPairs,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
@@ -194,7 +194,7 @@ namespace Nemesis.TextParsers
                 ArrayPool<T>.Shared.Return(initialBuffer);
             }
         }
-
+        
         //TODO UnescapeCharacterTo(span, ValueSequenceBuilder) + ShouldUnescapeCharacter?
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)

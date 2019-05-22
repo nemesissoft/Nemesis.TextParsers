@@ -8,7 +8,8 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     class LinqTests
     {
-        private static ParsedSequence<double> GetSequence(string text) => SpanCollectionSerializer.DefaultInstance.ParseStream<double>(text.AsSpan());
+        private static ParsedSequence<double> GetSequence(string text) => 
+            SpanCollectionSerializer.DefaultInstance.ParseStream<double>(text.AsSpan(), out _);
 
         [TestCase(@"", false, 0)]
         [TestCase(@"1", true, 1)]

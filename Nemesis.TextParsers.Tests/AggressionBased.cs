@@ -346,12 +346,12 @@ namespace Nemesis.TextParsers.Tests
 
         public static IAggressionBased<TValue> FromText(string text) => string.IsNullOrEmpty(text) ?
             FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)text : default) :
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan()))
+            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _))
         ;
 
         public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) => text.IsEmpty ?
             FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)"" : default) :
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text))
+            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _))
         ;
 
         private static bool IsEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);

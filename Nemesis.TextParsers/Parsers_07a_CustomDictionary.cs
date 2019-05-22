@@ -64,7 +64,7 @@ namespace Nemesis.TextParsers
 
             public TDict Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {
-                var stream = SpanCollectionSerializer.DefaultInstance.ParsePairsStream<TKey, TValue>(input);
+                var stream = SpanCollectionSerializer.DefaultInstance.ParsePairsStream<TKey, TValue>(input, out _);
                 TDict result = GetDictionary(stream);
 
                 if (_supportsDeserializationLogic && result is IDeserializationCallback callback)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -40,34 +39,34 @@ namespace Nemesis.TextParsers
 
         #region Collection
         [PureMethod]
-        public TTo[] ParseArray<TTo>(string text, ushort capacity = 8) =>
-            text == null ? null : ParseArray<TTo>(text.AsSpan(), capacity);
+        public TTo[] ParseArray<TTo>(string text) =>
+            text == null ? null : ParseArray<TTo>(text.AsSpan());
 
         [PureMethod]
-        public TTo[] ParseArray<TTo>(ReadOnlySpan<char> text, ushort capacity = 8) =>
-            text.IsEmpty ? new TTo[0] : ParseStream<TTo>(text).ToArray(capacity);
+        public TTo[] ParseArray<TTo>(ReadOnlySpan<char> text) =>
+            text.IsEmpty ? new TTo[0] : ParseStream<TTo>(text, out var capacity).ToArray(capacity);
 
 
         [PureMethod]
-        public IReadOnlyCollection<TTo> ParseCollection<TTo>(string text,
-            CollectionKind kind = CollectionKind.List, ushort capacity = 8) =>
-            text == null ? null : ParseCollection<TTo>(text.AsSpan(), kind, capacity);
+        public IReadOnlyCollection<TTo> ParseCollection<TTo>(string text, CollectionKind kind = CollectionKind.List) =>
+            text == null ? null : ParseCollection<TTo>(text.AsSpan(), kind);
 
         [PureMethod]
-        public IReadOnlyCollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text,
-            CollectionKind kind = CollectionKind.List, ushort capacity = 8) =>
-            ParseStream<TTo>(text).ToCollection(kind, capacity);
+        public IReadOnlyCollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text, CollectionKind kind = CollectionKind.List) =>
+            ParseStream<TTo>(text, out var capacity).ToCollection(kind, capacity);
 
 
         public LeanCollection<T> ParseLeanCollection<T>(string text) =>
             text == null ? new LeanCollection<T>() : ParseLeanCollection<T>(text.AsSpan());
 
         public LeanCollection<T> ParseLeanCollection<T>(ReadOnlySpan<char> text) =>
-            ParseStream<T>(text).ToLeanCollection();
+            ParseStream<T>(text, out _).ToLeanCollection();
 
         [PureMethod]
-        public ParsedSequence<TTo> ParseStream<TTo>(in ReadOnlySpan<char> text)
+        public ParsedSequence<TTo> ParseStream<TTo>(in ReadOnlySpan<char> text, out ushort capacity)
         {
+            capacity = (ushort)(CountCharacters(text, ListDelimiter) + 1);
+
             var tokens = text.Tokenize(ListDelimiter, EscapingSequenceStart, true);
             var parsed = tokens.Parse<TTo>(EscapingSequenceStart, NullElementMarker, ListDelimiter);
 
@@ -137,22 +136,22 @@ namespace Nemesis.TextParsers
         #region Dictionary
 
         public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text,
-            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort capacity = 8)
+            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys)
             => text == null ? null :
-                ParseDictionary<TKey, TValue>(text.AsSpan(), kind, behaviour, capacity);
+                ParseDictionary<TKey, TValue>(text.AsSpan(), kind, behaviour);
 
 
         public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(ReadOnlySpan<char> text,
-            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort capacity = 8)
+            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys)
         {
-            var parsedPairs = ParsePairsStream<TKey, TValue>(text);
+            var parsedPairs = ParsePairsStream<TKey, TValue>(text, out var capacity);
             return parsedPairs.ToDictionary(kind, behaviour, capacity);
         }
 
-        public ParsedPairSequence<TKey, TValue> ParsePairsStream<TKey, TValue>(ReadOnlySpan<char> text)
+        public ParsedPairSequence<TKey, TValue> ParsePairsStream<TKey, TValue>(ReadOnlySpan<char> text, out ushort capacity)
         {
+            capacity = (ushort)(CountCharacters(text, DictionaryPairsDelimiter) + 1);
+
             var potentialKvp = text.Tokenize(DictionaryPairsDelimiter, EscapingSequenceStart, true);
 
             var parsedPairs = new ParsedPairSequence<TKey, TValue>(potentialKvp, EscapingSequenceStart,
@@ -210,6 +209,20 @@ namespace Nemesis.TextParsers
             var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
             accumulator.Dispose();
             return text;
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private static ushort CountCharacters(in ReadOnlySpan<char> input, char character)
+        {
+            ushort count = 0;
+            for (int i = input.Length - 1; i >= 0; i--)
+                if (input[i] == character)
+                    count++;
+
+            return count;
         }
 
         #endregion
