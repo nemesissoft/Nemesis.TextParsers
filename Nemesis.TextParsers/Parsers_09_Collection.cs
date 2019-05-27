@@ -19,14 +19,14 @@ namespace Nemesis.TextParsers
             return (ITransformer<TCollection>)Activator.CreateInstance(transType, kind);
         }
 
-        private class InnerCollectionTransformer<TElement, TCollection> : ITransformer<TCollection>, IParser<TCollection>
+        private class InnerCollectionTransformer<TElement, TCollection> : ITransformer<TCollection>, ITextParser<TCollection>
             where TCollection : IEnumerable<TElement>
         {
             private readonly CollectionKind _kind;
             public InnerCollectionTransformer(CollectionKind kind) => _kind = kind;
 
 
-            TCollection IParser<TCollection>.ParseText(string input) => Parse(input.AsSpan());
+            TCollection ITextParser<TCollection>.ParseText(string input) => Parse(input.AsSpan());
 
             public TCollection Parse(ReadOnlySpan<char> input) => //input.IsEmpty ? default :
                 (TCollection)SpanCollectionSerializer.DefaultInstance.ParseCollection<TElement>(input, _kind);

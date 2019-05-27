@@ -52,13 +52,13 @@ namespace Nemesis.TextParsers
             return λ.Compile();
         }
 
-        private abstract class CollectionTransformer<TElement, TCollection> : ITransformer<TCollection>, IParser<TCollection>
+        private abstract class CollectionTransformer<TElement, TCollection> : ITransformer<TCollection>, ITextParser<TCollection>
             where TCollection : IEnumerable<TElement>
         {
             private readonly bool _supportsDeserializationLogic;
             protected CollectionTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
-            TCollection IParser<TCollection>.ParseText(string input) => Parse(input.AsSpan());
+            TCollection ITextParser<TCollection>.ParseText(string input) => Parse(input.AsSpan());
 
             public TCollection Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {

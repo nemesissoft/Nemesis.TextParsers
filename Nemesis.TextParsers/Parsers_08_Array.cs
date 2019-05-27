@@ -16,9 +16,9 @@ namespace Nemesis.TextParsers
             return (ITransformer<TArray>)Activator.CreateInstance(transType);
         }
 
-        private class InnerArrayTransformer<TElement> : ITransformer<TElement[]>, IParser<TElement[]>
+        private class InnerArrayTransformer<TElement> : ITransformer<TElement[]>, ITextParser<TElement[]>
         {
-            TElement[] IParser<TElement[]>.ParseText(string input) => Parse(input.AsSpan());
+            TElement[] ITextParser<TElement[]>.ParseText(string input) => Parse(input.AsSpan());
 
             public TElement[] Parse(ReadOnlySpan<char> input) =>
                     //input.IsEmpty ? default :

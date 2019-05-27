@@ -19,14 +19,14 @@ namespace Nemesis.TextParsers
             return (ITransformer<TDictionary>)Activator.CreateInstance(transType, kind);
         }
 
-        private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, IParser<TDict>
+        private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, ITextParser<TDict>
             where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             private readonly DictionaryKind _kind;
             public InnerDictionaryTransformer(DictionaryKind kind) => _kind = kind;
 
 
-            TDict IParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
+            TDict ITextParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
 
             public TDict Parse(ReadOnlySpan<char> input) =>//input.IsEmpty ? default :
                 (TDict)SpanCollectionSerializer.DefaultInstance.ParseDictionary<TKey, TValue>(input, _kind);

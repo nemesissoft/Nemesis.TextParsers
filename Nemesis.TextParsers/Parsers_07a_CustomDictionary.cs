@@ -53,14 +53,14 @@ namespace Nemesis.TextParsers
             return λ.Compile();
         }
 
-        private abstract class DictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, IParser<TDict>
+        private abstract class DictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, ITextParser<TDict>
             where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             private readonly bool _supportsDeserializationLogic;
             protected DictionaryTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
 
-            TDict IParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
+            TDict ITextParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
 
             public TDict Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {

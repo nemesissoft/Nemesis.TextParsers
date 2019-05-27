@@ -16,9 +16,9 @@ namespace Nemesis.TextParsers
             return (ITransformer<TCollection>)Activator.CreateInstance(transType);
         }
 
-        private class InnerLeanCollectionTransformer<TElement> : ITransformer<LeanCollection<TElement>>, IParser<LeanCollection<TElement>>
+        private class InnerLeanCollectionTransformer<TElement> : ITransformer<LeanCollection<TElement>>, ITextParser<LeanCollection<TElement>>
         {
-            LeanCollection<TElement> IParser<LeanCollection<TElement>>.ParseText(string input) => Parse(input.AsSpan());
+            LeanCollection<TElement> ITextParser<LeanCollection<TElement>>.ParseText(string input) => Parse(input.AsSpan());
 
             public LeanCollection<TElement> Parse(ReadOnlySpan<char> input) =>
                 SpanCollectionSerializer.DefaultInstance.ParseLeanCollection<TElement>(input);

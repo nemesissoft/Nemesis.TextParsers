@@ -150,9 +150,9 @@ namespace Nemesis.TextParsers.Tests
             var transformer = getTransformer.Invoke(TextTransformer.Default, null);
             Console.WriteLine(transformer);
 
-            var parseMethod = typeof(IParser<>).MakeGenericType(data.contractType)
+            var parseMethod = typeof(ITextParser<>).MakeGenericType(data.contractType)
                                   .GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                    mi.Name == nameof(IParser<object>.ParseText))
+                    mi.Name == nameof(ITextParser<object>.ParseText))
                     ?? throw new MissingMethodException("Method ParseText does not exist");
 
             var formatMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>

@@ -38,7 +38,7 @@ namespace Nemesis.TextParsers
             return (ITransformer<TTuple>)Activator.CreateInstance(transType);
         }
 
-        private class Tuple2Transformer<T1, T2> : ITransformer<(T1, T2)>, IParser<(T1, T2)>
+        private class Tuple2Transformer<T1, T2> : ITransformer<(T1, T2)>, ITextParser<(T1, T2)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -51,7 +51,7 @@ namespace Nemesis.TextParsers
                 _transformer2 = TextTransformer.Default.GetTransformer<T2>();
             }
 
-            (T1, T2) IParser<(T1, T2)>.ParseText(string input) => Parse(input.AsSpan());
+            (T1, T2) ITextParser<(T1, T2)>.ParseText(string input) => Parse(input.AsSpan());
 
             public (T1, T2) Parse(ReadOnlySpan<char> input)
             {
@@ -91,7 +91,7 @@ namespace Nemesis.TextParsers
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()})";
         }
 
-        private class Tuple3Transformer<T1, T2, T3> : ITransformer<(T1, T2, T3)>, IParser<(T1, T2, T3)>
+        private class Tuple3Transformer<T1, T2, T3> : ITransformer<(T1, T2, T3)>, ITextParser<(T1, T2, T3)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -106,7 +106,7 @@ namespace Nemesis.TextParsers
                 _transformer3 = TextTransformer.Default.GetTransformer<T3>();
             }
 
-            (T1, T2, T3) IParser<(T1, T2, T3)>.ParseText(string input) => Parse(input.AsSpan());
+            (T1, T2, T3) ITextParser<(T1, T2, T3)>.ParseText(string input) => Parse(input.AsSpan());
 
             public (T1, T2, T3) Parse(ReadOnlySpan<char> input)
             {
@@ -151,7 +151,7 @@ namespace Nemesis.TextParsers
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()})";
         }
 
-        private class Tuple4Transformer<T1, T2, T3, T4> : ITransformer<(T1, T2, T3, T4)>, IParser<(T1, T2, T3, T4)>
+        private class Tuple4Transformer<T1, T2, T3, T4> : ITransformer<(T1, T2, T3, T4)>, ITextParser<(T1, T2, T3, T4)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -168,7 +168,7 @@ namespace Nemesis.TextParsers
                 _transformer4 = TextTransformer.Default.GetTransformer<T4>();
             }
 
-            (T1, T2, T3, T4) IParser<(T1, T2, T3, T4)>.ParseText(string input) => Parse(input.AsSpan());
+            (T1, T2, T3, T4) ITextParser<(T1, T2, T3, T4)>.ParseText(string input) => Parse(input.AsSpan());
 
             public (T1, T2, T3, T4) Parse(ReadOnlySpan<char> input)
             {
@@ -219,7 +219,7 @@ namespace Nemesis.TextParsers
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()})";
         }
 
-        private class Tuple5Transformer<T1, T2, T3, T4, T5> : ITransformer<(T1, T2, T3, T4, T5)>, IParser<(T1, T2, T3, T4, T5)>
+        private class Tuple5Transformer<T1, T2, T3, T4, T5> : ITransformer<(T1, T2, T3, T4, T5)>, ITextParser<(T1, T2, T3, T4, T5)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -238,7 +238,7 @@ namespace Nemesis.TextParsers
                 _transformer5 = TextTransformer.Default.GetTransformer<T5>();
             }
 
-            (T1, T2, T3, T4, T5) IParser<(T1, T2, T3, T4, T5)>.ParseText(string input) => Parse(input.AsSpan());
+            (T1, T2, T3, T4, T5) ITextParser<(T1, T2, T3, T4, T5)>.ParseText(string input) => Parse(input.AsSpan());
 
             public (T1, T2, T3, T4, T5) Parse(ReadOnlySpan<char> input)
             {

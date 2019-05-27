@@ -3,10 +3,11 @@ using System.Globalization;
 
 namespace Nemesis.TextParsers
 {
-    public interface IParser<out TTo> { TTo ParseText(string input); } //for tests - ReadOnlySpan<char> cannot be boxed
+    internal interface ITextParser<out TTo> { TTo ParseText(string input); } //for tests - ReadOnlySpan<char> cannot be boxed
     public interface ISpanParser<out TTo> { TTo Parse(ReadOnlySpan<char> input); }
     public interface IFormatter<in TElement> { string Format(TElement element); }
     public interface ITransformer<TElement> : ISpanParser<TElement>, IFormatter<TElement> { }
+    
 
     public interface ICanTransform
     {

@@ -31,9 +31,9 @@ namespace Nemesis.TextParsers.Tests
                     mi.Name == nameof(ITransformer<object>.Format))
                     ?? throw new MissingMethodException("Method Format does not exist");
 
-            MethodInfo parseMethod = typeof(IParser<>).MakeGenericType(tupleType)
+            MethodInfo parseMethod = typeof(ITextParser<>).MakeGenericType(tupleType)
                                   .GetMethods(ALL_FLAGS)
-                                  .SingleOrDefault(mi => mi.Name == nameof(IParser<object>.ParseText))
+                                  .SingleOrDefault(mi => mi.Name == nameof(ITextParser<object>.ParseText))
                               ?? throw new MissingMethodException("Method ParseText does not exist");
 
             return (transformer, formatMethod, parseMethod);

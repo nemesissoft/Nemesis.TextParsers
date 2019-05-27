@@ -10,6 +10,9 @@ namespace Nemesis.TextParsers
     public interface ITextTransformer
     {
         ITransformer<TElement> GetTransformer<TElement>();
+
+        //object Parse(ReadOnlySpan<char> input);
+        //string Format(object element);
     }
 
     public sealed class TextTransformer : ITextTransformer
@@ -17,10 +20,10 @@ namespace Nemesis.TextParsers
         private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;
         private readonly ConcurrentDictionary<Type, object> _transformerCache;
 
-        private TextTransformer([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, object> transformerCache=null)
+        private TextTransformer([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, object> transformerCache = null)
         {
             _canParseByDelegateContracts = canParseByDelegateContracts ?? throw new ArgumentNullException(nameof(canParseByDelegateContracts));
-            _transformerCache = transformerCache?? new ConcurrentDictionary<Type, object>();
+            _transformerCache = transformerCache ?? new ConcurrentDictionary<Type, object>();
         }
 
         public static ITextTransformer Default { get; } = GetDefaultTextTransformer();
@@ -34,7 +37,7 @@ namespace Nemesis.TextParsers
 
             foreach (var type in types)
                 if (typeof(ICanCreateTransformer).IsAssignableFrom(type))
-                    byDelegateList.Add((ICanCreateTransformer) Activator.CreateInstance(type));
+                    byDelegateList.Add((ICanCreateTransformer)Activator.CreateInstance(type));
 
             byDelegateList.Sort((i1, i2) => i1.Priority.CompareTo(i2.Priority));
 
@@ -42,7 +45,7 @@ namespace Nemesis.TextParsers
 
             return new TextTransformer(canParseByDelegateContracts);
         }
-        
+
         public ITransformer<TElement> GetTransformer<TElement>() =>
             (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), type =>
             {
@@ -55,6 +58,38 @@ namespace Nemesis.TextParsers
 
                 throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
             });
+
+        /*public object Parse(ReadOnlySpan<char> input)
+        {
+
+        }
+
+        public string Format(object element)
+        {
+            return element is null ? 
+                null : 
+                GetTransformerCore(element.GetType())
+        }
+
+        private object GetTransformerCore(Type objectType) =>
+            _transformerCache.GetOrAdd(objectType, type =>
+            {
+                if (type.IsGenericTypeDefinition)
+                    throw new NotSupportedException($"Parsing GenericTypeDefinition is not supported: {type.FullName}");
+
+                MethodInfo createTransformerMethod = typeof(ICanCreateTransformer)
+                        .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                        .Single(m => m.Name == nameof(ICanCreateTransformer.CreateTransformer))
+                        .MakeGenericMethod(type);
+
+                foreach (var canParseByDelegate in _canParseByDelegateContracts)
+                    if (canParseByDelegate.CanHandle(type))
+                        return createTransformerMethod.Invoke(canParseByDelegate, null);
+
+                throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
+            });*/
+
+
 
         /*public object GetTransformer(Type type)
         {
