@@ -16,15 +16,13 @@ namespace Nemesis.TextParsers
             return (ITransformer<TArray>)Activator.CreateInstance(transType);
         }
 
-        private class InnerArrayTransformer<TElement> : ITransformer<TElement[]>, ITextParser<TElement[]>
+        private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>
         {
-            TElement[] ITextParser<TElement[]>.ParseText(string input) => Parse(input.AsSpan());
-
-            public TElement[] Parse(ReadOnlySpan<char> input) =>
+            public override TElement[] Parse(ReadOnlySpan<char> input) =>
                     //input.IsEmpty ? default :
                     SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
 
-            public string Format(TElement[] array) =>
+            public override string Format(TElement[] array) =>
                     //array == null ? null :
                     SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
 

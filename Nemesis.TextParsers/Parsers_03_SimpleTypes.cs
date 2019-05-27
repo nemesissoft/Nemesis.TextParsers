@@ -50,14 +50,10 @@ namespace Nemesis.TextParsers
     }
 
 
-    public abstract class SimpleTransformer<TElement> : ICanTransformType, ITransformer<TElement>
+    public abstract class SimpleTransformer<TElement> : TransformerBase<TElement>, ICanTransformType
     {
-        public bool CanHandle(Type type) => typeof(TElement) == type;
+        //public bool CanHandle(Type type) => typeof(TElement) == type;
         public Type Type => typeof(TElement);
-
-        public abstract TElement Parse(ReadOnlySpan<char> input);
-
-        public abstract string Format(TElement element);
 
         protected static CultureInfo InvCult => CultureInfo.InvariantCulture;
 

@@ -15,6 +15,7 @@ namespace Nemesis.TextParsers
         //string Format(object element);
     }
 
+    //TODO implementation with Dictionary cache 
     public sealed class TextTransformer : ITextTransformer
     {
         private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;

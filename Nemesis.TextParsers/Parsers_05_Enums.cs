@@ -46,7 +46,7 @@ namespace Nemesis.TextParsers
         public sbyte Priority => 30;
     }
 
-    public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : ITransformer<TEnum>
+    public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : TransformerBase<TEnum>
         where TEnum : Enum
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
         where TNumberHandler : class, INumber<TUnderlying> //PERF: making number handler a concrete specification can win additional up to 3% in speed
@@ -63,7 +63,7 @@ namespace Nemesis.TextParsers
         //check performance comparison in Benchmark project - ToEnumBench
         internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
         
-        public TEnum Parse(ReadOnlySpan<char> input)
+        public override TEnum Parse(ReadOnlySpan<char> input)
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
 
@@ -97,7 +97,7 @@ namespace Nemesis.TextParsers
                 _elementParser(input);
         }
 
-        public string Format(TEnum element) => element.ToString("G");
+        public override string Format(TEnum element) => element.ToString("G");
 
         public override string ToString() => $"Transform {typeof(TEnum).Name}";
     }
@@ -140,7 +140,9 @@ namespace Nemesis.TextParsers
 
             var conditionToValue = new List<(Expression Condition, TUnderlying value)>();
 
-            var charEqMethod = typeof(EnumTransformerHelper).GetMethod(nameof(CharEq), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            var charEqMethod = typeof(EnumTransformerHelper)
+                .GetMethod(nameof(CharEq), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new MissingMethodException(nameof(EnumTransformerHelper), nameof(CharEq));
 
             foreach (var (name, value) in enumValues)
             {

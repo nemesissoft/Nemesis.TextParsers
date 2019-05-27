@@ -52,15 +52,14 @@ namespace Nemesis.TextParsers
             return λ.Compile();
         }
 
-        private abstract class CollectionTransformer<TElement, TCollection> : ITransformer<TCollection>, ITextParser<TCollection>
+        private abstract class CollectionTransformer<TElement, TCollection> : TransformerBase<TCollection>
             where TCollection : IEnumerable<TElement>
         {
             private readonly bool _supportsDeserializationLogic;
             protected CollectionTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
-            TCollection ITextParser<TCollection>.ParseText(string input) => Parse(input.AsSpan());
-
-            public TCollection Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
+            
+            public override TCollection Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {
                 var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
                 TCollection result = GetCollection(stream);
@@ -73,7 +72,7 @@ namespace Nemesis.TextParsers
 
             protected abstract TCollection GetCollection(in ParsedSequence<TElement> stream);
 
-            public string Format(TCollection coll) => //coll == null ? null :
+            public override string Format(TCollection coll) => //coll == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
             public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";

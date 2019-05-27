@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers
             return (ITransformer<TPair>)Activator.CreateInstance(transType);
         }
 
-        private class InnerPairTransformer<TKey, TValue> : ITransformer<KeyValuePair<TKey, TValue>>, ITextParser<KeyValuePair<TKey, TValue>>
+        private sealed class InnerPairTransformer<TKey, TValue> : TransformerBase<KeyValuePair<TKey, TValue>>
         {
             private const char TUPLE_DELIMITER = '=';
             private const char NULL_ELEMENT_MARKER = '∅';
@@ -36,9 +36,7 @@ namespace Nemesis.TextParsers
                 _valueTransformer = TextTransformer.Default.GetTransformer<TValue>();
             }
 
-            KeyValuePair<TKey, TValue> ITextParser<KeyValuePair<TKey, TValue>>.ParseText(string input) => Parse(input.AsSpan());
-
-            public KeyValuePair<TKey, TValue> Parse(ReadOnlySpan<char> input)
+            public override KeyValuePair<TKey, TValue> Parse(ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -82,7 +80,7 @@ namespace Nemesis.TextParsers
             }
 
 
-            public string Format(KeyValuePair<TKey, TValue> element)
+            public override string Format(KeyValuePair<TKey, TValue> element)
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);

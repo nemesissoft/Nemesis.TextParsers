@@ -20,16 +20,16 @@ namespace Nemesis.TextParsers
                 );
         }
 
-        private class ConverterTransformer<TElement> : ITransformer<TElement>
+        private sealed class ConverterTransformer<TElement> : TransformerBase<TElement>
         {
             private readonly TypeConverter _typeConverter;
             public ConverterTransformer(TypeConverter typeConverter) => _typeConverter = typeConverter;
 
 
-            public TElement Parse(ReadOnlySpan<char> input) =>
+            public override TElement Parse(ReadOnlySpan<char> input) =>
                 (TElement)_typeConverter.ConvertFromInvariantString(input.ToString());
 
-            public string Format(TElement element) =>
+            public override string Format(TElement element) =>
                 _typeConverter.ConvertToInvariantString(element);
 
             public override string ToString() => $"Transform {typeof(TElement).Name} using {nameof(TypeConverter)}";

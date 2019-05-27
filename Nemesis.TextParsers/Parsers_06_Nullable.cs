@@ -15,17 +15,17 @@ namespace Nemesis.TextParsers
             return (ITransformer<TNullable>)Activator.CreateInstance(transType);
         }
 
-        private class InnerNullableTransformer<TElement> : ITransformer<TElement?> where TElement : struct
+        private sealed class InnerNullableTransformer<TElement> : TransformerBase<TElement?> where TElement : struct
         {
             private readonly ITransformer<TElement> _elementParser;
 
             public InnerNullableTransformer() => _elementParser = TextTransformer.Default.GetTransformer<TElement>();
 
 
-            public TElement? Parse(ReadOnlySpan<char> input) =>
+            public override TElement? Parse(ReadOnlySpan<char> input) =>
                 input.IsEmpty ? (TElement?)null : _elementParser.Parse(input);
 
-            public string Format(TElement? element) =>
+            public override string Format(TElement? element) =>
                 element.HasValue ? _elementParser.Format(element.Value) : null;
 
             public override string ToString() => $"Transform {typeof(TElement).Name}?";

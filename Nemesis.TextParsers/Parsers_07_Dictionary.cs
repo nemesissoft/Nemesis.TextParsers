@@ -19,19 +19,17 @@ namespace Nemesis.TextParsers
             return (ITransformer<TDictionary>)Activator.CreateInstance(transType, kind);
         }
 
-        private class InnerDictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, ITextParser<TDict>
+        private sealed class InnerDictionaryTransformer<TKey, TValue, TDict> : TransformerBase<TDict>
             where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             private readonly DictionaryKind _kind;
             public InnerDictionaryTransformer(DictionaryKind kind) => _kind = kind;
 
-
-            TDict ITextParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
-
-            public TDict Parse(ReadOnlySpan<char> input) =>//input.IsEmpty ? default :
+            
+            public override TDict Parse(ReadOnlySpan<char> input) =>//input.IsEmpty ? default :
                 (TDict)SpanCollectionSerializer.DefaultInstance.ParseDictionary<TKey, TValue>(input, _kind);
 
-            public string Format(TDict dict) =>//dict == null ? null :
+            public override string Format(TDict dict) =>//dict == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
 
             public override string ToString() => $"Transform {typeof(TDict).GetFriendlyName()} AS {_kind}<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>";

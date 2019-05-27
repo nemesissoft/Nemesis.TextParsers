@@ -19,19 +19,17 @@ namespace Nemesis.TextParsers
             return (ITransformer<TCollection>)Activator.CreateInstance(transType, kind);
         }
 
-        private class InnerCollectionTransformer<TElement, TCollection> : ITransformer<TCollection>, ITextParser<TCollection>
+        private sealed class InnerCollectionTransformer<TElement, TCollection> : TransformerBase<TCollection>
             where TCollection : IEnumerable<TElement>
         {
             private readonly CollectionKind _kind;
             public InnerCollectionTransformer(CollectionKind kind) => _kind = kind;
 
 
-            TCollection ITextParser<TCollection>.ParseText(string input) => Parse(input.AsSpan());
-
-            public TCollection Parse(ReadOnlySpan<char> input) => //input.IsEmpty ? default :
+            public override TCollection Parse(ReadOnlySpan<char> input) => //input.IsEmpty ? default :
                 (TCollection)SpanCollectionSerializer.DefaultInstance.ParseCollection<TElement>(input, _kind);
 
-            public string Format(TCollection coll) => //coll == null ? null :
+            public override string Format(TCollection coll) => //coll == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
             public override string ToString() => $"Transform {typeof(TCollection).GetFriendlyName()} AS {_kind}<{typeof(TElement).GetFriendlyName()}>";

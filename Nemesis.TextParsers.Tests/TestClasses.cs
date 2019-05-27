@@ -373,5 +373,13 @@ namespace Nemesis.TextParsers.Tests
         }
 
         public string Format(Option element) => element.ToString();
+
+        public Option ParseFromText(string text) => Parse(text.AsSpan());
+
+        public object ParseObject(string text) => Parse(text.AsSpan());
+
+        public object ParseObject(ReadOnlySpan<char> input) => Parse(input);
+
+        public string FormatObject(object element) => Format((Option) element);
     }
 }

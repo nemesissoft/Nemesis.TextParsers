@@ -53,16 +53,14 @@ namespace Nemesis.TextParsers
             return λ.Compile();
         }
 
-        private abstract class DictionaryTransformer<TKey, TValue, TDict> : ITransformer<TDict>, ITextParser<TDict>
+        private abstract class DictionaryTransformer<TKey, TValue, TDict> : TransformerBase<TDict>
             where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             private readonly bool _supportsDeserializationLogic;
             protected DictionaryTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
 
-            TDict ITextParser<TDict>.ParseText(string input) => Parse(input.AsSpan());
-
-            public TDict Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
+            public override TDict Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {
                 var stream = SpanCollectionSerializer.DefaultInstance.ParsePairsStream<TKey, TValue>(input, out _);
                 TDict result = GetDictionary(stream);
@@ -75,7 +73,7 @@ namespace Nemesis.TextParsers
 
             protected abstract TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream);
 
-            public string Format(TDict dict) =>//dict == null ? null :
+            public override string Format(TDict dict) =>//dict == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
 
             public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
