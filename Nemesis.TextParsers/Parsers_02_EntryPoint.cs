@@ -10,12 +10,9 @@ namespace Nemesis.TextParsers
     public interface ITextTransformer
     {
         ITransformer<TElement> GetTransformer<TElement>();
-
-        //object Parse(ReadOnlySpan<char> input);
-        //string Format(object element);
     }
 
-    //TODO implementation with Dictionary cache 
+    //TODO implementation with Dictionary cache - settings file ?
     public sealed class TextTransformer : ITextTransformer
     {
         private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;
@@ -59,47 +56,5 @@ namespace Nemesis.TextParsers
 
                 throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
             });
-
-        /*public object Parse(ReadOnlySpan<char> input)
-        {
-
-        }
-
-        public string Format(object element)
-        {
-            return element is null ? 
-                null : 
-                GetTransformerCore(element.GetType())
-        }
-
-        private object GetTransformerCore(Type objectType) =>
-            _transformerCache.GetOrAdd(objectType, type =>
-            {
-                if (type.IsGenericTypeDefinition)
-                    throw new NotSupportedException($"Parsing GenericTypeDefinition is not supported: {type.FullName}");
-
-                MethodInfo createTransformerMethod = typeof(ICanCreateTransformer)
-                        .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                        .Single(m => m.Name == nameof(ICanCreateTransformer.CreateTransformer))
-                        .MakeGenericMethod(type);
-
-                foreach (var canParseByDelegate in _canParseByDelegateContracts)
-                    if (canParseByDelegate.CanHandle(type))
-                        return createTransformerMethod.Invoke(canParseByDelegate, null);
-
-                throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
-            });*/
-
-
-
-        /*public object GetTransformer(Type type)
-        {
-            var getTransformerMethod = typeof(TextTransformer).GetMethods()
-                .SingleOrDefault(m => m.IsGenericMethod && m.Name == nameof(GetTransformer)) ??
-                    throw new MissingMethodException(nameof(TextTransformer), nameof(GetTransformer));
-
-            getTransformerMethod = getTransformerMethod.MakeGenericMethod(type);
-            return getTransformerMethod.Invoke(null, null);
-        }*/
     }
 }
