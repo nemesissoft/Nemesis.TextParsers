@@ -9,6 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.Tests",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{BF38E5BE-AB8D-48DF-ABC1-4B49D8DA99D3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9E1DB4A9-1567-47CD-A602-6625864E752A}"
+	ProjectSection(SolutionItems) = preProject
+		GetNetCoreVersions.ps1 = GetNetCoreVersions.ps1
+		Nemesis.TextParsers.Public.snk = Nemesis.TextParsers.Public.snk
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
