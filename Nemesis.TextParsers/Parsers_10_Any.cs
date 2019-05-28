@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
@@ -16,7 +17,7 @@ namespace Nemesis.TextParsers
                 (
                     typeConverter.CanConvertFrom(typeof(string)) && typeConverter.CanConvertTo(typeof(string)) ?
                     new ConverterTransformer<TElement>(typeConverter) :
-                    throw new NotSupportedException($"{typeof(TElement).Name} is not supported for parsing. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+                    throw new NotSupportedException($"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
                 );
         }
 
@@ -32,7 +33,7 @@ namespace Nemesis.TextParsers
             public override string Format(TElement element) =>
                 _typeConverter.ConvertToInvariantString(element);
 
-            public override string ToString() => $"Transform {typeof(TElement).Name} using {nameof(TypeConverter)}";
+            public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {nameof(TypeConverter)}";
         }
 
         public bool CanHandle(Type type) => true;

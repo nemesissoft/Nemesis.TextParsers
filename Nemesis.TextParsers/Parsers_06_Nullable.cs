@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
@@ -28,7 +29,7 @@ namespace Nemesis.TextParsers
             public override string Format(TElement? element) =>
                 element.HasValue ? _elementParser.Format(element.Value) : null;
 
-            public override string ToString() => $"Transform {typeof(TElement).Name}?";
+            public override string ToString() => $"Transform {typeof(TElement?).GetFriendlyName()}";
         }
 
         public bool CanHandle(Type type) => type.IsValueType && Nullable.GetUnderlyingType(type) != null;

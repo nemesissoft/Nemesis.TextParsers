@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
@@ -55,14 +56,14 @@ namespace Nemesis.TextParsers
         public string Format(TElement element) =>
             element?.ToString(null, CultureInfo.InvariantCulture);
 
-        public override string ToString() => $"Format {typeof(TElement).Name} based on ToString(null, CultureInfo.InvariantCulture)";
+        public override string ToString() => $"Format {typeof(TElement).GetFriendlyName()} based on ToString(null, CultureInfo.InvariantCulture)";
     }
 
     public sealed class NormalFormatter<TElement> : IFormatter<TElement>
     {
         public string Format(TElement element) => element?.ToString();
 
-        public override string ToString() => $"Format {typeof(TElement).Name} based on ToString()";
+        public override string ToString() => $"Format {typeof(TElement).GetFriendlyName()} based on ToString()";
     }
 
     public sealed class CompositionTransformer<TElement> : TransformerBase<TElement>
