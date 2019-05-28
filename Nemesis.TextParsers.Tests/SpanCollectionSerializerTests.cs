@@ -14,6 +14,7 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     public class SpanCollectionSerializerTests
     {
+        private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
         private readonly SpanCollectionSerializer _sut = SpanCollectionSerializer.DefaultInstance;
 
         private static string NormalizeNullMarkers(string text)
@@ -232,8 +233,6 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(Bad_ListParseData))]
         public void List_Parse_NegativeCompoundTests((Type elementType, string input, Type expectedException) data)
         {
-            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
-
             var parseMethod = (typeof(SpanCollectionSerializerTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
                   mi.Name == nameof(ParseCollection))
                   ?? throw new MissingMethodException("Method ParseList does not exist"))
@@ -529,7 +528,6 @@ namespace Nemesis.TextParsers.Tests
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public void List_CompoundTests((Type elementType, IEnumerable expectedOutput, string input) data)
         {
-            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
             var castMethod = (typeof(Enumerable).GetMethod(nameof(Enumerable.Cast), ALL_FLAGS)
                     ?? throw new MissingMethodException("Method Enumerable.Cast does not exist"))
                 .MakeGenericMethod(data.elementType);

@@ -128,20 +128,20 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        class StringKeyedDictionary<TValue>: SortedDictionary<string, TValue> { }
-        class FloatValuedDictionary<TKey>: Dictionary<TKey, float> { }
-        class ImmutableDecimalValuedDictionary<TKey>: ReadOnlyDictionary<TKey, decimal>
+        class StringKeyedDictionary<TValue> : SortedDictionary<string, TValue> { }
+        class FloatValuedDictionary<TKey> : Dictionary<TKey, float> { }
+        class ImmutableDecimalValuedDictionary<TKey> : ReadOnlyDictionary<TKey, decimal>
         {
             public ImmutableDecimalValuedDictionary(IDictionary<TKey, decimal> dictionary) : base(dictionary)
             {
             }
         }
 
+        private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
+
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type concreteType) data)
         {
-            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
-
             var getTransformer = (typeof(ITextTransformer).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
                                     mi.Name == nameof(ITextTransformer.GetTransformer) && mi.IsGenericMethod)
                                 ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
@@ -176,6 +176,34 @@ namespace Nemesis.TextParsers.Tests
 
 
             var parsed2 = parseMethod.Invoke(transformer, new object[] { text });
+            if (parsed2 is IEnumerable enumerable2)
+                Assert.That(parsed, Is.EquivalentTo(enumerable2));
+            else
+                Assert.That(parsed, Is.EqualTo(parsed2));
+        }
+
+        [TestCaseSource(nameof(Correct_Data))]
+        public void CollectionType_CompoundTest_NonGeneric((Type contractType, string input, int cardinality, Type concreteType) data)
+        {
+            var transformer = TextTransformer.Default.GetTransformer(data.contractType);
+            Console.WriteLine(transformer);
+
+            var parsed = transformer.ParseObject(data.input);
+            Assert.That(parsed, Is.TypeOf(data.concreteType));
+
+
+            var cardinalityProp = parsed.GetType().GetProperties(ALL_FLAGS)
+                .FirstOrDefault(p => p.Name == "Size" || p.Name == "Count" || p.Name == "Length");
+            Assert.That(cardinalityProp, Is.Not.Null, "cardinality property not found");
+            var cardinality = cardinalityProp.GetValue(parsed);
+            Assert.That(cardinality, Is.EqualTo(data.cardinality));
+
+
+            string text = transformer.FormatObject(parsed);
+            Console.WriteLine(text);
+
+
+            var parsed2 = transformer.ParseObject(text);
             if (parsed2 is IEnumerable enumerable2)
                 Assert.That(parsed, Is.EquivalentTo(enumerable2));
             else

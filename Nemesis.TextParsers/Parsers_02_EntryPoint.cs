@@ -10,6 +10,7 @@ namespace Nemesis.TextParsers
     public interface ITextTransformer
     {
         ITransformer<TElement> GetTransformer<TElement>();
+        ITransformer GetTransformer(Type elementType);
     }
 
     //TODO implementation with Dictionary cache - settings file ?
@@ -17,12 +18,12 @@ namespace Nemesis.TextParsers
     public sealed class TextTransformer : ITextTransformer
     {
         private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;
-        private readonly ConcurrentDictionary<Type, object> _transformerCache;
-
-        private TextTransformer([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, object> transformerCache = null)
+        private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache;
+        
+        private TextTransformer([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, ITransformer> transformerCache = null)
         {
             _canParseByDelegateContracts = canParseByDelegateContracts ?? throw new ArgumentNullException(nameof(canParseByDelegateContracts));
-            _transformerCache = transformerCache ?? new ConcurrentDictionary<Type, object>();
+            _transformerCache = transformerCache ?? new ConcurrentDictionary<Type, ITransformer>();
         }
 
         public static ITextTransformer Default { get; } = GetDefaultTextTransformer();
@@ -46,16 +47,29 @@ namespace Nemesis.TextParsers
         }
 
         public ITransformer<TElement> GetTransformer<TElement>() =>
-            (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), type =>
-            {
-                if (type.IsGenericTypeDefinition)
-                    throw new NotSupportedException($"Parsing GenericTypeDefinition is not supported: {type.FullName}");
+            (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), GetTransformerCore<TElement>);
 
-                foreach (var canParseByDelegate in _canParseByDelegateContracts)
-                    if (canParseByDelegate.CanHandle(type))
-                        return canParseByDelegate.CreateTransformer<TElement>();
+        public ITransformer GetTransformer(Type elementType) =>
+            _transformerCache.GetOrAdd(elementType, type => 
+                (ITransformer) _getTransformerMethodGeneric.MakeGenericMethod(type).Invoke(this, new object[] {type})
+            );
 
-                throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
-            });
+        private static readonly MethodInfo _getTransformerMethodGeneric =
+            typeof(TextTransformer)
+                .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
+                .SingleOrDefault(m => m.IsGenericMethod && m.Name == nameof(GetTransformerCore)) ??
+            throw new MissingMethodException(nameof(TextTransformer), nameof(GetTransformerCore));
+
+        private ITransformer<TElement> GetTransformerCore<TElement>(Type type)
+        {
+            if (type.IsGenericTypeDefinition)
+                throw new NotSupportedException($"Parsing GenericTypeDefinition is not supported: {type.FullName}");
+
+            foreach (var canParseByDelegate in _canParseByDelegateContracts)
+                if (canParseByDelegate.CanHandle(type))
+                    return canParseByDelegate.CreateTransformer<TElement>();
+
+            throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
+        }
     }
 }
