@@ -10,7 +10,7 @@ using Nemesis.Essentials.Runtime;
 namespace Nemesis.TextParsers
 {
     [UsedImplicitly]
-    public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
+    internal sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TCollection> CreateTransformer<TCollection>()
         {

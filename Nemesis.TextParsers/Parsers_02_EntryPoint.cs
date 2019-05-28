@@ -13,6 +13,7 @@ namespace Nemesis.TextParsers
     }
 
     //TODO implementation with Dictionary cache - settings file ?
+    //TODO CreateTransformer() with context - relation to parent 
     public sealed class TextTransformer : ITextTransformer
     {
         private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;

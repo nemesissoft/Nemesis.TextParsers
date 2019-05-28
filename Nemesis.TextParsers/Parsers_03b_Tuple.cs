@@ -6,7 +6,7 @@ using Nemesis.Essentials.Runtime;
 namespace Nemesis.TextParsers
 {
     [UsedImplicitly]
-    public sealed class TupleTransformerCreator : ICanCreateTransformer
+    internal sealed class TupleTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TTuple> CreateTransformer<TTuple>()
         {

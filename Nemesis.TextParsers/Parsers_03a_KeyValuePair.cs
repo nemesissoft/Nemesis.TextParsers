@@ -7,7 +7,7 @@ using Nemesis.Essentials.Runtime;
 namespace Nemesis.TextParsers
 {
     [UsedImplicitly]
-    public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
+    internal sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TPair> CreateTransformer<TPair>()
         {

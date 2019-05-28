@@ -9,7 +9,7 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
-    public sealed class EnumTransformerCreator : ICanCreateTransformer
+    internal sealed class EnumTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TEnum> CreateTransformer<TEnum>()
         {

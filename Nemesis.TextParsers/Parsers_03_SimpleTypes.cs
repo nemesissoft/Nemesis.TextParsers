@@ -11,7 +11,7 @@ using Nemesis.Essentials.Runtime;
 namespace Nemesis.TextParsers
 {
     [UsedImplicitly]
-    public sealed class SimpleTransformerCreator : ICanCreateTransformer
+    internal sealed class SimpleTransformerCreator : ICanCreateTransformer
     {
         private readonly IReadOnlyDictionary<Type, object> _simpleTransformers;
 

@@ -7,7 +7,7 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
-    public abstract class FactoryMethodTransformer : ICanCreateTransformer
+    internal abstract class FactoryMethodTransformer : ICanCreateTransformer
     {
         public ITransformer<TElement> CreateTransformer<TElement>()
         {
@@ -84,7 +84,7 @@ namespace Nemesis.TextParsers
         }
     }
 
-    public sealed class ConventionTransformer : FactoryMethodTransformer
+    internal sealed class ConventionTransformer : FactoryMethodTransformer
     {
         protected override ISpanParser<TElement> GetParser<TElement>(Type elementType)
         {
@@ -134,7 +134,7 @@ namespace Nemesis.TextParsers
     public interface ITextFactorySpan<out TElement> { TElement FromText(ReadOnlySpan<char> text); }
 
     //TODO support non static factory classes via ITextFactoryString+ITextFactorySpan?
-    public sealed class TextFactoryTransformer : FactoryMethodTransformer
+    internal sealed class TextFactoryTransformer : FactoryMethodTransformer
     {
         protected override ISpanParser<TElement> GetParser<TElement>(Type elementType)
         {

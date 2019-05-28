@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Nemesis.TextParsers
 {
     [UsedImplicitly]
-    public sealed class AnyTransformerCreator : ICanCreateTransformer
+    internal sealed class AnyTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TElement> CreateTransformer<TElement>()
         {
