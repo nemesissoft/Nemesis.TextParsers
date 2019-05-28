@@ -14,7 +14,8 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageIconUrl>http://icons.iconarchive.com/icons/iconka/cat-commerce/128/review-icon.png</PackageIconUrl>
-
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    
 
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
