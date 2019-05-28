@@ -39,6 +39,7 @@ namespace Nemesis.TextParsers.Tests
         public static readonly SpanCollectionSerializer Instance = new SpanCollectionSerializer('#', ';', '=', '∅', '\\');
     }
 
+    [TextFactory(typeof(AggressionBasedFactory<>))]
     internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
     {
         IReadOnlyList<TValue> IAggressionValuesProvider<TValue>.Values => GetValues().ToList();

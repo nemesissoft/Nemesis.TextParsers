@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
@@ -63,7 +64,7 @@ namespace Nemesis.TextParsers
         private ITransformer<TElement> GetTransformerCore<TElement>(Type type)
         {
             if (type.IsGenericTypeDefinition)
-                throw new NotSupportedException($"Parsing GenericTypeDefinition is not supported: {type.FullName}");
+                throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
 
             foreach (var canParseByDelegate in _canParseByDelegateContracts)
                 if (canParseByDelegate.CanHandle(type))

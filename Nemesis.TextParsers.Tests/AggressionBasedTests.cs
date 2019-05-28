@@ -78,7 +78,7 @@ namespace Nemesis.TextParsers.Tests
         {
             var factoryType = typeof(AggressionBasedFactory<>).MakeGenericType(data.elementType);
             var fromTextMethod = factoryType.GetMethods()
-                .Single(m => m.Name == nameof(AggressionBasedFactory<object>.FromText) && m.GetParameters()[0].ParameterType == typeof(string)) 
+                .Single(m => m.Name == nameof(AggressionBasedFactory<object>.FromText) && m.GetParameters()[0].ParameterType == typeof(string))
                 ?? throw new MissingMethodException();
 
             var actual = fromTextMethod.Invoke(null, new object[] { data.input });
@@ -93,7 +93,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(values, Is.EquivalentTo(data.expectedOutput));
         }
 
-        private static IEnumerable<IEnumerable<int>> InvalidValuesForFactory() => new IEnumerable<int>[]
+        private static IEnumerable<IEnumerable<int>> FromValues_Invalid() => new IEnumerable<int>[]
         {
             new []{1,2},
             new []{1,2,3,4},
@@ -106,11 +106,90 @@ namespace Nemesis.TextParsers.Tests
             new []{1,2,3,4,5,6,7,8,9,10,11},
         };
 
-        [TestCaseSource(nameof(InvalidValuesForFactory))]
+        [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedFactory_FromValues_NegativeTests(IEnumerable<int> values) =>
             Assert.Throws<ArgumentException>(() => AggressionBasedFactory<int>.FromValues(values));
 
+        private static IEnumerable<(string, int[], Type, Type)> TextTransformer_Symmetry()
+            => new[]
+            {
+                ("", new []{0}, typeof(IAggressionBased<int>), typeof(AggressionBased1<int>)),
+                ("", new []{0}, typeof(AggressionBased1<int>), typeof(AggressionBased1<int>)),
+
+                ("123",new []{123}, typeof(IAggressionBased<int>), typeof(AggressionBased1<int>)),
+                ("123",new []{123}, typeof(AggressionBased1<int>), typeof(AggressionBased1<int>)),
+
+                ("123#456#789", new []{123,456,789}, typeof(IAggressionBased<int>), typeof(AggressionBased3<int>)),
+                ("123#456#789", new []{123,456,789}, typeof(AggressionBased3<int>), typeof(AggressionBased3<int>)),
+
+                ("123#123#123", new []{123}, typeof(IAggressionBased<int>), typeof(AggressionBased1<int>)),
+                ("123#123#123", new []{123}, typeof(AggressionBased1<int>), typeof(AggressionBased1<int>)),
+
+
+                ("1#1#1#1#1#1#1#1#1", new []{1}, typeof(IAggressionBased<int>), typeof(AggressionBased1<int>)),
+                ("1#1#1#1#1#1#1#1#1", new []{1}, typeof(AggressionBased1<int>), typeof(AggressionBased1<int>)),
+
+                ("1#1#1#4#4#4#7#7#7", new []{1,4,7}, typeof(IAggressionBased<int>), typeof(AggressionBased3<int>)),
+                ("1#1#1#4#4#4#7#7#7", new []{1,4,7}, typeof(AggressionBased3<int>), typeof(AggressionBased3<int>)),
+
+
+                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, typeof(IAggressionBased<int>), typeof(AggressionBased9<int>)),
+                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, typeof(AggressionBased9<int>), typeof(AggressionBased9<int>)),
+            };
+
+        [TestCaseSource(nameof(TextTransformer_Symmetry))]
+        public void TextTransformer_ShouldParseAndFormatAppropriateTypes((string inputText, int[] expectedValues, Type contractType, Type expectedType) data)
+        {
+            var transformer = TextTransformer.Default.GetTransformer(data.contractType);
+            var parsed = transformer.ParseObject(data.inputText);
+
+            Assert.That(parsed, Is.TypeOf(data.expectedType));
+            Assert.That(((IAggressionValuesProvider<int>)parsed).Values, Is.EquivalentTo(data.expectedValues));
+
+
+            string formatted = transformer.FormatObject(parsed);
+            var parsed2 = transformer.ParseObject(formatted);
+
+            Assert.That(
+                ((IAggressionValuesProvider<int>)parsed).Values,
+                Is.EquivalentTo(
+                    ((IAggressionValuesProvider<int>)parsed2).Values
+                    ));
+        }
+
+
+        private static IEnumerable<(string, int[], Type)> TextTransformer_Format()
+         => new[]
+         {
+                ("0", new []{0}, typeof(AggressionBased1<int>)),
+
+                ("123",new []{123}, typeof(AggressionBased1<int>)),
+
+                ("123#456#789", new []{123,456,789}, typeof(AggressionBased3<int>)),
+                ("123",         new []{123,123,123}, typeof(AggressionBased1<int>)),
+
+                ("1",                 new []{1,1,1,1,1,1,1,1,1}, typeof(AggressionBased1<int>)),
+                ("1#4#7",             new []{1,1,1,4,4,4,7,7,7}, typeof(AggressionBased3<int>)),
+                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, typeof(AggressionBased9<int>)),
+         };
+
+        [TestCaseSource(nameof(TextTransformer_Format))]
+        public void TextTransformer_ShouldFormat((string expectedOutput, int[] inputValues, Type expectedType) data)
+        {
+            var aggBased = AggressionBasedFactory<int>.FromValues(data.inputValues);
+            Assert.That(aggBased, Is.TypeOf(data.expectedType));
+
+
+            var transformer = TextTransformer.Default.GetTransformer(aggBased.GetType());
+            string formatted = transformer.FormatObject(aggBased);
+
+
+            Assert.That(formatted, Is.EqualTo(data.expectedOutput));
+        }
+
         #endregion
+
+        #region Equals
 
         private static IEnumerable<(Type, string, string)> ValidValuesForEquals() => new[]
         {
@@ -194,5 +273,6 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual2, Is.EqualTo(crazyAggBased2));
         }
 
+        #endregion
     }
 }
