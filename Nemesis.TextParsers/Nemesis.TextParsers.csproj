@@ -23,7 +23,7 @@
     <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
     
 
-    <Version>0.9.14</Version> 
+    <Version>0.9.15</Version> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
     <RepositoryType>git</RepositoryType> 
     <RepositoryUrl>https://github.com/nemesissoft/Nemesis.TextParsers</RepositoryUrl> 

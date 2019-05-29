@@ -291,7 +291,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
         }
 
-        protected override string FormatString { get; } = "G9";
+        protected override string FormatString { get; } = "R";
     }
 
     [UsedImplicitly]
@@ -311,7 +311,7 @@ namespace Nemesis.TextParsers
                 , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
         }
 
-        protected override string FormatString { get; } = "G17";
+        protected override string FormatString { get; } = "R";
     }
 
     [UsedImplicitly]
