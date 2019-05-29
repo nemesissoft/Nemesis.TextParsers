@@ -142,8 +142,8 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type concreteType) data)
         {
-            var getTransformer = (typeof(ITextTransformer).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                    mi.Name == nameof(ITextTransformer.GetTransformer) && mi.IsGenericMethod)
+            var getTransformer = (typeof(ITransformerStore).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
+                                    mi.Name == nameof(ITransformerStore.GetTransformer) && mi.IsGenericMethod)
                                 ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
                     .MakeGenericMethod(data.contractType);
 

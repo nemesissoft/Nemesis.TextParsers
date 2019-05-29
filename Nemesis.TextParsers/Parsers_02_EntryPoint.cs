@@ -8,28 +8,31 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
-    public interface ITextTransformer
+    public interface ITransformerStore
     {
         ITransformer<TElement> GetTransformer<TElement>();
         ITransformer GetTransformer(Type elementType);
     }
 
-    //TODO implementation with Dictionary cache - settings file ?
-    //TODO CreateTransformer() with context - relation to parent 
-    public sealed class TextTransformer : ITextTransformer
+    public static class TextTransformer
+    {
+        public static ITransformerStore Default { get; } = StandardTransformerStore.GetDefaultTextTransformer();
+    }
+
+    //TODO CreateTransformer() with context - relation to parent ITransformerStore 
+    //TODO implement ReadOnlyStore:ITransformerStore (with with Dictionary cache) in Test project
+    internal sealed class StandardTransformerStore : ITransformerStore
     {
         private readonly IReadOnlyList<ICanCreateTransformer> _canParseByDelegateContracts;
         private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache;
-        
-        private TextTransformer([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, ITransformer> transformerCache = null)
+
+        private StandardTransformerStore([NotNull] IReadOnlyList<ICanCreateTransformer> canParseByDelegateContracts, ConcurrentDictionary<Type, ITransformer> transformerCache = null)
         {
             _canParseByDelegateContracts = canParseByDelegateContracts ?? throw new ArgumentNullException(nameof(canParseByDelegateContracts));
             _transformerCache = transformerCache ?? new ConcurrentDictionary<Type, ITransformer>();
         }
 
-        public static ITextTransformer Default { get; } = GetDefaultTextTransformer();
-
-        private static ITextTransformer GetDefaultTextTransformer()
+        internal static ITransformerStore GetDefaultTextTransformer()
         {
             var types = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
@@ -44,25 +47,30 @@ namespace Nemesis.TextParsers
 
             var canParseByDelegateContracts = byDelegateList;
 
-            return new TextTransformer(canParseByDelegateContracts);
+            return new StandardTransformerStore(canParseByDelegateContracts);
         }
 
         public ITransformer<TElement> GetTransformer<TElement>() =>
-            (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), GetTransformerCore<TElement>);
+            (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), t=>GetTransformerCore<TElement>());
 
         public ITransformer GetTransformer(Type elementType) =>
-            _transformerCache.GetOrAdd(elementType, type => 
-                (ITransformer) _getTransformerMethodGeneric.MakeGenericMethod(type).Invoke(this, new object[] {type})
+            _transformerCache.GetOrAdd(elementType, type =>
+                (ITransformer)_getTransformerMethodGeneric.MakeGenericMethod(type).Invoke(this, null)
             );
 
-        private static readonly MethodInfo _getTransformerMethodGeneric =
-            typeof(TextTransformer)
-                .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-                .SingleOrDefault(m => m.IsGenericMethod && m.Name == nameof(GetTransformerCore)) ??
-            throw new MissingMethodException(nameof(TextTransformer), nameof(GetTransformerCore));
 
-        private ITransformer<TElement> GetTransformerCore<TElement>(Type type)
+        static StandardTransformerStore() =>
+            _getTransformerMethodGeneric = Method.OfExpression<Func<StandardTransformerStore, ITransformer<int>>>(
+                test => test.GetTransformerCore<int>()
+            ).GetGenericMethodDefinition();
+
+
+        private static readonly MethodInfo _getTransformerMethodGeneric;
+        
+        private ITransformer<TElement> GetTransformerCore<TElement>()
         {
+            Type type = typeof(TElement);
+
             if (type.IsGenericTypeDefinition)
                 throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
 

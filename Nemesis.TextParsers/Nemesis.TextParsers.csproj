@@ -23,7 +23,7 @@
     <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
     
 
-    <Version>0.9.13</Version> 
+    <Version>0.9.14</Version> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
     <RepositoryType>git</RepositoryType> 
     <RepositoryUrl>https://github.com/nemesissoft/Nemesis.TextParsers</RepositoryUrl> 
@@ -35,12 +35,12 @@
   </PropertyGroup>
 
   <ItemGroup>    
-    <PackageReference Include="Nemesis.Essentials" Version="1.0.10" />
+    <PackageReference Include="Nemesis.Essentials" Version="1.0.11" />        
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.Memory" Version="4.5.2" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
