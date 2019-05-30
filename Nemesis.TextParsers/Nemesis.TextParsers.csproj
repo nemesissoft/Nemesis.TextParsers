@@ -24,9 +24,8 @@
     
 
     <Version>0.9.15</Version> 
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
-    <RepositoryType>git</RepositoryType> 
-    <RepositoryUrl>https://github.com/nemesissoft/Nemesis.TextParsers</RepositoryUrl> 
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
   </PropertyGroup>
 
@@ -34,7 +33,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <ItemGroup>    
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19270-01" PrivateAssets="All"/>
     <PackageReference Include="Nemesis.Essentials" Version="1.0.11" />        
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
