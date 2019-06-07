@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    Append source information to PackageDescription.
+  -->
+  <Target Name="_AppendCommonPackageDescription" 
+          BeforeTargets="InitializeStandardNuspecProperties;GenerateNuspec" 
+          DependsOnTargets="InitializeSourceControlInformation"
+          Condition="'$(IsPackable)' == 'true'">
+    <PropertyGroup>
+      <PackageDescription>
+      $(PackageDescription)
+      This package was built from the source at $(RepositoryUrl)/commit/$(SourceRevisionId).
+      </PackageDescription>
+    </PropertyGroup>
+  </Target>
+</Project>

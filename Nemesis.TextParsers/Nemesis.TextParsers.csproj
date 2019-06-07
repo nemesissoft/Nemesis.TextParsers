@@ -24,7 +24,7 @@
     
 
     <Version>0.9.15</Version> 
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
   </PropertyGroup>
