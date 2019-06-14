@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using AutoFixture;
@@ -16,16 +17,20 @@ namespace Nemesis.TextParsers.Tests
     {
         private static IEnumerable<(string, Type)> GetTestTypes()
         {
-            var enums = _existingPropertyTypes.Where(t => t.IsEnum).OrderBy(t => t.Name).ToList();
-            var structs = _existingPropertyTypes.Where(t => t.IsValueType && !t.IsEnum).OrderBy(t => t.Name).ToList();
-            var arrays = _existingPropertyTypes.Where(t => t.IsArray).OrderBy(t => t.Name).ToList();
-            var classes = _existingPropertyTypes.Where(t => !t.IsValueType && !t.IsArray).OrderBy(t => t.Name).ToList();
+            var props = _existingPropertyTypes.Union(_additionalTypes).ToList();
 
-            var simpleTypes = _existingPropertyTypes.Where(t => t.IsValueType || t == typeof(string)).OrderBy(t => t.Name).ToList();
+            var enums = props.Where(t => t.IsEnum).OrderBy(t => t.Name).ToList();
+            var structs = props.Where(t => t.IsValueType && !t.IsEnum).OrderBy(t => t.Name).ToList();
+            var arrays = props.Where(t => t.IsArray).OrderBy(t => t.Name).ToList();
+            var classes = props.Where(t => !t.IsValueType && !t.IsArray).OrderBy(t => t.Name).ToList();
+
+            var simpleTypes = props.Where(t => t.IsValueType || t == typeof(string)).OrderBy(t => t.Name).ToList();
 
             var aggressionBased = simpleTypes.SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) }).ToList();
 
-            simpleTypes = simpleTypes.Union(aggressionBased).ToList();
+            simpleTypes = simpleTypes
+                .Union(aggressionBased)
+                .ToList();
 
             var customsArrays = simpleTypes.Select(t => t.MakeArrayType()).ToList();
 
@@ -40,7 +45,9 @@ namespace Nemesis.TextParsers.Tests
 
             return enums.Union(structs).Union(arrays).Union(classes).Union(aggressionBased).Union(customsArrays).Union(collections).Union(dictionaries)
                 .Select(type => (Name: type.GetFriendlyName(), type)).OrderBy(pair => pair.Name)
-                .DistinctBy(pair => pair.Name);
+                .DistinctBy(pair => pair.Name)
+                //.Select(p=>new TestCaseData(p.Type).SetName(p.Name))
+                ;
         }
 
         private readonly Fixture _fixture = new Fixture();
@@ -48,23 +55,30 @@ namespace Nemesis.TextParsers.Tests
         private readonly MethodInfo _createMethodGeneric = Method.OfExpression<Func<Fixture, int>>(f => f.Create<int>());
 
         [OneTimeSetUp]
+        [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeEveryTest()
         {
             _fixture.Register<string>(() => $"XXX{_rand.Next():D10}");
             _fixture.Register<double>(() => Math.Round(_rand.NextDouble() * 1000,2));
             _fixture.Register<float>(() => (float) Math.Round(_rand.NextDouble() * 1000,2));
+            _fixture.Register<Enum1>(() => (Enum1) _rand.Next(0, 100));
         }
 
         [TestCaseSource(nameof(GetTestTypes))]
-        public void AllSupportedTypes_ShouldParseAndFormatProperly((string typeName, Type testType) data)
+        public void ShouldParseAndFormat((string _, Type testType) data)
         {
             var testType = data.testType;
-            var transformer = TextTransformer.Default.GetTransformer(testType);
+            bool isGeneric = testType.IsGenericType && !testType.IsGenericTypeDefinition;
+
+            ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) && 
+                                       testType.GenericTypeArguments[0] is Type elementType1
+                                       ? TextTransformer.Default.GetTransformer(typeof(IAggressionBased<>).MakeGenericType(elementType1))
+                                       : TextTransformer.Default.GetTransformer(testType);
             Assert.That(transformer, Is.Not.Null);
             Console.WriteLine(transformer);
 
 
-            if (testType.IsGenericType && !testType.IsGenericTypeDefinition && testType.GetGenericTypeDefinition() == typeof(IAggressionBased<>))
+            if (isGeneric && testType.GetGenericTypeDefinition() == typeof(IAggressionBased<>))
             {
                 var elementType = testType.GenericTypeArguments[0];
                 testType = typeof(AggressionBased3<>).MakeGenericType(elementType);
@@ -98,11 +112,14 @@ namespace Nemesis.TextParsers.Tests
                 o2.Should().BeEquivalentTo(o1);
             }
 
+
             object ParseAndAssert(string text)
             {
                 var parsed = transformer.ParseObject(text);
                 if (parsed != null && Nullable.GetUnderlyingType(testType) is Type underlyingType)
                     Assert.That(parsed, Is.TypeOf(underlyingType));
+                else if (parsed != null && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
+                    Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.FullName}");
                 else
                     Assert.That(parsed, Is.TypeOf(testType));
                 return parsed;
@@ -136,11 +153,11 @@ namespace Nemesis.TextParsers.Tests
             typeof(Dictionary<int, float>), typeof(Dictionary<double, string>), typeof(Dictionary<Fruits, double>),
             typeof(SortedDictionary<Fruits, float>), typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
 
-            typeof(IAggressionBased<int[]>), typeof(IAggressionBased<TimeSpan>),
-            typeof(IAggressionBased<List<string>>), typeof(List<IAggressionBased<string>>),
-            typeof(IAggressionBased<List<float>>), typeof(List<IAggressionBased<float>>),
-            typeof(IAggressionBased<List<TimeSpan>>), typeof(List<IAggressionBased<TimeSpan>>),
-            typeof(IAggressionBased<List<IAggressionBased<TimeSpan[]>>>),
+            typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
+            typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
+            typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
+            typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
+            typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
             typeof(DateTime), typeof(TimeSpan), typeof(TimeSpan?),
             typeof(char), typeof(char?), typeof(bool?),
         };
