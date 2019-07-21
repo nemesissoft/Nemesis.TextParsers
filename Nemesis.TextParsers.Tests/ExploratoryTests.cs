@@ -26,7 +26,9 @@ namespace Nemesis.TextParsers.Tests
 
             var simpleTypes = props.Where(t => t.IsValueType || t == typeof(string)).OrderBy(t => t.Name).ToList();
 
-            var aggressionBased = simpleTypes.SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) }).ToList();
+            var aggressionBased = simpleTypes
+                .SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) })
+                .ToList();
 
             simpleTypes = simpleTypes
                 .Union(aggressionBased)
@@ -50,18 +52,58 @@ namespace Nemesis.TextParsers.Tests
                 ;
         }
 
+
         private readonly Fixture _fixture = new Fixture();
         private readonly Random _rand = new Random();
-        private readonly MethodInfo _createMethodGeneric = Method.OfExpression<Func<Fixture, int>>(f => f.Create<int>());
+        private readonly MethodInfo _createMethodGeneric = Method.OfExpression<Func<Fixture, int>>(f => f.Create<int>()).GetGenericMethodDefinition();
 
         [OneTimeSetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeEveryTest()
         {
             _fixture.Register<string>(() => $"XXX{_rand.Next():D10}");
-            _fixture.Register<double>(() => Math.Round(_rand.NextDouble() * 1000,2));
-            _fixture.Register<float>(() => (float) Math.Round(_rand.NextDouble() * 1000,2));
-            _fixture.Register<Enum1>(() => (Enum1) _rand.Next(0, 100));
+            _fixture.Register<double>(() => Math.Round(_rand.NextDouble() * 1000, 2));
+            _fixture.Register<float>(() => (float)Math.Round(_rand.NextDouble() * 1000, 2));
+            _fixture.Register<Enum1>(() => (Enum1)_rand.Next(0, 100));
+
+
+
+            var props = _existingPropertyTypes.Union(_additionalTypes).ToList();
+            var simpleTypes = props.Where(t => t.IsValueType || t == typeof(string)).OrderBy(t => t.Name).ToList();
+            RegisterAggressionBased(_fixture, simpleTypes);
+        }
+
+        private static void RegisterAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
+        {
+            var getAggBas3Method = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased3<int>(fixture));
+            getAggBas3Method = getAggBas3Method.GetGenericMethodDefinition();
+
+            foreach (var elementType in simpleTypes)
+            {
+                var concreteMethod = getAggBas3Method.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture });
+            }
+        }
+
+        private static void RegisterAggressionBased3<TElement>(Fixture fixture)
+        {
+            AggressionBased3<TElement> Creator()
+            {
+                TElement pass = fixture.Create<TElement>(),
+                    norm = fixture.Create<TElement>(),
+                    aggr = fixture.Create<TElement>();
+
+                while (StructuralEquality.Equals(pass, norm) && StructuralEquality.Equals(pass, aggr))
+                {
+                    norm = fixture.Create<TElement>();
+                    aggr = fixture.Create<TElement>();
+                }
+
+                return new AggressionBased3<TElement>(pass, norm, aggr);
+            }
+
+            // ReSharper disable once RedundantTypeArgumentsOfMethod
+            fixture.Register<AggressionBased3<TElement>>(Creator);
         }
 
         [TestCaseSource(nameof(GetTestTypes))]
@@ -70,11 +112,12 @@ namespace Nemesis.TextParsers.Tests
             var testType = data.testType;
             bool isGeneric = testType.IsGenericType && !testType.IsGenericTypeDefinition;
 
-            ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) && 
+            ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) &&
                                        testType.GenericTypeArguments[0] is Type elementType1
                                        ? TextTransformer.Default.GetTransformer(typeof(IAggressionBased<>).MakeGenericType(elementType1))
                                        : TextTransformer.Default.GetTransformer(testType);
             Assert.That(transformer, Is.Not.Null);
+            Console.WriteLine(data.testType);
             Console.WriteLine(transformer);
 
 
@@ -84,15 +127,15 @@ namespace Nemesis.TextParsers.Tests
                 testType = typeof(AggressionBased3<>).MakeGenericType(elementType);
             }
 
-            var createMethod = _createMethodGeneric.GetGenericMethodDefinition().MakeGenericMethod(testType);
+            var createMethod = _createMethodGeneric.MakeGenericMethod(testType);
 
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 1; i <= 30; i++)
             {
                 var instance = createMethod.Invoke(null, new object[] { _fixture });
 
                 string text = transformer.FormatObject(instance);
-                Console.WriteLine(text);
+                Console.WriteLine("{0:00}. {1}", i, text);
 
                 var parsed1 = ParseAndAssert(text);
                 var parsed2 = ParseAndAssert(text);
