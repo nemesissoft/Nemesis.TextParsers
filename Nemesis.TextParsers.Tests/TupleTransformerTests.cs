@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 
 namespace Nemesis.TextParsers.Tests
@@ -17,8 +19,8 @@ namespace Nemesis.TextParsers.Tests
                           tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
                 ? new KeyValuePairTransformerCreator()
                 : (ICanCreateTransformer)new TupleTransformerCreator();
-
-            Assert.That(creator.CanHandle(tupleType));
+            
+            Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}" );
 
             var createTransformer = (creator.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
                                     mi.Name == nameof(ICanCreateTransformer.CreateTransformer) && mi.IsGenericMethod)
@@ -76,14 +78,21 @@ namespace Nemesis.TextParsers.Tests
 
 
             //Tuples
+            (typeof(ValueTuple<TimeSpan>), new ValueTuple<TimeSpan>(new TimeSpan(3,14,15,9)), @"(3.14:15:09)"),
             (typeof((TimeSpan, int)), (new TimeSpan(3,14,15,9), 3), @"(3.14:15:09,3)"),
             (typeof((TimeSpan, int, float)), (new TimeSpan(3,14,15,9), 3, 3.14f), @"(3.14:15:09,3,3.14)"),
             (typeof((TimeSpan, int, float, string)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi"), @"(3.14:15:09,3,3.14,Pi)"),
             (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)"),
+            (typeof((TimeSpan, int, float, string, decimal, bool)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true), @"(3.14:15:09,3,3.14,Pi,3.14,true)"),
+            (typeof((TimeSpan, int, float, string, decimal, bool, byte)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15), @"(3.14:15:09,3,3.14,Pi,3.14,true,15)"),
+            (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew))"),
+            (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode, int)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew, 89), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew\,89))"),
             
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @""),
+            (typeof((TimeSpan, int, float, string, decimal, byte)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0), @""),
+            (typeof((TimeSpan, int, float, string, decimal, byte, bool)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0, false), @""),
 
             (typeof((string, string, string, string, string)), (@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"(\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅)"),
 
@@ -152,7 +161,9 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
 
-
+            (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode, int)), @"3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew\,89)", typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal, bool, string)), @"3.14:15:16,3,3.14,Pi,3.14,true,ABC",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof((TimeSpan, int, float, string, decimal, bool)), @"3.14:15:16,3,3.14,Pi,3.14,true",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:16,3,3.14,Pi,3.14",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:99,3,3.14,Pi,3.14",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi",typeof(ArgumentException), NO_PARENTHESES_ERROR),
@@ -160,6 +171,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), NO_PARENTHESES_ERROR),
+            (typeof(ValueTuple<TimeSpan>), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
 
 
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
@@ -169,6 +181,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3)",typeof(ArgumentException), @"3rd tuple element was not found"),
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09)",typeof(ArgumentException), @"2nd tuple element was not found"),
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi,3.14,MorePie)",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
+
         };
 
         [TestCaseSource(nameof(Bad_KeyValuePair_Data))]

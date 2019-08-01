@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
@@ -17,25 +18,71 @@ namespace Nemesis.TextParsers
             Type transType;
             switch (types?.Length)
             {
+                case 1:
+                    transType = typeof(Tuple1Transformer<>); break;
                 case 2:
-                    transType = typeof(Tuple2Transformer<,>);
-                    break;
+                    transType = typeof(Tuple2Transformer<,>); break;
                 case 3:
-                    transType = typeof(Tuple3Transformer<,,>);
-                    break;
+                    transType = typeof(Tuple3Transformer<,,>); break;
                 case 4:
-                    transType = typeof(Tuple4Transformer<,,,>);
-                    break;
+                    transType = typeof(Tuple4Transformer<,,,>); break;
                 case 5:
-                    transType = typeof(Tuple5Transformer<,,,,>);
-                    break;
+                    transType = typeof(Tuple5Transformer<,,,,>); break;
+                case 6:
+                    transType = typeof(Tuple6Transformer<,,,,,>); break;
+                case 7:
+                    transType = typeof(Tuple7Transformer<,,,,,,>); break;
+                case 8:
+                    transType = typeof(TupleRestTransformer<,,,,,,,>); break;
+
                 default:
-                    throw new InvalidOperationException($"Only ValueTuple with arity 2-{MAX_ARITY} are supported");
+                    throw new NotSupportedException($"Only ValueTuple with arity 1-{MAX_ARITY} are supported");
             }
 
             transType = transType.MakeGenericType(types);
 
             return (ITransformer<TTuple>)Activator.CreateInstance(transType);
+        }
+
+        private sealed class Tuple1Transformer<T1> : TransformerBase<ValueTuple<T1>>
+        {
+            private readonly ITransformer<T1> _transformer1;
+
+            private byte Arity => 1;
+
+            public Tuple1Transformer()
+            {
+                _transformer1 = TextTransformer.Default.GetTransformer<T1>();
+            }
+
+            public override ValueTuple<T1> Parse(ReadOnlySpan<char> input)
+            {
+                if (input.IsEmpty) return default;
+
+                var enumerator = Helper.ParseStart(input, Arity);
+
+                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+
+                Helper.ParseEnd(ref enumerator, Arity);
+
+                return new ValueTuple<T1>(t1);
+            }
+
+            public override string Format(ValueTuple<T1> element)
+            {
+                Span<char> initialBuffer = stackalloc char[32];
+                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
+
+                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+
+                Helper.EndFormat(ref accumulator);
+                var text = accumulator.AsSpan().ToString();
+                accumulator.Dispose();
+                return text;
+            }
+
+            public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()})";
         }
 
         private sealed class Tuple2Transformer<T1, T2> : TransformerBase<(T1, T2)>
@@ -78,7 +125,7 @@ namespace Nemesis.TextParsers
                 Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                
+
 
                 Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
@@ -136,7 +183,7 @@ namespace Nemesis.TextParsers
                 Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                
+
 
                 Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
@@ -202,7 +249,7 @@ namespace Nemesis.TextParsers
                 Helper.AddDelimiter(ref accumulator);
 
                 Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-                
+
 
                 Helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
@@ -285,6 +332,280 @@ namespace Nemesis.TextParsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()})";
+        }
+
+        private sealed class Tuple6Transformer<T1, T2, T3, T4, T5, T6> : TransformerBase<(T1, T2, T3, T4, T5, T6)>
+        {
+            private readonly ITransformer<T1> _transformer1;
+            private readonly ITransformer<T2> _transformer2;
+            private readonly ITransformer<T3> _transformer3;
+            private readonly ITransformer<T4> _transformer4;
+            private readonly ITransformer<T5> _transformer5;
+            private readonly ITransformer<T6> _transformer6;
+
+            private byte Arity => 6;
+
+            public Tuple6Transformer()
+            {
+                _transformer1 = TextTransformer.Default.GetTransformer<T1>();
+                _transformer2 = TextTransformer.Default.GetTransformer<T2>();
+                _transformer3 = TextTransformer.Default.GetTransformer<T3>();
+                _transformer4 = TextTransformer.Default.GetTransformer<T4>();
+                _transformer5 = TextTransformer.Default.GetTransformer<T5>();
+                _transformer6 = TextTransformer.Default.GetTransformer<T6>();
+            }
+
+            public override (T1, T2, T3, T4, T5, T6) Parse(ReadOnlySpan<char> input)
+            {
+                if (input.IsEmpty) return default;
+
+                var enumerator = Helper.ParseStart(input, Arity);
+
+                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+
+                Helper.ParseNext(ref enumerator, 2);
+                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+
+                Helper.ParseNext(ref enumerator, 3);
+                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+
+                Helper.ParseNext(ref enumerator, 4);
+                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+
+                Helper.ParseNext(ref enumerator, 5);
+                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+
+                Helper.ParseNext(ref enumerator, 6);
+                var t6 = Helper.ParseElement(ref enumerator, _transformer6);
+
+                Helper.ParseEnd(ref enumerator, Arity);
+
+                return (t1, t2, t3, t4, t5, t6);
+            }
+
+            public override string Format((T1, T2, T3, T4, T5, T6) element)
+            {
+                Span<char> initialBuffer = stackalloc char[32];
+                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
+
+                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+
+                Helper.EndFormat(ref accumulator);
+                var text = accumulator.AsSpan().ToString();
+                accumulator.Dispose();
+                return text;
+            }
+
+            public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()})";
+        }
+
+        private sealed class Tuple7Transformer<T1, T2, T3, T4, T5, T6, T7> : TransformerBase<(T1, T2, T3, T4, T5, T6, T7)>
+        {
+            private readonly ITransformer<T1> _transformer1;
+            private readonly ITransformer<T2> _transformer2;
+            private readonly ITransformer<T3> _transformer3;
+            private readonly ITransformer<T4> _transformer4;
+            private readonly ITransformer<T5> _transformer5;
+            private readonly ITransformer<T6> _transformer6;
+            private readonly ITransformer<T7> _transformer7;
+
+            private byte Arity => 7;
+
+            public Tuple7Transformer()
+            {
+                _transformer1 = TextTransformer.Default.GetTransformer<T1>();
+                _transformer2 = TextTransformer.Default.GetTransformer<T2>();
+                _transformer3 = TextTransformer.Default.GetTransformer<T3>();
+                _transformer4 = TextTransformer.Default.GetTransformer<T4>();
+                _transformer5 = TextTransformer.Default.GetTransformer<T5>();
+                _transformer6 = TextTransformer.Default.GetTransformer<T6>();
+                _transformer7 = TextTransformer.Default.GetTransformer<T7>();
+            }
+
+            public override (T1, T2, T3, T4, T5, T6, T7) Parse(ReadOnlySpan<char> input)
+            {
+                if (input.IsEmpty) return default;
+
+                var enumerator = Helper.ParseStart(input, Arity);
+
+                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+
+                Helper.ParseNext(ref enumerator, 2);
+                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+
+                Helper.ParseNext(ref enumerator, 3);
+                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+
+                Helper.ParseNext(ref enumerator, 4);
+                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+
+                Helper.ParseNext(ref enumerator, 5);
+                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+
+                Helper.ParseNext(ref enumerator, 6);
+                var t6 = Helper.ParseElement(ref enumerator, _transformer6);
+
+                Helper.ParseNext(ref enumerator, 7);
+                var t7 = Helper.ParseElement(ref enumerator, _transformer7);
+
+                Helper.ParseEnd(ref enumerator, Arity);
+
+                return (t1, t2, t3, t4, t5, t6, t7);
+            }
+
+            public override string Format((T1, T2, T3, T4, T5, T6, T7) element)
+            {
+                Span<char> initialBuffer = stackalloc char[32];
+                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                Helper.StartFormat(ref accumulator);
+
+                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                Helper.AddDelimiter(ref accumulator);
+
+                Helper.FormatElement(_transformer7, element.Item7, ref accumulator);
+
+                Helper.EndFormat(ref accumulator);
+                var text = accumulator.AsSpan().ToString();
+                accumulator.Dispose();
+                return text;
+            }
+
+            public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()})";
+        }
+
+        private sealed class TupleRestTransformer<T1, T2, T3, T4, T5, T6, T7, TRest> : TransformerBase<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>> where TRest : struct
+        {
+            private readonly ITransformer<T1> _transformer1;
+            private readonly ITransformer<T2> _transformer2;
+            private readonly ITransformer<T3> _transformer3;
+            private readonly ITransformer<T4> _transformer4;
+            private readonly ITransformer<T5> _transformer5;
+            private readonly ITransformer<T6> _transformer6;
+            private readonly ITransformer<T7> _transformer7;
+            private readonly ITransformer<TRest> _transformerRest;
+
+            private byte Arity => 8;
+
+            public TupleRestTransformer()
+            {
+                _transformer1 = TextTransformer.Default.GetTransformer<T1>();
+                _transformer2 = TextTransformer.Default.GetTransformer<T2>();
+                _transformer3 = TextTransformer.Default.GetTransformer<T3>();
+                _transformer4 = TextTransformer.Default.GetTransformer<T4>();
+                _transformer5 = TextTransformer.Default.GetTransformer<T5>();
+                _transformer6 = TextTransformer.Default.GetTransformer<T6>();
+                _transformer7 = TextTransformer.Default.GetTransformer<T7>();
+                _transformerRest = TextTransformer.Default.GetTransformer<TRest>();
+            }
+
+            public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Parse(ReadOnlySpan<char> input)
+            {
+                if (input.IsEmpty) return default;
+
+                var enumerator = Helper.ParseStart(input, Arity);
+
+                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+
+                Helper.ParseNext(ref enumerator, 2);
+                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+
+                Helper.ParseNext(ref enumerator, 3);
+                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+
+                Helper.ParseNext(ref enumerator, 4);
+                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+
+                Helper.ParseNext(ref enumerator, 5);
+                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+
+                Helper.ParseNext(ref enumerator, 6);
+                var t6 = Helper.ParseElement(ref enumerator, _transformer6);
+
+                Helper.ParseNext(ref enumerator, 7);
+                var t7 = Helper.ParseElement(ref enumerator, _transformer7);
+
+                Helper.ParseNext(ref enumerator, 8);
+                var tRest = Helper.ParseElement(ref enumerator, _transformerRest);
+
+                Helper.ParseEnd(ref enumerator, Arity);
+
+                return new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(t1, t2, t3, t4, t5, t6, t7, tRest);
+            }
+
+            public override string Format(ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> element)
+            {
+                var initialBuffer = ArrayPool<char>.Shared.Rent(32);
+                try
+                {
+                    var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                    Helper.StartFormat(ref accumulator);
+
+                    Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformer7, element.Item7, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
+
+                    Helper.FormatElement(_transformerRest, element.Rest, ref accumulator);
+
+                    Helper.EndFormat(ref accumulator);
+                    var text = accumulator.AsSpan().ToString();
+                    accumulator.Dispose();
+                    return text;
+                }
+                finally
+                {
+                    ArrayPool<char>.Shared.Return(initialBuffer);
+                }
+            }
+
+            public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()},{typeof(TRest).GetFriendlyName()})";
         }
 
         private static class Helper
@@ -421,14 +742,15 @@ namespace Nemesis.TextParsers
             }
         }
 
-        private const byte MAX_ARITY = 5;
+        private const byte MAX_ARITY = 8;
 
         public bool CanHandle(Type type) =>
-            type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
             //typeof(System.Runtime.CompilerServices.ITuple).IsAssignableFrom(type) //not supported in .NET Standard 2.0
+            type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
             type.Namespace == "System" &&
+            type.Name.StartsWith("ValueTuple`") &&
             typeof(ValueType).IsAssignableFrom(type) &&
-            type.GenericTypeArguments?.Length is int arity && arity <= MAX_ARITY && arity >= 2
+            type.GenericTypeArguments?.Length is int arity && arity <= MAX_ARITY && arity >= 1
             ;
 
         public sbyte Priority => 12;
