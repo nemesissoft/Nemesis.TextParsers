@@ -3,11 +3,11 @@ using System;
 using System.ComponentModel;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Nemesis.Essentials.Design;
-using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers.Tests
         string ToString();
     }
 
-    [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements")]
+    //[TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements")]
     [TextFactory(typeof(AggressionBasedFactory<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public interface IAggressionBased<out TValue>
@@ -389,6 +389,51 @@ namespace Nemesis.TextParsers.Tests
             }
             else
                 return object.Equals(left, right);
+        }
+
+        sealed class EnumerableEqualityComparer<TElement> : IEqualityComparer<IEnumerable<TElement>>
+        {
+            private readonly IEqualityComparer<TElement> _equalityComparer;
+
+
+
+            private EnumerableEqualityComparer(IEqualityComparer<TElement> equalityComparer = null) =>
+                _equalityComparer = equalityComparer ?? EqualityComparer<TElement>.Default;
+
+            public static readonly EnumerableEqualityComparer<TElement> DefaultInstance = new EnumerableEqualityComparer<TElement>();
+
+            public static EnumerableEqualityComparer<TElement> CreateInstance(IEqualityComparer<TElement> equalityComparer) =>
+                new EnumerableEqualityComparer<TElement>(equalityComparer);
+
+
+
+            public bool Equals(IEnumerable<TElement> left, IEnumerable<TElement> right)
+            {
+                Debug.Assert(_equalityComparer != null);
+
+                if (left is null)
+                    return right is null;
+                else if (right is null) return false;
+
+                if (ReferenceEquals(left, right)) return true;
+
+
+                using (var enumerator = left.GetEnumerator())
+                using (var enumerator2 = right.GetEnumerator())
+                {
+                    while (enumerator.MoveNext())
+                        if (!enumerator2.MoveNext() || !_equalityComparer.Equals(enumerator.Current, enumerator2.Current))
+                            return false;
+
+                    if (enumerator2.MoveNext())
+                        return false;
+                }
+
+                return true;
+            }
+
+            public int GetHashCode(IEnumerable<TElement> enumerable)
+                => unchecked(enumerable.Aggregate(0, (current, element) => (current * 397) ^ _equalityComparer.GetHashCode(element)));
         }
     }
 

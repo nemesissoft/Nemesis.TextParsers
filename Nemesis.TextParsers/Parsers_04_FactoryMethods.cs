@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
 {

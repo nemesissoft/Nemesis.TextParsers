@@ -4,13 +4,13 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
-using Nemesis.Essentials.Design;
 
 namespace Nemesis.TextParsers.Tests
 {
     [Flags]
     public enum DaysOfWeek : byte
     {
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         None = 0,
         Monday
             = 0b0000_0001,
@@ -286,9 +286,11 @@ namespace Nemesis.TextParsers.Tests
         }
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     internal enum Color { Red = 1, Blue = 2, Green = 3 }
 
     [Flags]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     internal enum Colors { None = 0, Red = 1, Blue = 2, Green = 4, RedAndBlue = Red | Blue }
 
 
@@ -308,6 +310,31 @@ namespace Nemesis.TextParsers.Tests
         Option1,
         Option2,
         Option3
+    }
+
+    public abstract class TextTypeConverter : TypeConverter
+    {
+        public sealed override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
+            sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+
+        public sealed override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
+            destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+    }
+
+    public abstract class BaseTextConverter<TValue> : TextTypeConverter
+    {
+        public sealed override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
+            value is string text ? ParseString(text) : default;
+
+        public abstract TValue ParseString(string text);
+
+
+        public sealed override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
+            destinationType == typeof(string) ?
+                FormatToString((TValue)value) :
+                base.ConvertTo(context, culture, value, destinationType);
+
+        public abstract string FormatToString(TValue value);
     }
 
     internal sealed class OptionConverter : BaseTextConverter<Option>, ITransformer<Option>

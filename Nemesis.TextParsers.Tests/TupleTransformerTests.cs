@@ -4,8 +4,6 @@ using System.IO;
 using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-
 
 namespace Nemesis.TextParsers.Tests
 {

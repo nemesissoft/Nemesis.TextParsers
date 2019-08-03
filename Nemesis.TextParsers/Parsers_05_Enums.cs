@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    [UsedImplicitly]
     internal sealed class EnumTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TEnum> CreateTransformer<TEnum>()
@@ -104,24 +105,6 @@ namespace Nemesis.TextParsers
 
     internal static class EnumTransformerHelper
     {
-        internal static Func<TUnderlying, TEnum> GetNumberConverter<TEnum, TUnderlying>()
-        {
-            var input = Expression.Parameter(typeof(TUnderlying), "input");
-
-            var λ = Expression.Lambda<Func<TUnderlying, TEnum>>(
-                Expression.Convert(input, typeof(TEnum)),
-                input);
-            return λ.Compile();
-
-            // ReSharper disable once CommentTypo
-            /* //DynamicMethod is not present in .net Standard 2.0
-            var method = new DynamicMethod("Convert", typeof(TEnum), new[] { typeof(TUnderlying) }, true);
-            var il = method.GetILGenerator();
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ret);
-            return (Func<TUnderlying, TEnum>)method.CreateDelegate(typeof(Func<TUnderlying, TEnum>));*/
-        }
-
         internal delegate TUnderlying ParserDelegate<out TUnderlying>(ReadOnlySpan<char> input);
 
         internal static ParserDelegate<TUnderlying> GetElementParser<TEnum, TUnderlying>()
@@ -166,12 +149,12 @@ namespace Nemesis.TextParsers
                     conditionElements.Add(charCheck);
                 }
 
-                var condition = ExpressionUtils.AndAlsoJoin(conditionElements);
+                var condition = AndAlsoJoin(conditionElements);
 
                 conditionToValue.Add((condition, value));
             }
             LabelTarget returnTarget = Expression.Label(typeof(TUnderlying), "exit");
-            var iff = ExpressionUtils.IfThenElseJoin(conditionToValue, formatException, returnTarget);
+            var iff = IfThenElseJoin(conditionToValue, formatException, returnTarget);
 
             var body = Expression.Block(
                 iff,
@@ -180,6 +163,32 @@ namespace Nemesis.TextParsers
 
             var λ = Expression.Lambda<ParserDelegate<TUnderlying>>(body, inputParam);
             return λ.Compile();
+        }
+
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        private static Expression AndAlsoJoin(IEnumerable<Expression> expressionList) => expressionList != null && expressionList.Any() ?
+            expressionList.Aggregate<Expression, Expression>(null, (current, element) => current == null ? element : Expression.AndAlso(current, element))
+            : Expression.Constant(false);
+
+        private static Expression IfThenElseJoin<TResult>(IReadOnlyList<(Expression Condition, TResult value)> expressionList, Expression lastElse, LabelTarget exitTarget)
+        {
+            if (expressionList != null && expressionList.Count > 0)
+            {
+                Expression @else = lastElse;
+
+                for (int i = expressionList.Count - 1; i >= 0; i--)
+                {
+                    var (condition, value) = expressionList[i];
+
+                    var then = Expression.Return(exitTarget, Expression.Constant(value));
+
+                    @else = Expression.IfThenElse(condition, then, @else);
+                }
+
+                return @else;
+            }
+            else
+                return lastElse;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
 {

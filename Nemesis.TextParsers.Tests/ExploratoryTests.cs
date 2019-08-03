@@ -6,8 +6,7 @@ using System.Linq;
 using System.Reflection;
 using AutoFixture;
 using FluentAssertions;
-using Nemesis.Essentials.Design;
-using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Runtime;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -45,13 +44,29 @@ namespace Nemesis.TextParsers.Tests
 
 
 
-            return enums.Union(structs).Union(arrays).Union(classes).Union(aggressionBased).Union(customsArrays).Union(collections).Union(dictionaries)
-                .Select(type => (Name: type.GetFriendlyName(), type)).OrderBy(pair => pair.Name)
-                .DistinctBy(pair => pair.Name)
+            return DistinctBy(
+                    enums.Union(structs).Union(arrays).Union(classes).Union(aggressionBased).Union(customsArrays).Union(collections).Union(dictionaries)
+                        .Select(type => (Name: type.GetFriendlyName(), type)).OrderBy(pair => pair.Name),
+                    pair => pair.Name)
                 //.Select(p=>new TestCaseData(p.Type).SetName(p.Name))
                 ;
         }
 
+        private static IEnumerable<TElement> DistinctBy<TElement, TKey>(IEnumerable<TElement> source, Func<TElement, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+            var set = new HashSet<TKey>(comparer ?? EqualityComparer<TKey>.Default);
+
+            foreach (var item in source)
+            {
+                var key = keySelector(item);
+
+                if (set.Add(key))
+                    yield return item;
+            }
+        }
 
         private readonly Fixture _fixture = new Fixture();
         private readonly Random _rand = new Random();

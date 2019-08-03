@@ -2,7 +2,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
 {

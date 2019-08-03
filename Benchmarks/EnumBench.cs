@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -276,9 +277,26 @@ namespace Benchmarks
             return (Func<byte, DaysOfWeek>)method.CreateDelegate(typeof(Func<byte, DaysOfWeek>));
         }
 
-        private static readonly Func<byte, DaysOfWeek> _expressionFunc = EnumTransformerHelper.GetNumberConverter<DaysOfWeek, byte>();
+        private static readonly Func<byte, DaysOfWeek> _expressionFunc = GetNumberConverter<DaysOfWeek, byte>();
         private static readonly Func<byte, DaysOfWeek> _dynamicMethodFunc = GetNumberConverterDynamicMethod();
 
+        private static Func<TUnderlying, TEnum> GetNumberConverter<TEnum, TUnderlying>()
+        {
+            var input = Expression.Parameter(typeof(TUnderlying), "input");
+
+            var λ = Expression.Lambda<Func<TUnderlying, TEnum>>(
+                Expression.Convert(input, typeof(TEnum)),
+                input);
+            return λ.Compile();
+
+            // ReSharper disable once CommentTypo
+            /* //DynamicMethod is not present in .net Standard 2.0
+            var method = new DynamicMethod("Convert", typeof(TEnum), new[] { typeof(TUnderlying) }, true);
+            var il = method.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ret);
+            return (Func<TUnderlying, TEnum>)method.CreateDelegate(typeof(Func<TUnderlying, TEnum>));*/
+        }
 
         [Benchmark(Baseline = true)]
         public DaysOfWeek NativeTest()

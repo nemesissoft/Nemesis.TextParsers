@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
 {
