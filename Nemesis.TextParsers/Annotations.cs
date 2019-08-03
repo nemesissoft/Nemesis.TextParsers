@@ -399,6 +399,7 @@ namespace JetBrains.Annotations
     /// This attribute is intended to mark publicly available API
     /// which should not be removed and so is treated as used.
     /// </summary>
+    [AttributeUsage(AttributeTargets.All)]
     [MeansImplicitUse(ImplicitUseTargetFlags.WithMembers)]
     internal sealed class PublicAPIAttribute : Attribute
     {

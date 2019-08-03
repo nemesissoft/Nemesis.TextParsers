@@ -59,7 +59,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, 5)]
         public void Iterate_ArrayElement(float[] elements, int expectedLength)
         {
-            var coll = LeanCollection<float>.FromArray(elements);
+            var coll = LeanCollectionFactory.FromArray(elements);
             Assert.That(coll.Size, Is.EqualTo(expectedLength));
 
             var actual = coll.ToList();
@@ -104,7 +104,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, "15.5|25.6|35.99|50|999")]
         public void ToStringTest(float[] elements, string expectedText)
         {
-            var coll = LeanCollection<float>.FromArray(elements);
+            var coll = LeanCollectionFactory.FromArray(elements);
             Assert.That(coll.ToString(), Is.EqualTo(expectedText));
         }
 
@@ -115,11 +115,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 })]
         public void EqualsTest(float[] elements)
         {
-            var coll1 = LeanCollection<float>.FromArray(elements);
-            var coll2 = LeanCollection<float>.FromArray(elements);
+            var coll1 = LeanCollectionFactory.FromArray(elements);
+            var coll2 = LeanCollectionFactory.FromArray(elements);
             Assert.That(coll1, Is.EqualTo(coll2));
 
-            var coll3 = LeanCollection<float>.FromArray(new[] { 15.5f, 25.6f, 35.99f, 50, 999, 1555555 });
+            var coll3 = LeanCollectionFactory.FromArray(new[] { 15.5f, 25.6f, 35.99f, 50, 999, 1555555 });
             Assert.That(coll1, Is.Not.EqualTo(coll3));
 
             if (elements?.Length > 0)
@@ -127,7 +127,7 @@ namespace Nemesis.TextParsers.Tests
                 var newElements = new float[elements.Length];
                 Array.Copy(elements, newElements, elements.Length);
                 newElements[0] = 9999;
-                var coll4 = LeanCollection<float>.FromArray(newElements);
+                var coll4 = LeanCollectionFactory.FromArray(newElements);
                 Assert.That(coll1, Is.Not.EqualTo(coll4));
             }
         }
@@ -145,7 +145,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new[] { 1f, 8, 9, 5, 3, 4 }, new[] { 1.0f, 3.0f, 4.0f, 5.0f, 8.0f, 9.0f })]
         public void SortTest(float[] elements, float[] expectedElements)
         {
-            var coll1 = LeanCollection<float>.FromArray(elements);
+            var coll1 = LeanCollectionFactory.FromArray(elements);
 
             coll1.Sort();
 

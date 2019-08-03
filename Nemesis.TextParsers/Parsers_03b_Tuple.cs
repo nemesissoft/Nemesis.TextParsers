@@ -48,7 +48,7 @@ namespace Nemesis.TextParsers
         {
             private readonly ITransformer<T1> _transformer1;
 
-            private byte Arity => 1;
+            private const byte ARITY = 1;
 
             public Tuple1Transformer()
             {
@@ -59,11 +59,11 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return new ValueTuple<T1>(t1);
             }
@@ -90,7 +90,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
 
-            private byte Arity => 2;
+            private const byte ARITY = 2;
 
             public Tuple2Transformer()
             {
@@ -102,7 +102,7 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -110,7 +110,7 @@ namespace Nemesis.TextParsers
                 var t2 = Helper.ParseElement(ref enumerator, _transformer2);
 
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2);
             }
@@ -142,7 +142,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T2> _transformer2;
             private readonly ITransformer<T3> _transformer3;
 
-            private byte Arity => 3;
+            private const byte ARITY = 3;
 
             public Tuple3Transformer()
             {
@@ -155,7 +155,7 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -165,7 +165,7 @@ namespace Nemesis.TextParsers
                 Helper.ParseNext(ref enumerator, 3);
                 var t3 = Helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3);
             }
@@ -201,7 +201,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T3> _transformer3;
             private readonly ITransformer<T4> _transformer4;
 
-            private byte Arity => 4;
+            private const byte ARITY = 4;
 
             public Tuple4Transformer()
             {
@@ -215,7 +215,7 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -228,7 +228,7 @@ namespace Nemesis.TextParsers
                 Helper.ParseNext(ref enumerator, 4);
                 var t4 = Helper.ParseElement(ref enumerator, _transformer4);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4);
             }
@@ -268,7 +268,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T4> _transformer4;
             private readonly ITransformer<T5> _transformer5;
 
-            private byte Arity => 5;
+            private const byte ARITY = 5;
 
             public Tuple5Transformer()
             {
@@ -283,7 +283,7 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -299,7 +299,7 @@ namespace Nemesis.TextParsers
                 Helper.ParseNext(ref enumerator, 5);
                 var t5 = Helper.ParseElement(ref enumerator, _transformer5);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4, t5);
             }
@@ -343,7 +343,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T5> _transformer5;
             private readonly ITransformer<T6> _transformer6;
 
-            private byte Arity => 6;
+            private const byte ARITY = 6;
 
             public Tuple6Transformer()
             {
@@ -359,7 +359,7 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -378,7 +378,7 @@ namespace Nemesis.TextParsers
                 Helper.ParseNext(ref enumerator, 6);
                 var t6 = Helper.ParseElement(ref enumerator, _transformer6);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4, t5, t6);
             }
@@ -425,7 +425,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T6> _transformer6;
             private readonly ITransformer<T7> _transformer7;
 
-            private byte Arity => 7;
+            private const byte ARITY = 7;
 
             public Tuple7Transformer()
             {
@@ -442,7 +442,7 @@ namespace Nemesis.TextParsers
             {
                 if (input.IsEmpty) return default;
 
-                var enumerator = Helper.ParseStart(input, Arity);
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -464,7 +464,7 @@ namespace Nemesis.TextParsers
                 Helper.ParseNext(ref enumerator, 7);
                 var t7 = Helper.ParseElement(ref enumerator, _transformer7);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4, t5, t6, t7);
             }
@@ -515,7 +515,7 @@ namespace Nemesis.TextParsers
             private readonly ITransformer<T7> _transformer7;
             private readonly ITransformer<TRest> _transformerRest;
 
-            private byte Arity => 8;
+            private const byte ARITY = 8;
 
             public TupleRestTransformer()
             {
@@ -532,8 +532,8 @@ namespace Nemesis.TextParsers
             public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Parse(ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
-
-                var enumerator = Helper.ParseStart(input, Arity);
+                
+                var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
 
@@ -558,7 +558,7 @@ namespace Nemesis.TextParsers
                 Helper.ParseNext(ref enumerator, 8);
                 var tRest = Helper.ParseElement(ref enumerator, _transformerRest);
 
-                Helper.ParseEnd(ref enumerator, Arity);
+                Helper.ParseEnd(ref enumerator, ARITY);
 
                 return new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(t1, t2, t3, t4, t5, t6, t7, tRest);
             }

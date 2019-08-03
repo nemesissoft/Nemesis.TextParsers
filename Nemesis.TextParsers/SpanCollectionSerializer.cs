@@ -44,7 +44,7 @@ namespace Nemesis.TextParsers
 
         [PureMethod]
         public TTo[] ParseArray<TTo>(ReadOnlySpan<char> text) =>
-            text.IsEmpty ? new TTo[0] : ParseStream<TTo>(text, out var capacity).ToArray(capacity);
+            text.IsEmpty ? Array.Empty<TTo>() : ParseStream<TTo>(text, out var capacity).ToArray(capacity);
 
 
         [PureMethod]

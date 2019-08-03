@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
+using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
@@ -11,6 +12,7 @@ namespace Nemesis.TextParsers
     /// <summary>
     /// Aids in providing metadata for GUI applications 
     /// </summary>
+    [PublicAPI]
     public readonly struct CollectionMeta : IEquatable<CollectionMeta>
     {
         public bool IsArray { get; }
@@ -75,13 +77,14 @@ namespace Nemesis.TextParsers
         public IReadOnlyCollection<TDestElem> CreateCollectionGeneric<TDestElem>(IList sourceElements)
         {
             if (!IsValid) return null;
-            int count = sourceElements.Count;
+            int count = sourceElements?.Count ?? 0;
 
             if (IsArray)
             {
                 var result = new TDestElem[count];
 
                 for (int i = 0; i < count; i++)
+                    // ReSharper disable once PossibleNullReferenceException
                     result[i] = SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]);
 
                 return result;
@@ -94,6 +97,7 @@ namespace Nemesis.TextParsers
                         var result = new List<TDestElem>(count);
 
                         for (int i = 0; i < count; i++)
+                            // ReSharper disable once PossibleNullReferenceException
                             result.Add(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
 
                         return Kind == CollectionKind.List ?
@@ -114,6 +118,7 @@ namespace Nemesis.TextParsers
                             : new SortedSet<TDestElem>();
 
                         for (int i = 0; i < count; i++)
+                            // ReSharper disable once PossibleNullReferenceException
                             result.Add(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
 
                         return (IReadOnlyCollection<TDestElem>)result;
@@ -123,6 +128,7 @@ namespace Nemesis.TextParsers
                         var result = new LinkedList<TDestElem>();
 
                         for (int i = 0; i < count; i++)
+                            // ReSharper disable once PossibleNullReferenceException
                             result.AddLast(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
@@ -132,6 +138,7 @@ namespace Nemesis.TextParsers
                         var result = new Stack<TDestElem>(count);
 
                         for (int i = 0; i < count; i++)
+                            // ReSharper disable once PossibleNullReferenceException
                             result.Push(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
@@ -141,13 +148,14 @@ namespace Nemesis.TextParsers
                         var result = new Queue<TDestElem>(count);
 
                         for (int i = 0; i < count; i++)
+                            // ReSharper disable once PossibleNullReferenceException
                             result.Enqueue(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
                     }
                 //case CollectionKind.Unknown:
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(Kind), Kind, $"{nameof(Kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
+                    throw new NotSupportedException($@"{nameof(Kind)} = '{Kind}' is not supported");
             }
         }
     }

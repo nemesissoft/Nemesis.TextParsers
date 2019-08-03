@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers
 {
+    [PublicAPI]
     public static class LightLinq
     {
         public static (bool success, double result) Sum(this ParsedSequence<double> values)

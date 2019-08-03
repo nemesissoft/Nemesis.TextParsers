@@ -64,7 +64,7 @@ namespace Benchmarks
         [BenchmarkCategory("Sum"), Benchmark]
         public int LeanSum()
         {
-            var coll = LeanCollection<int>.FromArray(Source);
+            var coll = LeanCollectionFactory.FromArray(Source);
 
             var enumerator = coll.GetEnumerator();
             if (!enumerator.MoveNext()) return 0;
@@ -92,7 +92,7 @@ namespace Benchmarks
         [BenchmarkCategory("Sort"), Benchmark]
         public int LeanSort()
         {
-            var coll = LeanCollection<int>.FromArray(Source);
+            var coll = LeanCollectionFactory.FromArray(Source);
 
             coll.Sort();
 

@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using Nemesis.TextParsers.Runtime;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
@@ -187,7 +186,7 @@ namespace Nemesis.TextParsers
 
                 var array = accumulator.AsSpan().ToArray();
                 accumulator.Dispose();
-                return LeanCollection<T>.FromArrayChecked(array);
+                return LeanCollectionFactory.FromArrayChecked(array);
             }
             finally
             {

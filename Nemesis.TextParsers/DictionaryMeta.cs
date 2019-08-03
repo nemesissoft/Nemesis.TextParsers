@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
+using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
@@ -11,6 +13,7 @@ namespace Nemesis.TextParsers
     /// <summary>
     /// Aids in providing metadata for GUI applications 
     /// </summary>
+    [PublicAPI]
     public struct DictionaryMeta : IEquatable<DictionaryMeta>
     {
         public DictionaryKind Kind { get; }
@@ -72,7 +75,7 @@ namespace Nemesis.TextParsers
         public IDictionary<TKey, TValue> CreateDictionaryGeneric<TKey, TValue>(IList<(object Key, object Value)> sourceElements)
         {
             if (!IsValid) return null;
-            int capacity = sourceElements.Count;
+            int capacity = sourceElements?.Count ?? 0;
 
             IDictionary<TKey, TValue> result =
                 Kind == DictionaryKind.SortedDictionary ? new SortedDictionary<TKey, TValue>() :
@@ -84,6 +87,7 @@ namespace Nemesis.TextParsers
 
             for (int i = 0; i < capacity; i++)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 var (oKey, oValue) = sourceElements[i];
                 TKey key = SpanParserHelper.ConvertElement<TKey>(oKey);
                 TValue value = SpanParserHelper.ConvertElement<TValue>(oValue);
@@ -93,8 +97,8 @@ namespace Nemesis.TextParsers
                 result[key] = value;
             }
 
-            return Kind == DictionaryKind.ReadOnlyDictionary 
-                ? new ReadOnlyDictionary<TKey, TValue>(result) 
+            return Kind == DictionaryKind.ReadOnlyDictionary
+                ? new ReadOnlyDictionary<TKey, TValue>(result)
                 : result;
 
             TKey GetQuiteUniqueNotNullKey()
@@ -107,13 +111,15 @@ namespace Nemesis.TextParsers
                     if (typeOfKey == typeof(string))
                         return (TKey)(object)$"Key {nextKey}";
                     else if (TypeMeta.IsNumeric(typeOfKey))
-                        return (TKey)Convert.ChangeType(nextKey % 128, typeOfKey);
+                        return (TKey)Convert.ChangeType(nextKey % 128, typeOfKey, CultureInfo.InvariantCulture);
                     else if (typeOfKey.IsValueType && Nullable.GetUnderlyingType(typeOfKey) is Type underlyingType)
                         return (TKey)FormatterServices.GetUninitializedObject(underlyingType);
                     else
                         return (TKey)FormatterServices.GetUninitializedObject(typeOfKey);
                 }
-                catch (Exception) { return default; }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch { return default; }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
     }

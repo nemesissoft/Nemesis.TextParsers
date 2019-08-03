@@ -13,16 +13,11 @@ namespace Nemesis.TextParsers
         private readonly char _dictionaryPairsDelimiter;
         private readonly char _dictionaryKeyValueDelimiter;
 
-        private static readonly ISpanParser<TKey> _keyParser;
-        private static readonly ISpanParser<TValue> _valueParser;
+        private static readonly ISpanParser<TKey> _keyParser = TextTransformer.Default.GetTransformer<TKey>();
+        private static readonly ISpanParser<TValue> _valueParser = TextTransformer.Default.GetTransformer<TValue>();
         #endregion
 
         #region Ctors/factories
-        static ParsedPairSequence()
-        {
-            _keyParser = TextTransformer.Default.GetTransformer<TKey>();
-            _valueParser = TextTransformer.Default.GetTransformer<TValue>();
-        }
 
         public ParsedPairSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter)
         {
@@ -109,7 +104,7 @@ namespace Nemesis.TextParsers
                 {
                     unescapedInput = unescapedInput
                         .UnescapeCharacter(escapingSequenceStart, nullElementMarker, escapingSequenceStart);
-                    
+
                     return parser.Parse(unescapedInput);
                 }
             }
