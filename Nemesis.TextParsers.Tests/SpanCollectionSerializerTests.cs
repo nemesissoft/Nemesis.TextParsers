@@ -332,6 +332,9 @@ namespace Nemesis.TextParsers.Tests
             (typeof(TimeSpan?), Enumerable.Range(1, 7).Select(i => i % 3 == 0 ? (TimeSpan?) null : new TimeSpan(i, i + 1, i + 2, i + 3)).ToList(),
             @"1.02:03:04|2.03:04:05|∅|4.05:06:07|5.06:07:08|∅|7.08:09:10" ),
 
+            (typeof(Uri), Enumerable.Range(1, 7).Select(i => new Uri($"http://www.google{i}.com")).ToList(),
+                @"http://www.google1.com|http://www.google2.com|http://www.google3.com|http://www.google4.com|http://www.google5.com|http://www.google6.com|http://www.google7.com" ),
+
             (typeof(decimal[]), Enumerable.Range(1, 7).Select(
                     i => i % 3 == 0 ? null : new decimal[] {10 * i, 10 * i + 1}).ToList(),
             @"10\|11|20\|21|∅|40\|41|50\|51|∅|70\|71" ),

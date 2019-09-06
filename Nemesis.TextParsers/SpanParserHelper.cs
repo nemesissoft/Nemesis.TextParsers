@@ -193,7 +193,7 @@ namespace Nemesis.TextParsers
                 ArrayPool<T>.Shared.Return(initialBuffer);
             }
         }
-        
+
         //TODO UnescapeCharacterTo(span, ValueSequenceBuilder) + ShouldUnescapeCharacter?
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)

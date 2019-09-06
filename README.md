@@ -106,3 +106,4 @@ accumulator.Dispose();
     * Enum casing+other customizations
     * empty string meaing (empty, default, null?))
 2. custom TextParser factory/customizations
+3. support for ObservableCollection

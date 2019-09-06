@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Tests
@@ -219,11 +220,84 @@ namespace Nemesis.TextParsers.Tests
             }
 
             Exception GetException(int numberOfElements) => new ArgumentException(
-                $@"Sequence should contain either 3, but contained {(numberOfElements > 3 ? "more than 3" : numberOfElements.ToString())} elements");
+                $@"Sequence should contain 3 elements, but contained {(numberOfElements > 3 ? "more than 3" : numberOfElements.ToString())} elements");
         }
 
         [UsedImplicitly]
         public static ThreeElements<TElement> FromText(string text) => throw new NotSupportedException("This should never be used");
+    }
+
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+    internal struct Range<TElement>
+    {
+        private const char SEPARATOR = '‥';
+        private const char ESCAPING_SEQUENCE_START = '\\';
+        private const char NULL_ELEMENT_MARKER = '∅';
+
+        private static readonly IFormatter<TElement> _formatter = TextTransformer.Default.GetTransformer<TElement>();
+
+        public TElement From { get; }
+        public TElement To { get; }
+
+        public Range(TElement from, TElement to)
+        {
+            From = from;
+            To = to;
+        }
+
+        public override string ToString()
+        {
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            FormatElement(From, ref accumulator);
+            accumulator.Append(SEPARATOR);
+            FormatElement(To, ref accumulator);
+
+            var text = accumulator.AsSpan().ToString();
+            accumulator.Dispose();
+            return text;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FormatElement(TElement element, ref ValueSequenceBuilder<char> accumulator)
+        {
+            string elementText = _formatter.Format(element);
+            if (elementText == null)
+                accumulator.Append(NULL_ELEMENT_MARKER);
+            else
+            {
+                foreach (char c in elementText)
+                {
+                    if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == SEPARATOR)
+                        accumulator.Append(ESCAPING_SEQUENCE_START);
+                    accumulator.Append(c);
+                }
+            }
+        }
+
+        [UsedImplicitly]
+        public static Range<TElement> FromText(ReadOnlySpan<char> text)
+        {
+            var tokens = text.Tokenize(SEPARATOR, ESCAPING_SEQUENCE_START, true);
+            var parsed = tokens.Parse<TElement>(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
+
+            var enumerator = parsed.GetEnumerator();
+            {
+                if (!enumerator.MoveNext()) throw GetException(0);
+                var from = enumerator.Current;
+
+                if (!enumerator.MoveNext()) throw GetException(1);
+                var to = enumerator.Current;
+
+                if (enumerator.MoveNext()) throw GetException(3);//end of sequence
+
+                return new Range<TElement>(from, to);
+            }
+
+            Exception GetException(int numberOfElements) => new ArgumentException(
+                $@"Sequence should contain 2 elements, but contained {(numberOfElements > 2 ? "more than 2" : numberOfElements.ToString())} elements");
+        }
     }
 
 
@@ -396,7 +470,7 @@ namespace Nemesis.TextParsers.Tests
 #else
                 input
 #endif
-                    , out int i3) ? new Option((OptionEnum) i3) : new Option(OptionEnum.None);
+                    , out int i3) ? new Option((OptionEnum)i3) : new Option(OptionEnum.None);
         }
 
         public string Format(Option element) => element.ToString();
@@ -407,6 +481,6 @@ namespace Nemesis.TextParsers.Tests
 
         public object ParseObject(ReadOnlySpan<char> input) => Parse(input);
 
-        public string FormatObject(object element) => Format((Option) element);
+        public string FormatObject(object element) => Format((Option)element);
     }
 }
