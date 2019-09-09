@@ -105,6 +105,15 @@ namespace Nemesis.TextParsers
 
                         return result;
                     }
+                case CollectionKind.ObservableCollection:
+                    {
+                        var result = new ObservableCollection<TTo>();
+
+                        foreach (TTo part in parsedSequence)
+                            result.Add(part);
+
+                        return result;
+                    }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
             }

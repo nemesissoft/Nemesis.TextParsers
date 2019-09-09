@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,8 @@ namespace Nemesis.TextParsers.Tests
             (typeof(Stack<int>), @"37|2|3|5|26", 5, typeof(Stack<int>)),
             (typeof(Queue<int>), @"37|2|3|5|36", 5, typeof(Queue<int>)),
 
+            (typeof(ObservableCollection<int>), @"18|14|12|13|10", 5, typeof(ObservableCollection<int>)),
+            
 
             //lean collection
             (typeof(LeanCollection<byte>), @"", 0, typeof(LeanCollection<byte>)),

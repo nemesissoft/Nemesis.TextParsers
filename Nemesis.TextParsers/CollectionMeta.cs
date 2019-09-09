@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -153,7 +154,16 @@ namespace Nemesis.TextParsers
 
                         return result;
                     }
-                //case CollectionKind.Unknown:
+                case CollectionKind.ObservableCollection:
+                    {
+                        var result = new ObservableCollection<TDestElem>();
+
+                        for (int i = 0; i < count; i++)
+                            // ReSharper disable once PossibleNullReferenceException
+                            result.Add(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+
+                        return result;
+                    }
                 default:
                     throw new NotSupportedException($@"{nameof(Kind)} = '{Kind}' is not supported");
             }
@@ -209,11 +219,12 @@ namespace Nemesis.TextParsers
                     return CollectionKind.Stack;
                 else if (definition == typeof(Queue<>))
                     return CollectionKind.Queue;
-                else
-                    return CollectionKind.Unknown;
+
+                else if (definition == typeof(ObservableCollection<>))
+                    return CollectionKind.ObservableCollection;
             }
-            else
-                return CollectionKind.Unknown;
+
+            return CollectionKind.Unknown;
         }
 
         private static Type GetElementType(Type collectionType)
@@ -245,6 +256,8 @@ namespace Nemesis.TextParsers
             typeof(LinkedList<>),
             typeof(Stack<>),
             typeof(Queue<>),
+
+            typeof(ObservableCollection<>),
         };
 
         public static bool IsTypeSupported(Type collectionType) =>
@@ -266,6 +279,8 @@ namespace Nemesis.TextParsers
 
         LinkedList,
         Stack,
-        Queue
+        Queue,
+
+        ObservableCollection
     }
 }
