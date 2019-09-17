@@ -100,14 +100,26 @@ accumulator.Dispose();
 ```
 
 
-## Builds
+## CI
 
 |Branch     |Status    |
-|-----------|:--------:|
-|Main       |[![Build status](https://ci.appveyor.com/api/projects/status/5t4ng6d578cnm7ab?svg=true)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers) |
-|master     |[![Build status](https://ci.appveyor.com/api/projects/status/5t4ng6d578cnm7ab/branch/master?svg=true)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master) |
+|---------------|:--------:|
+|master build   |[![Build status](https://ci.appveyor.com/api/projects/status/5t4ng6d578cnm7ab/branch/master?svg=true)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master) |
+|Tests          | [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests) |
+|Code size      | [![Code size](https://img.shields.io/github/languages/code-size/nemesissoft/Nemesis.TextParsers)](https://github.com/nemesissoft/Nemesis.TextParsers) |
+|Issues         | [![Issues](https://img.shields.io/github/issues/nemesissoft/Nemesis.TextParsers)](https://github.com/nemesissoft/Nemesis.TextParsers/issues) |
+
+## Nuget package
+
+[![Nuget package](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png)  
+ ![Version](https://img.shields.io/nuget/v/Nemesis.TextParsers)  
+ ![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers)  
+](https://www.nuget.org/packages/Nemesis.TextParsers/)
 
 
+
+
+[![desc](imgSrc)](URL)
 
 ## Todo / road map
 1. context based transformer creation with settings for:
