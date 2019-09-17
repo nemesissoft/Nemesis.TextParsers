@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
@@ -55,8 +54,6 @@ namespace Nemesis.TextParsers
         //public bool CanHandle(Type type) => typeof(TElement) == type;
         public Type Type => typeof(TElement);
 
-        protected static CultureInfo InvCult => CultureInfo.InvariantCulture;
-
         public override string ToString() => $"Transform {Type.Name}";
     }
 
@@ -74,7 +71,7 @@ namespace Nemesis.TextParsers
     public sealed class BooleanParser : SimpleTransformer<bool>
     {
 #if NETSTANDARD2_0
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         internal static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
         {
             if (span.Length != value.Length)
@@ -180,7 +177,7 @@ namespace Nemesis.TextParsers
     public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer<TElement> where TElement : IFormattable
     {
         public sealed override string Format(TElement element) =>
-            element.ToString(FormatString, InvCult);
+            element.ToString(FormatString, Culture.InvCult);
 
         protected virtual string FormatString { get; } = null;
     }
@@ -288,7 +285,7 @@ namespace Nemesis.TextParsers
 #else
                 input
 #endif
-                , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
+                , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult);
         }
 
         protected override string FormatString { get; } = "R";
@@ -308,7 +305,7 @@ namespace Nemesis.TextParsers
 #else
                 input
 #endif
-                , NumberStyles.Float | NumberStyles.AllowThousands, InvCult);
+                , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult);
         }
 
         protected override string FormatString { get; } = "R";
@@ -324,7 +321,7 @@ namespace Nemesis.TextParsers
 #else
                 input
 #endif
-                , NumberStyles.Number, InvCult);
+                , NumberStyles.Number, Culture.InvCult);
     }
 
     [UsedImplicitly]
@@ -337,7 +334,7 @@ namespace Nemesis.TextParsers
 #else
                 input
 #endif
-                , InvCult);
+                , Culture.InvCult);
     }
 
     [UsedImplicitly]
@@ -350,7 +347,7 @@ namespace Nemesis.TextParsers
 #else
                 input
 #endif
-                , InvCult, DateTimeStyles.RoundtripKind);
+                , Culture.InvCult, DateTimeStyles.RoundtripKind);
 
         protected override string FormatString { get; } = "o";
     }
@@ -365,7 +362,7 @@ namespace Nemesis.TextParsers
 #else
                 input
 #endif
-                , InvCult, DateTimeStyles.RoundtripKind);
+                , Culture.InvCult, DateTimeStyles.RoundtripKind);
 
         protected override string FormatString { get; } = "o";
     }
@@ -393,7 +390,7 @@ namespace Nemesis.TextParsers
 #else
             input
 #endif
-            , NumberStyles.Integer, InvCult);
+            , NumberStyles.Integer, Culture.InvCult);
 
         protected override string FormatString { get; } = "R";
     }

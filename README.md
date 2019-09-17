@@ -1,4 +1,5 @@
 # Nemesis.TextParsers
+
 When stucked with a task of parsing various items form strings we ofter opt for TypeConverter (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ?
 
 We tend to create methods like:
@@ -99,6 +100,14 @@ accumulator.Dispose();
 ```
 
 
+## Builds
+
+|Branch     |Status    |
+|-----------|:--------:|
+|Main       |[![Build status](https://ci.appveyor.com/api/projects/status/5t4ng6d578cnm7ab?svg=true)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers) |
+|master     |[![Build status](https://ci.appveyor.com/api/projects/status/5t4ng6d578cnm7ab/branch/master?svg=true)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master) |
+
+
 
 ## Todo / road map
 1. context based transformer creation with settings for:
@@ -106,3 +115,5 @@ accumulator.Dispose();
     * Enum casing+other customizations
     * empty string meaing (empty, default, null?))
 2. custom TextParser factory/customizations
+3. ability to format to buffer
+4. become DI friendly adding support for cross cutting concerns i.e. logging

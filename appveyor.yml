@@ -1,0 +1,26 @@
+version: 0.11.{build}
+image: Visual Studio 2019
+configuration: Release
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj;**\*.props'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+before_build:
+- cmd: nuget restore
+build:
+  verbosity: normal
+artifacts:
+- path: '**\*.nupkg'
+  name: NuGet Packages
+- path: '**\*.snupkg'
+  name: NuGet Symbols Packages
+deploy:
+- provider: NuGet
+  api_key:
+    secure: vd8yW7QMjs4O+Bp1KjU5JOp0+MteVsroKNGz6h+/mjG4SVpBRPq7tK37deBj6FDD
+  on:
+    branch: master

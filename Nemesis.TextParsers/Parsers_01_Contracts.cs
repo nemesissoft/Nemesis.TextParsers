@@ -41,7 +41,6 @@ namespace Nemesis.TextParsers
 
     public interface ICanTransformType
     {
-        //bool CanHandle(Type type);
         Type Type { get; }
     }
     public interface ICanCreateTransformer
