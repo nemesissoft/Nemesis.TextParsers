@@ -108,6 +108,8 @@ accumulator.Dispose();
 |Tests          | [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests) |
 |Code size      | [![Code size](https://img.shields.io/github/languages/code-size/nemesissoft/Nemesis.TextParsers)](https://github.com/nemesissoft/Nemesis.TextParsers) |
 |Issues         | [![Issues](https://img.shields.io/github/issues/nemesissoft/Nemesis.TextParsers)](https://github.com/nemesissoft/Nemesis.TextParsers/issues) |
+|GitHub stars | [![GitHub stars](https://img.shields.io/github/stars/nemesissoft/Nemesis.TextParsers?style=social)](https://github.com/nemesissoft/Nemesis.TextParsers/stargazers) |
+|GitHub commit activity| ![Activity](https://img.shields.io/github/commit-activity/y/nemesissoft/Nemesis.TextParsers) |
 
 ## Nuget package
 
@@ -116,10 +118,6 @@ accumulator.Dispose();
  ![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers)  
 ](https://www.nuget.org/packages/Nemesis.TextParsers/)
 
-
-
-
-[![desc](imgSrc)](URL)
 
 ## Todo / road map
 1. context based transformer creation with settings for:
