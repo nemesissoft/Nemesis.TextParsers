@@ -8,7 +8,7 @@
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
     <Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
-    <Description>Contains various parser optimized for speed and no allocation</Description>
+    <Description>Contains various parser optimized for speed and no allocation**ooo**</Description>
 
 
     <PackageIconUrl>http://icons.iconarchive.com/icons/iconka/cat-commerce/128/review-icon.png</PackageIconUrl>

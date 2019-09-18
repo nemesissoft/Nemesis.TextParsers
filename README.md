@@ -100,7 +100,7 @@ accumulator.Dispose();
 ```
 
 
-## CI
+## Continuous Integration
 
 |Branch     |Status    |
 |---------------|:--------:|
