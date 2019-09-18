@@ -8,8 +8,8 @@
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
     <Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
-    <Description>Contains various parser optimized for speed and no allocation**ooo**</Description>
-
+    <Description>Contains various parser optimized for speed and no allocation</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <PackageIconUrl>http://icons.iconarchive.com/icons/iconka/cat-commerce/128/review-icon.png</PackageIconUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
@@ -22,11 +22,15 @@
     <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
     
 
-    <Version>0.9.15</Version> 
+    <Version>0.0.1</Version>
     <AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath=""/>
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -68,6 +72,5 @@
         Console.WriteLine("Target framework: .NET Framework 4.5");
 #else NETSTANDARD2_0      NETCOREAPP2_2
         Console.WriteLine("Target framework: .NET Standard 1.4");
-#endif
-  
+#endif  
   -->
