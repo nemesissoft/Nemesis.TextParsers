@@ -8,6 +8,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Nemesis.TextParsers.Runtime;
+#if NETCOREAPP3_0
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+#else
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
+#endif
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -24,6 +29,7 @@ namespace Nemesis.TextParsers.Tests
     //[TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements")]
     [TextFactory(typeof(AggressionBasedFactory<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
     public interface IAggressionBased<out TValue>
     {
         TValue PassiveValue { get; }
@@ -53,13 +59,13 @@ namespace Nemesis.TextParsers.Tests
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            switch (other)
+            return other switch
             {
-                case AggressionBased1<TValue> o1: return Equals1(o1);
-                case AggressionBased3<TValue> o3: return Equals3(o3);
-                case AggressionBased9<TValue> o9: return Equals9(o9);
-                default: throw new ArgumentException($@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
-            }
+                AggressionBased1<TValue> o1 => Equals1(o1),
+                AggressionBased3<TValue> o3 => Equals3(o3),
+                AggressionBased9<TValue> o9 => Equals9(o9),
+                _ => throw new ArgumentException($@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other)),
+            };
         }
 
         protected abstract bool Equals1(in AggressionBased1<TValue> o1);
@@ -185,7 +191,7 @@ namespace Nemesis.TextParsers.Tests
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
         public TValue AggressiveValue => GetValueFor(StrategyAggression.Aggressive);
 
-        public AggressionBased9([NotNull] TValue[] values) => _values = values ?? throw new ArgumentNullException(nameof(values));
+        public AggressionBased9([@NotNull] TValue[] values) => _values = values ?? throw new ArgumentNullException(nameof(values));
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
 

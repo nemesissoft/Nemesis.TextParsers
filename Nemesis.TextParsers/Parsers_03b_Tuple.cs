@@ -14,31 +14,18 @@ namespace Nemesis.TextParsers
             var tupleType = typeof(TTuple);
 
             var types = tupleType.GenericTypeArguments;
-
-            Type transType;
-            switch (types?.Length)
+            var transType = (types?.Length) switch
             {
-                case 1:
-                    transType = typeof(Tuple1Transformer<>); break;
-                case 2:
-                    transType = typeof(Tuple2Transformer<,>); break;
-                case 3:
-                    transType = typeof(Tuple3Transformer<,,>); break;
-                case 4:
-                    transType = typeof(Tuple4Transformer<,,,>); break;
-                case 5:
-                    transType = typeof(Tuple5Transformer<,,,,>); break;
-                case 6:
-                    transType = typeof(Tuple6Transformer<,,,,,>); break;
-                case 7:
-                    transType = typeof(Tuple7Transformer<,,,,,,>); break;
-                case 8:
-                    transType = typeof(TupleRestTransformer<,,,,,,,>); break;
-
-                default:
-                    throw new NotSupportedException($"Only ValueTuple with arity 1-{MAX_ARITY} are supported");
-            }
-
+                1 => typeof(Tuple1Transformer<>),
+                2 => typeof(Tuple2Transformer<,>),
+                3 => typeof(Tuple3Transformer<,,>),
+                4 => typeof(Tuple4Transformer<,,,>),
+                5 => typeof(Tuple5Transformer<,,,,>),
+                6 => typeof(Tuple6Transformer<,,,,,>),
+                7 => typeof(Tuple7Transformer<,,,,,,>),
+                8 => typeof(TupleRestTransformer<,,,,,,,>),
+                _ => throw new NotSupportedException($"Only ValueTuple with arity 1-{MAX_ARITY} are supported"),
+            };
             transType = transType.MakeGenericType(types);
 
             return (ITransformer<TTuple>)Activator.CreateInstance(transType);
@@ -50,10 +37,7 @@ namespace Nemesis.TextParsers
 
             private const byte ARITY = 1;
 
-            public Tuple1Transformer()
-            {
-                _transformer1 = TextTransformer.Default.GetTransformer<T1>();
-            }
+            public Tuple1Transformer() => _transformer1 = TextTransformer.Default.GetTransformer<T1>();
 
             public override ValueTuple<T1> Parse(ReadOnlySpan<char> input)
             {
@@ -667,29 +651,25 @@ namespace Nemesis.TextParsers
 
                 return span.Slice(start + 1, end - start - 1);
 
-                Exception GetStateException() => new ArgumentException(
+                static Exception GetStateException() => new ArgumentException(
                          "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
             {
-                string ToOrdinal(byte number)
+                static string ToOrdinal(byte number)
                 {
                     int rem = number % 100;
                     if (rem >= 11 && rem <= 13) return $"{number}th";
 
-                    switch (number % 10)
+                    return (number % 10) switch
                     {
-                        case 1:
-                            return $"{number}st";
-                        case 2:
-                            return $"{number}nd";
-                        case 3:
-                            return $"{number}rd";
-                        default:
-                            return $"{number}th";
-                    }
+                        1 => $"{number}st",
+                        2 => $"{number}nd",
+                        3 => $"{number}rd",
+                        _ => $"{number}th",
+                    };
                 }
 
                 if (!enumerator.MoveNext())

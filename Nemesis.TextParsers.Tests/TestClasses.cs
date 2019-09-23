@@ -219,12 +219,12 @@ namespace Nemesis.TextParsers.Tests
                 return new ThreeElements<TElement>(first, second, third);
             }
 
-            Exception GetException(int numberOfElements) => new ArgumentException(
+            static Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain 3 elements, but contained {(numberOfElements > 3 ? "more than 3" : numberOfElements.ToString())} elements");
         }
 
-        [UsedImplicitly]
-        public static ThreeElements<TElement> FromText(string text) => throw new NotSupportedException("This should never be used");
+        //[UsedImplicitly]
+        //public static ThreeElements<TElement> FromText(string text) => throw new NotSupportedException("This should never be used");
     }
 
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
@@ -295,7 +295,7 @@ namespace Nemesis.TextParsers.Tests
                 return new Range<TElement>(from, to);
             }
 
-            Exception GetException(int numberOfElements) => new ArgumentException(
+            static Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain 2 elements, but contained {(numberOfElements > 2 ? "more than 2" : numberOfElements.ToString())} elements");
         }
     }
@@ -355,7 +355,7 @@ namespace Nemesis.TextParsers.Tests
                 return new PairWithFactory<TElement>(left, right);
             }
 
-            Exception GetException(int numberOfElements) => new ArgumentException(
+            static Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain either 2, but contained {(numberOfElements > 2 ? "more than 2" : numberOfElements.ToString())} elements");
         }
     }

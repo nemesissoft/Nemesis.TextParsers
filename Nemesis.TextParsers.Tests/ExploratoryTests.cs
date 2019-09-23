@@ -164,7 +164,7 @@ namespace Nemesis.TextParsers.Tests
                 IsMutuallyEquivalent(parsed1, parsed3);
             }
 
-            void IsMutuallyEquivalent(object o1, object o2)
+            static void IsMutuallyEquivalent(object o1, object o2)
             {
                 o1.Should().BeEquivalentTo(o2);
                 o2.Should().BeEquivalentTo(o1);

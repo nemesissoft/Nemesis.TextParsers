@@ -52,7 +52,7 @@ namespace Nemesis.TextParsers
 
                 var δ = current - mean;
 
-                mean = mean + δ / i;
+                mean += δ / i;
                 Σ += δ * (current - mean);
             } while (enumerator.MoveNext());
 

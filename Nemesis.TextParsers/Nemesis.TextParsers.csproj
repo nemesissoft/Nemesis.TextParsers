@@ -1,35 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.2;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;netstandard2.1;netstandard2.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
+    <!--TODO  
+    <Nullable>enable</Nullable>
+    Disposable ref structs
+    Readonly members
+    https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#stackalloc-in-nested-expressions
+    -->
 
     <Authors>Michał Bryłka, Leszek Kowalski</Authors>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
     <Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
     <Description>Contains various parser optimized for speed and no allocation</Description>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <PackageIconUrl>http://icons.iconarchive.com/icons/iconka/cat-commerce/128/review-icon.png</PackageIconUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>review-icon.png</PackageIcon>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
+
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>    
+    <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
 
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
     <PublicSign>true</PublicSign>
     <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
-    
+
 
     <Version>0.0.1</Version>
-    <AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath=""/>
+    <None Include="..\README.md" Pack="true" PackagePath="" />
+    <None Include="review-icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -39,38 +46,31 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
     <PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" Version="1.0.17" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />
   </ItemGroup>
 
+  <!--Legacy on-->
+  <PropertyGroup>
+    <AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>
+  </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
-  
+  <!--<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0' Or '$(TargetFramework)'=='netstandard2.1'">
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
+  </PropertyGroup>-->
+  <!--Legacy off-->
+
+
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>$(MSBuildProjectName).Tests, PublicKey=00240000048000001a010000060200000024000052534131300800000100010035c8d69e21b106b1164c8fc9c108ed2c08b283d13af6028fc6d6dd07ddd98039bcd99689793df5eef77230ce0a469dfb3ba7575ec699a6e001224ef90b3ce3437e873f0e5bc267a992a78ce1ecb85545d021f17ce51dccf9b3b2cb418aa9adcd2cf93fcc53ab12cb80a5cd51dcf6f3f3be70777b5dbf6d43dc20801be7f9d8220d8ac1082391647e650ff596673c8cd40257f113c8d59f8b150cebc991eeedc69a9c1d442f93089a276aad3122cf90feafb02a384524fcab4d269de23aa5666c6fcc8b89766455d8e0fe9e65d1034673382c596cc60ee8d1b1b4fedb767ff05d7d6cdae0c0db091c24311ae373f98887826256298d72a772a3a8abee357a28f6a5bb4f4369ab</_Parameter1>
     </AssemblyAttribute>
-    
+
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Benchmarks, PublicKey=00240000048000001a010000060200000024000052534131300800000100010035c8d69e21b106b1164c8fc9c108ed2c08b283d13af6028fc6d6dd07ddd98039bcd99689793df5eef77230ce0a469dfb3ba7575ec699a6e001224ef90b3ce3437e873f0e5bc267a992a78ce1ecb85545d021f17ce51dccf9b3b2cb418aa9adcd2cf93fcc53ab12cb80a5cd51dcf6f3f3be70777b5dbf6d43dc20801be7f9d8220d8ac1082391647e650ff596673c8cd40257f113c8d59f8b150cebc991eeedc69a9c1d442f93089a276aad3122cf90feafb02a384524fcab4d269de23aa5666c6fcc8b89766455d8e0fe9e65d1034673382c596cc60ee8d1b1b4fedb767ff05d7d6cdae0c0db091c24311ae373f98887826256298d72a772a3a8abee357a28f6a5bb4f4369ab</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 
 </Project>
-
-
-<!-- <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.Memory" Version="4.5.2" />
-  </ItemGroup>
-  
-  
-  #if NET40
-        Console.WriteLine("Target framework: .NET Framework 4.0");
-#elif NET45  
-        Console.WriteLine("Target framework: .NET Framework 4.5");
-#else NETSTANDARD2_0      NETCOREAPP2_2
-        Console.WriteLine("Target framework: .NET Standard 1.4");
-#endif  
-  -->

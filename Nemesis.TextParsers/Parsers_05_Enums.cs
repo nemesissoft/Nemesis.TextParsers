@@ -6,6 +6,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+#if NETCOREAPP3_0
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+#else
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
+#endif
+
 
 namespace Nemesis.TextParsers
 {
@@ -55,15 +61,16 @@ namespace Nemesis.TextParsers
         private readonly TNumberHandler _numberHandler;
 
         public bool IsFlagEnum { get; } = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
-        
+
         private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>();
 
-        public EnumTransformer([NotNull]TNumberHandler numberHandler) =>
+        // ReSharper disable once RedundantVerbatimPrefix
+        public EnumTransformer([@NotNull]TNumberHandler numberHandler) =>
                 _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
 
         //check performance comparison in Benchmark project - ToEnumBench
         internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
-        
+
         public override TEnum Parse(ReadOnlySpan<char> input)
         {
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
