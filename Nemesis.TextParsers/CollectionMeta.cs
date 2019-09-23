@@ -175,7 +175,7 @@ namespace Nemesis.TextParsers
         {
             if (collectionType != null)
             {
-                if (collectionType.IsArray && collectionType.GetElementType() is Type arrayElementType)
+                if (collectionType.IsArray && collectionType.GetElementType() is { } arrayElementType)
                     return new CollectionMeta(true, CollectionKind.Unknown, arrayElementType);
                 else if (IsTypeSupported(collectionType) &&
                          GetCollectionKind(collectionType) is CollectionKind kind &&
@@ -192,7 +192,7 @@ namespace Nemesis.TextParsers
 
         private static CollectionKind GetCollectionKind(Type collectionType)
         {
-            if (collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() is Type definition)
+            if (collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() is { } definition)
             {
                 if (definition == typeof(IEnumerable<>) ||
                     definition == typeof(ICollection<>) ||
@@ -262,7 +262,7 @@ namespace Nemesis.TextParsers
         public static bool IsTypeSupported(Type collectionType) =>
             collectionType != null &&
             collectionType.IsGenericType &&
-            collectionType.GetGenericTypeDefinition() is Type definition &&
+            collectionType.GetGenericTypeDefinition() is { } definition &&
             _supportedCollectionTypes.Contains(definition);
     }
 

@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers
         }
 
         public bool CanHandle(Type type) =>
-            GetFactoryMethodContainer(type) is Type containerType &&
+            GetFactoryMethodContainer(type) is { } containerType &&
             containerType.GetMethods(STATIC_METHOD_FLAGS)
                 .Any(m => FactoryMethodPredicate(m, type));
 
@@ -68,7 +68,7 @@ namespace Nemesis.TextParsers
 
             MethodInfo FindMethodWithParameterType(Type paramType) =>
                 conversionMethods.FirstOrDefault(m =>
-                    m.GetParameters() is ParameterInfo[] @params && @params.Length == 1 &&
+                    m.GetParameters() is { } @params && @params.Length == 1 &&
                     @params[0].ParameterType == paramType);
         }
 
@@ -81,8 +81,8 @@ namespace Nemesis.TextParsers
         
         private static bool FactoryMethodPredicate(MethodInfo m, Type returnType) =>
             m.Name == FACTORY_METHOD_NAME &&
-            m.GetParameters() is ParameterInfo[] @params && @params.Length == 1 &&
-            @params[0].ParameterType is Type firstParamType &&
+            m.GetParameters() is { } @params && @params.Length == 1 &&
+            @params[0].ParameterType is { } firstParamType &&
             (
                 firstParamType == typeof(string)
                 ||

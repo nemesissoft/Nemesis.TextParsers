@@ -14,7 +14,7 @@ namespace Nemesis.TextParsers
     /// Aids in providing metadata for GUI applications 
     /// </summary>
     [PublicAPI]
-    public struct DictionaryMeta : IEquatable<DictionaryMeta>
+    public readonly struct DictionaryMeta : IEquatable<DictionaryMeta>
     {
         public DictionaryKind Kind { get; }
         public Type KeyType { get; }
@@ -112,7 +112,7 @@ namespace Nemesis.TextParsers
                         return (TKey)(object)$"Key {nextKey}";
                     else if (TypeMeta.IsNumeric(typeOfKey))
                         return (TKey)Convert.ChangeType(nextKey % 128, typeOfKey, CultureInfo.InvariantCulture);
-                    else if (typeOfKey.IsValueType && Nullable.GetUnderlyingType(typeOfKey) is Type underlyingType)
+                    else if (typeOfKey.IsValueType && Nullable.GetUnderlyingType(typeOfKey) is { } underlyingType)
                         return (TKey)FormatterServices.GetUninitializedObject(underlyingType);
                     else
                         return (TKey)FormatterServices.GetUninitializedObject(typeOfKey);
@@ -142,7 +142,7 @@ namespace Nemesis.TextParsers
 
         private static DictionaryKind GetDictionaryKind(Type dictType)
         {
-            if (dictType.IsGenericType && dictType.GetGenericTypeDefinition() is Type definition)
+            if (dictType.IsGenericType && dictType.GetGenericTypeDefinition() is { } definition)
             {
                 if (definition == typeof(Dictionary<,>) ||
                     definition == typeof(IDictionary<,>))
@@ -164,7 +164,7 @@ namespace Nemesis.TextParsers
         private static (Type keyType, Type valueType) GetPairType(Type dictType)
         {
             var genType =
-                dictType.IsGenericType && dictType.GetGenericTypeDefinition() is Type definition &&
+                dictType.IsGenericType && dictType.GetGenericTypeDefinition() is { } definition &&
                 (definition == typeof(IDictionary<,>) || definition == typeof(IReadOnlyDictionary<,>))
                     ? dictType
                     : TypeMeta.GetConcreteInterfaceOfType(dictType, typeof(IDictionary<,>))
@@ -188,7 +188,7 @@ namespace Nemesis.TextParsers
         public static bool IsTypeSupported(Type dictType) =>
             dictType != null &&
             dictType.IsGenericType &&
-            dictType.GetGenericTypeDefinition() is Type definition &&
+            dictType.GetGenericTypeDefinition() is { } definition &&
             _supportedDictionaryTypes.Contains(definition);
     }
 

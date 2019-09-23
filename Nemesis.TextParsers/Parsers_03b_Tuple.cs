@@ -516,7 +516,7 @@ namespace Nemesis.TextParsers
             public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Parse(ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
-                
+
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -725,12 +725,15 @@ namespace Nemesis.TextParsers
         private const byte MAX_ARITY = 8;
 
         public bool CanHandle(Type type) =>
-            //typeof(System.Runtime.CompilerServices.ITuple).IsAssignableFrom(type) //not supported in .NET Standard 2.0
             type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
+#if NETSTANDARD2_0
             type.Namespace == "System" &&
             type.Name.StartsWith("ValueTuple`") &&
-            typeof(ValueType).IsAssignableFrom(type) &&
-            type.GenericTypeArguments?.Length is int arity && arity <= MAX_ARITY && arity >= 1
+            typeof(ValueType).IsAssignableFrom(type) &&          
+#else
+            typeof(ITuple).IsAssignableFrom(type) &&
+#endif
+            type.GenericTypeArguments?.Length is { } arity && arity <= MAX_ARITY && arity >= 1
             ;
 
         public sbyte Priority => 12;

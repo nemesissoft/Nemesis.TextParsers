@@ -3,11 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;netstandard2.1;netstandard2.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <!--TODO  
-    <Nullable>enable</Nullable>
-    
-    Readonly members
-    https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#stackalloc-in-nested-expressions
+    <!--TODO  <Nullable>enable</Nullable>    
     -->
 
     <Authors>Michał Bryłka, Leszek Kowalski</Authors>
