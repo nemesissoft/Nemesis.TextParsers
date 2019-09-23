@@ -27,14 +27,12 @@ namespace Nemesis.TextParsers
             var initialBuffer = ArrayPool<TTo>.Shared.Rent(capacity);
             try
             {
-                var accumulator = new ValueSequenceBuilder<TTo>(initialBuffer);
+                using var accumulator = new ValueSequenceBuilder<TTo>(initialBuffer);
 
                 foreach (TTo part in parsedSequence)
                     accumulator.Append(part);
 
-                var array = accumulator.AsSpan().ToArray();
-                accumulator.Dispose();
-                return array;
+                return accumulator.AsSpan().ToArray();
             }
             finally
             {
@@ -184,7 +182,7 @@ namespace Nemesis.TextParsers
             var initialBuffer = ArrayPool<T>.Shared.Rent(8);
             try
             {
-                var accumulator = new ValueSequenceBuilder<T>(initialBuffer);
+                using var accumulator = new ValueSequenceBuilder<T>(initialBuffer);
                 accumulator.Append(first);
                 accumulator.Append(second);
                 accumulator.Append(third);
@@ -192,10 +190,8 @@ namespace Nemesis.TextParsers
 
                 if (enumerator.MoveNext())
                     accumulator.Append(enumerator.Current);
-
-                var array = accumulator.AsSpan().ToArray();
-                accumulator.Dispose();
-                return LeanCollectionFactory.FromArrayChecked(array);
+                
+                return LeanCollectionFactory.FromArrayChecked(accumulator.AsSpan().ToArray());
             }
             finally
             {
@@ -216,7 +212,7 @@ namespace Nemesis.TextParsers
             ) //is it worth looking for escape sequence ?
             {
                 Span<char> initialBuffer = stackalloc char[Math.Min(length, 256)];
-                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
 
                 for (int i = 0; i < length; i++)
@@ -242,10 +238,7 @@ namespace Nemesis.TextParsers
                     else
                         accumulator.Append(current);
                 }
-
-                var array = accumulator.AsSpan().ToArray();
-                accumulator.Dispose();
-                return array;
+                return accumulator.AsSpan().ToArray();
             }
             else return input;
         }
@@ -262,7 +255,7 @@ namespace Nemesis.TextParsers
             ) //is it worth looking for escape sequence ?
             {
                 Span<char> initialBuffer = stackalloc char[Math.Min(length, 256)];
-                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
 
                 for (int i = 0; i < length; i++)
@@ -288,10 +281,8 @@ namespace Nemesis.TextParsers
                     else
                         accumulator.Append(current);
                 }
-
-                var array = accumulator.AsSpan().ToArray();
-                accumulator.Dispose();
-                return array;
+                
+                return accumulator.AsSpan().ToArray();
             }
             else return input;
         }

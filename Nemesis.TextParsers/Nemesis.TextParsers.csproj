@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <!--TODO  
     <Nullable>enable</Nullable>
-    Disposable ref structs
+    
     Readonly members
     https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#stackalloc-in-nested-expressions
     -->

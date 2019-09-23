@@ -56,14 +56,12 @@ namespace Benchmarks
         public string ValueStringBuilder()
         {
             Span<char> initialBuffer = stackalloc char[1000];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
             for (char c = 'A'; c < 'A' + ITERATIONS; c++)
                 accumulator.Append(c);
 
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+            return accumulator.AsSpan().ToString();
         }
     }
 }

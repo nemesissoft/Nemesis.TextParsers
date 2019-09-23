@@ -60,7 +60,7 @@ namespace Nemesis.TextParsers
                 {
                     var bufferLength = Math.Min(Math.Max(input.Length * 13 / 10, 16), 256);
                     Span<char> initialBuffer = stackalloc char[bufferLength];
-                    var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                    using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
                     bool escaped = false;
                     // ReSharper disable once ForCanBeConvertedToForeach
@@ -92,9 +92,7 @@ Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are su
                         throw new ArgumentException("Unfinished escaping sequence detected at the end of input", nameof(input));
 
                     var toParse = accumulator.AsSpan();
-                    var result = Parse(in toParse);
-                    accumulator.Dispose();
-                    return result;
+                    return Parse(in toParse);
                 }
                 return Parse(input);
             }

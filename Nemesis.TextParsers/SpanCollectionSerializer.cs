@@ -170,7 +170,7 @@ namespace Nemesis.TextParsers
             IFormatter<TValue> valueFormatter = TextTransformer.Default.GetTransformer<TValue>();
 
             Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
             foreach (var pair in dict)
             {
@@ -205,10 +205,7 @@ namespace Nemesis.TextParsers
 
                 accumulator.Append(DictionaryPairsDelimiter);
             }
-
-            var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
-            accumulator.Dispose();
-            return text;
+            return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
         }
 
         #endregion
