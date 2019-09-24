@@ -1,8 +1,43 @@
-# Nemesis.TextParsers
+# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
 
-When stucked with a task of parsing various items form strings we ofter opt for TypeConverter (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ?
+[![Build status - master](https://img.shields.io/appveyor/ci/Nemesis/nemesis-textparsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master)
+[![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message&style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests)
+[![Code size](https://img.shields.io/github/languages/code-size/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers)
+[![Issues](https://img.shields.io/github/issues/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/issues)
+![Commit activity](https://img.shields.io/github/commit-activity/y/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)
+[![GitHub stars](https://img.shields.io/github/stars/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/stargazers)
 
-We tend to create methods like:
+
+[
+ ![NuGet version](https://img.shields.io/nuget/v/Nemesis.TextParsers.svg?style=flat-square)
+ ![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.svg?style=flat-square)
+](https://www.nuget.org/packages/Nemesis.TextParsers/)
+***
+
+## Benefits and Features
+TL;DR - are you looking for performant, non allocating serializer from structural object to flat, human editable string? Look no further. [Benchmarks](Benchmarks/ParserBench.cs) shows potential gains from using Nemesis.TextParsers
+
+
+|        Method | Count |        Mean | Ratio | Allocated |
+|-------------- |------ |------------:|------:|----------:|
+|      TextJson |    10 |   121.02 us |  1.00 |   35200 B |
+| TextJsonBytes |    10 |   120.79 us |  1.00 |   30400 B |
+|   TextJsonNet |    10 |   137.28 us |  1.13 |  288000 B |
+|   TextParsers |    10 |    49.02 us |  0.41 |    6400 B |
+|               |       |             |       |           |
+|      TextJson |   100 |   846.06 us |  1.00 |  195200 B |
+| TextJsonBytes |   100 |   845.84 us |  1.00 |  163200 B |
+|   TextJsonNet |   100 |   943.71 us |  1.12 |  636800 B |
+|   TextParsers |   100 |   463.33 us |  0.55 |   42400 B |
+|               |       |             |       |           |
+|      TextJson |  1000 | 8,142.13 us |  1.00 | 1639200 B |
+| TextJsonBytes |  1000 | 8,155.41 us |  1.00 | 1247200 B |
+|   TextJsonNet |  1000 | 8,708.12 us |  1.07 | 3880800 B |
+|   TextParsers |  1000 | 4,384.00 us |  0.54 |  402400 B |
+
+### Other popular choices
+
+When stucked with a task of parsing various items form strings we ofter opt for TypeConverter (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ? We tend to create methods like:
 ```csharp
 public static T FromString<T>(string text) =>
     (T)TypeDescriptor.GetConverter(typeof(T))
@@ -10,6 +45,7 @@ public static T FromString<T>(string text) =>
 ```
 
 or even create similar constructs to be in line with object oriented design:
+
 ```csharp
 public abstract class TextTypeConverter : TypeConverter
 {
@@ -42,25 +78,21 @@ What is wrong with that? Well, nothing... except of performance.
 TypeConverter was designed 15+ years ago when processing power tended to double every now and then and (in my opinion) it was more suited for creating GUI-like editors where performance usually is not an issue. 
 But imagine a service application like exchange trading suite that has to perform multiple operations per second and in such cases processor has more important thing to do than parsing strings. 
 
-## Parser/formatter features
+### Features
 0. as concise as possible - both JSON or XML exist but thay are not ready to be created from hand by human support
 1. works in various architectures supporting .Net Core and .Net Standard and is culture independent 
 2. support for basic system types (C#-like type names):
    * string
    * bool
-   * byte/sbyte
-   * short/ushort
-   * int/uint 
-   * long/ulong
+   * byte/sbyte, short/ushort, int/uint, long/ulong
    * float/double
    * decimal
    * BigInteger
-   * TimeSpan
-   * DateTime/DateTimeOffset
-   * Guid
+   * TimeSpan, DateTime/DateTimeOffset
+   * Guid, Uri
 3. supports pattern based parsing/formatting via ToString/FromText methods placed inside type or static/instance factory 
 4. supports compound types:
-   * KeyValuePair<,> and ValueTuple of arity 2-5 (1 is not a tuple, more than 5 warrants a dedicated type)
+   * KeyValuePair<,> and ValueTuple of any arity 
    * Enums (with number underlying types)
    * Nullables
    * Dictionaries (built-in i.e. SortedDictionary/SortedList and custom ones)
@@ -81,42 +113,22 @@ But imagine a service application like exchange trading suite that has to perfor
 
 7. provides basic building blocks for parser's callers to be able to create their own transformers/factories 
     * LeanCollection that can store 1,2,3 or more elements 
-    * string.Split equivalent is provided to accept faster representaion of string - ReadOnlySpan&lt;char&gt;. Supports both standard and custom escaping sequences
+    * [SpanSplit](Nemesis.TextParsers/SpanSplit.cs) - string.Split equivalent is provided to accept faster representaion of string - ReadOnlySpan&lt;char&gt;. Supports both standard and custom escaping sequences
     * access to every implemented parser/formatter
 8. basic LINQ support 
 ```csharp
 var avg = SpanCollectionSerializer.DefaultInstance.ParseStream<double>("1|2|3".AsSpan()).Average();
 ```
-9. basic support for GUI editors for compound types like collections/dictionaries
+9. basic support for GUI editors for compound types like collections/dictionaries: [CollectionMeta](Nemesis.TextParsers/CollectionMeta.cs), [DictionaryMeta](Nemesis.TextParsers/DictionaryMeta.cs)
 10. lean/frugal implementation of StringBuilder - ValueSequenceBuilder
 ```csharp
 Span<char> initialBuffer = stackalloc char[32];
-var accumulator = new ValueSequenceBuilder<char>initialBuffer);
+using var accumulator = new ValueSequenceBuilder<char>initialBuffer);
 using (var enumerator = coll.GetEnumerator())
     while (enumerator.MoveNext())
         FormatElement(formatter, enumerator.Current, ref ccumulator);
-var text = accumulator.AsSpanTo(accumulator.Length > 0 ? ccumulator.Length - 1 : 0).ToString();
-accumulator.Dispose();
+return accumulator.AsSpanTo(accumulator.Length > 0 ? ccumulator.Length - 1 : 0).ToString();
 ```
-
-
-## Continuous Integration
-
-|Branch     |Status    |
-|---------------|:--------:|
-|master build   |[![Build status](https://ci.appveyor.com/api/projects/status/5t4ng6d578cnm7ab/branch/master?svg=true)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master) |
-|Tests          | [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests) |
-|Code size      | [![Code size](https://img.shields.io/github/languages/code-size/nemesissoft/Nemesis.TextParsers)](https://github.com/nemesissoft/Nemesis.TextParsers) |
-|Issues         | [![Issues](https://img.shields.io/github/issues/nemesissoft/Nemesis.TextParsers)](https://github.com/nemesissoft/Nemesis.TextParsers/issues) |
-|GitHub stars | [![GitHub stars](https://img.shields.io/github/stars/nemesissoft/Nemesis.TextParsers?style=social)](https://github.com/nemesissoft/Nemesis.TextParsers/stargazers) |
-|GitHub commit activity| ![Activity](https://img.shields.io/github/commit-activity/y/nemesissoft/Nemesis.TextParsers) |
-
-## Nuget package
-
-[![Nuget package](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png)  
- ![Version](https://img.shields.io/nuget/v/Nemesis.TextParsers)  
- ![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers)  
-](https://www.nuget.org/packages/Nemesis.TextParsers/)
 
 
 ## Todo / road map

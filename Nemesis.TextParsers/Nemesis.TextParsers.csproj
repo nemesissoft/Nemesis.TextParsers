@@ -3,16 +3,15 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;netstandard2.1;netstandard2.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <!--TODO  <Nullable>enable</Nullable>    
-    -->
-
+    <!--<Nullable>enable</Nullable>-->
+    
     <Authors>Michał Bryłka, Leszek Kowalski</Authors>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
     <Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
     <Description>Contains various parser optimized for speed and no allocation</Description>
 
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
     <PackageIcon>review-icon.png</PackageIcon>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
@@ -27,11 +26,11 @@
     <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
 
 
-    <Version>0.0.1</Version>
+    <!--<Version>0.11.46</Version>-->
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="" />
+    <!--<None Include="..\README.md" Pack="true" PackagePath="" />-->
     <None Include="review-icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
@@ -41,7 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
-    <PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" Version="1.0.17" />
+    <PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" Version="1.0.17" PrivateAssets="All" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />
   </ItemGroup>
 
