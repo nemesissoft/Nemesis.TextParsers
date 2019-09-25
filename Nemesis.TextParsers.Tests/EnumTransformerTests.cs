@@ -321,7 +321,7 @@ namespace Nemesis.TextParsers.Tests
             input = input.Trim();
 
             return IsNumeric(input) && byte.TryParse(
-#if NET472|| NET48
+#if NETFRAMEWORK
                 input.ToString()
 #else
                 input
