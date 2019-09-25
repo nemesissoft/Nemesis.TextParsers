@@ -1,17 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;netstandard2.1;netstandard2.0</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
+    <!--<Version>0.11.46</Version>-->
     <!--<Nullable>enable</Nullable>-->
+
+    <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;netstandard2.1;netstandard2.0</TargetFrameworks>
     
-    <Authors>Michał Bryłka, Leszek Kowalski</Authors>
-    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
-    <Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
     <Description>Contains various parser optimized for speed and no allocation</Description>
 
-    <!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
+
     <PackageIcon>review-icon.png</PackageIcon>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
@@ -20,17 +18,9 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
 
-    <SignAssembly>true</SignAssembly>
-    <DelaySign>false</DelaySign>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
-
-
-    <!--<Version>0.11.46</Version>-->
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<None Include="..\README.md" Pack="true" PackagePath="" />-->
     <None Include="review-icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
@@ -68,4 +58,12 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+
+  <!--Pack documentation once it's suppoerted on nuget--> <!--
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>-->
 </Project>

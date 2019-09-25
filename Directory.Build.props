@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    
+    <LangVersion>8.0</LangVersion>
+    <!--<NullableContextOptions>enable</NullableContextOptions>-->
+
+    <Authors>Michał Bryłka, Leszek Kowalski</Authors>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
+
+
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
+    
+    
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+
+  </PropertyGroup>
+</Project>
