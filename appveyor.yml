@@ -1,6 +1,16 @@
-version: 0.11.{build}
+version: '{build}'
 image: Visual Studio 2019
 configuration: Release
+init:
+- pwsh: >-
+    if ($env:APPVEYOR_REPO_TAG -eq "true")
+    {
+        Update-AppveyorBuild -Version "$($env:APPVEYOR_REPO_TAG_NAME.TrimStart("v"))"
+    }
+    else
+    {
+        Update-AppveyorBuild -Version "0.0.1+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"
+    }
 dotnet_csproj:
   patch: true
   file: '**\*.csproj;**\*.props'
@@ -24,3 +34,4 @@ deploy:
     secure: vd8yW7QMjs4O+Bp1KjU5JOp0+MteVsroKNGz6h+/mjG4SVpBRPq7tK37deBj6FDD
   on:
     branch: master
+    APPVEYOR_REPO_TAG: true
