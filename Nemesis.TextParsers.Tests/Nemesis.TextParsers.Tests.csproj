@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;net48</TargetFrameworks>
+
+
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
+
   </PropertyGroup>
 
   <ItemGroup>

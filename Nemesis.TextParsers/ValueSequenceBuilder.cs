@@ -34,13 +34,13 @@ namespace Nemesis.TextParsers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Pop() => _current[--Length];
 
-        public ReadOnlySpan<T> AsSpan() => _current.Slice(0, Length);
+        public readonly ReadOnlySpan<T> AsSpan() => _current.Slice(0, Length);
 
-        public ReadOnlySpan<T> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
+        public readonly ReadOnlySpan<T> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
 
-        public ReadOnlySpan<T> AsSpanTo(int length) => _current.Slice(0, length);
+        public readonly ReadOnlySpan<T> AsSpanTo(int length) => _current.Slice(0, length);
 
-        public ReadOnlySpan<T> AsSpanFrom(int start) => _current.Slice(start, Length - start);
+        public readonly ReadOnlySpan<T> AsSpanFrom(int start) => _current.Slice(start, Length - start);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()

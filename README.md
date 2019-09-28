@@ -139,3 +139,4 @@ return accumulator.AsSpanTo(accumulator.Length > 0 ? ccumulator.Length - 1 : 0).
 2. custom TextParser factory/customizations
 3. ability to format to buffer
 4. become DI friendly adding support for cross cutting concerns i.e. logging
+5. support for pattern based Dispose

@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp3.0</TargetFrameworks>
+    
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

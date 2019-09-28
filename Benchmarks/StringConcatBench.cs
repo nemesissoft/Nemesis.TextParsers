@@ -56,6 +56,20 @@ namespace Benchmarks
         public string ValueStringBuilder()
         {
             Span<char> initialBuffer = stackalloc char[1000];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            for (char c = 'A'; c < 'A' + ITERATIONS; c++)
+                accumulator.Append(c);
+
+            var text = accumulator.AsSpan().ToString();
+            accumulator.Dispose();
+            return text;
+        }
+
+        [Benchmark]
+        public string ValueStringBuilderUsing()
+        {
+            Span<char> initialBuffer = stackalloc char[1000];
             using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
             for (char c = 'A'; c < 'A' + ITERATIONS; c++)

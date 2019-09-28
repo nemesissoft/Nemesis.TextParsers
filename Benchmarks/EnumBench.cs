@@ -307,6 +307,36 @@ namespace Benchmarks
             return current;
         }
 
+        [Benchmark]
+        public DaysOfWeek PointerDedicated()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= ToEnumPointer(AllEnumValues[i]);
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek PointerGeneric()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnumValues.Length - 1; i >= 0; i--)
+                current |= ToEnumPointer<DaysOfWeek, byte>(AllEnumValues[i]);
+            return current;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe DaysOfWeek ToEnumPointer(byte value)
+            => *(DaysOfWeek*)(&value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe TEnum ToEnumPointer<TEnum, TUnderlying>(TUnderlying value)
+            where TEnum : unmanaged, Enum
+            where TUnderlying : unmanaged
+            => *(TEnum*)(&value);
+
+
+
         private static TEnum ToEnumCast<TEnum, TUnderlying>(TUnderlying number)
             where TEnum : Enum
             where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>,
@@ -387,14 +417,15 @@ namespace Benchmarks
             return current;
         }
 
-        private static DaysOfWeek ToEnum(byte value) => EnumTransformer<DaysOfWeek, byte, ByteNumber>.ToEnum(value);
+        internal static TEnum ToEnum<TEnum, TUnderlying>(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
+
 
         [Benchmark]
         public DaysOfWeek SelectedSolution()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
-                current |= ToEnum(AllEnumValues[i]);
+                current |= ToEnum<DaysOfWeek, byte>(AllEnumValues[i]);
             return current;
         }
 
