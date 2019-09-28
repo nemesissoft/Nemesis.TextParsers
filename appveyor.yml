@@ -9,7 +9,9 @@ init:
     }
     else
     {
-        Update-AppveyorBuild -Version "0.0.1+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"
+        $newVersion = "0.0.$env:APPVEYOR_BUILD_NUMBER+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"
+        Add-AppveyorMessage -Message ("Change build version to " + $newVersion)
+        Update-AppveyorBuild -Version $newVersion
     }
 dotnet_csproj:
   patch: true
