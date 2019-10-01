@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.ComponentModel;
 using BenchmarkDotNet.Attributes;
 using Nemesis.TextParsers;
@@ -80,8 +81,7 @@ namespace Benchmarks
             return result;
         }
 
-        private static readonly ITransformer<int> _intParser = TextTransformer.Default.GetTransformer<int>();
-
+        //private static readonly ITransformer<int> _intParser = TextTransformer.Default.GetTransformer<int>();
         [Benchmark]
         public int SpanSplit()
         {
@@ -90,7 +90,7 @@ namespace Benchmarks
             var split = Numbers.AsSpan().Split('|');
 
             foreach (var text in split)
-                result += _intParser.Parse(text);
+                result += int.Parse(text);
 
             return result;
         }
@@ -99,11 +99,11 @@ namespace Benchmarks
         public int SpanTokenize()
         {
             int result = 0;
-            var parsed = Numbers.AsSpan().Tokenize('|', '\\', true)
-                    .Parse<int>('\\', '∅')
+            var tokens = Numbers.AsSpan().Tokenize('|', '\\', true)
+                    //.Parse<int>('\\', '∅')
                 ;
 
-            foreach (int num in parsed) result += num;
+            foreach (var token in tokens) result += int.Parse(token);
 
             return result;
         }
@@ -134,6 +134,46 @@ namespace Benchmarks
             int result = 0;
             foreach (int num in parsed)
                 result += num;
+            return result;
+        }
+
+        [Benchmark]
+        public int Sequence_Tokenize()
+        {
+            int result = 0;
+            var seq = new ReadOnlySequence<char>(Numbers.AsMemory());
+            var reader = new SequenceReader<char>(seq);
+            while (!reader.End)
+            {
+                // ReSharper disable once RedundantArgumentDefaultValue
+                if (reader.TryReadTo(out ReadOnlySpan<char> readChars, '|', '\\', true))
+                    result += int.Parse(readChars);
+                else
+                {
+                    result += int.Parse(reader.UnreadSpan);
+                    reader.Advance(reader.Remaining);
+                }
+            }
+            return result;
+        }
+
+        [Benchmark]
+        public int Sequence_Split()
+        {
+            int result = 0;
+            var seq = new ReadOnlySequence<char>(Numbers.AsMemory());
+            var reader = new SequenceReader<char>(seq);
+            while (!reader.End)
+            {
+                // ReSharper disable once RedundantArgumentDefaultValue
+                if (reader.TryReadTo(out ReadOnlySpan<char> readChars, '|', advancePastDelimiter: true))
+                    result += int.Parse(readChars);
+                else
+                {
+                    result += int.Parse(reader.UnreadSpan);
+                    reader.Advance(reader.Remaining);
+                }
+            }
             return result;
         }
 

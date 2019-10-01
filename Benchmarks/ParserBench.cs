@@ -75,9 +75,11 @@ namespace Benchmarks
             int[] array = null;
             string source = _jsonText;
             for (uint i = 0; i < ITERATIONS; i++)
-                using (var reader = new JsonTextReader(new StringReader(source)))
-                    array = _serializer.Deserialize<int[]>(reader);
-            
+            {
+                using var reader = new JsonTextReader(new StringReader(source));
+                array = _serializer.Deserialize<int[]>(reader);
+            }
+
             return array?.Length ?? 0;
         }
 
