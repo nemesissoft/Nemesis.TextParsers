@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
+using EnumsNET;
 using Nemesis.TextParsers;
 
 // ReSharper disable CommentTypo
@@ -47,8 +48,69 @@ namespace Benchmarks
 
         static EnumParserBench() => _parser.Parse("10".AsSpan());
 
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetGenericIgnoreCase()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = Enums.Parse<DaysOfWeek>(text.AsSpan(), true);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetGenericObserveCase()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = Enums.Parse<DaysOfWeek>(text.AsSpan(), false);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetUnsafe()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = Enums.ParseUnsafe<DaysOfWeek>(text.AsSpan());
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetNonGenericIgnoreCase()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = (DaysOfWeek)Enums.Parse(typeof(DaysOfWeek), text.AsSpan(), true);
+            }
+            return current;
+        }
+        
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetNonGenericObserveCase()
+        {
+            DaysOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = (DaysOfWeek)Enums.Parse(typeof(DaysOfWeek), text.AsSpan(), false);
+            }
+            return current;
+        }
+
+
         [Benchmark(Baseline = true)]
-        public DaysOfWeek EnumParser()
+        public DaysOfWeek EnumTransformer()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -60,7 +122,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumParserCode()
+        public DaysOfWeek DedicatedCode()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -71,11 +133,11 @@ namespace Benchmarks
             return current;
         }
 
-        private static DaysOfWeek ParseDaysOfWeek(ReadOnlySpan<char> input)
+        private static DaysOfWeek ParseDaysOfWeek(ReadOnlySpan<char> text)
         {
-            if (input.IsEmpty || input.IsWhiteSpace()) return default;
+            if (text.IsEmpty || text.IsWhiteSpace()) return default;
 
-            var enumStream = input.Split(',').GetEnumerator();
+            var enumStream = text.Split(',').GetEnumerator();
 
             if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {typeof(DaysOfWeek).Name} enum");
             byte currentValue = ParseDaysOfWeekElement(enumStream.Current);
@@ -89,116 +151,115 @@ namespace Benchmarks
 
             return (DaysOfWeek)currentValue;
 
-        }
+            static byte ParseDaysOfWeekElement(ReadOnlySpan<char> input)
+            {
+                if (input.IsEmpty || input.IsWhiteSpace()) return default;
+                input = input.Trim();
 
-        private static byte ParseDaysOfWeekElement(ReadOnlySpan<char> input)
-        {
-            if (input.IsEmpty || input.IsWhiteSpace()) return default;
-            input = input.Trim();
-
-            return IsNumeric(input) && byte.TryParse(
+                return IsNumeric(input) && byte.TryParse(
 #if NET48
                 input.ToString()
 #else
                 input
 #endif
                 , out byte number) ? number : ParseDaysOfWeekByLabelOr(input);
+            }
+            static bool IsNumeric(ReadOnlySpan<char> input)
+            {
+                char firstChar;
+                return input.Length > 0 && (char.IsDigit(firstChar = input[0]) || firstChar == '-' || firstChar == '+');
+            }
+
+            static byte ParseDaysOfWeekByLabelOr(ReadOnlySpan<char> input)
+            {
+                if (input.Length == 4 && (input[3] == 'E' || input[3] == 'e') && (input[2] == 'N' || input[2] == 'n') &&
+                    (input[1] == 'O' || input[1] == 'o') && (input[0] == 'N' || input[0] == 'n')
+                )
+                    return 0;
+                else if (
+                    input.Length == 6 && (input[5] == 'Y' || input[5] == 'y') && (input[4] == 'A' || input[4] == 'a') &&
+                    (input[3] == 'D' || input[3] == 'd') && (input[2] == 'N' || input[2] == 'n') &&
+                    (input[1] == 'O' || input[1] == 'o') && (input[0] == 'M' || input[0] == 'm')
+                )
+                    return 1;
+                else if (
+                    input.Length == 7 && (input[6] == 'Y' || input[6] == 'y') && (input[5] == 'A' || input[5] == 'a') &&
+                    (input[4] == 'D' || input[4] == 'd') && (input[3] == 'S' || input[3] == 's') &&
+                    (input[2] == 'E' || input[2] == 'e') && (input[1] == 'U' || input[1] == 'u') &&
+                    (input[0] == 'T' || input[0] == 't')
+                )
+                    return 2;
+                else if (
+                    input.Length == 9 && (input[8] == 'Y' || input[8] == 'y') &&
+                    (input[7] == 'A' || input[7] == 'a') && (input[6] == 'D' || input[6] == 'd') &&
+                    (input[5] == 'S' || input[5] == 's') && (input[4] == 'E' || input[4] == 'e') &&
+                    (input[3] == 'N' || input[3] == 'n') && (input[2] == 'D' || input[2] == 'd') &&
+                    (input[1] == 'E' || input[1] == 'e') && (input[0] == 'W' || input[0] == 'w')
+                )
+                    return 4;
+                else if (
+                    input.Length == 8 && (input[7] == 'Y' || input[7] == 'y') &&
+                    (input[6] == 'A' || input[6] == 'a') && (input[5] == 'D' || input[5] == 'd') &&
+                    (input[4] == 'S' || input[4] == 's') && (input[3] == 'R' || input[3] == 'r') &&
+                    (input[2] == 'U' || input[2] == 'u') && (input[1] == 'H' || input[1] == 'h') &&
+                    (input[0] == 'T' || input[0] == 't')
+                )
+                    return 8;
+                else if (
+                    input.Length == 6 && (input[5] == 'Y' || input[5] == 'y') &&
+                    (input[4] == 'A' || input[4] == 'a') && (input[3] == 'D' || input[3] == 'd') &&
+                    (input[2] == 'I' || input[2] == 'i') && (input[1] == 'R' || input[1] == 'r') &&
+                    (input[0] == 'F' || input[0] == 'f')
+                )
+                    return 16;
+                else if (
+                    input.Length == 8 && (input[7] == 'Y' || input[7] == 'y') &&
+                    (input[6] == 'A' || input[6] == 'a') && (input[5] == 'D' || input[5] == 'd') &&
+                    (input[4] == 'R' || input[4] == 'r') && (input[3] == 'U' || input[3] == 'u') &&
+                    (input[2] == 'T' || input[2] == 't') && (input[1] == 'A' || input[1] == 'a') &&
+                    (input[0] == 'S' || input[0] == 's')
+                )
+                    return 32;
+                else if (
+                    input.Length == 6 && (input[5] == 'Y' || input[5] == 'y') &&
+                    (input[4] == 'A' || input[4] == 'a') && (input[3] == 'D' || input[3] == 'd') &&
+                    (input[2] == 'N' || input[2] == 'n') && (input[1] == 'U' || input[1] == 'u') &&
+                    (input[0] == 'S' || input[0] == 's')
+                )
+                    return 64;
+                else if (
+                    input.Length == 8 && (input[7] == 'S' || input[7] == 's') &&
+                    (input[6] == 'Y' || input[6] == 'y') &&
+                    (input[5] == 'A' || input[5] == 'a') &&
+                    (input[4] == 'D' || input[4] == 'd') &&
+                    (input[3] == 'K' || input[3] == 'k') &&
+                    (input[2] == 'E' || input[2] == 'e') &&
+                    (input[1] == 'E' || input[1] == 'e') && (input[0] == 'W' || input[0] == 'w')
+                )
+                    return 31;
+                else if (
+                    input.Length == 8 && (input[7] == 'S' || input[7] == 's') &&
+                    (input[6] == 'D' || input[6] == 'd') &&
+                    (input[5] == 'N' || input[5] == 'n') &&
+                    (input[4] == 'E' || input[4] == 'e') &&
+                    (input[3] == 'K' || input[3] == 'k') &&
+                    (input[2] == 'E' || input[2] == 'e') &&
+                    (input[1] == 'E' || input[1] == 'e') &&
+                    (input[0] == 'W' || input[0] == 'w')
+                )
+                    return 96;
+                else if (
+                    input.Length == 3 && (input[2] == 'L' || input[2] == 'l') &&
+                    (input[1] == 'L' || input[1] == 'l') &&
+                    (input[0] == 'A' || input[0] == 'a')
+                )
+                    return 127;
+                else
+                    throw new FormatException(
+                        "Enum of type 'DaysOfWeek' cannot be parsed.Valid values are: None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All or number within Byte range.");
+            }
         }
 
-        private static bool IsNumeric(ReadOnlySpan<char> input)
-        {
-            char firstChar;
-            return input.Length > 0 && (char.IsDigit(firstChar = input[0]) || firstChar == '-' || firstChar == '+');
-        }
-
-        private static byte ParseDaysOfWeekByLabelOr(ReadOnlySpan<char> input)
-        {
-            if (input.Length == 4 && (input[3] == 'E' || input[3] == 'e') && (input[2] == 'N' || input[2] == 'n') &&
-                (input[1] == 'O' || input[1] == 'o') && (input[0] == 'N' || input[0] == 'n')
-            )
-                return 0;
-            else if (
-                input.Length == 6 && (input[5] == 'Y' || input[5] == 'y') && (input[4] == 'A' || input[4] == 'a') &&
-                (input[3] == 'D' || input[3] == 'd') && (input[2] == 'N' || input[2] == 'n') &&
-                (input[1] == 'O' || input[1] == 'o') && (input[0] == 'M' || input[0] == 'm')
-            )
-                return 1;
-            else if (
-                input.Length == 7 && (input[6] == 'Y' || input[6] == 'y') && (input[5] == 'A' || input[5] == 'a') &&
-                (input[4] == 'D' || input[4] == 'd') && (input[3] == 'S' || input[3] == 's') &&
-                (input[2] == 'E' || input[2] == 'e') && (input[1] == 'U' || input[1] == 'u') &&
-                (input[0] == 'T' || input[0] == 't')
-            )
-                return 2;
-            else if (
-                input.Length == 9 && (input[8] == 'Y' || input[8] == 'y') &&
-                (input[7] == 'A' || input[7] == 'a') && (input[6] == 'D' || input[6] == 'd') &&
-                (input[5] == 'S' || input[5] == 's') && (input[4] == 'E' || input[4] == 'e') &&
-                (input[3] == 'N' || input[3] == 'n') && (input[2] == 'D' || input[2] == 'd') &&
-                (input[1] == 'E' || input[1] == 'e') && (input[0] == 'W' || input[0] == 'w')
-            )
-                return 4;
-            else if (
-                input.Length == 8 && (input[7] == 'Y' || input[7] == 'y') &&
-                (input[6] == 'A' || input[6] == 'a') && (input[5] == 'D' || input[5] == 'd') &&
-                (input[4] == 'S' || input[4] == 's') && (input[3] == 'R' || input[3] == 'r') &&
-                (input[2] == 'U' || input[2] == 'u') && (input[1] == 'H' || input[1] == 'h') &&
-                (input[0] == 'T' || input[0] == 't')
-            )
-                return 8;
-            else if (
-                input.Length == 6 && (input[5] == 'Y' || input[5] == 'y') &&
-                (input[4] == 'A' || input[4] == 'a') && (input[3] == 'D' || input[3] == 'd') &&
-                (input[2] == 'I' || input[2] == 'i') && (input[1] == 'R' || input[1] == 'r') &&
-                (input[0] == 'F' || input[0] == 'f')
-            )
-                return 16;
-            else if (
-                input.Length == 8 && (input[7] == 'Y' || input[7] == 'y') &&
-                (input[6] == 'A' || input[6] == 'a') && (input[5] == 'D' || input[5] == 'd') &&
-                (input[4] == 'R' || input[4] == 'r') && (input[3] == 'U' || input[3] == 'u') &&
-                (input[2] == 'T' || input[2] == 't') && (input[1] == 'A' || input[1] == 'a') &&
-                (input[0] == 'S' || input[0] == 's')
-            )
-                return 32;
-            else if (
-                input.Length == 6 && (input[5] == 'Y' || input[5] == 'y') &&
-                (input[4] == 'A' || input[4] == 'a') && (input[3] == 'D' || input[3] == 'd') &&
-                (input[2] == 'N' || input[2] == 'n') && (input[1] == 'U' || input[1] == 'u') &&
-                (input[0] == 'S' || input[0] == 's')
-            )
-                return 64;
-            else if (
-                input.Length == 8 && (input[7] == 'S' || input[7] == 's') &&
-                (input[6] == 'Y' || input[6] == 'y') &&
-                (input[5] == 'A' || input[5] == 'a') &&
-                (input[4] == 'D' || input[4] == 'd') &&
-                (input[3] == 'K' || input[3] == 'k') &&
-                (input[2] == 'E' || input[2] == 'e') &&
-                (input[1] == 'E' || input[1] == 'e') && (input[0] == 'W' || input[0] == 'w')
-            )
-                return 31;
-            else if (
-                input.Length == 8 && (input[7] == 'S' || input[7] == 's') &&
-                (input[6] == 'D' || input[6] == 'd') &&
-                (input[5] == 'N' || input[5] == 'n') &&
-                (input[4] == 'E' || input[4] == 'e') &&
-                (input[3] == 'K' || input[3] == 'k') &&
-                (input[2] == 'E' || input[2] == 'e') &&
-                (input[1] == 'E' || input[1] == 'e') &&
-                (input[0] == 'W' || input[0] == 'w')
-            )
-                return 96;
-            else if (
-                input.Length == 3 && (input[2] == 'L' || input[2] == 'l') &&
-                (input[1] == 'L' || input[1] == 'l') &&
-                (input[0] == 'A' || input[0] == 'a')
-            )
-                return 127;
-            else
-                throw new FormatException(
-                    "Enum of type 'DaysOfWeek' cannot be parsed.Valid values are: None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All or number within Byte range.");
-        }
 
         [Benchmark]
         public DaysOfWeek NativeEnumIgnoreCaseGeneric()
@@ -207,7 +268,7 @@ namespace Benchmarks
             for (int i = AllEnums.Length - 1; i >= 0; i--)
             {
                 var text = AllEnums[i];
-                current = (DaysOfWeek)Enum.Parse(typeof(DaysOfWeek), text, true);
+                current = Enum.Parse<DaysOfWeek>(text, true);
             }
             return current;
         }
