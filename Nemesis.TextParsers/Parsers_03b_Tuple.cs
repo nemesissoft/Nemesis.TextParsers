@@ -726,7 +726,7 @@ namespace Nemesis.TextParsers
 
         public bool CanHandle(Type type) =>
             type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             type.Namespace == "System" &&
             type.Name.StartsWith("ValueTuple`") &&
             typeof(ValueType).IsAssignableFrom(type) &&          

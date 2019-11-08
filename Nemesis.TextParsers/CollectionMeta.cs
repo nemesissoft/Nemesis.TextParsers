@@ -110,7 +110,7 @@ namespace Nemesis.TextParsers
                     {
                         ISet<TDestElem> result = Kind == CollectionKind.HashSet
                             ? (ISet<TDestElem>)new HashSet<TDestElem>(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 
 #else
                                 count

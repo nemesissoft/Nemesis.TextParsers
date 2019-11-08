@@ -63,7 +63,7 @@ namespace Nemesis.TextParsers
                     {
                         ISet<TTo> result = kind == CollectionKind.HashSet
                             ? (ISet<TTo>)new HashSet<TTo>(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 
 #else
                             capacity

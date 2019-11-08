@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers
 
 
         public bool TryParse(in ReadOnlySpan<char> input, out byte value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.ByteParser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
             byte.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -121,7 +121,7 @@ namespace Nemesis.TextParsers
         public sbyte Div(sbyte left, sbyte right) => (sbyte)(left / right);
 
         public bool TryParse(in ReadOnlySpan<char> input, out sbyte value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.SByteParser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
             sbyte.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -153,7 +153,7 @@ namespace Nemesis.TextParsers
         public short Div(short left, short right) => (short)(left / right);
 
         public bool TryParse(in ReadOnlySpan<char> input, out short value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Int16Parser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
             short.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -185,7 +185,7 @@ namespace Nemesis.TextParsers
         public ushort Div(ushort left, ushort right) => (ushort)(left / right);
 
         public bool TryParse(in ReadOnlySpan<char> input, out ushort value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.UInt16Parser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else
             ushort.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -218,7 +218,7 @@ namespace Nemesis.TextParsers
 
 
         public bool TryParse(in ReadOnlySpan<char> input, out int value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.TryParseInt32(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
             int.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -250,7 +250,7 @@ namespace Nemesis.TextParsers
         public uint Div(uint left, uint right) => left / right;
 
         public bool TryParse(in ReadOnlySpan<char> input, out uint value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.TryParseUInt32(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
             uint.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -282,7 +282,7 @@ namespace Nemesis.TextParsers
         public long Div(long left, long right) => left / right;
 
         public bool TryParse(in ReadOnlySpan<char> input, out long value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.TryParseInt64(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
             long.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
@@ -314,7 +314,7 @@ namespace Nemesis.TextParsers
         public ulong Div(ulong left, ulong right) => left / right;
 
         public bool TryParse(in ReadOnlySpan<char> input, out ulong value) =>
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.TryParseUInt64(input, NumberStyles.Integer, Culture.InvInfo, out value);
 #else
             ulong.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
