@@ -301,6 +301,168 @@ namespace Benchmarks
     }
 
     [MemoryDiagnoser]
+    public class EnumParserBenchEdn
+    {
+        [Flags]
+        public enum DaysOfWeek : byte
+        {
+            None = 0,
+            Monday
+                = 0b0000_0001,
+            Tuesday
+                = 0b0000_0010,
+            Wednesday
+                = 0b0000_0100,
+            Thursday
+                = 0b0000_1000,
+            Friday
+                = 0b0001_0000,
+            Saturday
+                = 0b0010_0000,
+            Sunday
+                = 0b0100_0000,
+
+            Weekdays = Monday | Tuesday | Wednesday | Thursday | Friday,
+            Weekends = Saturday | Sunday,
+            All = Weekdays | Weekends
+        }
+
+        private static (int Start, int Length)[] _sliceData;
+        private static string _toParse;
+
+        private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _parser = new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
+
+        static EnumParserBenchEdn()
+        {
+            _parser.Parse("10".AsSpan());
+
+            const int MAX_ENUMS = 130;
+            string[] allEnums =
+                Enumerable.Range(0, MAX_ENUMS).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
+
+            int maxLen = allEnums.Max(name => name.Length);
+            string toParse = string.Join("", allEnums.Select(name =>
+                    "/" + name.PadRight(maxLen)
+                )
+            );
+
+            (int Start, int Length)[] sliceData = Enumerable.Range(0, allEnums.Length).Select(i => (Start: i * (maxLen + 1) + 1, Length: maxLen)).ToArray();
+
+            //var t1 = toParse.AsSpan(sliceData[0].Start, sliceData[0].Length).ToString();
+
+            //sanity check
+            for (int i = 0; i < MAX_ENUMS; i++)
+            {
+                var text = toParse.AsSpan(sliceData[i].Start, sliceData[i].Length);
+                var parsedEnum = Enum.Parse<DaysOfWeek>(text.ToString());
+
+                if ((byte)parsedEnum != (byte)i)
+                    throw new InvalidOperationException("Failed at " + i);
+            }
+
+            _sliceData = sliceData;
+            _toParse = toParse;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetGenericIgnoreCase()
+        {
+            DaysOfWeek current = default;
+            var toParse = _toParse.AsSpan();
+            var sliceData = _sliceData;
+
+            for (int i = sliceData.Length - 1; i >= 0; i--)
+            {
+                var (start, length) = sliceData[i];
+                var span = toParse.Slice(start, length);
+                current = Enums.Parse<DaysOfWeek>(span, true);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetGenericObserveCase()
+        {
+            DaysOfWeek current = default;
+            var toParse = _toParse.AsSpan();
+            var sliceData = _sliceData;
+
+            for (int i = sliceData.Length - 1; i >= 0; i--)
+            {
+                var (start, length) = sliceData[i];
+                var span = toParse.Slice(start, length);
+                current = Enums.Parse<DaysOfWeek>(span, false);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetUnsafe()
+        {
+            DaysOfWeek current = default;
+            var toParse = _toParse.AsSpan();
+            var sliceData = _sliceData;
+
+            for (int i = sliceData.Length - 1; i >= 0; i--)
+            {
+                var (start, length) = sliceData[i];
+                var span = toParse.Slice(start, length);
+                current = Enums.ParseUnsafe<DaysOfWeek>(span);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetNonGenericIgnoreCase()
+        {
+            DaysOfWeek current = default;
+            var toParse = _toParse.AsSpan();
+            var sliceData = _sliceData;
+
+            for (int i = sliceData.Length - 1; i >= 0; i--)
+            {
+                var (start, length) = sliceData[i];
+                var span = toParse.Slice(start, length);
+                current = (DaysOfWeek)Enums.Parse(typeof(DaysOfWeek),span, true);
+            }
+            return current;
+        }
+
+        [Benchmark]
+        public DaysOfWeek EnumsDotNetNonGenericObserveCase()
+        {
+            DaysOfWeek current = default;
+            var toParse = _toParse.AsSpan();
+            var sliceData = _sliceData;
+
+            for (int i = sliceData.Length - 1; i >= 0; i--)
+            {
+                var (start, length) = sliceData[i];
+                var span = toParse.Slice(start, length);
+                current = (DaysOfWeek)Enums.Parse(typeof(DaysOfWeek), span, false);
+            }
+            return current;
+        }
+
+
+        [Benchmark(Baseline = true)]
+        public DaysOfWeek EnumTransformer()
+        {
+            DaysOfWeek current = default;
+            var toParse = _toParse.AsSpan();
+            var sliceData = _sliceData;
+
+            for (int i = sliceData.Length - 1; i >= 0; i--)
+            {
+                var (start, length) = sliceData[i];
+                var span = toParse.Slice(start, length);
+                current = _parser.Parse(span);
+            }
+            return current;
+        }
+    }
+
+    [MemoryDiagnoser]
     public class ToEnumBench
     {
         [Flags]
