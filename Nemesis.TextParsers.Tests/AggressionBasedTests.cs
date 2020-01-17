@@ -71,6 +71,10 @@ namespace Nemesis.TextParsers.Tests
             {
                 AggressionBasedFactory<int>.FromPassiveNormalAggressive(1,2,40)
             }),
+
+            (typeof(Dictionary<string, string>), @"Key=Text", new[] { new Dictionary<string, string>() { { "Key", @"Text" } } }),
+            (typeof(Dictionary<string, string>), @"Key=Text\;Text", new[] { new Dictionary<string, string>() { { "Key", @"Text;Text" } } }),
+
         };
 
         [TestCaseSource(nameof(ValidValuesFor_FromText_Complex))]
@@ -184,6 +188,33 @@ namespace Nemesis.TextParsers.Tests
             string formatted = transformer.FormatObject(aggBased);
 
 
+            Assert.That(formatted, Is.EqualTo(data.expectedOutput));
+        }
+
+        private static IEnumerable<(string, object[], Type)> TextTransformer_Complex_Format()
+         => new (string, object[], Type)[]
+         {
+                (@"Key=Value", new []{new Dictionary<string, string>{ { "Key", "Value" } } }, typeof(AggressionBased1<Dictionary<string,string>>)),
+                (@"Key=Va\;lue", new []{new Dictionary<string, string>{ { "Key", "Va;lue" } } }, typeof(AggressionBased1<Dictionary<string,string>>)),
+
+         };
+
+        [TestCaseSource(nameof(TextTransformer_Complex_Format))]
+        public void TextTransformer_Complex_ShouldFormat((string expectedOutput, object[] inputValues, Type expectedType) data)
+        {
+            var elementType = data.expectedType.GenericTypeArguments[0];
+            var factoryType = typeof(AggressionBasedFactory<>).MakeGenericType(elementType);
+            var fromValuesMethod = factoryType.GetMethods()
+                .Single(m => m.Name == nameof(AggressionBasedFactory<object>.FromValues) && m.GetParameters()[0].ParameterType == typeof(IEnumerable<>).MakeGenericType(elementType))
+                ?? throw new MissingMethodException();
+
+            var actual = fromValuesMethod.Invoke(null, new object[] { data.inputValues });
+
+            Assert.That(actual, Is.TypeOf(data.expectedType));
+            
+            var transformer = TextTransformer.Default.GetTransformer(actual.GetType());
+            string formatted = transformer.FormatObject(actual);
+            
             Assert.That(formatted, Is.EqualTo(data.expectedOutput));
         }
 
