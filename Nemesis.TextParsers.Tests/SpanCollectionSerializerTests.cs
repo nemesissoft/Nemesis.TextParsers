@@ -24,7 +24,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         #region List
-        internal static IEnumerable<(string, string[])> ValidListData() => new[]
+        internal static IEnumerable<(string text, string[] collection)> ValidListData() => new[]
         {
             (null, null),
             ("", new string[0]),
@@ -602,7 +602,7 @@ namespace Nemesis.TextParsers.Tests
 
         #region Dict
 
-        private static IEnumerable<(string, Dss)> ValidDictData() => new[]
+        private static IEnumerable<(string text, Dss dictionary)> ValidDictData() => new[]
         {
             (null, null),
             (@"", new Dss()),
@@ -629,6 +629,7 @@ namespace Nemesis.TextParsers.Tests
             (@"key\;\=1=\=\;", new Dss{["key;=1"]="=;"} ),
             (@"\\\;\\\==\\\;\\\=;k\\\=ey2=\;\\\=A\\BC;key\;\=1=\=\;", new Dss{[@"\;\="]=@"\;\=", [@"k\=ey2"]=@";\=A\BC", ["key;=1"]="=;"}),
 
+            (@"Key=Text\;Text", new Dss{{ "Key", @"Text;Text" }})            
         };
 
         [TestCaseSource(nameof(ValidDictData))]
