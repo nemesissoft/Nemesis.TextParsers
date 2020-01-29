@@ -378,7 +378,7 @@ namespace Nemesis.TextParsers.Tests
                 return eq1.Equals(right);
             else if (type.DerivesOrImplementsGeneric(typeof(IEnumerable<>)))
             {
-                var enumerableTypeArguments = type.IsArray ? type.GetElementType() : type.GenericTypeArguments.First();
+                var enumerableTypeArguments = type.IsArray ? type.GetElementType() : GetIEnumerableTypeParameter(type);
 
                 var enumerableType = typeof(IEnumerable<>).MakeGenericType(enumerableTypeArguments);
                 var comparerType = typeof(EnumerableEqualityComparer<>).MakeGenericType(enumerableTypeArguments);
@@ -395,6 +395,26 @@ namespace Nemesis.TextParsers.Tests
             }
             else
                 return object.Equals(left, right);
+        }
+
+        private static Type GetIEnumerableTypeParameter([JetBrains.Annotations.NotNull]Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            var generic = typeof(IEnumerable<>);
+
+            Type retType = null;
+
+            foreach (Type @interface in type.GetInterfaces())
+                if (@interface.IsGenericType && !@interface.IsGenericTypeDefinition && @interface.GetGenericTypeDefinition() == generic)
+                    if (retType == null)
+                        retType = @interface;
+                    else
+                        throw new NotSupportedException($"This path only supports classes that implement {typeof(IEnumerable<object>).Name} interface only once");
+
+            return retType != null && retType.GenericTypeArguments.Length == 1
+                ? retType.GenericTypeArguments[0]
+                : throw new InvalidOperationException("Type has to be or implement IEnumerable<>");
+
         }
 
         sealed class EnumerableEqualityComparer<TElement> : IEqualityComparer<IEnumerable<TElement>>
