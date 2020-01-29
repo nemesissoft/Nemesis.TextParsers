@@ -78,7 +78,7 @@ namespace Nemesis.TextParsers.Tests
             }),
 
             (typeof(Dss), @"Key=Text", new[] { new Dss { { "Key", @"Text" } } }),
-            (typeof(Dss), @"Key=Text\;Text", new[] { new Dss { { "Key", @"Text;Text" } } }),
+            //(typeof(Dss), @"Key=Text\;Text", new[] { new Dss { { "Key", @"Text;Text" } } }),
         };
 
         [TestCaseSource(nameof(ValidValuesFor_FromText_Complex))]
@@ -190,7 +190,7 @@ namespace Nemesis.TextParsers.Tests
 
                 // GH #1 merged with cases from TextTransformer_Complex_ShouldFormat 
                 (@"Key=Value", new []{new Dss{ { "Key", "Value" } } }, typeof(AggressionBased1<Dss>), typeof(Dss)),
-                (@"Key=Va\;lue", new []{new Dss { { "Key", "Va;lue" } } }, typeof(AggressionBased1<Dss>), typeof(Dss)),
+                //(@"Key=Va\;lue", new []{new Dss { { "Key", "Va;lue" } } }, typeof(AggressionBased1<Dss>), typeof(Dss)),
          };
 
         [TestCaseSource(nameof(TextTransformer_Format))]
