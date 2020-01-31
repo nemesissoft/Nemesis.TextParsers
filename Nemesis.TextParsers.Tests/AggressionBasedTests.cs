@@ -11,12 +11,10 @@ using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture(TestOf = typeof(IAggressionBased<>))]
-    internal class AggressionBasedTests
+    internal partial class AggressionBasedTests
     {
         private const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-
-        #region Factory
-
+        
         private static IEnumerable<(string, IEnumerable<int>, string, IEnumerable<int>)> ValidValuesForFactory()
             => new (string, IEnumerable<int>, string, IEnumerable<int>)[]
         {
@@ -204,7 +202,7 @@ namespace Nemesis.TextParsers.Tests
             tester.Invoke(null, new[] { data.expectedOutput, data.inputValues, data.expectedAggBasedType });
         }
 
-        private static void TextTransformer_ShouldFormatHelper<TElement>(string expectedOutput, TElement[] inputValues, Type expectedAggBasedType)
+        private static void TextTransformer_ShouldFormatHelper<TElement>(string expectedOutput, IEnumerable<TElement> inputValues, Type expectedAggBasedType)
         {
             var aggBased = AggressionBasedFactory<TElement>.FromValues(inputValues);
             Assert.That(aggBased, Is.TypeOf(expectedAggBasedType));
@@ -216,93 +214,5 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(formatted, Is.EqualTo(expectedOutput));
         }
-
-        #endregion
-
-        #region Equals
-
-        private static IEnumerable<(Type, string, string)> ValidValuesForEquals() => new[]
-        {
-            (typeof(int), @"1#2#3#4#5#6#7#8#9", @"1#2#3#4#5#6#7#8#9"),
-
-            (typeof(int), @"1#1#1#4#4#4#7#7#7", @"1#4#7"),
-            (typeof(int), @"1#1#1#4#4#4#7#7#7", @"1#1#1#4#4#4#7#7#7"),
-
-            (typeof(int), @"1#1#1#1#1#1#1#1#1", @"1"),
-            (typeof(int), @"1#1#1#1#1#1#1#1#1", @"1#1#1#1#1#1#1#1#1"),
-
-            (typeof(List<int>), @"1|2|3#4|5|6#7|8|9", @"1|2|3#4|5|6#7|8|9"),
-            (typeof(List<int>), @"1|2|3#1|2|3#1|2|3", @"1|2|3"),
-
-            (typeof(IAggressionBased<int>), @"1\#2\#3#4\#5\#6#7\#8\#9", @"1\#2\#3#4\#5\#6#7\#8\#9"),
-            (typeof(IAggressionBased<int>), @"1\#2\#3#1\#2\#3#1\#2\#3", @"1\#2\#3"),
-        };
-
-        [TestCaseSource(nameof(ValidValuesForEquals))]
-        public void EqualsTests((Type elementType, string text1, string text2) data)
-        {
-            var factoryType = typeof(AggressionBasedFactory<>).MakeGenericType(data.elementType);
-            var fromTextMethod = factoryType.GetMethods()
-               .Single(m => m.Name == nameof(AggressionBasedFactory<object>.FromText) && m.GetParameters()[0].ParameterType == typeof(string))
-               ?? throw new MissingMethodException();
-
-            var ab1 = fromTextMethod.Invoke(null, new object[] { data.text1 });
-            var ab2 = fromTextMethod.Invoke(null, new object[] { data.text2 });
-
-            Assert.That(ab1, Is.EqualTo(ab2));
-        }
-
-        [Test]
-        public void NastyEqualsTests()
-        {
-            var crazyAggBased = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressive(
-                new List<IAggressionBased<int[]>>
-                {
-                    FacIntArr.FromPassiveNormalAggressive(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FacIntArr.FromPassiveNormalAggressive(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                },
-                new List<IAggressionBased<int[]>>
-                {
-                    FacIntArr.FromPassiveNormalAggressive(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FacIntArr.FromPassiveNormalAggressive(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                },
-                new List<IAggressionBased<int[]>>
-                {
-                    FacIntArr.FromPassiveNormalAggressive(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FacIntArr.FromPassiveNormalAggressive(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                }
-            );
-            var text = crazyAggBased.ToString();
-
-            var actual = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromText(text);
-
-            Assert.That(actual, Is.EqualTo(crazyAggBased));
-
-
-            var crazyAggBased2 = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressive(
-                new List<IAggressionBased<int[]>>
-                {
-                    FacIntArr.FromPassiveNormalAggressive(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FacIntArr.FromPassiveNormalAggressive(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                },
-                new List<IAggressionBased<int[]>>
-                {
-                    FacIntArr.FromPassiveNormalAggressive(new[] {100, 11}, new[] {200, 21}, new[] {300, 31}),
-                    FacIntArr.FromPassiveNormalAggressive(new[] {400, 41}, new[] {500, 51}, new[] {600, 61}),
-                },
-                new List<IAggressionBased<int[]>>
-                {
-                    FacIntArr.FromPassiveNormalAggressive(new[] {1000, 11}, new[] {2000, 21}, new[] {3000, 31}),
-                    FacIntArr.FromPassiveNormalAggressive(new[] {4000, 41}, new[] {5000, 51}, new[] {6000, 61}),
-                }
-            );
-            var text2 = crazyAggBased2.ToString();
-
-            var actual2 = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromText(text2);
-
-            Assert.That(actual2, Is.EqualTo(crazyAggBased2));
-        }
-
-        #endregion
     }
 }
