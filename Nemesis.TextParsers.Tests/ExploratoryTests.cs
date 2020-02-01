@@ -128,7 +128,7 @@ namespace Nemesis.TextParsers.Tests
             bool isGeneric = testType.IsGenericType && !testType.IsGenericTypeDefinition;
 
             ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) &&
-                                       testType.GenericTypeArguments[0] is Type elementType1
+                                       testType.GenericTypeArguments[0] is { } elementType1
                                        ? TextTransformer.Default.GetTransformer(typeof(IAggressionBased<>).MakeGenericType(elementType1))
                                        : TextTransformer.Default.GetTransformer(testType);
             Assert.That(transformer, Is.Not.Null);
@@ -174,7 +174,7 @@ namespace Nemesis.TextParsers.Tests
             object ParseAndAssert(string text)
             {
                 var parsed = transformer.ParseObject(text);
-                if (parsed != null && Nullable.GetUnderlyingType(testType) is Type underlyingType)
+                if (parsed != null && Nullable.GetUnderlyingType(testType) is { } underlyingType)
                     Assert.That(parsed, Is.TypeOf(underlyingType));
                 else if (parsed != null && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
                     Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.FullName}");
