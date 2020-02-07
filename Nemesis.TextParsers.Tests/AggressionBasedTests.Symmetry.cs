@@ -9,12 +9,12 @@ using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
 
 namespace Nemesis.TextParsers.Tests
 {
+    //TODO add values ABF<>.FromOneValue(null) vs null values AB<>
     [TestFixture(TestOf = typeof(IAggressionBased<>))]
     internal partial class AggressionBasedTests
     {
         private const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-
-
+        
         private static IEnumerable<(string inputText, IEnumerable inputEnumeration, Type expectedAggBasedType, Type elementType)> SymmetryData() => new[]
         {
             (@"1#2#3#4#5#6#7#8#9", (IEnumerable)new[]{1,2,3,4,5,6,7,8,9}, typeof(AggressionBased9<int>), typeof(int)),
