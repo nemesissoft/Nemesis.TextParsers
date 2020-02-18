@@ -1,15 +1,11 @@
 ﻿using JetBrains.Annotations;
 using System;
 using System.ComponentModel;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
-using Nemesis.TextParsers.Runtime;
 #if NETCOREAPP3_0
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
     using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
@@ -19,7 +15,7 @@ namespace Nemesis.TextParsers.Tests
     public interface IAggressionValuesProvider<out TValue>
     {
         /// <summary>
-        /// For introspection and test purposes. This will allocate a new list
+        /// For introspection and test purposes. This might allocate a new list
         /// </summary>
         IReadOnlyList<TValue> Values { get; }
 
@@ -52,20 +48,24 @@ namespace Nemesis.TextParsers.Tests
 
         protected abstract LeanCollection<TValue> GetValues();
 
-        protected static bool IsEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
+        protected static bool IsStructurallyEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
         public bool Equals(IAggressionBased<TValue> other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return other switch
+#pragma warning disable IDE0066 // Convert switch statement to expression
+            switch (other)
+#pragma warning restore IDE0066 // Convert switch statement to expression
             {
-                AggressionBased1<TValue> o1 => Equals1(o1),
-                AggressionBased3<TValue> o3 => Equals3(o3),
-                AggressionBased9<TValue> o9 => Equals9(o9),
-                _ => throw new ArgumentException($@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other)),
-            };
+                case AggressionBased1<TValue> o1: return Equals1(o1);
+                case AggressionBased3<TValue> o3: return Equals3(o3);
+                case AggressionBased9<TValue> o9: return Equals9(o9);
+                default:
+                    throw new ArgumentException(
+                        $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
+            }
         }
 
         protected abstract bool Equals1(in AggressionBased1<TValue> o1);
@@ -100,12 +100,12 @@ namespace Nemesis.TextParsers.Tests
         public TValue GetValueFor(byte aggression) => One;
 
         protected override bool Equals1(in AggressionBased1<TValue> o1) =>
-            IsEqual(One, o1.One);
+            IsStructurallyEqual(One, o1.One);
 
         protected override bool Equals3(in AggressionBased3<TValue> o3) =>
-            IsEqual(One, o3.PassiveValue) &&
-            IsEqual(One, o3.NormalValue) &&
-            IsEqual(One, o3.AggressiveValue);
+            IsStructurallyEqual(One, o3.PassiveValue) &&
+            IsStructurallyEqual(One, o3.NormalValue) &&
+            IsStructurallyEqual(One, o3.AggressiveValue);
 
         protected override bool Equals9(in AggressionBased9<TValue> o9) => o9.Equals(this);
 
@@ -155,19 +155,19 @@ namespace Nemesis.TextParsers.Tests
         }
 
         protected override bool Equals1(in AggressionBased1<TValue> o1) =>
-            IsEqual(PassiveValue, o1.One) &&
-            IsEqual(NormalValue, o1.One) &&
-            IsEqual(AggressiveValue, o1.One);
+            IsStructurallyEqual(PassiveValue, o1.One) &&
+            IsStructurallyEqual(NormalValue, o1.One) &&
+            IsStructurallyEqual(AggressiveValue, o1.One);
 
         protected override bool Equals3(in AggressionBased3<TValue> o3) =>
-            IsEqual(PassiveValue, o3.PassiveValue) &&
-            IsEqual(NormalValue, o3.NormalValue) &&
-            IsEqual(AggressiveValue, o3.AggressiveValue);
+            IsStructurallyEqual(PassiveValue, o3.PassiveValue) &&
+            IsStructurallyEqual(NormalValue, o3.NormalValue) &&
+            IsStructurallyEqual(AggressiveValue, o3.AggressiveValue);
 
         protected override bool Equals9(in AggressionBased9<TValue> o9) =>
-            IsEqual(PassiveValue, o9.GetValueFor(1)) && IsEqual(PassiveValue, o9.GetValueFor(2)) && IsEqual(PassiveValue, o9.GetValueFor(3)) &&
-            IsEqual(NormalValue, o9.GetValueFor(4)) && IsEqual(NormalValue, o9.GetValueFor(5)) && IsEqual(NormalValue, o9.GetValueFor(6)) &&
-            IsEqual(AggressiveValue, o9.GetValueFor(7)) && IsEqual(AggressiveValue, o9.GetValueFor(8)) && IsEqual(AggressiveValue, o9.GetValueFor(9));
+            IsStructurallyEqual(PassiveValue, o9.GetValueFor(1)) && IsStructurallyEqual(PassiveValue, o9.GetValueFor(2)) && IsStructurallyEqual(PassiveValue, o9.GetValueFor(3)) &&
+            IsStructurallyEqual(NormalValue, o9.GetValueFor(4)) && IsStructurallyEqual(NormalValue, o9.GetValueFor(5)) && IsStructurallyEqual(NormalValue, o9.GetValueFor(6)) &&
+            IsStructurallyEqual(AggressiveValue, o9.GetValueFor(7)) && IsStructurallyEqual(AggressiveValue, o9.GetValueFor(8)) && IsStructurallyEqual(AggressiveValue, o9.GetValueFor(9));
 
         protected override int GetHashCodeCore()
         {
@@ -210,13 +210,13 @@ namespace Nemesis.TextParsers.Tests
         protected override bool Equals1(in AggressionBased1<TValue> o1)
         {
             var thisOne = o1.One;
-            return _values?.All(v => IsEqual(v, thisOne)) == true;
+            return _values?.All(v => IsStructurallyEqual(v, thisOne)) == true;
         }
 
         protected override bool Equals3(in AggressionBased3<TValue> o3) =>
-            IsEqual(o3.PassiveValue, GetValueFor(1)) && IsEqual(o3.PassiveValue, GetValueFor(2)) && IsEqual(o3.PassiveValue, GetValueFor(3)) &&
-            IsEqual(o3.NormalValue, GetValueFor(4)) && IsEqual(o3.NormalValue, GetValueFor(5)) && IsEqual(o3.NormalValue, GetValueFor(6)) &&
-            IsEqual(o3.AggressiveValue, GetValueFor(7)) && IsEqual(o3.AggressiveValue, GetValueFor(8)) && IsEqual(o3.AggressiveValue, GetValueFor(9))
+            IsStructurallyEqual(o3.PassiveValue, GetValueFor(1)) && IsStructurallyEqual(o3.PassiveValue, GetValueFor(2)) && IsStructurallyEqual(o3.PassiveValue, GetValueFor(3)) &&
+            IsStructurallyEqual(o3.NormalValue, GetValueFor(4)) && IsStructurallyEqual(o3.NormalValue, GetValueFor(5)) && IsStructurallyEqual(o3.NormalValue, GetValueFor(6)) &&
+            IsStructurallyEqual(o3.AggressiveValue, GetValueFor(7)) && IsStructurallyEqual(o3.AggressiveValue, GetValueFor(8)) && IsStructurallyEqual(o3.AggressiveValue, GetValueFor(9))
         ;
 
         protected override bool Equals9(in AggressionBased9<TValue> o9)
@@ -229,7 +229,7 @@ namespace Nemesis.TextParsers.Tests
             using (var enumerator2 = ((IReadOnlyList<TValue>)o9Values).GetEnumerator())
             {
                 while (enumerator.MoveNext())
-                    if (!enumerator2.MoveNext() || !IsEqual(enumerator.Current, enumerator2.Current))
+                    if (!enumerator2.MoveNext() || !IsStructurallyEqual(enumerator.Current, enumerator2.Current))
                         return false;
 
                 if (enumerator2.MoveNext())
@@ -363,106 +363,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static bool IsEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
     }
-
-    internal static class StructuralEquality
-    {
-        public static bool Equals<TValue>(TValue left, TValue right)
-        {
-            if (left == null) return right == null;
-            if (right == null) return false;
-
-            if (ReferenceEquals(left, right)) return true;
-
-            var type = typeof(TValue);
-            if (left is IEquatable<TValue> eq1)
-                return eq1.Equals(right);
-            else if (type.DerivesOrImplementsGeneric(typeof(IEnumerable<>)))
-            {
-                var enumerableTypeArguments = type.IsArray ? type.GetElementType() : GetIEnumerableTypeParameter(type);
-
-                var enumerableType = typeof(IEnumerable<>).MakeGenericType(enumerableTypeArguments);
-                var comparerType = typeof(EnumerableEqualityComparer<>).MakeGenericType(enumerableTypeArguments);
-
-                FieldInfo comparerInstanceField = comparerType.GetField(nameof(EnumerableEqualityComparer<string>.DefaultInstance));
-                var comparer = comparerInstanceField.GetValue(null);
-
-                MethodInfo equalsMethod = comparerInstanceField.FieldType.GetMethod(nameof(IEqualityComparer.Equals), new[] { enumerableType, enumerableType })
-                                          ?? throw new MissingFieldException("EnumerableEqualityComparer<>.DefaultInstance field is missing");
-
-                var result = (bool)equalsMethod.Invoke(comparer, new object[] { left, right });
-
-                return result;
-            }
-            else
-                return object.Equals(left, right);
-        }
-
-        private static Type GetIEnumerableTypeParameter([JetBrains.Annotations.NotNull]Type type)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            var generic = typeof(IEnumerable<>);
-
-            Type retType = null;
-
-            foreach (Type @interface in type.GetInterfaces())
-                if (@interface.IsGenericType && !@interface.IsGenericTypeDefinition && @interface.GetGenericTypeDefinition() == generic)
-                    if (retType == null)
-                        retType = @interface;
-                    else
-                        throw new NotSupportedException($"This path only supports classes that implement {typeof(IEnumerable<object>).Name} interface only once");
-
-            return retType != null && retType.GenericTypeArguments.Length == 1
-                ? retType.GenericTypeArguments[0]
-                : throw new InvalidOperationException("Type has to be or implement IEnumerable<>");
-
-        }
-
-        sealed class EnumerableEqualityComparer<TElement> : IEqualityComparer<IEnumerable<TElement>>
-        {
-            private readonly IEqualityComparer<TElement> _equalityComparer;
-
-
-
-            private EnumerableEqualityComparer(IEqualityComparer<TElement> equalityComparer = null) =>
-                _equalityComparer = equalityComparer ?? EqualityComparer<TElement>.Default;
-
-            public static readonly EnumerableEqualityComparer<TElement> DefaultInstance = new EnumerableEqualityComparer<TElement>();
-
-            public static EnumerableEqualityComparer<TElement> CreateInstance(IEqualityComparer<TElement> equalityComparer) =>
-                new EnumerableEqualityComparer<TElement>(equalityComparer);
-
-
-
-            public bool Equals(IEnumerable<TElement> left, IEnumerable<TElement> right)
-            {
-                Debug.Assert(_equalityComparer != null);
-
-                if (left is null)
-                    return right is null;
-                else if (right is null) return false;
-
-                if (ReferenceEquals(left, right)) return true;
-
-
-                using (var enumerator = left.GetEnumerator())
-                using (var enumerator2 = right.GetEnumerator())
-                {
-                    while (enumerator.MoveNext())
-                        if (!enumerator2.MoveNext() || !_equalityComparer.Equals(enumerator.Current, enumerator2.Current))
-                            return false;
-
-                    if (enumerator2.MoveNext())
-                        return false;
-                }
-
-                return true;
-            }
-
-            public int GetHashCode(IEnumerable<TElement> enumerable)
-                => unchecked(enumerable.Aggregate(0, (current, element) => (current * 397) ^ _equalityComparer.GetHashCode(element)));
-        }
-    }
-
+    
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum StrategyAggression : byte
     {

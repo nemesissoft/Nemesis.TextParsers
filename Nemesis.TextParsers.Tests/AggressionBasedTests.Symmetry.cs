@@ -190,18 +190,5 @@ namespace Nemesis.TextParsers.Tests
             CheckEquivalenceAb(ab1, parsed3A);
             CheckEquivalenceAb(parsed1, parsed2);
         }
-
-        
-
-        private class StructuralEqualityComparer<T> : IEqualityComparer<T>
-        {
-            public static readonly IEqualityComparer<T> Instance = new StructuralEqualityComparer<T>();
-
-            private StructuralEqualityComparer() { }
-
-            public bool Equals(T x, T y) => StructuralEquality.Equals(x, y);
-
-            public int GetHashCode(T obj) => obj?.GetHashCode() ?? 0;
-        }
     }
 }
