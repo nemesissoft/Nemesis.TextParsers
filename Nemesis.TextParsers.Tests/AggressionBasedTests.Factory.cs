@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
+using FacIntCheck = Nemesis.TextParsers.Tests.AggressionBasedFactoryChecked<int>;
 using System.Collections;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 
@@ -10,35 +11,37 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture(TestOf = typeof(IAggressionBased<>))]
     internal partial class AggressionBasedTests
     {
-        private static IEnumerable<(Type elemenType, string input, IEnumerable expectedOutput)> ValidValuesFor_FromText_Complex() => new[]
+        private static IEnumerable<(int number, Type elemenType, string input, IEnumerable expectedOutput)> ValidValuesFor_FromText_Complex() => new[]
         {
-            (typeof(int), @"1#2#3#4#5#6#7#8#9", (IEnumerable)new[]{1,2,3,4,5,6,7,8,9}),
+            (01, typeof(int), @"1#2#3#4#5#6#7#8#9", (IEnumerable)new[]{1,2,3,4,5,6,7,8,9}),
 
-            (typeof(int), @"1#1#1#4#4#4#7#7#7", new[]{1,4,7} ),
-            (typeof(int), @"1#4#7", new[]{1,4,7} ),
+            (02, typeof(int), @"1#1#1#4#4#4#7#7#7", new[]{1,1,1,4,4,4,7,7,7} ),
+            (03, typeof(int), @"1#4#7", new[]{1,4,7} ),
 
-            (typeof(int), @"1#1#1#1#1#1#1#1#1", new[]{1}),
-            (typeof(int), @"1", new[]{1}),
+            (04, typeof(int), @"1#1#1#1#1#1#1#1#1", new[]{1,1,1,1,1,1,1,1,1}),
+            (05, typeof(int), @"1", new[]{1}),
 
-            (typeof(List<int>), @"1|2|3#4|5|6#7|8|9", new[]{new List<int>{1,2,3},new List<int>{4,5,6},new List<int>{7,8,9}}),
-            (typeof(List<int>), @"1|2|3#1|2|3#1|2|3", new[]{new List<int>{1,2,3}}),
+            (06, typeof(List<int>), @"1|2|3#4|5|6#7|8|9", new[]{new List<int>{1,2,3},new List<int>{4,5,6},new List<int>{7,8,9}}),
+            (07, typeof(List<int>), @"1|2|3#1|2|3#1|2|3", new[]{new List<int>{1,2,3},new List<int>{1,2,3},new List<int>{1,2,3}}),
 
-            (typeof(IAggressionBased<int>), @"1\#2\#4#40\#50\#70#7\#8\#9", new[]
+            (08, typeof(IAggressionBased<int>), @"1\#2\#4#40\#50\#70#7\#8\#9", new[]
             {
                 FacInt.FromPassiveNormalAggressive(1,2,4),
                 FacInt.FromPassiveNormalAggressive(40,50,70),
                 FacInt.FromPassiveNormalAggressive(7,8,9),
             }),
-            (typeof(IAggressionBased<int>), @"1\#2\#40#1\#2\#40#1\#2\#40",new[]
+            (09, typeof(IAggressionBased<int>), @"1\#2\#40#1\#2\#40#1\#2\#40",new[]
             {
+                FacInt.FromPassiveNormalAggressive(1,2,40),
+                FacInt.FromPassiveNormalAggressive(1,2,40),
                 FacInt.FromPassiveNormalAggressive(1,2,40)
             }),
 
-            (typeof(Dss), @"Key=Text", new[] { new Dss { { "Key", @"Text" } } }),
+            (10, typeof(Dss), @"Key=Text", new[] { new Dss { { "Key", @"Text" } } }),
         };
 
         [TestCaseSource(nameof(ValidValuesFor_FromText_Complex))]
-        public void AggressionBasedFactory_FromText_ShouldParseComplexCases((Type elementType, string input, IEnumerable expectedOutput) data)
+        public void AggressionBasedFactory_FromText_ShouldParseComplexCases((int number, Type elementType, string input, IEnumerable expectedOutput) data)
         {
             var tester = (
                             GetType().GetMethod(nameof(AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper), ALL_FLAGS) ??
@@ -50,7 +53,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static void AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
         {
-            var actual = AggressionBasedFactory<TElement>.FromText(input);
+            var actual = AggressionBasedFactoryChecked<TElement>.FromText(input);
 
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
@@ -59,36 +62,36 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(values, Is.EquivalentTo(expectedOutput));
         }
 
-        private static IEnumerable<(string, IEnumerable<int>, string, IEnumerable<int>)> ValidValuesForFactory()
-            => new (string, IEnumerable<int>, string, IEnumerable<int>)[]
+        private static IEnumerable<(string inputText, IEnumerable<int> inputValues, string expectedOutput, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues)> ValidValuesForFactory()
+            => new (string, IEnumerable<int>, string, IEnumerable<int>, IEnumerable<int>)[]
             {
-                (null,          null, "0", new []{0}),
-                ("",            new int [0], @"0",new []{0}),
-                ("123",         new []{123}, @"123",new []{123}),
-                ("123#456#789", new []{123,456,789}, @"123#456#789",new []{123,456,789}),
-                ("123#123#123", new []{123,123,123}, @"123",new []{123}),
+                (null,          null, "0", new []{0}, new []{0}),
+                ("",            new int [0], @"0",new []{0},new []{0}),
+                ("123",         new []{123}, @"123",new []{123},new []{123}),
+                ("123#456#789", new []{123,456,789}, @"123#456#789",new []{123,456,789},new []{123,456,789}),
+                ("123#123#123", new []{123,123,123}, @"123",new []{123},new []{123, 123, 123}),
 
-                ("1#1#1#1#1#1#1#1#1", new []{1,1,1,1,1,1,1,1,1}, @"1",new []{1}),
-                ("1#1#1#4#4#4#7#7#7", new []{1,1,1,4,4,4,7,7,7}, @"1#4#7",new []{1,4,7}),
-                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, @"1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}),
+                ("1#1#1#1#1#1#1#1#1", new []{1,1,1,1,1,1,1,1,1}, @"1",new []{1},new []{1,1,1,1,1,1,1,1,1}),
+                ("1#1#1#4#4#4#7#7#7", new []{1,1,1,4,4,4,7,7,7}, @"1#4#7",new []{1,4,7},new []{1,1,1,4,4,4,7,7,7}),
+                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, @"1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, new []{1,2,3,4,5,6,7,8,9}),
             };
 
         [TestCaseSource(nameof(ValidValuesForFactory))]
-        public void AggressionBasedFactory_FromValues_ShouldCreateAndCompactValues((string _, IEnumerable<int> inputValues, string expectedOutput, IEnumerable<int> expectedValues) data)
+        public void AggressionBasedFactory_FromValues_ShouldCreateAndCompactValues((string _, IEnumerable<int> inputValues, string expectedOutput, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
         {
-            var actual = FacInt.FromValues(data.inputValues);
+            var actual = FacInt.FromValuesCompact(data.inputValues);
 
             Assert.That(actual, Is.Not.Null);
 
             Assert.That(actual.ToString(), Is.EqualTo(data.expectedOutput));
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EquivalentTo(data.expectedValues));
+            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EquivalentTo(data.expectedValuesCompacted));
         }
 
         [TestCaseSource(nameof(ValidValuesForFactory))]
-        public void AggressionBasedFactory_FromText_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValues) data)
+        public void AggressionBasedFactory_FromText_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
         {
-            var actual = FacInt.FromText(data.inputText);
+            var actual = FacIntCheck.FromText(data.inputText);
 
             Assert.That(actual, Is.Not.Null);
 
@@ -110,6 +113,10 @@ namespace Nemesis.TextParsers.Tests
 
         [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedFactory_FromValues_NegativeTests(IEnumerable<int> values) =>
-            Assert.Throws<ArgumentException>(() => FacInt.FromValues(values));
+            Assert.Throws<ArgumentException>(() => FacInt.FromValuesCompact(values));
+        
+        [TestCaseSource(nameof(FromValues_Invalid))]
+        public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values) =>
+            Assert.Throws<ArgumentException>(() => FacIntCheck.FromValues(values));
     }
 }

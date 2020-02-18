@@ -7,7 +7,7 @@ using System.Linq;
 #if NETCOREAPP3_0
     using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
 namespace Nemesis.TextParsers.Tests
@@ -23,7 +23,7 @@ namespace Nemesis.TextParsers.Tests
     }
 
     //[TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements")]
-    [TextFactory(typeof(AggressionBasedFactory<>))]
+    [TextFactory(typeof(AggressionBasedFactoryChecked<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
     public interface IAggressionBased<out TValue>
@@ -41,7 +41,7 @@ namespace Nemesis.TextParsers.Tests
         public static readonly SpanCollectionSerializer Instance = new SpanCollectionSerializer('#', ';', '=', '∅', '\\');
     }
 
-    [TextFactory(typeof(AggressionBasedFactory<>))]
+    [TextFactory(typeof(AggressionBasedFactoryChecked<>))]
     internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
     {
         IReadOnlyList<TValue> IAggressionValuesProvider<TValue>.Values => GetValues().ToList();
@@ -242,6 +242,100 @@ namespace Nemesis.TextParsers.Tests
         protected override int GetHashCodeCore() => _values?.GetHashCode() ?? 0;
     }
 
+    public static class AggressionBasedFactoryChecked<TValue>
+    {
+        public static IAggressionBased<TValue> FromText(string text) => string.IsNullOrEmpty(text) ?
+            AggressionBasedFactory<TValue>.FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)text : default) :
+            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _))
+        ;
+
+        public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) => text.IsEmpty ?
+            AggressionBasedFactory<TValue>.FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)"" : default) :
+            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _))
+        ;
+
+        public static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
+        {
+            if (values == null) return AggressionBasedFactory<TValue>.Default();
+
+            using (var enumerator = values.GetEnumerator())
+            {
+                if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
+                var pass = enumerator.Current;
+
+                if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
+                var norm = enumerator.Current;
+
+                if (!enumerator.MoveNext()) throw GetException(2);
+                var aggr = enumerator.Current;
+
+                if (!enumerator.MoveNext())
+                    return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
+
+                TValue v1 = pass, v2 = norm, v3 = aggr;
+
+                var v4 = enumerator.Current;
+                if (!enumerator.MoveNext()) throw GetException(4);
+                var v5 = enumerator.Current;
+                if (!enumerator.MoveNext()) throw GetException(5);
+                var v6 = enumerator.Current;
+                if (!enumerator.MoveNext()) throw GetException(6);
+                var v7 = enumerator.Current;
+                if (!enumerator.MoveNext()) throw GetException(7);
+                var v8 = enumerator.Current;
+                if (!enumerator.MoveNext()) throw GetException(8);
+                var v9 = enumerator.Current;
+
+                //end of sequence
+                if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
+
+                return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
+            }
+
+            Exception GetException(int numberOfElements) => new ArgumentException(
+                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
+        }
+
+        public static IAggressionBased<TValue> FromValues(ParsedSequence<TValue> values)
+        {
+            var enumerator = values.GetEnumerator();
+
+            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
+            var pass = enumerator.Current;
+
+            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
+            var norm = enumerator.Current;
+
+            if (!enumerator.MoveNext()) throw GetException(2);
+            var aggr = enumerator.Current;
+
+            if (!enumerator.MoveNext())
+                return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
+
+            TValue v1 = pass, v2 = norm, v3 = aggr;
+
+            var v4 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(4);
+            var v5 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(5);
+            var v6 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(6);
+            var v7 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(7);
+            var v8 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(8);
+            var v9 = enumerator.Current;
+
+            //end of sequence
+            if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
+
+            return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
+
+            Exception GetException(int numberOfElements) => new ArgumentException(
+                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
+        }
+    }
+
     public static class AggressionBasedFactory<TValue>
     {
         public static IAggressionBased<TValue> Default() => new AggressionBased1<TValue>(default);
@@ -256,7 +350,7 @@ namespace Nemesis.TextParsers.Tests
         public static IAggressionBased<TValue> FromPassiveNormalAggressiveChecked(TValue passive, TValue normal, TValue aggressive)
             => new AggressionBased3<TValue>(passive, normal, aggressive);
 
-        public static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
+        public static IAggressionBased<TValue> FromValuesCompact(IEnumerable<TValue> values)
         {
             if (values == null) return Default();
 
@@ -305,7 +399,7 @@ namespace Nemesis.TextParsers.Tests
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
         }
 
-        public static IAggressionBased<TValue> FromValues(ParsedSequence<TValue> values)
+        public static IAggressionBased<TValue> FromValuesCompact(ParsedSequence<TValue> values)
         {
             var enumerator = values.GetEnumerator();
 
@@ -350,20 +444,20 @@ namespace Nemesis.TextParsers.Tests
             Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
         }
-
-        public static IAggressionBased<TValue> FromText(string text) => string.IsNullOrEmpty(text) ?
+        
+        public static IAggressionBased<TValue> FromTextCompact(string text) => string.IsNullOrEmpty(text) ?
             FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)text : default) :
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _))
+            FromValuesCompact(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _))
         ;
 
-        public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) => text.IsEmpty ?
+        public static IAggressionBased<TValue> FromTextCompact(ReadOnlySpan<char> text) => text.IsEmpty ?
             FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)"" : default) :
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _))
+            FromValuesCompact(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _))
         ;
 
         private static bool IsEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
     }
-    
+
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum StrategyAggression : byte
     {

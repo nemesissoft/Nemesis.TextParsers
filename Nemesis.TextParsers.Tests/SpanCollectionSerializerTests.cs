@@ -595,7 +595,7 @@ namespace Nemesis.TextParsers.Tests
 
             string text = input.ToString();
             Assert.That(text, Is.EqualTo(@"10|\∅|30#∅#\∅|110|\∅|130|\∅|150"));
-            var deser = AggressionBasedFactory<List<float?>>.FromText(text);
+            var deser = AggressionBasedFactoryChecked<List<float?>>.FromText(text);
             Assert.That(deser, Is.EqualTo(input));
         }
         #endregion

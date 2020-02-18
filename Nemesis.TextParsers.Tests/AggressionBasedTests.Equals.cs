@@ -41,8 +41,8 @@ namespace Nemesis.TextParsers.Tests
 
         private static void EqualsTestsHelper<TElement>(string text1, string text2)
         {
-            var ab1 = AggressionBasedFactory<TElement>.FromText(text1);
-            var ab2 = AggressionBasedFactory<TElement>.FromText(text2);
+            var ab1 = AggressionBasedFactoryChecked<TElement>.FromText(text1);
+            var ab2 = AggressionBasedFactoryChecked<TElement>.FromText(text2);
 
             Assert.That(ab1, Is.EqualTo(ab2));
         }
@@ -53,36 +53,29 @@ namespace Nemesis.TextParsers.Tests
             static IAggressionBased<int[]> FromPna(int[] p, int[] n, int[] a) =>
                   AggressionBasedFactory<int[]>.FromPassiveNormalAggressive(p, n, a);
 
-            var crazyAggBased = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressive(
-                new List<IAggressionBased<int[]>>
-                {
-                    FromPna(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FromPna(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                },
-                new List<IAggressionBased<int[]>>
-                {
-                    FromPna(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FromPna(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                },
-                new List<IAggressionBased<int[]>>
-                {
-                    FromPna(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FromPna(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                }
+            static List<IAggressionBased<int[]>> SameList() => new List<IAggressionBased<int[]>>
+            {
+                FromPna(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
+                FromPna(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
+            };
+
+            var crazyAggBasedSame = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressive(
+                SameList(),
+                SameList(),
+                SameList()
             );
-            var text = crazyAggBased.ToString();
+            Assert.That(crazyAggBasedSame, Is.TypeOf<AggressionBased1<List<IAggressionBased<int[]>>>>());
 
-            var actual = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromText(text);
+            var text = crazyAggBasedSame.ToString();
 
-            Assert.That(actual, Is.EqualTo(crazyAggBased));
+            var actual = AggressionBasedFactoryChecked<List<IAggressionBased<int[]>>>.FromText(text);
+
+            Assert.That(actual, Is.EqualTo(crazyAggBasedSame));
 
 
-            var crazyAggBased2 = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressive(
-                new List<IAggressionBased<int[]>>
-                {
-                    FromPna(new[] {10, 11}, new[] {20, 21}, new[] {30, 31}),
-                    FromPna(new[] {40, 41}, new[] {50, 51}, new[] {60, 61}),
-                },
+
+            var crazyAggBasedNotSame = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressive(
+                SameList(),
                 new List<IAggressionBased<int[]>>
                 {
                     FromPna(new[] {100, 11}, new[] {200, 21}, new[] {300, 31}),
@@ -94,11 +87,26 @@ namespace Nemesis.TextParsers.Tests
                     FromPna(new[] {4000, 41}, new[] {5000, 51}, new[] {6000, 61}),
                 }
             );
-            var text2 = crazyAggBased2.ToString();
+            var text2 = crazyAggBasedNotSame.ToString();
 
-            var actual2 = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromText(text2);
+            var actual2 = AggressionBasedFactoryChecked<List<IAggressionBased<int[]>>>.FromText(text2);
 
-            Assert.That(actual2, Is.EqualTo(crazyAggBased2));
+            Assert.That(actual2, Is.EqualTo(crazyAggBasedNotSame));
+
+
+
+            var crazyAggBasedSameNotCompacted = AggressionBasedFactory<List<IAggressionBased<int[]>>>.FromPassiveNormalAggressiveChecked(
+                SameList(),
+                SameList(),
+                SameList()
+            );
+            Assert.That(crazyAggBasedSameNotCompacted, Is.TypeOf<AggressionBased3<List<IAggressionBased<int[]>>>>());
+
+            var textNotCompacted = crazyAggBasedSameNotCompacted.ToString();
+
+            var actualNotCompacted = AggressionBasedFactoryChecked<List<IAggressionBased<int[]>>>.FromText(textNotCompacted);
+
+            Assert.That(actualNotCompacted, Is.EqualTo(crazyAggBasedSameNotCompacted));
         }
     }
 }
