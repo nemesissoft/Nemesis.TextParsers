@@ -22,7 +22,23 @@ dotnet_csproj:
   file_version: '{version}'
   informational_version: '{version}'
 before_build:
-- cmd: nuget restore
+- ps: >-
+    nuget restore
+
+    if ($env:APPVEYOR_REPO_TAG_NAME)
+    {
+        $releaseNotes = & $([scriptblock]::Create((New-Object Net.WebClient).DownloadString( 'https://raw.githubusercontent.com/nemesissoft/BuildTools/master/GetGithubReleaseNotes.ps1' ))) -tagName "$env:APPVEYOR_REPO_TAG_NAME" -repoName "$env:APPVEYOR_REPO_NAME"
+    
+        if($releaseNotes)
+        {
+            $shortDesc = $releaseNotes.Item1
+            $longDesc = $releaseNotes.Item2
+
+            Update-AppveyorBuild -Message "$shortDesc"
+
+            & $([scriptblock]::Create((New-Object Net.WebClient).DownloadString( 'https://raw.githubusercontent.com/nemesissoft/BuildTools/master/UpdateReleaseNotes.ps1' ))) -basePath "$env:APPVEYOR_BUILD_FOLDER" -releaseNotes "$longDesc"
+        }        
+    }
 build:
   verbosity: normal
 artifacts:
