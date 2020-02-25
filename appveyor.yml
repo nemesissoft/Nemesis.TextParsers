@@ -5,14 +5,15 @@ init:
 - pwsh: >-
     if ($env:APPVEYOR_REPO_TAG -eq "true")
     {
-        Update-AppveyorBuild -Version "$($env:APPVEYOR_REPO_TAG_NAME.TrimStart("v"))"
+        $newVersion = "$($env:APPVEYOR_REPO_TAG_NAME.TrimStart("v"))"
     }
     else
     {
-        $newVersion = "0.0.$env:APPVEYOR_BUILD_NUMBER+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"
-        Add-AppveyorMessage -Message ("Change build version to " + $newVersion)
-        Update-AppveyorBuild -Version $newVersion
+        $newVersion = "0.0.$env:APPVEYOR_BUILD_NUMBER+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"        
     }
+    Add-AppveyorMessage -Message ("Change build version to " + $newVersion)
+    
+    Update-AppveyorBuild -Version $newVersion
 dotnet_csproj:
   patch: true
   file: '**\*.csproj;**\*.props'
