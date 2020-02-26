@@ -51,7 +51,7 @@ namespace Nemesis.TextParsers.Tests
         public override string ToString() => $"{X};{Y}";
 
         public static Point FromText(string text) =>
-            text.Split(';') is string[] arr ?
+            text.Split(';') is { } arr ?
                 new Point(int.Parse(arr[0]), int.Parse(arr[1])) : default;
     }
 

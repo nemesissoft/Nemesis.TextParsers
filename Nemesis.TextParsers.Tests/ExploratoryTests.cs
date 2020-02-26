@@ -176,7 +176,7 @@ namespace Nemesis.TextParsers.Tests
                 if (parsed != null && Nullable.GetUnderlyingType(testType) is { } underlyingType)
                     Assert.That(parsed, Is.TypeOf(underlyingType));
                 else if (parsed != null && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
-                    Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.FullName}");
+                    Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.GetFriendlyName()}");
                 else
                     Assert.That(parsed, Is.TypeOf(testType));
                 return parsed;

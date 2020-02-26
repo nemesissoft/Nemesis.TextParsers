@@ -39,7 +39,7 @@ namespace Nemesis.TextParsers
             elementType = ElementType;
         }
 
-        public override string ToString() => $"Array:{IsArray}, {Kind}, {ElementType?.FullName}";
+        public override string ToString() => $"Array:{IsArray}, {Kind}, {ElementType?.GetFriendlyName() ?? "<NoType>"}";
 
         #region Equals
         public bool Equals(CollectionMeta other) =>
@@ -179,7 +179,7 @@ namespace Nemesis.TextParsers
                 if (collectionType.IsArray && collectionType.GetElementType() is { } arrayElementType)
                     return new CollectionMeta(true, CollectionKind.Unknown, arrayElementType);
                 else if (IsTypeSupported(collectionType) &&
-                         GetCollectionKind(collectionType) is CollectionKind kind &&
+                         GetCollectionKind(collectionType) is { } kind &&
                          kind != CollectionKind.Unknown
                         )
                 {

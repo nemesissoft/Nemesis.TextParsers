@@ -39,7 +39,7 @@ namespace Nemesis.TextParsers
             valueType = ValueType;
         }
 
-        public override string ToString() => $"{Kind}<{KeyType?.FullName}, {ValueType?.FullName}>";
+        public override string ToString() => $"{Kind}<{KeyType?.GetFriendlyName() ?? "<NoType>"}, {ValueType?.GetFriendlyName() ?? "<NoType>"}>";
 
         #region Equals
         public bool Equals(DictionaryMeta other) => Kind == other.Kind && KeyType == other.KeyType && ValueType == other.ValueType;

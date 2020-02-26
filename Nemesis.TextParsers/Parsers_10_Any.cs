@@ -8,20 +8,23 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     internal sealed class AnyTransformerCreator : ICanCreateTransformer
     {
-        public ITransformer<TElement> CreateTransformer<TElement>()
-        {
-            var typeConverter = TypeDescriptor.GetConverter(typeof(TElement));
+        public ITransformer<TElement> CreateTransformer<TElement>() =>
+            TypeDescriptor.GetConverter(typeof(TElement)) switch
+            {
+                ITransformer<TElement> t => t,
 
-            return typeConverter is ITransformer<TElement> transformer ?
-                transformer :
-                (
-                    typeConverter.GetType() != typeof(TypeConverter) &&
-                    typeConverter.CanConvertFrom(typeof(string)) && typeConverter.CanConvertTo(typeof(string)) 
-                        ? new ConverterTransformer<TElement>(typeConverter) 
-                        : throw new NotSupportedException($"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
-                );
-        }
+                var t1 when t1.GetType() == typeof(TypeConverter) => throw new NotSupportedException(
+                    $"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself"
+                ),
 
+                var t2 when t2.CanConvertFrom(typeof(string)) && t2.CanConvertTo(typeof(string)) =>
+                    new ConverterTransformer<TElement>(t2),
+
+                _ => throw new NotSupportedException(
+                    $"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string"
+                )
+            };
+        
         private sealed class ConverterTransformer<TElement> : TransformerBase<TElement>
         {
             private readonly TypeConverter _typeConverter;

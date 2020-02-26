@@ -78,7 +78,7 @@ namespace Nemesis.TextParsers
                 if (canParseByDelegate.CanHandle(type))
                     return canParseByDelegate.CreateTransformer<TElement>();
 
-            throw new NotSupportedException($"Type '{type.FullName}' is not supported for string transformations");
+            throw new NotSupportedException($"Type '{type.GetFriendlyName()}' is not supported for string transformations. Provide appropriate chain of responsibility");
         }
     }
 }

@@ -36,8 +36,8 @@ namespace Nemesis.TextParsers
 
         private ISpanParser<TElement> GetParser<TElement>(Type elementType)
         {
-            Type factoryMethodContainer = GetFactoryMethodContainer(elementType) ??
-                               throw new InvalidOperationException($"Missing factory declaration for {elementType.FullName}");
+            Type factoryMethodContainer = GetFactoryMethodContainer(elementType) 
+                 ?? throw new InvalidOperationException($"Missing factory declaration for {elementType.GetFriendlyName()}");
 
             var conversionMethods = factoryMethodContainer.GetMethods(STATIC_METHOD_FLAGS)
                 .Where(m => FactoryMethodPredicate(m, elementType)).ToList();
