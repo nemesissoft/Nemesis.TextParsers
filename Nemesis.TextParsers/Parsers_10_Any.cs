@@ -15,9 +15,10 @@ namespace Nemesis.TextParsers
             return typeConverter is ITransformer<TElement> transformer ?
                 transformer :
                 (
-                    typeConverter.CanConvertFrom(typeof(string)) && typeConverter.CanConvertTo(typeof(string)) ?
-                    new ConverterTransformer<TElement>(typeConverter) :
-                    throw new NotSupportedException($"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+                    typeConverter.GetType() != typeof(TypeConverter) &&
+                    typeConverter.CanConvertFrom(typeof(string)) && typeConverter.CanConvertTo(typeof(string)) 
+                        ? new ConverterTransformer<TElement>(typeConverter) 
+                        : throw new NotSupportedException($"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
                 );
         }
 

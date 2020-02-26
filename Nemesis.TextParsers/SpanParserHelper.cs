@@ -122,16 +122,13 @@ namespace Nemesis.TextParsers
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
             ushort capacity = 8)
         {
-            if (kind == DictionaryKind.Unknown)
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported");
-
-            IDictionary<TKey, TValue> result =
-                kind == DictionaryKind.SortedDictionary ? new SortedDictionary<TKey, TValue>() :
-                 (
-                     kind == DictionaryKind.SortedList
-                     ? new SortedList<TKey, TValue>(capacity)
-                     : (IDictionary<TKey, TValue>)new Dictionary<TKey, TValue>(capacity)
-                 );
+            IDictionary<TKey, TValue> result = kind switch
+                {
+                    DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
+                    DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
+                    DictionaryKind.SortedList => new SortedList<TKey, TValue>(capacity),
+                    _ => new Dictionary<TKey, TValue>(capacity)
+                };
 
             foreach (var pair in parsedPairs)
             {

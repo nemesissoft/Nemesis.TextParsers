@@ -41,8 +41,7 @@ namespace Nemesis.TextParsers.Tests
                 .SelectMany(keyType => simpleTypes.Select(val => (Key: keyType, Value: val)))
                 .Select(kvp => typeof(Dictionary<,>).MakeGenericType(kvp.Key, kvp.Value))
                 .ToList();
-
-
+            
 
             return DistinctBy(
                     enums.Union(structs).Union(arrays).Union(classes).Union(aggressionBased).Union(customsArrays).Union(collections).Union(dictionaries)
@@ -197,7 +196,7 @@ namespace Nemesis.TextParsers.Tests
             //AggressionBased
             typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>), typeof(IAggressionBased<float?>),
             //class
-            typeof(Dictionary<string,string>), typeof(Dictionary<string,int>), typeof(Dictionary<string,double>), typeof(List<string>), typeof(string)
+            typeof(Dictionary<string,string>), typeof(Dictionary<string,int>), typeof(Dictionary<string,double>), typeof(List<string>), typeof(string), typeof(Uri),
         };
 
         private static readonly IEnumerable<Type> _additionalTypes = new[]

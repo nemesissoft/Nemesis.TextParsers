@@ -31,7 +31,12 @@ namespace Nemesis.TextParsers
                     type.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
                 {
                     var instance = (ICanTransformType)Activator.CreateInstance(type);
-                    simpleTransformers[instance.Type] = instance;
+
+                    var elementType = instance.Type;
+                    if (simpleTransformers.ContainsKey(elementType))
+                        throw new NotSupportedException($"Automatic registration does not support multiple simple transformers to handle type {elementType}");
+
+                    simpleTransformers[elementType] = instance;
                 }
 
             return simpleTransformers;
@@ -85,18 +90,18 @@ namespace Nemesis.TextParsers
             return true;
         }
 
-        internal const string TrueLiteral = "True";
-        internal const string FalseLiteral = "False";
+        internal const string TRUE_LITERAL = "True";
+        internal const string FALSE_LITERAL = "False";
         public static bool TryParseBool(ReadOnlySpan<char> value, out bool result)
         {
-            ReadOnlySpan<char> trueSpan = TrueLiteral.AsSpan();
+            ReadOnlySpan<char> trueSpan = TRUE_LITERAL.AsSpan();
             if (EqualsOrdinalIgnoreCase(trueSpan, value))
             {
                 result = true;
                 return true;
             }
 
-            ReadOnlySpan<char> falseSpan = FalseLiteral.AsSpan();
+            ReadOnlySpan<char> falseSpan = FALSE_LITERAL.AsSpan();
             if (EqualsOrdinalIgnoreCase(falseSpan, value))
             {
                 result = false;
@@ -123,7 +128,7 @@ namespace Nemesis.TextParsers
         }
 
         public static bool ParseBool(ReadOnlySpan<char> value) =>
-            TryParseBool(value, out bool result) ? result : throw new FormatException($"Boolean supports only case insensitive '{TrueLiteral}' or '{FalseLiteral}'");
+            TryParseBool(value, out bool result) ? result : throw new FormatException($"Boolean supports only case insensitive '{TRUE_LITERAL}' or '{FALSE_LITERAL}'");
 
         private static ReadOnlySpan<char> TrimWhiteSpaceAndNull(ReadOnlySpan<char> value)
         {
@@ -172,6 +177,19 @@ namespace Nemesis.TextParsers
         }
 
         public override string Format(bool element) => element ? "True" : "False";
+    }
+
+    [UsedImplicitly]
+    public sealed class CharParser : SimpleTransformer<char>
+    {
+        public override char Parse(ReadOnlySpan<char> input) => input.Length switch
+        {
+            0 => '\0',
+            1 => input[0],
+            _ => throw new FormatException($"\"{input.ToString()}\" is not a valid value for char")
+        };
+
+        public override string Format(char element) => element == '\0' ? "" : char.ToString(element);
     }
 
     public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer<TElement> where TElement : IFormattable

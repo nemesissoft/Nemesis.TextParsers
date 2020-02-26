@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers
 {
-
     [UsedImplicitly]
     internal sealed class TextFactoryTransformer : FactoryMethodTransformer
     {
