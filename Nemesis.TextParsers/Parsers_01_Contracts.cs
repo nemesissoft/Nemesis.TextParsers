@@ -7,16 +7,20 @@ namespace Nemesis.TextParsers
     public interface ITransformer
     {
         object ParseObject(string text);
-        object ParseObject(ReadOnlySpan<char> input);
+        object ParseObject(in ReadOnlySpan<char> input);
 
         string FormatObject(object element);
     }
 
     public interface ISpanParser<out TElement>
     {
-        TElement Parse(ReadOnlySpan<char> input);
+        TElement Parse(in ReadOnlySpan<char> input);
     }
-    public interface IFormatter<in TElement> { string Format(TElement element); }
+
+    public interface IFormatter<in TElement>
+    {
+        string Format(TElement element);
+    }
     
     public interface ITransformer<TElement> : ISpanParser<TElement>, IFormatter<TElement>, ITransformer
     {
@@ -25,7 +29,7 @@ namespace Nemesis.TextParsers
 
     public abstract class TransformerBase<TElement> : ITransformer<TElement>
     {
-        public abstract TElement Parse(ReadOnlySpan<char> input);
+        public abstract TElement Parse(in ReadOnlySpan<char> input);
 
         public abstract string Format(TElement element);
 
@@ -34,7 +38,7 @@ namespace Nemesis.TextParsers
 
         public object ParseObject(string text) => Parse(text.AsSpan());
         
-        public object ParseObject(ReadOnlySpan<char> input) => Parse(input);
+        public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
         public string FormatObject(object element) => Format((TElement) element);
     }
@@ -76,7 +80,7 @@ namespace Nemesis.TextParsers
             _formatter = formatter;
         }
 
-        public override TElement Parse(ReadOnlySpan<char> input) => _parser.Parse(input);
+        public override TElement Parse(in ReadOnlySpan<char> input) => _parser.Parse(input);
 
         public override string Format(TElement element) => _formatter.Format(element);
 

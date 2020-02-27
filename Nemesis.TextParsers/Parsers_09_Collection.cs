@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers
             public InnerCollectionTransformer(CollectionKind kind) => _kind = kind;
 
 
-            public override TCollection Parse(ReadOnlySpan<char> input) => //input.IsEmpty ? default :
+            public override TCollection Parse(in ReadOnlySpan<char> input) => //input.IsEmpty ? default :
                 (TCollection)SpanCollectionSerializer.DefaultInstance.ParseCollection<TElement>(input, _kind);
 
             public override string Format(TCollection coll) => //coll == null ? null :

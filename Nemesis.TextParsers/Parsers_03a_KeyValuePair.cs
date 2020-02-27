@@ -36,7 +36,7 @@ namespace Nemesis.TextParsers
                 _valueTransformer = TextTransformer.Default.GetTransformer<TValue>();
             }
 
-            public override KeyValuePair<TKey, TValue> Parse(ReadOnlySpan<char> input)
+            public override KeyValuePair<TKey, TValue> Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 

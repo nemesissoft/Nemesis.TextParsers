@@ -65,7 +65,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class StringParser : SimpleTransformer<string>
     {
-        public override string Parse(ReadOnlySpan<char> input) => input.ToString();
+        public override string Parse(in ReadOnlySpan<char> input) => input.ToString();
 
         public override string Format(string element) => element;
     }
@@ -137,20 +137,16 @@ namespace Nemesis.TextParsers
             int start = 0;
             while (start < value.Length)
             {
-                if (!Char.IsWhiteSpace(value[start]) && value[start] != NULL_CHAR)
-                {
+                if (!char.IsWhiteSpace(value[start]) && value[start] != NULL_CHAR)
                     break;
-                }
                 start++;
             }
 
             int end = value.Length - 1;
             while (end >= start)
             {
-                if (!Char.IsWhiteSpace(value[end]) && value[end] != NULL_CHAR)
-                {
+                if (!char.IsWhiteSpace(value[end]) && value[end] != NULL_CHAR)
                     break;
-                }
                 end--;
             }
 
@@ -158,16 +154,15 @@ namespace Nemesis.TextParsers
         }
 #endif
 
-        public override bool Parse(ReadOnlySpan<char> input)
+        public override bool Parse(in ReadOnlySpan<char> input)
         {
-            input = input.Trim();
             try
             {
                 return
 #if NETSTANDARD2_0 || NETFRAMEWORK || NETFRAMEWORK
-                ParseBool(input);
+                ParseBool(input.Trim());
 #else
-                bool.Parse(input);
+                bool.Parse(input.Trim());
 #endif
             }
             catch (FormatException e)
@@ -182,7 +177,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class CharParser : SimpleTransformer<char>
     {
-        public override char Parse(ReadOnlySpan<char> input) => input.Length switch
+        public override char Parse(in ReadOnlySpan<char> input) => input.Length switch
         {
             0 => '\0',
             1 => input[0],
@@ -203,7 +198,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class ByteParser : SimpleFormattableTransformer<byte>
     {
-        public override byte Parse(ReadOnlySpan<char> input) =>
+        public override byte Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.ByteParser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
@@ -214,7 +209,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class SByteParser : SimpleFormattableTransformer<sbyte>
     {
-        public override sbyte Parse(ReadOnlySpan<char> input) =>
+        public override sbyte Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.SByteParser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
@@ -225,7 +220,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class Int16Parser : SimpleFormattableTransformer<short>
     {
-        public override short Parse(ReadOnlySpan<char> input) =>
+        public override short Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Int16Parser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
@@ -237,7 +232,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class UInt16Parser : SimpleFormattableTransformer<ushort>
     {
-        public override ushort Parse(ReadOnlySpan<char> input) =>
+        public override ushort Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.UInt16Parser.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #else
@@ -248,7 +243,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class Int32Parser : SimpleFormattableTransformer<int>
     {
-        public override int Parse(ReadOnlySpan<char> input) =>
+        public override int Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.ParseInt32(input, NumberStyles.Integer, Culture.InvInfo);
 #else
@@ -259,7 +254,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class UInt32Parser : SimpleFormattableTransformer<uint>
     {
-        public override uint Parse(ReadOnlySpan<char> input) =>
+        public override uint Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.ParseUInt32(input, NumberStyles.Integer, Culture.InvInfo);
 #else
@@ -270,7 +265,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class Int64Parser : SimpleFormattableTransformer<long>
     {
-        public override long Parse(ReadOnlySpan<char> input) =>
+        public override long Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.ParseInt64(input, NumberStyles.Integer, Culture.InvInfo);
 #else
@@ -281,7 +276,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class UInt64Parser : SimpleFormattableTransformer<ulong>
     {
-        public override ulong Parse(ReadOnlySpan<char> input) =>
+        public override ulong Parse(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.Number.ParseUInt64(input, NumberStyles.Integer, Culture.InvInfo);
 #else
@@ -292,7 +287,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class SingleParser : SimpleFormattableTransformer<float>
     {
-        public override float Parse(ReadOnlySpan<char> input)
+        public override float Parse(in ReadOnlySpan<char> input)
         {
             if (input.Length == 1 && input[0] == '∞') return float.PositiveInfinity;
             else if (input.Length == 2 && input[0] == '-' && input[1] == '∞') return float.NegativeInfinity;
@@ -312,7 +307,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class DoubleParser : SimpleFormattableTransformer<double>
     {
-        public override double Parse(ReadOnlySpan<char> input)
+        public override double Parse(in ReadOnlySpan<char> input)
         {
             if (input.Length == 1 && input[0] == '∞') return double.PositiveInfinity;
             else if (input.Length == 2 && input[0] == '-' && input[1] == '∞') return double.NegativeInfinity;
@@ -332,7 +327,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class DecimalParser : SimpleFormattableTransformer<decimal>
     {
-        public override decimal Parse(ReadOnlySpan<char> input) =>
+        public override decimal Parse(in ReadOnlySpan<char> input) =>
             decimal.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
@@ -345,7 +340,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class TimeSpanParser : SimpleFormattableTransformer<TimeSpan>
     {
-        public override TimeSpan Parse(ReadOnlySpan<char> input) =>
+        public override TimeSpan Parse(in ReadOnlySpan<char> input) =>
             TimeSpan.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
@@ -358,7 +353,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class DateTimeParser : SimpleFormattableTransformer<DateTime>
     {
-        public override DateTime Parse(ReadOnlySpan<char> input) =>
+        public override DateTime Parse(in ReadOnlySpan<char> input) =>
             DateTime.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
@@ -373,7 +368,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class DateTimeOffsetParser : SimpleFormattableTransformer<DateTimeOffset>
     {
-        public override DateTimeOffset Parse(ReadOnlySpan<char> input) =>
+        public override DateTimeOffset Parse(in ReadOnlySpan<char> input) =>
             DateTimeOffset.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
@@ -388,7 +383,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class GuidParser : SimpleFormattableTransformer<Guid>
     {
-        public override Guid Parse(ReadOnlySpan<char> input) => Guid.Parse(
+        public override Guid Parse(in ReadOnlySpan<char> input) => Guid.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
 #else
@@ -402,7 +397,7 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class BigIntegerParser : SimpleFormattableTransformer<BigInteger>
     {
-        public override BigInteger Parse(ReadOnlySpan<char> input) => BigInteger.Parse(
+        public override BigInteger Parse(in ReadOnlySpan<char> input) => BigInteger.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
 #else

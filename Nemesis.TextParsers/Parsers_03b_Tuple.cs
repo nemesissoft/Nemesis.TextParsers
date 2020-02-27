@@ -39,7 +39,7 @@ namespace Nemesis.TextParsers
 
             public Tuple1Transformer() => _transformer1 = TextTransformer.Default.GetTransformer<T1>();
 
-            public override ValueTuple<T1> Parse(ReadOnlySpan<char> input)
+            public override ValueTuple<T1> Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -82,7 +82,7 @@ namespace Nemesis.TextParsers
                 _transformer2 = TextTransformer.Default.GetTransformer<T2>();
             }
 
-            public override (T1, T2) Parse(ReadOnlySpan<char> input)
+            public override (T1, T2) Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -135,7 +135,7 @@ namespace Nemesis.TextParsers
                 _transformer3 = TextTransformer.Default.GetTransformer<T3>();
             }
 
-            public override (T1, T2, T3) Parse(ReadOnlySpan<char> input)
+            public override (T1, T2, T3) Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -195,7 +195,7 @@ namespace Nemesis.TextParsers
                 _transformer4 = TextTransformer.Default.GetTransformer<T4>();
             }
 
-            public override (T1, T2, T3, T4) Parse(ReadOnlySpan<char> input)
+            public override (T1, T2, T3, T4) Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -263,7 +263,7 @@ namespace Nemesis.TextParsers
                 _transformer5 = TextTransformer.Default.GetTransformer<T5>();
             }
 
-            public override (T1, T2, T3, T4, T5) Parse(ReadOnlySpan<char> input)
+            public override (T1, T2, T3, T4, T5) Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -339,7 +339,7 @@ namespace Nemesis.TextParsers
                 _transformer6 = TextTransformer.Default.GetTransformer<T6>();
             }
 
-            public override (T1, T2, T3, T4, T5, T6) Parse(ReadOnlySpan<char> input)
+            public override (T1, T2, T3, T4, T5, T6) Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -422,7 +422,7 @@ namespace Nemesis.TextParsers
                 _transformer7 = TextTransformer.Default.GetTransformer<T7>();
             }
 
-            public override (T1, T2, T3, T4, T5, T6, T7) Parse(ReadOnlySpan<char> input)
+            public override (T1, T2, T3, T4, T5, T6, T7) Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 
@@ -513,7 +513,7 @@ namespace Nemesis.TextParsers
                 _transformerRest = TextTransformer.Default.GetTransformer<TRest>();
             }
 
-            public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Parse(ReadOnlySpan<char> input)
+            public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Parse(in ReadOnlySpan<char> input)
             {
                 if (input.IsEmpty) return default;
 

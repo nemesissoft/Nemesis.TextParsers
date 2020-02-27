@@ -18,7 +18,7 @@ namespace Nemesis.TextParsers
 
         private class InnerLeanCollectionTransformer<TElement> : TransformerBase<LeanCollection<TElement>>
         {
-            public override LeanCollection<TElement> Parse(ReadOnlySpan<char> input) =>
+            public override LeanCollection<TElement> Parse(in ReadOnlySpan<char> input) =>
                 SpanCollectionSerializer.DefaultInstance.ParseLeanCollection<TElement>(input);
 
             public override string Format(LeanCollection<TElement> coll) =>

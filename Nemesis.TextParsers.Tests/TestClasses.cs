@@ -112,7 +112,7 @@ namespace Nemesis.TextParsers.Tests
 
         [UsedImplicitly]
         public static Rect FromText(string text) =>
-            text.Split(';') is string[] arr ?
+            text.Split(';') is { } arr ?
                 new Rect(int.Parse(arr[0]), int.Parse(arr[1]),
                     int.Parse(arr[2]), int.Parse(arr[3])) : default;
     }
@@ -434,14 +434,14 @@ namespace Nemesis.TextParsers.Tests
 
         public override string FormatToString(Option value) => value.ToString();
 
-        public Option Parse(ReadOnlySpan<char> input)
+        public Option Parse(in ReadOnlySpan<char> text)
         {
-            input = input.Trim();
+            var input = text.Trim();
 
             if (input.Length == 2 &&
                 (input[0] == 'o' || input[0] == 'O') &&
                 char.IsDigit(input[1]) &&
-                int.Parse(input[1].ToString()) is int i1 &&
+                int.Parse(input[1].ToString()) is { } i1 &&
                 i1 >= 1 && i1 <= 3
             )
                 return new Option((OptionEnum)i1);
@@ -479,7 +479,7 @@ namespace Nemesis.TextParsers.Tests
 
         public object ParseObject(string text) => Parse(text.AsSpan());
 
-        public object ParseObject(ReadOnlySpan<char> input) => Parse(input);
+        public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
         public string FormatObject(object element) => Format((Option)element);
     }

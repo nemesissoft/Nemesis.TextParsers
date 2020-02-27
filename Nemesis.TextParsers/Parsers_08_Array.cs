@@ -18,7 +18,7 @@ namespace Nemesis.TextParsers
 
         private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>
         {
-            public override TElement[] Parse(ReadOnlySpan<char> input) =>
+            public override TElement[] Parse(in ReadOnlySpan<char> input) =>
                     //input.IsEmpty ? default :
                     SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
 

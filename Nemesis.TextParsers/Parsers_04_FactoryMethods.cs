@@ -106,7 +106,7 @@ namespace Nemesis.TextParsers
             public InnerStringParser(Expression body, ParameterExpression inputParameter) =>
                 _delegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
 
-            public TElement Parse(ReadOnlySpan<char> input) => _delegate(input.ToString());
+            public TElement Parse(in ReadOnlySpan<char> input) => _delegate(input.ToString());
 
             public sealed override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {FACTORY_METHOD_NAME}(string input)";
         }
@@ -119,7 +119,7 @@ namespace Nemesis.TextParsers
             public InnerSpanParser(Expression body, ParameterExpression inputParameter) =>
                 _delegate = Expression.Lambda<ParserDelegate>(body, inputParameter).Compile();
 
-            public TElement Parse(ReadOnlySpan<char> input) => _delegate(input);
+            public TElement Parse(in ReadOnlySpan<char> input) => _delegate(input);
 
             public sealed override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {FACTORY_METHOD_NAME}(ReadOnlySpan<char> input)";
         }

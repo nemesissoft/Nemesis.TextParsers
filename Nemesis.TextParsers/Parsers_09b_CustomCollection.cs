@@ -59,7 +59,7 @@ namespace Nemesis.TextParsers
             protected CollectionTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
             
-            public override TCollection Parse(ReadOnlySpan<char> input) //input.IsEmpty ? default :
+            public override TCollection Parse(in ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {
                 var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
                 TCollection result = GetCollection(stream);

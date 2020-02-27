@@ -23,7 +23,7 @@ namespace Nemesis.TextParsers
             public InnerNullableTransformer() => _elementParser = TextTransformer.Default.GetTransformer<TElement>();
 
 
-            public override TElement? Parse(ReadOnlySpan<char> input) =>
+            public override TElement? Parse(in ReadOnlySpan<char> input) =>
                 input.IsEmpty ? (TElement?)null : _elementParser.Parse(input);
 
             public override string Format(TElement? element) =>
