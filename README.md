@@ -133,14 +133,18 @@ using (var enumerator = coll.GetEnumerator())
 return accumulator.AsSpanTo(accumulator.Length > 0 ? ccumulator.Length - 1 : 0).ToString();
 ```
 
+## Funding
+Open source software is free but creating it is not. Should you wish to support us in our noble endeavour, please consider the following donation methods:
+* [![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
+
 
 ## Todo / road map
-1. context based transformer creation with settings for:
-	* DictionaryBehaviour
-    * Enum casing+other customizations
-    * empty string meaing (empty, default, null?))
-2. custom TextParser factory/customizations
-3. ability to format to buffer
-4. become DI friendly adding support for cross cutting concerns i.e. logging
-5. support for pattern based Dispose
-6. improve Tokenizer performance
+- [ ] context based transformer creation with settings for:
+	- [ ] DictionaryBehaviour
+    - [ ] Enum casing+other customizations
+    - [ ] empty string meaing (empty, default, null?))
+- [ ] custom TextParser factory/customizations
+- [ ] ability to format to buffer
+- [ ] become DI friendly adding support for cross cutting concerns i.e. logging
+- [ ] support for pattern based Dispose
+- [ ] improve Tokenizer performance
