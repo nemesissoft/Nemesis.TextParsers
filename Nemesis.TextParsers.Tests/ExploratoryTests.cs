@@ -6,75 +6,36 @@ using System.Linq;
 using System.Reflection;
 using AutoFixture;
 using FluentAssertions;
-using Nemesis.TextParsers.Runtime;
+using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture]
-    class ExploratoryTests
+    public sealed class ExploratoryTests
     {
-        private static IEnumerable<(string, Type)> GetTestTypes()
-        {
-            var props = _existingPropertyTypes.Union(_additionalTypes).ToList();
-
-            var enums = props.Where(t => t.IsEnum).OrderBy(t => t.Name).ToList();
-            var structs = props.Where(t => t.IsValueType && !t.IsEnum).OrderBy(t => t.Name).ToList();
-            var arrays = props.Where(t => t.IsArray).OrderBy(t => t.Name).ToList();
-            var classes = props.Where(t => !t.IsValueType && !t.IsArray).OrderBy(t => t.Name).ToList();
-
-            var simpleTypes = props.Where(t => t.IsValueType || t == typeof(string)).OrderBy(t => t.Name).ToList();
-
-            var aggressionBased = simpleTypes
-                .SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) })
-                .ToList();
-
-            simpleTypes = simpleTypes
-                .Union(aggressionBased)
-                .ToList();
-
-            var customsArrays = simpleTypes.Select(t => t.MakeArrayType()).ToList();
-
-            var collections = simpleTypes.Select(t => typeof(List<>).MakeGenericType(t)).ToList();
-
-            var dictionaries = new[] { typeof(float), typeof(int), typeof(string) }
-                .SelectMany(keyType => simpleTypes.Select(val => (Key: keyType, Value: val)))
-                .Select(kvp => typeof(Dictionary<,>).MakeGenericType(kvp.Key, kvp.Value))
-                .ToList();
-            
-
-            return DistinctBy(
-                    enums.Union(structs).Union(arrays).Union(classes).Union(aggressionBased).Union(customsArrays).Union(collections).Union(dictionaries)
-                        .Select(type => (Name: type.GetFriendlyName(), type)).OrderBy(pair => pair.Name),
-                    pair => pair.Name)
-                //.Select(p=>new TestCaseData(p.Type).SetName(p.Name))
-                ;
-        }
-
-        private static IEnumerable<TElement> DistinctBy<TElement, TKey>(IEnumerable<TElement> source, Func<TElement, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-
-            var set = new HashSet<TKey>(comparer ?? EqualityComparer<TKey>.Default);
-
-            foreach (var item in source)
-            {
-                var key = keySelector(item);
-
-                if (set.Add(key))
-                    yield return item;
-            }
-        }
-
         private readonly Fixture _fixture = new Fixture();
         private readonly Random _rand = new Random();
         private readonly MethodInfo _createMethodGeneric = Method.OfExpression<Func<Fixture, int>>(f => f.Create<int>()).GetGenericMethodDefinition();
+
+        private static readonly IDictionary<ExploratoryTestCategory, IReadOnlyList<Type>> _allTestCases = ExploratoryTestsData.GetAllTestTypes();
 
         [OneTimeSetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeEveryTest()
         {
+            static void RegisterAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
+            {
+                var getAggBasMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAllAggressionBased<int>(fixture));
+                getAggBasMethod = getAggBasMethod.GetGenericMethodDefinition();
+
+                foreach (var elementType in simpleTypes)
+                {
+                    var concreteMethod = getAggBasMethod.MakeGenericMethod(elementType);
+                    concreteMethod.Invoke(null, new object[] { fixture });
+                }
+            }
+
             _fixture.Register<string>(() => $"XXX{_rand.Next():D10}");
             _fixture.Register<double>(() => Math.Round(_rand.NextDouble() * 1000, 2));
             _fixture.Register<float>(() => (float)Math.Round(_rand.NextDouble() * 1000, 2));
@@ -82,48 +43,86 @@ namespace Nemesis.TextParsers.Tests
 
 
 
-            var props = _existingPropertyTypes.Union(_additionalTypes).ToList();
-            var simpleTypes = props.Where(t => t.IsValueType || t == typeof(string)).OrderBy(t => t.Name).ToList();
+            var simpleTypes = _allTestCases[ExploratoryTestCategory.Structs]
+                .Concat(_allTestCases[ExploratoryTestCategory.Enums])
+                .Concat(new[] { typeof(string) })
+                .OrderBy(t => t.Name).ToList();
+
             RegisterAggressionBased(_fixture, simpleTypes);
         }
-
-        private static void RegisterAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
+        
+        private static void RegisterAllAggressionBased<TElement>(Fixture fixture)
         {
-            var getAggBas3Method = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased3<int>(fixture));
-            getAggBas3Method = getAggBas3Method.GetGenericMethodDefinition();
+            AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
 
-            foreach (var elementType in simpleTypes)
-            {
-                var concreteMethod = getAggBas3Method.MakeGenericMethod(elementType);
-                concreteMethod.Invoke(null, new object[] { fixture });
-            }
-        }
-
-        private static void RegisterAggressionBased3<TElement>(Fixture fixture)
-        {
-            AggressionBased3<TElement> Creator()
+            AggressionBased3<TElement> Creator3()
             {
                 TElement pass = fixture.Create<TElement>(),
                     norm = fixture.Create<TElement>(),
                     aggr = fixture.Create<TElement>();
 
+                int i = 0;
                 while (StructuralEquality.Equals(pass, norm) && StructuralEquality.Equals(pass, aggr))
                 {
                     norm = fixture.Create<TElement>();
                     aggr = fixture.Create<TElement>();
+
+                    if (i++ > 100)
+                        throw new InvalidOperationException($"Cannot create instance for {typeof(TElement).GetFriendlyName()}");
                 }
 
                 return new AggressionBased3<TElement>(pass, norm, aggr);
             }
 
-            // ReSharper disable once RedundantTypeArgumentsOfMethod
-            fixture.Register<AggressionBased3<TElement>>(Creator);
+            fixture.Register(Creator1);
+
+            fixture.Register(Creator3);
+            
+            fixture.Register<IAggressionBased<TElement>>(Creator3);
         }
 
-        [TestCaseSource(nameof(GetTestTypes))]
-        public void ShouldParseAndFormat((string _, Type testType) data)
+        private static IEnumerable<Type> GetTypesForCategory(ExploratoryTestCategory category) =>
+            _allTestCases.TryGetValue(category, out var list)
+                ? list/*.Select(t => (t.GetFriendlyName(), t))*/
+                : Enumerable.Empty<Type>();
+
+
+        private static IEnumerable<Type> GetEnums() => GetTypesForCategory(ExploratoryTestCategory.Enums);
+        private static IEnumerable<Type> GetStructs() => GetTypesForCategory(ExploratoryTestCategory.Structs);
+        private static IEnumerable<Type> GetArrays() => GetTypesForCategory(ExploratoryTestCategory.Arrays);
+        private static IEnumerable<Type> GetDictionaries() => GetTypesForCategory(ExploratoryTestCategory.Dictionaries);
+        private static IEnumerable<Type> GetCollections() => GetTypesForCategory(ExploratoryTestCategory.Collections);
+        private static IEnumerable<Type> GetAggressionBased() => GetTypesForCategory(ExploratoryTestCategory.AggressionBased);
+        private static IEnumerable<Type> GetClasses() => GetTypesForCategory(ExploratoryTestCategory.Classes);
+        private static IEnumerable<Type> GetRemaining() => GetTypesForCategory(ExploratoryTestCategory.Remaining);
+
+        [TestCaseSource(nameof(GetEnums))]
+        public void Enums(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetStructs))]
+        public void Structs(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetArrays))]
+        public void Arrays(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetDictionaries))]
+        public void Dictionaries(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetCollections))]
+        public void Collections(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetAggressionBased))]
+        public void AggressionBased(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetClasses))]
+        public void Classes(Type data) => ShouldParseAndFormat(data);
+
+        [TestCaseSource(nameof(GetRemaining))]
+        public void Remaining(Type data) => ShouldParseAndFormat(data);
+
+
+        private void ShouldParseAndFormat(Type testType)
         {
-            var testType = data.testType;
             bool isGeneric = testType.IsGenericType && !testType.IsGenericTypeDefinition;
 
             ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) &&
@@ -131,7 +130,7 @@ namespace Nemesis.TextParsers.Tests
                                        ? TextTransformer.Default.GetTransformer(typeof(IAggressionBased<>).MakeGenericType(elementType1))
                                        : TextTransformer.Default.GetTransformer(testType);
             Assert.That(transformer, Is.Not.Null);
-            Console.WriteLine(data.testType);
+            Console.WriteLine(testType);
             Console.WriteLine(transformer);
 
 
@@ -182,41 +181,141 @@ namespace Nemesis.TextParsers.Tests
                 return parsed;
             }
         }
+    }
 
+    public enum ExploratoryTestCategory : byte
+    {
+        Enums,
+        Structs,
 
+        Arrays,
+        Dictionaries,
+        Collections,
 
-        private static readonly IEnumerable<Type> _existingPropertyTypes = new[]
+        AggressionBased,
+
+        Classes,
+        Remaining
+    }
+
+    static class ExploratoryTestsData
+    {
+        public static IDictionary<ExploratoryTestCategory, IReadOnlyList<Type>> GetAllTestTypes()
         {
-            //enum
-            
-            //array
-            typeof(bool[]), typeof(double[]), typeof(int[]), typeof(long[]), typeof(string[]), 
-            //struct
-            typeof(bool), typeof(double), typeof(int), typeof(long), typeof(double?), typeof(bool?), typeof(int?), 
-            //AggressionBased
-            typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>), typeof(IAggressionBased<float?>),
-            //class
-            typeof(Dictionary<string,string>), typeof(Dictionary<string,int>), typeof(Dictionary<string,double>), typeof(List<string>), typeof(string), typeof(Uri),
+            var allTypes = GetExistingPropertyTypes()
+                .Concat(GetAdditionalTypes())
+                .Distinct().ToList();
+
+
+            List<Type> Carve(Predicate<Type> condition)
+            {
+                var result = new List<Type>(8);
+
+                for (int i = allTypes.Count - 1; i >= 0; i--)
+                {
+                    var elem = allTypes[i];
+                    if (condition(elem))
+                    {
+                        result.Add(elem);
+                        allTypes.RemoveAt(i);
+                    }
+                }
+                result.Sort((t1, t2) => string.Compare(t1.Name, t2.Name, StringComparison.Ordinal));
+                return result;
+            }
+
+            var enums = Carve(t => t.IsEnum);
+            var structs = Carve(t => t.IsValueType && !t.IsEnum);
+            var arrays = Carve(t => t.IsArray);
+
+            var dictionaries = Carve(t => t.DerivesOrImplementsGeneric(typeof(IDictionary<,>)));
+            var collections = Carve(t => t.DerivesOrImplementsGeneric(typeof(ICollection<>)));
+            var aggressionBased = Carve(t => t.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)));
+
+            var classes = Carve(t => !t.IsValueType && !t.IsArray);
+            var remaining = allTypes;
+
+            var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(structs).OrderBy(t => t.Name).ToList();
+
+            aggressionBased = simpleTypes
+                .SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) })
+                .Concat(aggressionBased).OrderBy(t => t.Name)
+                .ToList();
+
+            simpleTypes = simpleTypes.Concat(aggressionBased).ToList();
+
+            arrays = simpleTypes.Select(t => t.MakeArrayType())
+                .Concat(arrays)
+                .Distinct().OrderBy(t => t.Name).ToList();
+
+            collections = simpleTypes.Select(t => typeof(List<>).MakeGenericType(t))
+                .Concat(collections)
+                .Distinct().OrderBy(t => t.Name).ToList();
+
+            dictionaries = new[] { typeof(float), typeof(int), typeof(string) }
+                .SelectMany(keyType => simpleTypes.Select(val => (Key: keyType, Value: val)))
+                .Select(kvp => typeof(Dictionary<,>).MakeGenericType(kvp.Key, kvp.Value))
+                .Concat(dictionaries)
+                .Distinct().OrderBy(t => t.Name).ToList();
+
+
+            var dict = new Dictionary<ExploratoryTestCategory, IReadOnlyList<Type>>
+            {
+                [ExploratoryTestCategory.Enums] = enums,
+                [ExploratoryTestCategory.Structs] = structs,
+                [ExploratoryTestCategory.Arrays] = arrays,
+                [ExploratoryTestCategory.Dictionaries] = dictionaries,
+                [ExploratoryTestCategory.Collections] = collections,
+                [ExploratoryTestCategory.AggressionBased] = aggressionBased,
+                [ExploratoryTestCategory.Classes] = classes,
+                [ExploratoryTestCategory.Remaining] = remaining
+            };
+
+            return dict;
+        }
+
+        private static IEnumerable<Type> GetExistingPropertyTypes() => new[]
+        {
+            //add own types i.e. from configuration model 
+            typeof(string)
         };
 
-        private static readonly IEnumerable<Type> _additionalTypes = new[]
+        private static IEnumerable<Type> GetAdditionalTypes() => new[]
         {
+            //enum
             typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum), typeof(Int64Enum), typeof(UInt64Enum),
-            typeof(Fruits[]),
-
-            typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+            
 
 
+            //array + collections + dictionaries
+            typeof(bool[]), typeof(double[]), typeof(int[]), typeof(long[]), typeof(string[]), typeof(Fruits[]),
+            typeof(List<string>),
+            typeof(Dictionary<string,string>), typeof(Dictionary<string,int>), typeof(Dictionary<string,double>),
             typeof(Dictionary<int, float>), typeof(Dictionary<double, string>), typeof(Dictionary<Fruits, double>),
             typeof(SortedDictionary<Fruits, float>), typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
 
+
+
+            //struct
+            typeof(bool), typeof(double), typeof(int), typeof(long), typeof(double?), typeof(bool?), typeof(int?),
+            typeof(DateTime), typeof(TimeSpan), typeof(TimeSpan?),
+            typeof(char), typeof(char?), typeof(bool?),
+            typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+            
+
+
+            //AggressionBased
+            typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>), 
+            typeof(AggressionBased3<float?>),
             typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
             typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
             typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
             typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
             typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
-            typeof(DateTime), typeof(TimeSpan), typeof(TimeSpan?),
-            typeof(char), typeof(char?), typeof(bool?),
+
+
+            //class
+            typeof(string), typeof(Uri),
         };
     }
 }
