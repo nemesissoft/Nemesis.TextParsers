@@ -16,12 +16,10 @@ namespace Nemesis.TextParsers.Tests
     {
         private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
         private readonly SpanCollectionSerializer _sut = SpanCollectionSerializer.DefaultInstance;
-
-        private static string NormalizeNullMarkers(string text)
-        {
-            const string NULL = "维基百科";
-            return text.Replace(@"\∅", NULL).Replace(@"∅", NULL).Replace(NULL, @"\∅");
-        }
+        
+        const string NULL_PLACEHOLDER = "维基百科";
+        private static string NormalizeNullMarkers(string text) => 
+            text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
 
         #region List
         internal static IEnumerable<(string text, string[] collection)> ValidListData() => new[]
@@ -598,6 +596,31 @@ namespace Nemesis.TextParsers.Tests
             var deser = AggressionBasedFactoryChecked<List<float?>>.FromText(text);
             Assert.That(deser, Is.EqualTo(input));
         }
+
+
+        [Test]
+        public void Complex_List_Roundtrip_Test()
+        {
+            var array = new int?[] {30, null, null, 40};
+            // (@"B|∅|A|∅", new []{"B",null,"A",null}),
+            var text = _sut.FormatCollection(array);
+
+            Assert.That(text, Is.EqualTo("30|∅|∅|40"));
+
+            var parsed = _sut.ParseArray<int?>(text);
+            Assert.That(parsed, Is.EquivalentTo(array));
+
+            var parsed2 = _sut.ParseArray<int?>(@"300|||400");
+            Assert.That(parsed2, Is.EquivalentTo(new int?[] { 300, null, null, 400 }));
+
+
+            var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int?[]>>();
+            var parsed3 = trans.ParseFromText(@"3000|\∅|\∅|4000");
+            Assert.That(
+                ((IAggressionValuesProvider<int?[]>)parsed3).Values.SingleOrDefault(),
+                Is.EquivalentTo(new int?[] { 3000, null, null, 4000 }));
+        }
+
         #endregion
 
         #region Dict
