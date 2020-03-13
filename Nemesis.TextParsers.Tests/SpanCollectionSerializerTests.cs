@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers.Tests
         {
             (null, null),
             ("", new string[0]),
-            //("", new []{""}), //not supported
+            //("", new []{""}), //not supported. Rare case 
             (@"AAA|BBB|CCC", new []{"AAA","BBB","CCC"}),
             (@"|BBB||CCC", new []{"","BBB","","CCC"}),
             (@"|BBB|\|CCC", new []{"","BBB","|CCC"}),

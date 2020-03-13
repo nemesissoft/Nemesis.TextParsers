@@ -13,6 +13,8 @@ namespace Nemesis.TextParsers.Tests
     {
         private static IReadOnlyList<T> ParseCollection<T>(string text)
         {
+            if (text == null) return null;
+
             var tokens = text.AsSpan().Tokenize('|', '\\', false);
             var parsed = tokens.Parse<T>('\\', '∅', '|');
 
@@ -133,21 +135,27 @@ namespace Nemesis.TextParsers.Tests
                 Assert.Fail($@"Unexpected external exception: {e.Message}");
             }
         }
-        
+
         [TestCaseSource(typeof(SpanCollectionSerializerTests), nameof(SpanCollectionSerializerTests.ListCompoundData))]
         public void List_Parse_CompoundTests((Type elementType, IEnumerable expectedList, string input) data)
         {
-            //var tt = SpanCollectionSerializer.DefaultInstance.FormatCollection(data.expectedList.Cast<SortedDictionary<int, float>>());
+            static void CheckEquivalency(IEnumerable left, IEnumerable right)
+            {
+                if (left is null)
+                    Assert.That(right, Is.Null);
+                else
+                    Assert.That(left, Is.EquivalentTo(right));
+            }
 
             const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
 
-            var parseMethod = (typeof(ParsedSequenceTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi => 
+            var parseMethod = (typeof(ParsedSequenceTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
                     mi.Name == nameof(ParseCollection) && mi.IsGenericMethod)
                     ?? throw new MissingMethodException("Method ParseCollection does not exist"))
                 .MakeGenericMethod(data.elementType);
 
             var deser = (IEnumerable)parseMethod.Invoke(null, new object[] { data.input });
-            Assert.That(deser, Is.EquivalentTo(data.expectedList));
+            CheckEquivalency(deser, data.expectedList);
 
             if (data.expectedList == null)
                 Console.WriteLine(@"NULL list");

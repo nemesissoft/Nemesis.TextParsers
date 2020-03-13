@@ -2,26 +2,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-
 
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture]
     class CollectionTransformerTests
     {
-        internal static IEnumerable<(Type, string, int, Type)> Correct_Data() => new[]
+        internal static IEnumerable<(Type contractType, string input, int cardinality, Type expectedType)> Correct_Data() => new[]
         {
+            //nulls
+            (typeof(int[]), null, 0, null),
+            (typeof(List<int>), null, 0, null),
+            (typeof(IList<int>), null, 0, null),
+            (typeof(ICollection<int>), null, 0, null),
+            (typeof(IEnumerable<int>), null, 0, null),
+            (typeof(ReadOnlyCollection<int>), null, 0, null),
+            (typeof(IReadOnlyCollection<int>), null, 0, null),
+            (typeof(IReadOnlyList<int>), null, 0, null),
+            (typeof(ISet<int>), null, 0, null),
+            (typeof(HashSet<int>), null, 0, null),
+            (typeof(SortedSet<int>), null, 0, null),
+            (typeof(LinkedList<int>), null, 0, null),
+            (typeof(Stack<int>), null, 0, null),
+            (typeof(Queue<int>), null, 0, null),
+            (typeof(Dictionary<int, string>), null, 0, null),
+            (typeof(IDictionary<int, string>), null, 0, null),
+
+
             //array
             (typeof(float[][]), @"1\|2\|3 | 4\|5\|6\|7", 2, typeof(float[][])),
             (typeof(int[]), @"10|2|3", 3, typeof(int[])),
             (typeof(int[]), @"", 0, typeof(int[])),
-            (typeof(int[]), null, 0, typeof(int[])),
-
+            
             //collections
             (typeof(List<int>), @"10|2|3", 3, typeof(List<int>)),
             (typeof(IList<int>), @"15|2|3|5", 4, typeof(List<int>)),
@@ -143,64 +159,50 @@ namespace Nemesis.TextParsers.Tests
         private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
 
         [TestCaseSource(nameof(Correct_Data))]
-        public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type concreteType) data)
+        public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type expectedType) data)
         {
-            var getTransformer = (typeof(ITransformerStore).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                    mi.Name == nameof(ITransformerStore.GetTransformer) && mi.IsGenericMethod)
-                                ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
-                    .MakeGenericMethod(data.contractType);
+            var tester = (GetType()
+                 .GetMethod(nameof(CollectionType_CompoundTestHelper), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+                 ?? throw new MissingMethodException(GetType().FullName, nameof(CollectionType_CompoundTestHelper))
+            ).GetGenericMethodDefinition();
+            
+            tester = tester.MakeGenericMethod(data.contractType);
 
-            var transformer = getTransformer.Invoke(TextTransformer.Default, null);
-            Console.WriteLine(transformer);
+            tester.Invoke(null, new object[] { data.input, data.cardinality, data.expectedType });
+        }
 
-            var parseMethod = typeof(ITransformer<>).MakeGenericType(data.contractType)
-                                  .GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                    mi.Name == nameof(ITransformer<object>.ParseFromText))
-                    ?? throw new MissingMethodException("Method ParseText does not exist");
-
-            var formatMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                   mi.Name == nameof(ITransformer<object>.Format))
-                               ?? throw new MissingMethodException("Method Format does not exist");
+        private static void CollectionType_CompoundTestHelper<T>(string input, int expectedCardinality, Type expectedType)
+        {
+            var sut = TextTransformer.Default.GetTransformer<T>();
+            Console.WriteLine(sut);
 
 
-            var parsed = parseMethod.Invoke(transformer, new object[] { data.input });
-            Assert.That(parsed, Is.TypeOf(data.concreteType));
+            var parsed = sut.ParseFromText(input);
+
+            CheckTypeAndCardinality(parsed, expectedCardinality, expectedType);
 
 
-            var cardinalityProp = parsed.GetType().GetProperties(ALL_FLAGS)
-                .FirstOrDefault(p => p.Name == "Size" || p.Name == "Count" || p.Name == "Length");
-            Assert.That(cardinalityProp, Is.Not.Null, "cardinality property not found");
-            var cardinality = cardinalityProp.GetValue(parsed);
-            Assert.That(cardinality, Is.EqualTo(data.cardinality));
-
-
-            string text = (string)formatMethod.Invoke(transformer, new[] { parsed });
+            string text = sut.Format(parsed);
             Console.WriteLine(text);
 
 
-            var parsed2 = parseMethod.Invoke(transformer, new object[] { text });
+            var parsed2 = sut.ParseFromText(text);
             if (parsed2 is IEnumerable enumerable2)
                 Assert.That(parsed, Is.EquivalentTo(enumerable2));
             else
                 Assert.That(parsed, Is.EqualTo(parsed2));
         }
 
+
         [TestCaseSource(nameof(Correct_Data))]
-        public void CollectionType_CompoundTest_NonGeneric((Type contractType, string input, int cardinality, Type concreteType) data)
+        public void CollectionType_CompoundTest_NonGeneric((Type contractType, string input, int cardinality, Type expectedType) data)
         {
             var transformer = TextTransformer.Default.GetTransformer(data.contractType);
             Console.WriteLine(transformer);
 
             var parsed = transformer.ParseObject(data.input);
-            Assert.That(parsed, Is.TypeOf(data.concreteType));
 
-
-            var cardinalityProp = parsed.GetType().GetProperties(ALL_FLAGS)
-                .FirstOrDefault(p => p.Name == "Size" || p.Name == "Count" || p.Name == "Length");
-            Assert.That(cardinalityProp, Is.Not.Null, "cardinality property not found");
-            var cardinality = cardinalityProp.GetValue(parsed);
-            Assert.That(cardinality, Is.EqualTo(data.cardinality));
-
+            CheckTypeAndCardinality(parsed, data.cardinality, data.expectedType);
 
             string text = transformer.FormatObject(parsed);
             Console.WriteLine(text);
@@ -211,6 +213,22 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(parsed, Is.EquivalentTo(enumerable2));
             else
                 Assert.That(parsed, Is.EqualTo(parsed2));
+        }
+
+        private static void CheckTypeAndCardinality(object parsed, int expectedCardinality, Type expectedType)
+        {
+            if (parsed is null && !(expectedType is null))
+                Assert.Fail("Not supported test case");
+            else if (!(parsed is null) && !(expectedType is null))
+            {
+                Assert.That(parsed, Is.TypeOf(expectedType));
+
+                var cardinalityProp = parsed.GetType().GetProperties(ALL_FLAGS)
+                    .SingleOrDefault(p => p.Name == "Size" || p.Name == "Count" || p.Name == "Length");
+                Assert.That(cardinalityProp, Is.Not.Null, "cardinality property not found");
+                var cardinality = cardinalityProp.GetValue(parsed);
+                Assert.That(cardinality, Is.EqualTo(expectedCardinality));
+            }
         }
     }
 }
