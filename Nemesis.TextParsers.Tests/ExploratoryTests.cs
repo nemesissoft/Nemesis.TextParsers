@@ -18,7 +18,8 @@ namespace Nemesis.TextParsers.Tests
         private readonly Random _rand = new Random();
         private readonly MethodInfo _createMethodGeneric = Method.OfExpression<Func<Fixture, int>>(f => f.Create<int>()).GetGenericMethodDefinition();
 
-        private static readonly IDictionary<ExploratoryTestCategory, IReadOnlyList<Type>> _allTestCases = ExploratoryTestsData.GetAllTestTypes();
+        private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> _allTestCases =
+            ExploratoryTestsData.GetAllTestTypes();
 
         [OneTimeSetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
@@ -36,21 +37,30 @@ namespace Nemesis.TextParsers.Tests
                 }
             }
 
-            _fixture.Register<string>(() => $"XXX{_rand.Next():D10}");
+            static string GetRandomString(Random rand, int length = 10)
+            {
+                var chars = new char[length];
+                for (var i = 0; i < chars.Length; i++)
+                    chars[i] = (char)rand.Next('A', 'Z' + 1);
+                return new string(chars);
+            }
+
+            _fixture.Register<string>(() => GetRandomString(_rand));
             _fixture.Register<double>(() => Math.Round(_rand.NextDouble() * 1000, 2));
             _fixture.Register<float>(() => (float)Math.Round(_rand.NextDouble() * 1000, 2));
             _fixture.Register<Enum1>(() => (Enum1)_rand.Next(0, 100));
 
 
 
-            var simpleTypes = _allTestCases[ExploratoryTestCategory.Structs]
-                .Concat(_allTestCases[ExploratoryTestCategory.Enums])
+            var simpleTypes = _allTestCases
+                .Where(d => d.category == ExploratoryTestCategory.Structs || d.category == ExploratoryTestCategory.Enums)
+                .Select(d => d.type)
                 .Concat(new[] { typeof(string) })
                 .OrderBy(t => t.Name).ToList();
 
             RegisterAggressionBased(_fixture, simpleTypes);
         }
-        
+
         private static void RegisterAllAggressionBased<TElement>(Fixture fixture)
         {
             AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
@@ -77,48 +87,56 @@ namespace Nemesis.TextParsers.Tests
             fixture.Register(Creator1);
 
             fixture.Register(Creator3);
-            
+
             fixture.Register<IAggressionBased<TElement>>(Creator3);
         }
 
-        private static IEnumerable<Type> GetTypesForCategory(ExploratoryTestCategory category) =>
-            _allTestCases.TryGetValue(category, out var list)
-                ? list/*.Select(t => (t.GetFriendlyName(), t))*/
-                : Enumerable.Empty<Type>();
+        private static IEnumerable<string> GetTypeNamesForCategory(ExploratoryTestCategory category) =>
+            _allTestCases.Where(d => d.category == category).Select(d => d.friendlyName);
 
 
-        private static IEnumerable<Type> GetEnums() => GetTypesForCategory(ExploratoryTestCategory.Enums);
-        private static IEnumerable<Type> GetStructs() => GetTypesForCategory(ExploratoryTestCategory.Structs);
-        private static IEnumerable<Type> GetArrays() => GetTypesForCategory(ExploratoryTestCategory.Arrays);
-        private static IEnumerable<Type> GetDictionaries() => GetTypesForCategory(ExploratoryTestCategory.Dictionaries);
-        private static IEnumerable<Type> GetCollections() => GetTypesForCategory(ExploratoryTestCategory.Collections);
-        private static IEnumerable<Type> GetAggressionBased() => GetTypesForCategory(ExploratoryTestCategory.AggressionBased);
-        private static IEnumerable<Type> GetClasses() => GetTypesForCategory(ExploratoryTestCategory.Classes);
-        private static IEnumerable<Type> GetRemaining() => GetTypesForCategory(ExploratoryTestCategory.Remaining);
+        private static IEnumerable<string> GetEnums() => GetTypeNamesForCategory(ExploratoryTestCategory.Enums);
+        private static IEnumerable<string> GetStructs() => GetTypeNamesForCategory(ExploratoryTestCategory.Structs);
+        private static IEnumerable<string> GetArrays() => GetTypeNamesForCategory(ExploratoryTestCategory.Arrays);
+        private static IEnumerable<string> GetDictionaries() => GetTypeNamesForCategory(ExploratoryTestCategory.Dictionaries);
+        private static IEnumerable<string> GetCollections() => GetTypeNamesForCategory(ExploratoryTestCategory.Collections);
+        private static IEnumerable<string> GetAggressionBased() => GetTypeNamesForCategory(ExploratoryTestCategory.AggressionBased);
+        private static IEnumerable<string> GetClasses() => GetTypeNamesForCategory(ExploratoryTestCategory.Classes);
 
         [TestCaseSource(nameof(GetEnums))]
-        public void Enums(Type data) => ShouldParseAndFormat(data);
+        public void Enums(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetStructs))]
-        public void Structs(Type data) => ShouldParseAndFormat(data);
+        public void Structs(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetArrays))]
-        public void Arrays(Type data) => ShouldParseAndFormat(data);
+        public void Arrays(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetDictionaries))]
-        public void Dictionaries(Type data) => ShouldParseAndFormat(data);
+        public void Dictionaries(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetCollections))]
-        public void Collections(Type data) => ShouldParseAndFormat(data);
+        public void Collections(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetAggressionBased))]
-        public void AggressionBased(Type data) => ShouldParseAndFormat(data);
+        public void AggressionBased(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetClasses))]
-        public void Classes(Type data) => ShouldParseAndFormat(data);
+        public void Classes(string typeName) => ShouldParseAndFormat(typeName);
 
-        [TestCaseSource(nameof(GetRemaining))]
-        public void Remaining(Type data) => ShouldParseAndFormat(data);
+        [Test]
+        public void Remaining() =>
+            CollectionAssert.IsEmpty(GetTypeNamesForCategory(ExploratoryTestCategory.Remaining));
+
+
+        private void ShouldParseAndFormat(string typeName)
+        {
+            var type = _allTestCases.Where(d => d.friendlyName == typeName).Select(d => d.type).SingleOrDefault();
+
+            Assert.That(type, Is.Not.Null, "Type not found");
+
+            ShouldParseAndFormat(type);
+        }
 
 
         private void ShouldParseAndFormat(Type testType)
@@ -142,7 +160,16 @@ namespace Nemesis.TextParsers.Tests
 
             var createMethod = _createMethodGeneric.MakeGenericMethod(testType);
 
+            //nulls
+            var parsedNull1 = ParseAndAssert(null);
+            var nullText = transformer.FormatObject(parsedNull1);
 
+            Console.WriteLine($"NULL:{nullText ?? "<NULL>"}");
+
+            var parsedNull2 = ParseAndAssert(nullText);
+            IsMutuallyEquivalent(parsedNull1, parsedNull2);
+
+            //instances
             for (int i = 1; i <= 30; i++)
             {
                 var instance = createMethod.Invoke(null, new object[] { _fixture });
@@ -176,8 +203,9 @@ namespace Nemesis.TextParsers.Tests
                     Assert.That(parsed, Is.TypeOf(underlyingType));
                 else if (parsed != null && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
                     Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.GetFriendlyName()}");
-                else
+                else if (parsed != null)
                     Assert.That(parsed, Is.TypeOf(testType));
+
                 return parsed;
             }
         }
@@ -200,7 +228,7 @@ namespace Nemesis.TextParsers.Tests
 
     static class ExploratoryTestsData
     {
-        public static IDictionary<ExploratoryTestCategory, IReadOnlyList<Type>> GetAllTestTypes()
+        public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> GetAllTestTypes()
         {
             var allTypes = GetExistingPropertyTypes()
                 .Concat(GetAdditionalTypes())
@@ -259,19 +287,21 @@ namespace Nemesis.TextParsers.Tests
                 .Distinct().OrderBy(t => t.Name).ToList();
 
 
-            var dict = new Dictionary<ExploratoryTestCategory, IReadOnlyList<Type>>
-            {
-                [ExploratoryTestCategory.Enums] = enums,
-                [ExploratoryTestCategory.Structs] = structs,
-                [ExploratoryTestCategory.Arrays] = arrays,
-                [ExploratoryTestCategory.Dictionaries] = dictionaries,
-                [ExploratoryTestCategory.Collections] = collections,
-                [ExploratoryTestCategory.AggressionBased] = aggressionBased,
-                [ExploratoryTestCategory.Classes] = classes,
-                [ExploratoryTestCategory.Remaining] = remaining
-            };
+            var @return = new List<(ExploratoryTestCategory category, Type type, string friendlyName)>();
 
-            return dict;
+            void ProjectAndAdd(ExploratoryTestCategory category, IEnumerable<Type> types) =>
+                @return.AddRange(types.Select(t => (category, t, t.GetFriendlyName())).Distinct());
+
+            ProjectAndAdd(ExploratoryTestCategory.Enums, enums);
+            ProjectAndAdd(ExploratoryTestCategory.Structs, structs);
+            ProjectAndAdd(ExploratoryTestCategory.Arrays, arrays);
+            ProjectAndAdd(ExploratoryTestCategory.Dictionaries, dictionaries);
+            ProjectAndAdd(ExploratoryTestCategory.Collections, collections);
+            ProjectAndAdd(ExploratoryTestCategory.AggressionBased, aggressionBased);
+            ProjectAndAdd(ExploratoryTestCategory.Classes, classes);
+            ProjectAndAdd(ExploratoryTestCategory.Remaining, remaining);
+
+            return @return;
         }
 
         private static IEnumerable<Type> GetExistingPropertyTypes() => new[]
@@ -305,7 +335,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             //AggressionBased
-            typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>), 
+            typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
             typeof(AggressionBased3<float?>),
             typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
             typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),

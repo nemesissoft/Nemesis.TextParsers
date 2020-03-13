@@ -16,9 +16,9 @@ namespace Nemesis.TextParsers.Tests
     {
         private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
         private readonly SpanCollectionSerializer _sut = SpanCollectionSerializer.DefaultInstance;
-        
+
         const string NULL_PLACEHOLDER = "维基百科";
-        private static string NormalizeNullMarkers(string text) => 
+        private static string NormalizeNullMarkers(string text) =>
             text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
 
         #region List
@@ -26,6 +26,7 @@ namespace Nemesis.TextParsers.Tests
         {
             (null, null),
             ("", new string[0]),
+            //("", new []{""}), //not supported
             (@"AAA|BBB|CCC", new []{"AAA","BBB","CCC"}),
             (@"|BBB||CCC", new []{"","BBB","","CCC"}),
             (@"|BBB|\|CCC", new []{"","BBB","|CCC"}),
@@ -229,7 +230,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(float), @" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
 #endif
         };
-
+        private IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) => _sut.ParseCollection<TElement>(text);
         [TestCaseSource(nameof(Bad_ListParseData))]
         public void List_Parse_NegativeCompoundTests((Type elementType, string input, Type expectedException) data)
         {
@@ -247,7 +248,7 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception e)
             {
-                if (e is TargetInvocationException tie && tie.InnerException is Exception inner)
+                if (e is TargetInvocationException tie && tie.InnerException is { } inner)
                     e = inner;
 
                 if (data.expectedException == e.GetType())
@@ -281,8 +282,11 @@ namespace Nemesis.TextParsers.Tests
 
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         [SuppressMessage("ReSharper", "RedundantCast")]
-        internal static IEnumerable<(Type, IEnumerable, string)> ListCompoundData() => new (Type, IEnumerable, string)[]
+        internal static IEnumerable<(Type elementType, IEnumerable expectedOutput, string input)> ListCompoundData() => new (Type, IEnumerable, string)[]
         {
+           // (typeof(byte), null, null),
+           // (typeof(string), null, null),
+
             (typeof(byte), GetTestNumbers<byte>(byte.MinValue, byte.MaxValue-1, 1, (n1, n2) => (byte)(n1+n2)),
                 @"∅|  1 | 2 |3 | 4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89|90|91|92|93|94|95|96|97|98|99|100|101|102|103|104|105|106|107|108|109|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|128|129|130|131|132|133|134|135|136|137|138|139|140|141|142|143|144|145|146|147|148|149|150|151|152|153|154|155|156|157|158|159|160|161|162|163|164|165|166|167|168|169|170|171|172|173|174|175|176|177|178|179|180|181|182|183|184|185|186|187|188|189|190|191|192|193|194|195|196|197|198|199|200|201|202|203|204|205|206|207|208|209|210|211|212|213|214|215|216|217|218|219|220|221|222|223|224|225|226|227|228|229|230|231|232|233|234|235|236|237|238|239|240|241|242|243|244|245|246|247|248|249|250|251|252|253|254" ),
 
@@ -528,52 +532,54 @@ namespace Nemesis.TextParsers.Tests
         static TimeSpan Divide(TimeSpan dividend, long divisor) => TimeSpan.FromTicks((long)(dividend.Ticks / (double)divisor));
 
         [TestCaseSource(nameof(ListCompoundData))]
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public void List_CompoundTests((Type elementType, IEnumerable expectedOutput, string input) data)
         {
-            var castMethod = (typeof(Enumerable).GetMethod(nameof(Enumerable.Cast), ALL_FLAGS)
-                    ?? throw new MissingMethodException("Method Enumerable.Cast does not exist"))
-                .MakeGenericMethod(data.elementType);
+            var tester = (
+                GetType().GetMethod(nameof(List_CompoundTestsHelper), ALL_FLAGS) ??
+                throw new MissingMethodException(GetType().FullName, nameof(List_CompoundTestsHelper))
+            ).MakeGenericMethod(data.elementType);
 
-            var formatMethod = (typeof(SpanCollectionSerializerTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                    mi.Name == nameof(FormatCollection) && mi.IsGenericMethod)
-                    ?? throw new MissingMethodException("Method FormatCollection does not exist"))
-                .MakeGenericMethod(data.elementType);
-
-            var parseMethod = (typeof(SpanCollectionSerializerTests).GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                  mi.Name == nameof(ParseCollection))
-                  ?? throw new MissingMethodException("Method ParseList does not exist"))
-                .MakeGenericMethod(data.elementType);
-
-            var genericListExpected = castMethod.Invoke(null, new object[] { data.expectedOutput });
-            string textExpected = (string)formatMethod.Invoke(this, new[] { genericListExpected });
-            Console.WriteLine(textExpected);
-
-            var parsed = (IEnumerable)parseMethod.Invoke(this, new object[] { data.input });
-            Assert.That(parsed, Is.EquivalentTo(data.expectedOutput));
-
-            var genericList = castMethod.Invoke(null, new object[] { parsed });
-
-            string text = (string)formatMethod.Invoke(this, new[] { genericList });
-            Console.WriteLine(data.input);
-            Console.WriteLine(text);
-
-
-            var parsed2 = (IEnumerable)parseMethod.Invoke(this, new object[] { text });
-            Assert.That(parsed2, Is.EquivalentTo(data.expectedOutput));
-
-
-            var parsed3 = (IEnumerable)parseMethod.Invoke(this, new object[] { textExpected });
-            Assert.That(parsed3, Is.EquivalentTo(data.expectedOutput));
-
-
-            Assert.That(parsed, Is.EquivalentTo(parsed2));
-            Assert.That(parsed, Is.EquivalentTo(parsed3));
+            tester.Invoke(null, new object[] { data.expectedOutput, data.input });
         }
 
-        private IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) => _sut.ParseCollection<TElement>(text);
-        private string FormatCollection<TElement>(IEnumerable<TElement> coll) => _sut.FormatCollection(coll);
+        private static void List_CompoundTestsHelper<TElement>(IEnumerable expectedOutput, string input)
+        {
+            static void CheckEquivalency(IReadOnlyCollection<TElement> left, IReadOnlyCollection<TElement> right)
+            {
+                if(left is null)
+                    Assert.That(right, Is.Null);
+                else
+                    Assert.That(left, Is.EquivalentTo(right));
+            }
 
+            var sut = SpanCollectionSerializer.DefaultInstance;
+
+            var expectedList = expectedOutput?.Cast<TElement>().ToList();
+
+            string textExpected = sut.FormatCollection(expectedList);
+
+            var parsed1 = sut.ParseCollection<TElement>(input);
+            CheckEquivalency(parsed1, expectedList);
+
+
+            string text = sut.FormatCollection(parsed1);
+            Console.WriteLine($"EXP:{textExpected}");
+            Console.WriteLine($"INP:{input}");
+            Console.WriteLine($"TEX:{text}");
+
+
+            var parsed2 = sut.ParseCollection<TElement>(text);
+            CheckEquivalency(parsed2, expectedList);
+
+
+            var parsed3 = sut.ParseCollection<TElement>(textExpected);
+            CheckEquivalency(parsed3, expectedList);
+
+
+            CheckEquivalency(parsed1, parsed2);
+            CheckEquivalency(parsed1, parsed3);
+        }
+        
         [Test]
         public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long
         {
@@ -597,11 +603,31 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(deser, Is.EqualTo(input));
         }
 
+        internal static IEnumerable<(string name, IAggressionBased<string> instance, string expectedText)> AggBasedNulls() => new[]
+        {
+            ("NULL", (IAggressionBased<string>) null, null),
+            ("1", AggressionBasedFactory<string>.FromOneValue(null), "∅"),
+            ("3", AggressionBasedFactory<string>.FromPassiveNormalAggressiveChecked(null, null, null), "∅#∅#∅"),
+        };
+
+        [TestCaseSource(nameof(AggBasedNulls))]
+        public void AggressionBased_NullVsNullValue_Tests((string name, IAggressionBased<string> instance, string expectedText) data)
+        {
+            var sut = TextTransformer.Default.GetTransformer<IAggressionBased<string>>();
+
+            var text = sut.Format(data.instance);
+            Assert.That(text, Is.EqualTo(data.expectedText));
+
+
+            var parsed = sut.ParseFromText(text);
+            Assert.That(parsed, Is.EqualTo(data.instance));
+        }
+
 
         [Test]
         public void Complex_List_Roundtrip_Test()
         {
-            var array = new int?[] {30, null, null, 40};
+            var array = new int?[] { 30, null, null, 40 };
             // (@"B|∅|A|∅", new []{"B",null,"A",null}),
             var text = _sut.FormatCollection(array);
 
@@ -652,7 +678,7 @@ namespace Nemesis.TextParsers.Tests
             (@"key\;\=1=\=\;", new Dss{["key;=1"]="=;"} ),
             (@"\\\;\\\==\\\;\\\=;k\\\=ey2=\;\\\=A\\BC;key\;\=1=\=\;", new Dss{[@"\;\="]=@"\;\=", [@"k\=ey2"]=@";\=A\BC", ["key;=1"]="=;"}),
 
-            (@"Key=Text\;Text", new Dss{{ "Key", @"Text;Text" }})            
+            (@"Key=Text\;Text", new Dss{{ "Key", @"Text;Text" }})
         };
 
         [TestCaseSource(nameof(ValidDictData))]

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Design;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -55,13 +57,15 @@ namespace Nemesis.TextParsers.Tests
         public float Carrot { get; }
         public float[] OnionFactors { get; }
 
-        public CarrotAndOnionFactors(float carrot, [NotNull] float[] onionFactors)
+        public CarrotAndOnionFactors(float carrot, float[] onionFactors)
         {
             Carrot = carrot;
-            OnionFactors = onionFactors ?? throw new ArgumentNullException(nameof(onionFactors));
+            OnionFactors = onionFactors;
         }
 
-        public bool Equals(CarrotAndOnionFactors other) => Carrot.Equals(other.Carrot) && OnionFactors.SequenceEqual(other.OnionFactors);
+        public bool Equals(CarrotAndOnionFactors other) =>
+            Carrot.Equals(other.Carrot) &&
+            EnumerableEqualityComparer<float>.DefaultInstance.Equals(OnionFactors, other.OnionFactors);
 
         public override bool Equals(object obj) => !(obj is null) && obj is CarrotAndOnionFactors other && Equals(other);
 
@@ -71,8 +75,10 @@ namespace Nemesis.TextParsers.Tests
 
         public static bool operator !=(CarrotAndOnionFactors left, CarrotAndOnionFactors right) => !left.Equals(right);
 
+        private const string NULL = "∅";
+
         public override string ToString() => FormattableString.Invariant(
-            $"{Carrot:G9};{string.Join(",", OnionFactors.Select(of => of.ToString("G9", CultureInfo.InvariantCulture)))}"
+            $"{Carrot:G9};{(OnionFactors == null ? NULL : string.Join(",", OnionFactors.Select(of => of.ToString("G9", CultureInfo.InvariantCulture))))}"
             );
 
         [UsedImplicitly]
@@ -89,7 +95,10 @@ namespace Nemesis.TextParsers.Tests
 
             if (stream.MoveNext())
             {
-                var onionStream = stream.Current.Split(',').GetEnumerator();
+                if(EqualsOrdinalIgnoreCase(stream.Current, NULL.AsSpan()))
+                    return new CarrotAndOnionFactors(carrot, null);
+
+                var onionStream = stream.Current.Split(',', true).GetEnumerator();
                 while (onionStream.MoveNext())
                 {
                     float onion = floatParser.Parse(onionStream.Current);
@@ -97,7 +106,20 @@ namespace Nemesis.TextParsers.Tests
                 }
             }
 
-            return new CarrotAndOnionFactors(carrot, onionFactors.Slice(0,onionCount).ToArray());
+            return new CarrotAndOnionFactors(carrot, onionFactors.Slice(0, onionCount).ToArray());
+        }
+
+       private static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
+        {
+            if (span.Length != value.Length)
+                return false;
+            if (value.Length == 0)  // span.Length == value.Length == 0
+                return true;
+            for (int i = span.Length - 1; i >= 0; i--)
+                if (char.ToUpperInvariant(span[i]) != char.ToUpperInvariant(value[i]))
+                    return false;
+
+            return true;
         }
     }
 
