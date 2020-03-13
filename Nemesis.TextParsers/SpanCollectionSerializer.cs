@@ -225,6 +225,7 @@ namespace Nemesis.TextParsers
         #endregion
 
         public override string ToString() => $@"Collection: Item1{ListDelimiter}Item2
-Dictionary: key1{DictionaryKeyValueDelimiter}value1{DictionaryPairsDelimiter}key2{DictionaryKeyValueDelimiter}value2";
+Dictionary: key1{DictionaryKeyValueDelimiter}value1{DictionaryPairsDelimiter}key2{DictionaryKeyValueDelimiter}value2
+Null marker: {NullElementMarker}";
     }
 }

@@ -16,7 +16,6 @@ namespace Nemesis.TextParsers.Tests
     {
         private readonly Fixture _fixture = new Fixture();
         private readonly Random _rand = new Random();
-        private readonly MethodInfo _createMethodGeneric = Method.OfExpression<Func<Fixture, int>>(f => f.Create<int>()).GetGenericMethodDefinition();
 
         private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> _allTestCases =
             ExploratoryTestsData.GetAllTestTypes();
@@ -137,28 +136,32 @@ namespace Nemesis.TextParsers.Tests
 
             ShouldParseAndFormat(type);
         }
-
+        
+        private static readonly MethodInfo _tester = (typeof(ExploratoryTests)
+            .GetMethod(nameof(ShouldParseAndFormatHelper), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) 
+            ?? throw new MissingMethodException(typeof(ExploratoryTests).FullName, nameof(ShouldParseAndFormatHelper))
+        ).GetGenericMethodDefinition();
 
         private void ShouldParseAndFormat(Type testType)
         {
+            var tester = _tester.MakeGenericMethod(testType);
+
+            tester.Invoke(this, null);
+        }
+        
+        private void ShouldParseAndFormatHelper<T>()
+        {
+            Type testType = typeof(T);
+
             bool isGeneric = testType.IsGenericType && !testType.IsGenericTypeDefinition;
 
             ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) &&
                                        testType.GenericTypeArguments[0] is { } elementType1
                                        ? TextTransformer.Default.GetTransformer(typeof(IAggressionBased<>).MakeGenericType(elementType1))
-                                       : TextTransformer.Default.GetTransformer(testType);
+                                       : TextTransformer.Default.GetTransformer<T>();
             Assert.That(transformer, Is.Not.Null);
             Console.WriteLine(testType);
             Console.WriteLine(transformer);
-
-
-            if (isGeneric && testType.GetGenericTypeDefinition() == typeof(IAggressionBased<>))
-            {
-                var elementType = testType.GenericTypeArguments[0];
-                testType = typeof(AggressionBased3<>).MakeGenericType(elementType);
-            }
-
-            var createMethod = _createMethodGeneric.MakeGenericMethod(testType);
 
             //nulls
             var parsedNull1 = ParseAndAssert(null);
@@ -170,12 +173,12 @@ namespace Nemesis.TextParsers.Tests
             IsMutuallyEquivalent(parsedNull1, parsedNull2);
 
             //instances
-            for (int i = 1; i <= 30; i++)
+            var instances = _fixture.CreateMany<T>(30);
+            int i = 1;
+            foreach (var instance in instances)
             {
-                var instance = createMethod.Invoke(null, new object[] { _fixture });
-
                 string text = transformer.FormatObject(instance);
-                Console.WriteLine("{0:00}. {1}", i, text);
+                Console.WriteLine("{0:00}. {1}", i++, text);
 
                 var parsed1 = ParseAndAssert(text);
                 var parsed2 = ParseAndAssert(text);
@@ -199,11 +202,17 @@ namespace Nemesis.TextParsers.Tests
             object ParseAndAssert(string text)
             {
                 var parsed = transformer.ParseObject(text);
-                if (parsed != null && Nullable.GetUnderlyingType(testType) is { } underlyingType)
+
+                if (parsed == null) return null;
+
+
+                if (Nullable.GetUnderlyingType(testType) is { } underlyingType)
                     Assert.That(parsed, Is.TypeOf(underlyingType));
-                else if (parsed != null && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
+                else if (testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
                     Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.GetFriendlyName()}");
-                else if (parsed != null)
+                else if (testType.IsInterface)
+                    Assert.That(parsed, Is.AssignableTo(testType));
+                else
                     Assert.That(parsed, Is.TypeOf(testType));
 
                 return parsed;
@@ -314,15 +323,18 @@ namespace Nemesis.TextParsers.Tests
         {
             //enum
             typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum), typeof(Int64Enum), typeof(UInt64Enum),
-            
-
 
             //array + collections + dictionaries
             typeof(bool[]), typeof(double[]), typeof(int[]), typeof(long[]), typeof(string[]), typeof(Fruits[]),
-            typeof(List<string>),
+            typeof(List<string>), typeof(ReadOnlyCollection<string>), 
+            typeof(HashSet<string>), typeof(SortedSet<string>), typeof(ISet<string>), 
+            typeof(LinkedList<string>), typeof(Stack<string>), typeof(Queue<string>),
+            typeof(ObservableCollection<string>),
+
             typeof(Dictionary<string,string>), typeof(Dictionary<string,int>), typeof(Dictionary<string,double>),
             typeof(Dictionary<int, float>), typeof(Dictionary<double, string>), typeof(Dictionary<Fruits, double>),
-            typeof(SortedDictionary<Fruits, float>), typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
+            typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>), 
+            typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
 
 
 
