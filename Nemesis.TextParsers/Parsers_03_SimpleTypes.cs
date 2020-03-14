@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
@@ -76,7 +77,7 @@ namespace Nemesis.TextParsers
     public sealed class BooleanParser : SimpleTransformer<bool>
     {
 #if NETSTANDARD2_0 || NETFRAMEWORK
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
         {
             if (span.Length != value.Length)
@@ -287,19 +288,22 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class SingleParser : SimpleFormattableTransformer<float>
     {
-        public override float Parse(in ReadOnlySpan<char> input)
-        {
-            if (input.Length == 1 && input[0] == '∞') return float.PositiveInfinity;
-            else if (input.Length == 2 && input[0] == '-' && input[1] == '∞') return float.NegativeInfinity;
-            else
-                return float.Parse(
+        public override float Parse(in ReadOnlySpan<char> input) => ParseSingle(input);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ParseSingle(in ReadOnlySpan<char> input) =>
+            input.Length switch
+            {
+                1 when input[0] == '∞' => float.PositiveInfinity,
+                2 when input[0] == '-' && input[1] == '∞' => float.NegativeInfinity,
+                _ => float.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
-                input.ToString()
+                    input.ToString()
 #else
-                input
+                    input
 #endif
-                , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult);
-        }
+                    , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+            };
 
         protected override string FormatString { get; } = "R";
     }
@@ -307,19 +311,22 @@ namespace Nemesis.TextParsers
     [UsedImplicitly]
     public sealed class DoubleParser : SimpleFormattableTransformer<double>
     {
-        public override double Parse(in ReadOnlySpan<char> input)
-        {
-            if (input.Length == 1 && input[0] == '∞') return double.PositiveInfinity;
-            else if (input.Length == 2 && input[0] == '-' && input[1] == '∞') return double.NegativeInfinity;
-            else
-                return double.Parse(
+        public override double Parse(in ReadOnlySpan<char> input) => ParseDouble(input);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double ParseDouble(in ReadOnlySpan<char> input) =>
+            input.Length switch
+            {
+                1 when input[0] == '∞' => double.PositiveInfinity,
+                2 when input[0] == '-' && input[1] == '∞' => double.NegativeInfinity,
+                _ => double.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
-                input.ToString()
+                    input.ToString()
 #else
-                input
+                    input
 #endif
-                , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult);
-        }
+                    , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+            };
 
         protected override string FormatString { get; } = "R";
     }
@@ -406,6 +413,73 @@ namespace Nemesis.TextParsers
             , NumberStyles.Integer, Culture.InvCult);
 
         protected override string FormatString { get; } = "R";
+    }
+
+    [UsedImplicitly]
+    public sealed class ComplexParser : SimpleTransformer<Complex>
+    {
+        private const char DELIMITER = ';';
+        private const char ESCAPING_SEQUENCE_START = '\\';
+        private const char START = '(';
+        private const char END = ')';
+
+
+        public override Complex Parse(in ReadOnlySpan<char> input)
+        {
+            if (input.IsEmpty) throw new FormatException("Empty text is not valid complex number representation");
+
+            var tokens = UnParenthesize(input).Tokenize(DELIMITER, ESCAPING_SEQUENCE_START, true);
+
+            var enumerator = tokens.GetEnumerator();
+
+            if (!enumerator.MoveNext())
+                throw new FormatException("Real part of complex number was not found");
+            var real = DoubleParser.ParseDouble(enumerator.Current);
+
+            if (!enumerator.MoveNext())
+                throw new FormatException("Imaginary part of complex number was not found");
+            var imaginary = DoubleParser.ParseDouble(enumerator.Current);
+
+
+            if (enumerator.MoveNext())
+                throw new FormatException($"Complex number representation consists of 2 parts separated by delimiter: {START}Real{DELIMITER} Imaginary{END}");
+
+            return new Complex(real, imaginary);
+        }
+
+        public override string Format(Complex c) =>
+            FormattableString.Invariant($"{START}{c.Real:R}{DELIMITER} {c.Imaginary:R}{END}");
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
+        {
+            int length = span.Length;
+            if (length < 2) throw GetStateException();
+
+            int start = 0;
+            for (; start < length; start++)
+                if (!char.IsWhiteSpace(span[start]))
+                    break;
+
+            bool startsWithParenthesis = start < span.Length && span[start] == START;
+
+            if (!startsWithParenthesis) throw GetStateException();
+
+            int end = span.Length - 1;
+            for (; end > start; end--)
+                if (!char.IsWhiteSpace(span[end]))
+                    break;
+
+            bool endsWithParenthesis = end > 0 && span[end] == END;
+
+            if (!endsWithParenthesis) throw GetStateException();
+
+            return span.Slice(start + 1, end - start - 1);
+
+            static Exception GetStateException() => new FormatException(
+                "Complex number representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace");
+        }
     }
 
     #endregion

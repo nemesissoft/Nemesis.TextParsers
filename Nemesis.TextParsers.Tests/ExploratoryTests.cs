@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using AutoFixture;
 using FluentAssertions;
@@ -18,35 +20,83 @@ namespace Nemesis.TextParsers.Tests
         private readonly Random _rand = new Random();
 
         private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> _allTestCases =
-            ExploratoryTestsData.GetAllTestTypes();
+            ExploratoryTestsData.GetAllTestTypes(
+                ExploratoryTestsData.GetStandardTypes().Concat(
+                    new[]
+                    {
+                        typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum), typeof(Int64Enum), typeof(UInt64Enum),
+                        typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+
+                        typeof(Fruits[]),typeof(Dictionary<Fruits, double>),
+                        typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
+                        typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
+
+                        typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
+                        typeof(AggressionBased3<float?>),
+                        typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
+                        typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
+                        typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
+                        typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
+                        typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
+                    }
+                    ).ToList());
 
         [OneTimeSetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeEveryTest()
         {
-            static void RegisterAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
+            static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
             {
-                var getAggBasMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAllAggressionBased<int>(fixture));
-                getAggBasMethod = getAggBasMethod.GetGenericMethodDefinition();
+                var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased<int>(null))
+                    .GetGenericMethodDefinition();
 
                 foreach (var elementType in simpleTypes)
                 {
-                    var concreteMethod = getAggBasMethod.MakeGenericMethod(elementType);
+                    var concreteMethod = registerMethod.MakeGenericMethod(elementType);
                     concreteMethod.Invoke(null, new object[] { fixture });
                 }
             }
 
-            static string GetRandomString(Random rand, int length = 10)
+            static void RegisterAllNullable(Fixture fixture, Random rand, IEnumerable<Type> structs)
+            {
+                var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterNullable<int>(null, null))
+                    .GetGenericMethodDefinition();
+
+                foreach (var elementType in structs)
+                {
+                    var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                    concreteMethod.Invoke(null, new object[] { fixture, rand });
+                }
+            }
+
+            static string GetRandomString(Random rand, char start, char end, int length = 10)
             {
                 var chars = new char[length];
                 for (var i = 0; i < chars.Length; i++)
-                    chars[i] = (char)rand.Next('A', 'Z' + 1);
+                    chars[i] = (char)rand.Next(start, end + 1);
                 return new string(chars);
             }
 
-            _fixture.Register<string>(() => GetRandomString(_rand));
-            _fixture.Register<double>(() => Math.Round(_rand.NextDouble() * 1000, 2));
-            _fixture.Register<float>(() => (float)Math.Round(_rand.NextDouble() * 1000, 2));
+            static double GetRandomDouble(Random rand, int magnitude = 1000, bool generateSpecialValues = true)
+            {
+                if (generateSpecialValues && rand.NextDouble() is { } chance && chance < 0.1)
+                {
+                    if (chance < 0.045) return double.PositiveInfinity;
+                    else if (chance < 0.09) return double.NegativeInfinity;
+                    else return double.NaN;
+                }
+                else
+                    return Math.Round((rand.NextDouble() - 0.5) * 2 * magnitude, 3);
+            }
+
+            _fixture.Register<string>(() => GetRandomString(_rand, 'A', 'Z'));
+            
+            _fixture.Register<double>(() => GetRandomDouble(_rand));
+            _fixture.Register<float>(() => (float)GetRandomDouble(_rand));
+            _fixture.Register<decimal>(() => (decimal)GetRandomDouble(_rand, 10000, false));
+            _fixture.Register<Complex>(() => new Complex(GetRandomDouble(_rand, 1000, false), GetRandomDouble(_rand, 1000, false)));
+
+            _fixture.Register<BigInteger>(() => BigInteger.Parse(GetRandomString(_rand, '0', '9', 30)));
             _fixture.Register<Enum1>(() => (Enum1)_rand.Next(0, 100));
 
 
@@ -54,13 +104,25 @@ namespace Nemesis.TextParsers.Tests
             var simpleTypes = _allTestCases
                 .Where(d => d.category == ExploratoryTestCategory.Structs || d.category == ExploratoryTestCategory.Enums)
                 .Select(d => d.type)
-                .Concat(new[] { typeof(string) })
-                .OrderBy(t => t.Name).ToList();
+                .Concat(new[] { typeof(string) });
+            RegisterAllAggressionBased(_fixture, simpleTypes);
 
-            RegisterAggressionBased(_fixture, simpleTypes);
+
+            var nonNullableStructs = _allTestCases
+                .Where(d => d.category == ExploratoryTestCategory.Structs || d.category == ExploratoryTestCategory.Enums)
+                .Select(d => d.type)
+                .Where(t => t.IsValueType && Nullable.GetUnderlyingType(t) == null);
+            RegisterAllNullable(_fixture, _rand, nonNullableStructs);
         }
 
-        private static void RegisterAllAggressionBased<TElement>(Fixture fixture)
+        private static void RegisterNullable<TElement>(IFixture fixture, Random rand) where TElement : struct
+        {
+            TElement? Creator() => rand.NextDouble() < 0.1 ? (TElement?)null : fixture.Create<TElement>();
+
+            fixture.Register(Creator);
+        }
+
+        private static void RegisterAggressionBased<TElement>(IFixture fixture)
         {
             AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
 
@@ -89,6 +151,7 @@ namespace Nemesis.TextParsers.Tests
 
             fixture.Register<IAggressionBased<TElement>>(Creator3);
         }
+        
 
         private static IEnumerable<string> GetTypeNamesForCategory(ExploratoryTestCategory category) =>
             _allTestCases.Where(d => d.category == category).Select(d => d.friendlyName);
@@ -136,10 +199,9 @@ namespace Nemesis.TextParsers.Tests
 
             ShouldParseAndFormat(type);
         }
-        
-        private static readonly MethodInfo _tester = (typeof(ExploratoryTests)
-            .GetMethod(nameof(ShouldParseAndFormatHelper), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) 
-            ?? throw new MissingMethodException(typeof(ExploratoryTests).FullName, nameof(ShouldParseAndFormatHelper))
+
+        private static readonly MethodInfo _tester = Method.OfExpression<Action<ExploratoryTests>>(
+            test => test.ShouldParseAndFormatHelper<int>()
         ).GetGenericMethodDefinition();
 
         private void ShouldParseAndFormat(Type testType)
@@ -148,19 +210,14 @@ namespace Nemesis.TextParsers.Tests
 
             tester.Invoke(this, null);
         }
-        
+
         private void ShouldParseAndFormatHelper<T>()
         {
             Type testType = typeof(T);
 
-            bool isGeneric = testType.IsGenericType && !testType.IsGenericTypeDefinition;
 
-            ITransformer transformer = isGeneric && testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)) &&
-                                       testType.GenericTypeArguments[0] is { } elementType1
-                                       ? TextTransformer.Default.GetTransformer(typeof(IAggressionBased<>).MakeGenericType(elementType1))
-                                       : TextTransformer.Default.GetTransformer<T>();
+            ITransformer transformer = TextTransformer.Default.GetTransformer<T>();
             Assert.That(transformer, Is.Not.Null);
-            Console.WriteLine(testType);
             Console.WriteLine(transformer);
 
             //nulls
@@ -237,16 +294,16 @@ namespace Nemesis.TextParsers.Tests
 
     static class ExploratoryTestsData
     {
-        public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> GetAllTestTypes()
+        public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)>
+            GetAllTestTypes(IList<Type> allTypes)
         {
-            var allTypes = GetExistingPropertyTypes()
-                .Concat(GetAdditionalTypes())
-                .Distinct().ToList();
+            var typeComparer = Comparer<Type>.Create((t1, t2) => 
+                string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
+            );
 
-
-            List<Type> Carve(Predicate<Type> condition)
+            SortedSet<Type> Carve(Predicate<Type> condition)
             {
-                var result = new List<Type>(8);
+                var result = new SortedSet<Type>(typeComparer);
 
                 for (int i = allTypes.Count - 1; i >= 0; i--)
                 {
@@ -257,7 +314,6 @@ namespace Nemesis.TextParsers.Tests
                         allTypes.RemoveAt(i);
                     }
                 }
-                result.Sort((t1, t2) => string.Compare(t1.Name, t2.Name, StringComparison.Ordinal));
                 return result;
             }
 
@@ -266,34 +322,42 @@ namespace Nemesis.TextParsers.Tests
             var arrays = Carve(t => t.IsArray);
 
             var dictionaries = Carve(t => t.DerivesOrImplementsGeneric(typeof(IDictionary<,>)));
-            var collections = Carve(t => t.DerivesOrImplementsGeneric(typeof(ICollection<>)));
+            var collections = Carve(t => t.DerivesOrImplementsGeneric(typeof(IEnumerable<>)) && t != typeof(string));
             var aggressionBased = Carve(t => t.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)));
 
             var classes = Carve(t => !t.IsValueType && !t.IsArray);
             var remaining = allTypes;
 
-            var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(structs).OrderBy(t => t.Name).ToList();
+            var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(structs).ToList();
 
-            aggressionBased = simpleTypes
-                .SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) })
-                .Concat(aggressionBased).OrderBy(t => t.Name)
-                .ToList();
+            static Type GetNullableCounterpart(Type t) => t.IsNullable(out var underlyingType)
+                ? underlyingType
+                : typeof(Nullable<>).MakeGenericType(t);
 
-            simpleTypes = simpleTypes.Concat(aggressionBased).ToList();
+            structs.UnionWith(structs.Select(GetNullableCounterpart).ToList());
 
-            arrays = simpleTypes.Select(t => t.MakeArrayType())
-                .Concat(arrays)
-                .Distinct().OrderBy(t => t.Name).ToList();
+            var originalAggressionBased = aggressionBased.ToList();
 
-            collections = simpleTypes.Select(t => typeof(List<>).MakeGenericType(t))
-                .Concat(collections)
-                .Distinct().OrderBy(t => t.Name).ToList();
+            aggressionBased.UnionWith(
+                simpleTypes
+                    .SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) })
+                );
 
-            dictionaries = new[] { typeof(float), typeof(int), typeof(string) }
+            simpleTypes = simpleTypes.Concat(originalAggressionBased).ToList();
+
+            arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType()));
+            arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType().MakeArrayType()));
+
+
+            collections.UnionWith(simpleTypes.Select(t => typeof(List<>).MakeGenericType(t)));
+
+
+            dictionaries.UnionWith(
+                new[] { typeof(float), typeof(string) }
                 .SelectMany(keyType => simpleTypes.Select(val => (Key: keyType, Value: val)))
                 .Select(kvp => typeof(Dictionary<,>).MakeGenericType(kvp.Key, kvp.Value))
-                .Concat(dictionaries)
-                .Distinct().OrderBy(t => t.Name).ToList();
+                );
+
 
 
             var @return = new List<(ExploratoryTestCategory category, Type type, string friendlyName)>();
@@ -313,49 +377,35 @@ namespace Nemesis.TextParsers.Tests
             return @return;
         }
 
-        private static IEnumerable<Type> GetExistingPropertyTypes() => new[]
-        {
-            //add own types i.e. from configuration model 
-            typeof(string)
-        };
-
-        private static IEnumerable<Type> GetAdditionalTypes() => new[]
+        public static IReadOnlyCollection<Type> GetStandardTypes() => new[]
         {
             //enum
-            typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum), typeof(Int64Enum), typeof(UInt64Enum),
-
-            //array + collections + dictionaries
-            typeof(bool[]), typeof(double[]), typeof(int[]), typeof(long[]), typeof(string[]), typeof(Fruits[]),
-            typeof(List<string>), typeof(ReadOnlyCollection<string>), 
-            typeof(HashSet<string>), typeof(SortedSet<string>), typeof(ISet<string>), 
-            typeof(LinkedList<string>), typeof(Stack<string>), typeof(Queue<string>),
-            typeof(ObservableCollection<string>),
-
-            typeof(Dictionary<string,string>), typeof(Dictionary<string,int>), typeof(Dictionary<string,double>),
-            typeof(Dictionary<int, float>), typeof(Dictionary<double, string>), typeof(Dictionary<Fruits, double>),
-            typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>), 
-            typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
-
-
+            typeof(FileMode),
 
             //struct
-            typeof(bool), typeof(double), typeof(int), typeof(long), typeof(double?), typeof(bool?), typeof(int?),
-            typeof(DateTime), typeof(TimeSpan), typeof(TimeSpan?),
-            typeof(char), typeof(char?), typeof(bool?),
-            typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+            typeof(bool), typeof(char),
+            typeof(float), typeof(double), typeof(decimal),
+            typeof(byte), typeof(sbyte),
+            typeof(short), typeof(ushort),
+            typeof(int), typeof(uint),
+            typeof(long), typeof(ulong),
+            typeof(BigInteger), typeof(Complex),
+            typeof(DateTime), typeof(TimeSpan), typeof(DateTimeOffset),
+            typeof(Guid), typeof(Guid?),
+
+
+            //array + collections + dictionaries
+            typeof(string[]), typeof(int?[]),
+            typeof(List<string>), typeof(ReadOnlyCollection<string>),
+            typeof(HashSet<string>), typeof(SortedSet<string>), typeof(ISet<string>),
+            typeof(LinkedList<string>), typeof(Stack<TimeSpan>), typeof(Queue<TimeSpan?>),
+            typeof(ObservableCollection<string>),
+
+            typeof(Dictionary<string,string>), typeof(IDictionary<string,int>),
+            typeof(Dictionary<int, float>), typeof(Dictionary<double, string>), typeof(Dictionary<Fruits, double>),
+            typeof(SortedDictionary<decimal, float>), typeof(SortedList<int, Guid>),
+            typeof(ReadOnlyDictionary<BigInteger, IList<TimeSpan>>), typeof(IReadOnlyDictionary<string,double>),
             
-
-
-            //AggressionBased
-            typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
-            typeof(AggressionBased3<float?>),
-            typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
-            typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
-            typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
-            typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
-            typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
-
-
             //class
             typeof(string), typeof(Uri),
         };
