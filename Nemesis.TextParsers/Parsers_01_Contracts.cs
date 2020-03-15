@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
@@ -7,6 +8,7 @@ namespace Nemesis.TextParsers
     public interface ITransformer
     {
         object ParseObject(string text);
+        [UsedImplicitly]
         object ParseObject(in ReadOnlySpan<char> input);
 
         string FormatObject(object element);

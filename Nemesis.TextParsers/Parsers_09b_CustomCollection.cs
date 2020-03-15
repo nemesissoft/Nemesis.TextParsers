@@ -101,7 +101,8 @@ namespace Nemesis.TextParsers
         {
             private readonly Func<IList<TElement>, TCollection> _listConversion;
 
-            public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic) => _listConversion = listConversion;
+            public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic) 
+                => _listConversion = listConversion;
 
             protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
             {

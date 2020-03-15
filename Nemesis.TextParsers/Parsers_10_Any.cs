@@ -39,7 +39,7 @@ namespace Nemesis.TextParsers
                     ? null
                     : _typeConverter.ConvertToInvariantString(element);
 
-            public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {nameof(TypeConverter)}";
+            public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {_typeConverter?.GetType().GetFriendlyName()}";
         }
 
         public bool CanHandle(Type type) => true;

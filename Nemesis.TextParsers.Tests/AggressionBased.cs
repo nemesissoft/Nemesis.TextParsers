@@ -12,6 +12,7 @@ using NotNull = JetBrains.Annotations.NotNullAttribute;
 
 namespace Nemesis.TextParsers.Tests
 {
+    [PublicAPI]
     public interface IAggressionValuesProvider<out TValue>
     {
         /// <summary>
@@ -50,23 +51,17 @@ namespace Nemesis.TextParsers.Tests
 
         protected static bool IsStructurallyEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
-        public bool Equals(IAggressionBased<TValue> other)
-        {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
-
-#pragma warning disable IDE0066 // Convert switch statement to expression
-            switch (other)
-#pragma warning restore IDE0066 // Convert switch statement to expression
+        public bool Equals(IAggressionBased<TValue> other) =>
+            other switch
             {
-                case AggressionBased1<TValue> o1: return Equals1(o1);
-                case AggressionBased3<TValue> o3: return Equals3(o3);
-                case AggressionBased9<TValue> o9: return Equals9(o9);
-                default:
-                    throw new ArgumentException(
-                        $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
-            }
-        }
+                null => false,
+                var ab when ReferenceEquals(this, ab) => true,
+                AggressionBased1<TValue> o1 => Equals1(o1),
+                AggressionBased3<TValue> o3 => Equals3(o3),
+                AggressionBased9<TValue> o9 => Equals9(o9),
+                _ => throw new ArgumentException(
+                    $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other))
+            };
 
         protected abstract bool Equals1(in AggressionBased1<TValue> o1);
 
@@ -129,30 +124,21 @@ namespace Nemesis.TextParsers.Tests
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
 
-        public TValue GetValueFor(byte aggression)
-        {
-            if (aggression > 9)
-                throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
-
-            switch (aggression)
+        public TValue GetValueFor(byte aggression) =>
+            aggression switch
             {
-                case 1:
-                case 2:
-                case 3:
-                    return PassiveValue;
-                case 0:
-                case 4:
-                case 5:
-                case 6:
-                    return NormalValue;
-                case 7:
-                case 8:
-                case 9:
-                    return AggressiveValue;
-                default:
-                    throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
-            }
-        }
+                1 => PassiveValue,
+                2 => PassiveValue,
+                3 => PassiveValue,
+                0 => NormalValue,
+                4 => NormalValue,
+                5 => NormalValue,
+                6 => NormalValue,
+                7 => AggressiveValue,
+                8 => AggressiveValue,
+                9 => AggressiveValue,
+                _ => throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression))
+            };
 
         protected override bool Equals1(in AggressionBased1<TValue> o1) =>
             IsStructurallyEqual(PassiveValue, o1.One) &&
@@ -191,6 +177,7 @@ namespace Nemesis.TextParsers.Tests
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
         public TValue AggressiveValue => GetValueFor(StrategyAggression.Aggressive);
 
+        // ReSharper disable once RedundantVerbatimPrefix
         public AggressionBased9([@NotNull] TValue[] values) => _values = values ?? throw new ArgumentNullException(nameof(values));
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
@@ -225,23 +212,19 @@ namespace Nemesis.TextParsers.Tests
 
             if (ReferenceEquals(_values, o9Values)) return true;
 
-            using (var enumerator = ((IReadOnlyList<TValue>)_values).GetEnumerator())
-            using (var enumerator2 = ((IReadOnlyList<TValue>)o9Values).GetEnumerator())
-            {
-                while (enumerator.MoveNext())
-                    if (!enumerator2.MoveNext() || !IsStructurallyEqual(enumerator.Current, enumerator2.Current))
-                        return false;
-
-                if (enumerator2.MoveNext())
+            using var enumerator = ((IReadOnlyList<TValue>) _values).GetEnumerator();
+            using var enumerator2 = ((IReadOnlyList<TValue>) o9Values).GetEnumerator();
+            while (enumerator.MoveNext())
+                if (!enumerator2.MoveNext() || !IsStructurallyEqual(enumerator.Current, enumerator2.Current))
                     return false;
-            }
 
-            return true;
+            return !enumerator2.MoveNext();
         }
 
         protected override int GetHashCodeCore() => _values?.GetHashCode() ?? 0;
     }
 
+    [PublicAPI]
     public static class AggressionBasedFactoryChecked<TValue>
     {
         public static IAggressionBased<TValue> FromText(string text) => string.IsNullOrEmpty(text) ?
@@ -258,39 +241,38 @@ namespace Nemesis.TextParsers.Tests
         {
             if (values == null) return AggressionBasedFactory<TValue>.Default();
 
-            using (var enumerator = values.GetEnumerator())
-            {
-                if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
-                var pass = enumerator.Current;
+            using var enumerator = values.GetEnumerator();
 
-                if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
-                var norm = enumerator.Current;
+            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
+            var pass = enumerator.Current;
 
-                if (!enumerator.MoveNext()) throw GetException(2);
-                var aggr = enumerator.Current;
+            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
+            var norm = enumerator.Current;
 
-                if (!enumerator.MoveNext())
-                    return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
+            if (!enumerator.MoveNext()) throw GetException(2);
+            var aggr = enumerator.Current;
 
-                TValue v1 = pass, v2 = norm, v3 = aggr;
+            if (!enumerator.MoveNext())
+                return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
 
-                var v4 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(4);
-                var v5 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(5);
-                var v6 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(6);
-                var v7 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(7);
-                var v8 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(8);
-                var v9 = enumerator.Current;
+            TValue v1 = pass, v2 = norm, v3 = aggr;
 
-                //end of sequence
-                if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
+            var v4 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(4);
+            var v5 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(5);
+            var v6 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(6);
+            var v7 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(7);
+            var v8 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(8);
+            var v9 = enumerator.Current;
 
-                return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
-            }
+            //end of sequence
+            if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
+
+            return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
 
             Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
@@ -332,10 +314,12 @@ namespace Nemesis.TextParsers.Tests
             return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
 
             Exception GetException(int numberOfElements) => new ArgumentException(
-                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
+                // ReSharper disable once UseNameofExpression
+                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", "values");
         }
     }
 
+    [PublicAPI]
     public static class AggressionBasedFactory<TValue>
     {
         public static IAggressionBased<TValue> Default() => new AggressionBased1<TValue>(default);
@@ -354,46 +338,45 @@ namespace Nemesis.TextParsers.Tests
         {
             if (values == null) return Default();
 
-            using (var enumerator = values.GetEnumerator())
-            {
-                if (!enumerator.MoveNext()) return Default();
-                var pass = enumerator.Current;
+            using var enumerator = values.GetEnumerator();
 
-                if (!enumerator.MoveNext()) return FromOneValue(pass);
-                var norm = enumerator.Current;
+            if (!enumerator.MoveNext()) return Default();
+            var pass = enumerator.Current;
 
-                if (!enumerator.MoveNext()) throw GetException(2);
-                var aggr = enumerator.Current;
+            if (!enumerator.MoveNext()) return FromOneValue(pass);
+            var norm = enumerator.Current;
 
-                if (!enumerator.MoveNext())
-                    return FromPassiveNormalAggressive(pass, norm, aggr);
+            if (!enumerator.MoveNext()) throw GetException(2);
+            var aggr = enumerator.Current;
 
-                TValue v1 = pass, v2 = norm, v3 = aggr;
+            if (!enumerator.MoveNext())
+                return FromPassiveNormalAggressive(pass, norm, aggr);
 
-                var v4 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(4);
-                var v5 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(5);
-                var v6 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(6);
-                var v7 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(7);
-                var v8 = enumerator.Current;
-                if (!enumerator.MoveNext()) throw GetException(8);
-                var v9 = enumerator.Current;
+            TValue v1 = pass, v2 = norm, v3 = aggr;
 
-                //end of sequence
-                if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
+            var v4 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(4);
+            var v5 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(5);
+            var v6 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(6);
+            var v7 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(7);
+            var v8 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(8);
+            var v9 = enumerator.Current;
+
+            //end of sequence
+            if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
 
 
-                if (IsEqual(v1, v2) && IsEqual(v1, v3) &&
-                    IsEqual(v4, v5) && IsEqual(v4, v6) &&
-                    IsEqual(v7, v8) && IsEqual(v7, v9)
-                   )
-                    return FromPassiveNormalAggressive(v1, v4, v7);
-                else
-                    return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
-            }
+            if (IsEqual(v1, v2) && IsEqual(v1, v3) &&
+                IsEqual(v4, v5) && IsEqual(v4, v6) &&
+                IsEqual(v7, v8) && IsEqual(v7, v9)
+            )
+                return FromPassiveNormalAggressive(v1, v4, v7);
+            else
+                return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
 
             Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
@@ -442,7 +425,8 @@ namespace Nemesis.TextParsers.Tests
                 return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
 
             Exception GetException(int numberOfElements) => new ArgumentException(
-                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
+                // ReSharper disable once UseNameofExpression
+                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", "values");
         }
         
         public static IAggressionBased<TValue> FromTextCompact(string text) => string.IsNullOrEmpty(text) ?

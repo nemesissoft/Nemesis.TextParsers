@@ -142,9 +142,7 @@ Open source software is free but creating it is not. Should you wish to support 
 - [ ] context based transformer creation with settings for:
 	- [ ] DictionaryBehaviour
     - [ ] Enum casing+other customizations
-    - [ ] empty string meaing (empty, default, null?))
+    - [ ] empty string meaning (empty, default, null?))
 - [ ] custom TextParser factory/customizations
 - [ ] ability to format to buffer
 - [ ] become DI friendly adding support for cross cutting concerns i.e. logging
-- [ ] support for pattern based Dispose
-- [ ] improve Tokenizer performance

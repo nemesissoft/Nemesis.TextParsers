@@ -51,7 +51,7 @@ namespace Nemesis.TextParsers
                     {
                         var result = new List<TTo>(capacity);
 
-                        foreach (TTo part in parsedSequence)
+                        foreach (var part in parsedSequence)
                             result.Add(part);
 
                         return kind == CollectionKind.List ?
@@ -71,7 +71,7 @@ namespace Nemesis.TextParsers
                         )
                             : new SortedSet<TTo>();
 
-                        foreach (TTo part in parsedSequence)
+                        foreach (var part in parsedSequence)
                             result.Add(part);
 
                         return (IReadOnlyCollection<TTo>)result;
@@ -80,7 +80,7 @@ namespace Nemesis.TextParsers
                     {
                         var result = new LinkedList<TTo>();
 
-                        foreach (TTo part in parsedSequence)
+                        foreach (var part in parsedSequence)
                             result.AddLast(part);
 
                         return result;
@@ -89,7 +89,7 @@ namespace Nemesis.TextParsers
                     {
                         var result = new Stack<TTo>(capacity);
 
-                        foreach (TTo part in parsedSequence)
+                        foreach (var part in parsedSequence)
                             result.Push(part);
 
                         return result;
@@ -98,7 +98,7 @@ namespace Nemesis.TextParsers
                     {
                         var result = new Queue<TTo>(capacity);
 
-                        foreach (TTo part in parsedSequence)
+                        foreach (var part in parsedSequence)
                             result.Enqueue(part);
 
                         return result;
@@ -107,7 +107,7 @@ namespace Nemesis.TextParsers
                     {
                         var result = new ObservableCollection<TTo>();
 
-                        foreach (TTo part in parsedSequence)
+                        foreach (var part in parsedSequence)
                             result.Add(part);
 
                         return result;
@@ -180,6 +180,7 @@ namespace Nemesis.TextParsers
             try
             {
                 using var accumulator = new ValueSequenceBuilder<T>(initialBuffer);
+                //TODO check if accumulator is copied 
                 accumulator.Append(first);
                 accumulator.Append(second);
                 accumulator.Append(third);
@@ -203,7 +204,7 @@ namespace Nemesis.TextParsers
             int length = input.Length;
             if (length < 2) return input;
 
-            if (input.IndexOf(escapingSequenceStart) is int escapeStart &&
+            if (input.IndexOf(escapingSequenceStart) is { } escapeStart &&
                 escapeStart >= 0 && escapeStart < length - 1 &&
                 input.Slice(escapeStart).IndexOf(character) >= 0
             ) //is it worth looking for escape sequence ?
@@ -246,7 +247,7 @@ namespace Nemesis.TextParsers
             int length = input.Length;
             if (length < 2) return input;
 
-            if (input.IndexOf(escapingSequenceStart) is int escapeStart &&
+            if (input.IndexOf(escapingSequenceStart) is { } escapeStart &&
                 escapeStart >= 0 && escapeStart < length - 1 &&
                 input.Slice(escapeStart).IndexOfAny(character1, character2) >= 0
             ) //is it worth looking for escape sequence ?
@@ -288,14 +289,14 @@ namespace Nemesis.TextParsers
         {
             try
             {
-                if (element is TDest dest)
-                    return dest;
-                else if (element is null)
-                    return default;
-                else if (typeof(TDest) == typeof(string) && element is IFormattable formattable)
-                    return (TDest)(object)formattable.ToString(null, CultureInfo.InvariantCulture);
-                else
-                    return (TDest)TypeMeta.GetDefault(typeof(TDest));
+                return element switch
+                {
+                    TDest dest => dest,
+                    null => default,
+                    IFormattable formattable when typeof(TDest) == typeof(string) =>
+                        (TDest) (object) formattable.ToString(null, CultureInfo.InvariantCulture),
+                    _ => (TDest) TypeMeta.GetDefault(typeof(TDest))
+                };
             }
             catch (Exception) { return default; }
         }
