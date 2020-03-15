@@ -7,7 +7,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class ValueTupleTransformerCreator : ICanCreateTransformer
+    public sealed class ValueTupleTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TTuple> CreateTransformer<TTuple>()
         {

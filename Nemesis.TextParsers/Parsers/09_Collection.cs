@@ -6,7 +6,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class CollectionTransformerCreator : ICanCreateTransformer //standard .net framework collection handler 
+    public sealed class CollectionTransformerCreator : ICanCreateTransformer //standard .net framework collection handler 
     {
         public ITransformer<TCollection> CreateTransformer<TCollection>()
         {

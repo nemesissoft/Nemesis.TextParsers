@@ -16,7 +16,7 @@ using JetBrains.Annotations;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class EnumTransformerCreator : ICanCreateTransformer
+    public sealed class EnumTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TEnum> CreateTransformer<TEnum>()
         {

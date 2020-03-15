@@ -5,7 +5,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class ArrayTransformerCreator : ICanCreateTransformer
+    public sealed class ArrayTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TArray> CreateTransformer<TArray>()
         {

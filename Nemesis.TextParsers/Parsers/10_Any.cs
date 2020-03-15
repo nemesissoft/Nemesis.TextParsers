@@ -6,7 +6,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class AnyTransformerCreator : ICanCreateTransformer
+    public sealed class AnyTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TElement> CreateTransformer<TElement>() =>
             TypeDescriptor.GetConverter(typeof(TElement)) switch

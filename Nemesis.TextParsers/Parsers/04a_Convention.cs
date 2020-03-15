@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class ConventionTransformer : FactoryMethodTransformer
+    public sealed class ConventionTransformer : FactoryMethodTransformer
     {
         protected override Type GetFactoryMethodContainer(Type type) => type;
 

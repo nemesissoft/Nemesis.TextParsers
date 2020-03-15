@@ -6,7 +6,7 @@ using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Parsers
 {
-    internal abstract class FactoryMethodTransformer : ICanCreateTransformer
+    public abstract class FactoryMethodTransformer : ICanCreateTransformer
     {
         public ITransformer<TElement> CreateTransformer<TElement>()
         {
