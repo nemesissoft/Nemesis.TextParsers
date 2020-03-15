@@ -66,11 +66,6 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <Folder Include="Parsers\" />
-  </ItemGroup>
-
-
   <!--Pack documentation once it's suppoerted on nuget--> <!--
   <PropertyGroup>
     <PackageReadmeFile>README.md</PackageReadmeFile>
