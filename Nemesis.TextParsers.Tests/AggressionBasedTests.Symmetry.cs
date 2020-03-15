@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {

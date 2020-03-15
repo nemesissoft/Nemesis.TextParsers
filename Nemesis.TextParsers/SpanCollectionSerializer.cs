@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Nemesis.TextParsers.Parsers;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Nemesis.TextParsers
@@ -162,10 +163,14 @@ namespace Nemesis.TextParsers
 
         public string FormatDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dict)
         {
-            if (dict == null) return null;
-            if (dict is IReadOnlyCollection<KeyValuePair<TKey, TValue>> roColl && roColl.Count == 0) return "";
-            if (dict is ICollection<KeyValuePair<TKey, TValue>> coll && coll.Count == 0) return "";
-
+            switch (dict)
+            {
+                case null: return null;
+                case IReadOnlyCollection<KeyValuePair<TKey, TValue>> roColl when roColl.Count == 0:
+                case ICollection<KeyValuePair<TKey, TValue>> coll when coll.Count == 0:
+                    return "";
+            }
+            
             IFormatter<TKey> keyFormatter = TextTransformer.Default.GetTransformer<TKey>();
             IFormatter<TValue> valueFormatter = TextTransformer.Default.GetTransformer<TValue>();
 

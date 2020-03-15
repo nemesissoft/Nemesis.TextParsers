@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {

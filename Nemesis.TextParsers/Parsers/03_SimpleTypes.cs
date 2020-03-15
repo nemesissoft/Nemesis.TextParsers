@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
     internal sealed class SimpleTransformerCreator : ICanCreateTransformer

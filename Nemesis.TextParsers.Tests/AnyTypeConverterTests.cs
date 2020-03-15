@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {

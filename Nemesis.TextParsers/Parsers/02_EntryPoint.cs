@@ -6,7 +6,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Parsers
 {
     public interface ITransformerStore
     {

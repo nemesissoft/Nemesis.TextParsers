@@ -2,7 +2,7 @@
 using System.Reflection;
 using JetBrains.Annotations;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
     internal sealed class ConventionTransformer : FactoryMethodTransformer

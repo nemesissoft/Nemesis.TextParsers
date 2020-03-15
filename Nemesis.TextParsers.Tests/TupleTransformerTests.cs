@@ -4,6 +4,7 @@ using System.IO;
 using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -16,7 +17,7 @@ namespace Nemesis.TextParsers.Tests
             var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
                           tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
                 ? new KeyValuePairTransformerCreator()
-                : (ICanCreateTransformer)new TupleTransformerCreator();
+                : (ICanCreateTransformer)new ValueTupleTransformerCreator();
             
             Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}" );
 

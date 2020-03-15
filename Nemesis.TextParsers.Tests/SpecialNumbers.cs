@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing.Printing;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using NUnit.Framework;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {

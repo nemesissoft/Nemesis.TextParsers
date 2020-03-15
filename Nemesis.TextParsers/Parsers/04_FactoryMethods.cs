@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Parsers
 {
     internal abstract class FactoryMethodTransformer : ICanCreateTransformer
     {

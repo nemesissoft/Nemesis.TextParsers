@@ -10,6 +10,7 @@ using AutoFixture;
 using FluentAssertions;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {

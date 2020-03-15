@@ -4,6 +4,7 @@ using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Nemesis.TextParsers;
 using Newtonsoft.Json;
+using Nemesis.TextParsers.Parsers;
 
 namespace Benchmarks
 {

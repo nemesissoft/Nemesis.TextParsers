@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers
 {

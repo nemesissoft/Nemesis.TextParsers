@@ -6,6 +6,7 @@ using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {

@@ -4,16 +4,17 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    internal sealed class TupleTransformerCreator : ICanCreateTransformer
+    internal sealed class ValueTupleTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TTuple> CreateTransformer<TTuple>()
         {
             var tupleType = typeof(TTuple);
 
             var types = tupleType.GenericTypeArguments;
+            // ReSharper disable once ConstantConditionalAccessQualifier
             var transType = (types?.Length) switch
             {
                 1 => typeof(Tuple1Transformer<>),
@@ -733,6 +734,7 @@ namespace Nemesis.TextParsers
 #else
             typeof(ITuple).IsAssignableFrom(type) &&
 #endif
+            // ReSharper disable once ConstantConditionalAccessQualifier
             type.GenericTypeArguments?.Length is { } arity && arity <= MAX_ARITY && arity >= 1
             ;
 

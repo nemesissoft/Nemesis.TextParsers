@@ -4,10 +4,11 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Nemesis.TextParsers.Parsers;
 #if NETCOREAPP3_0
     using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
-using NotNull = JetBrains.Annotations.NotNullAttribute;
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
 namespace Nemesis.TextParsers.Tests

@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 #endif
 
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
     internal sealed class EnumTransformerCreator : ICanCreateTransformer

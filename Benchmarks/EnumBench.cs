@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 using EnumsNET;
 using Nemesis.TextParsers;
+using Nemesis.TextParsers.Parsers;
 
 // ReSharper disable CommentTypo
 
@@ -67,6 +68,7 @@ namespace Benchmarks
             for (int i = AllEnums.Length - 1; i >= 0; i--)
             {
                 var text = AllEnums[i];
+                // ReSharper disable once RedundantArgumentDefaultValue
                 current = Enums.Parse<DaysOfWeek>(text.AsSpan(), false);
             }
             return current;
@@ -327,8 +329,8 @@ namespace Benchmarks
             All = Weekdays | Weekends
         }
 
-        private static (int Start, int Length)[] _sliceData;
-        private static string _toParse;
+        private static readonly (int Start, int Length)[] _sliceData;
+        private static readonly string _toParse;
 
         private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _parser = new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
 

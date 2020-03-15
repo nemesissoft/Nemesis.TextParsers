@@ -3,6 +3,7 @@ using System.Buffers;
 using System.ComponentModel;
 using BenchmarkDotNet.Attributes;
 using Nemesis.TextParsers;
+using Nemesis.TextParsers.Parsers;
 
 // ReSharper disable CommentTypo
 
