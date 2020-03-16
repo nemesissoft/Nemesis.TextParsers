@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
@@ -594,135 +595,14 @@ namespace Nemesis.TextParsers.Parsers
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()},{typeof(TRest).GetFriendlyName()})";
         }
 
-        private static class Helper
-        {
-            private const char TUPLE_DELIMITER = ',';
-            private const char NULL_ELEMENT_MARKER = '∅';
-            private const char ESCAPING_SEQUENCE_START = '\\';
-            private const char TUPLE_START = '(';
-            private const char TUPLE_END = ')';
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void StartFormat(ref ValueSequenceBuilder<char> accumulator) =>
-                accumulator.Append(TUPLE_START);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void EndFormat(ref ValueSequenceBuilder<char> accumulator) =>
-                accumulator.Append(TUPLE_END);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) =>
-                accumulator.Append(TUPLE_DELIMITER);
-
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity)
-            {
-                input = UnParenthesize(input);
-
-                var kvpTokens = input.Tokenize(TUPLE_DELIMITER, ESCAPING_SEQUENCE_START, true);
-                var enumerator = kvpTokens.GetEnumerator();
-
-                if (!enumerator.MoveNext())
-                    throw new ArgumentException($@"Tuple of arity={arity} separated by '{TUPLE_DELIMITER}' was not found");
-
-                return enumerator;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
-            {
-                int length = span.Length;
-                if (length < 2) throw GetStateException();
-
-                int start = 0;
-                for (; start < length; start++)
-                    if (!char.IsWhiteSpace(span[start]))
-                        break;
-
-                bool tupleStartsWithParenthesis = start < span.Length && span[start] == TUPLE_START;
-
-                if (!tupleStartsWithParenthesis) throw GetStateException();
-
-                int end = span.Length - 1;
-                for (; end > start; end--)
-                    if (!char.IsWhiteSpace(span[end]))
-                        break;
-
-                bool tupleEndsWithParenthesis = end > 0 && span[end] == TUPLE_END;
-
-                if (!tupleEndsWithParenthesis) throw GetStateException();
-
-                return span.Slice(start + 1, end - start - 1);
-
-                static Exception GetStateException() => new ArgumentException(
-                         "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace");
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
-            {
-                static string ToOrdinal(byte number)
-                {
-                    int rem = number % 100;
-                    if (rem >= 11 && rem <= 13) return $"{number}th";
-
-                    return (number % 10) switch
-                    {
-                        1 => $"{number}st",
-                        2 => $"{number}nd",
-                        3 => $"{number}rd",
-                        _ => $"{number}th",
-                    };
-                }
-
-                if (!enumerator.MoveNext())
-                    throw new ArgumentException($"{ToOrdinal(index)} tuple element was not found");
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity)
-            {
-                if (enumerator.MoveNext())
-                {
-                    var remaining = enumerator.Current.ToString();
-                    throw new ArgumentException($@"Tuple of arity={arity} separated by '{TUPLE_DELIMITER}' cannot have more than {arity} elements: '{remaining}'");
-                }
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser)
-            {
-                ReadOnlySpan<char> input = enumerator.Current;
-                var unescapedInput = input.UnescapeCharacter(ESCAPING_SEQUENCE_START, TUPLE_DELIMITER);
-
-                if (unescapedInput.Length == 1 && unescapedInput[0].Equals(NULL_ELEMENT_MARKER))
-                    return default;
-                else
-                {
-                    unescapedInput = unescapedInput.UnescapeCharacter
-                            (ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, ESCAPING_SEQUENCE_START);
-
-                    return parser.Parse(unescapedInput);
-                }
-            }
-
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
-            {
-                string elementText = formatter.Format(element);
-                if (elementText == null)
-                    accumulator.Append(NULL_ELEMENT_MARKER);
-                else
-                {
-                    foreach (char c in elementText)
-                    {
-                        if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == TUPLE_DELIMITER)
-                            accumulator.Append(ESCAPING_SEQUENCE_START);
-                        accumulator.Append(c);
-                    }
-                }
-            }
-        }
+        [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")] 
+        [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
+        public static readonly TupleHelper Helper = new TupleHelper(
+                tupleDelimiter: ',',
+                nullElementMarker: '∅',
+                escapingSequenceStart: '\\',
+                tupleStart: '(',
+                tupleEnd: ')');
 
         private const byte MAX_ARITY = 8;
 

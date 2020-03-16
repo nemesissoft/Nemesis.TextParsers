@@ -142,7 +142,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         private const string NO_PARENTHESES_ERROR =
-            "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace";
+            "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
         internal static IEnumerable<(Type, string, Type, string)> Bad_KeyValuePair_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
