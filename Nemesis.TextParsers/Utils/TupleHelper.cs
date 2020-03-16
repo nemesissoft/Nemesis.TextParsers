@@ -3,27 +3,27 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
-    public static class TupleHelper
+    public class TupleHelper
     {
-        private const char TUPLE_DELIMITER = ',';
-        private const char NULL_ELEMENT_MARKER = '∅';
-        private const char ESCAPING_SEQUENCE_START = '\\';
-        private const char TUPLE_START = '(';
-        private const char TUPLE_END = ')';
+        private readonly char TUPLE_DELIMITER = ',';
+        private readonly char NULL_ELEMENT_MARKER = '∅';
+        private readonly char ESCAPING_SEQUENCE_START = '\\';
+        private readonly char TUPLE_START = '(';
+        private readonly char TUPLE_END = ')';
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartFormat(ref ValueSequenceBuilder<char> accumulator) =>
+        public void StartFormat(ref ValueSequenceBuilder<char> accumulator) =>
             accumulator.Append(TUPLE_START);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void EndFormat(ref ValueSequenceBuilder<char> accumulator) =>
+        public void EndFormat(ref ValueSequenceBuilder<char> accumulator) =>
             accumulator.Append(TUPLE_END);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) =>
+        public void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) =>
             accumulator.Append(TUPLE_DELIMITER);
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity)
+        public TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity)
         {
             input = UnParenthesize(input);
 
@@ -37,7 +37,7 @@ namespace Nemesis.TextParsers.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
+        private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
         {
             int length = span.Length;
             if (length < 2) throw GetStateException();
@@ -67,7 +67,7 @@ namespace Nemesis.TextParsers.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
+        public void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
         {
             static string ToOrdinal(byte number)
             {
@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity)
+        public void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity)
         {
             if (enumerator.MoveNext())
             {
@@ -98,7 +98,7 @@ namespace Nemesis.TextParsers.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser)
+        public TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser)
         {
             ReadOnlySpan<char> input = enumerator.Current;
             var unescapedInput = input.UnescapeCharacter(ESCAPING_SEQUENCE_START, TUPLE_DELIMITER);
@@ -116,7 +116,7 @@ namespace Nemesis.TextParsers.Utils
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
+        public void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
         {
             string elementText = formatter.Format(element);
             if (elementText == null)
