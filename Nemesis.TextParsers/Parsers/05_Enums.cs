@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Utils;
 #if NETCOREAPP3_0
     using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else

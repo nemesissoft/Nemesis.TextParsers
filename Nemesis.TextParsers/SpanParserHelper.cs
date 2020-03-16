@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Utils;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Nemesis.TextParsers

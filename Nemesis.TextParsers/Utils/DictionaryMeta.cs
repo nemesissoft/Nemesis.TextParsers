@@ -9,7 +9,7 @@ using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     /// <summary>
     /// Aids in providing metadata for GUI applications 
@@ -130,7 +130,7 @@ namespace Nemesis.TextParsers
         public static DictionaryMeta GetDictionaryMeta(Type dictType)
         {
             if (IsTypeSupported(dictType) &&
-                GetDictionaryKind(dictType) is DictionaryKind kind &&
+                GetDictionaryKind(dictType) is { } kind &&
                 kind != DictionaryKind.Unknown
                )
             {

@@ -9,6 +9,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {

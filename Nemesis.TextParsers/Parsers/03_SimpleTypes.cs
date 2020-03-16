@@ -54,6 +54,11 @@ namespace Nemesis.TextParsers.Parsers
         public sbyte Priority => 10;
     }
 
+    internal static class Culture
+    {
+        internal static CultureInfo InvCult => CultureInfo.InvariantCulture;
+        internal static NumberFormatInfo InvInfo = NumberFormatInfo.InvariantInfo;
+    }
 
     public abstract class SimpleTransformer<TElement> : TransformerBase<TElement>, ICanTransformType
     {

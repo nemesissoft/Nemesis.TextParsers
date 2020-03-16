@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 #if NETCOREAPP3_0
     using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else

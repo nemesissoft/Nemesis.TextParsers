@@ -1,14 +1,14 @@
 ﻿#nullable disable
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     /// <summary>
     /// Aids in providing metadata for GUI applications 

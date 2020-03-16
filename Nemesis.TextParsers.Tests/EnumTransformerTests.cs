@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {

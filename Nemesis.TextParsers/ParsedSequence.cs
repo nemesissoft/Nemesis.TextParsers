@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers
 {

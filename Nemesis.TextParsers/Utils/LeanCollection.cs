@@ -2,31 +2,23 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     [PublicAPI]
     public static class LeanCollectionFactory
     {
         public static LeanCollection<T> FromArrayChecked<T>(T[] items) => new LeanCollection<T>(items);
 
-        public static LeanCollection<T> FromArray<T>(T[] items)
-        {
-            int? length = items?.Length;
-            switch (length)
+        public static LeanCollection<T> FromArray<T>(T[] items) =>
+            items?.Length switch
             {
-                case null:
-                case 0:
-                    return new LeanCollection<T>();
-                case 1:
-                    return new LeanCollection<T>(items[0]);
-                case 2:
-                    return new LeanCollection<T>(items[0], items[1]);
-                case 3:
-                    return new LeanCollection<T>(items[0], items[1], items[2]);
-                default:
-                    return new LeanCollection<T>(items);
-            }
-        }
+                null => new LeanCollection<T>(),
+                0 => new LeanCollection<T>(),
+                1 => new LeanCollection<T>(items[0]),
+                2 => new LeanCollection<T>(items[0], items[1]),
+                3 => new LeanCollection<T>(items[0], items[1], items[2]),
+                _ => new LeanCollection<T>(items)
+            };
 
         public static LeanCollection<T> ToLeanCollection<T>(T one) => new LeanCollection<T>(one);
         public static LeanCollection<T> ToLeanCollection<T>((T, T) pair) => new LeanCollection<T>(pair.Item1, pair.Item2);

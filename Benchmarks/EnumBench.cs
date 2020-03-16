@@ -9,6 +9,7 @@ using BenchmarkDotNet.Attributes;
 using EnumsNET;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 
 // ReSharper disable CommentTypo
 

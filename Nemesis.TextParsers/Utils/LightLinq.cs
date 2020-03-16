@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     [PublicAPI]
     public static class LightLinq

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {

@@ -3,7 +3,7 @@ using System.Globalization;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
-namespace Nemesis.TextParsers.Parsers
+namespace Nemesis.TextParsers
 {
     public interface ITransformer
     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests

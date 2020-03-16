@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     public static class NumberHandlerCache
     {

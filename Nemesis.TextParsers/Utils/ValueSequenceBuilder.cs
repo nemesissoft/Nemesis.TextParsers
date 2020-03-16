@@ -2,7 +2,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     public ref struct ValueSequenceBuilder<T>
     {

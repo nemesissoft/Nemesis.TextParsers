@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Nemesis.TextParsers.Parsers;
+using JetBrains.Annotations;
+using Nemesis.TextParsers.Utils;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Nemesis.TextParsers
 {
+    [PublicAPI]
     public sealed class SpanCollectionSerializer
     {
         #region Fields and properties

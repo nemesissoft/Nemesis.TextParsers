@@ -1,9 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Globalization;
-using Nemesis.TextParsers.Parsers;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers.Utils
 {
     public sealed class UniversalTextTypeConverter<TValue> : TypeConverter
     {
