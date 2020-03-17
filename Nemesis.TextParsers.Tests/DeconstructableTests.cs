@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using FluentAssertions;
 using Nemesis.Essentials.Design;
 using NUnit.Framework;
 
@@ -20,9 +21,14 @@ namespace Nemesis.TextParsers.Tests
                 new[] { 1, 2, 3, (float)Math.Round(Math.PI, 2) }, 
                 TimeSpan.Parse("12:34:56")
             );
-            Assert.That(actual, Is.EqualTo(expected));
+            IsMutuallyEquivalent(actual, expected);
         }
 
+        static void IsMutuallyEquivalent(object o1, object o2)
+        {
+            o1.Should().BeEquivalentTo(o2);
+            o2.Should().BeEquivalentTo(o1);
+        }
 
         [Test]
         public void NegativeTest()

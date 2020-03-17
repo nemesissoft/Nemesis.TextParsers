@@ -8,9 +8,8 @@ using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 
-/*TODO
- more than 8 params 
-tests 
+/*TODO  
+tests - more than 8 params
 recursive tests + exploratory tests 
     */
 
@@ -175,6 +174,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         //TODO: make non-static add option for transformer: char? bracketChar, char delimiter ...
+        //TODO: how to take these parameters ? i.e. attributes, convention, configuration
         [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
         [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
         private static readonly TupleHelper _helper = new TupleHelper(
@@ -183,6 +183,7 @@ namespace Nemesis.TextParsers.Parsers
             escapingSequenceStart: '\\',
             tupleStart: '(',
             tupleEnd: ')');
+        //TODO add debug sanity check - check if all chars are unique
 
         private const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         private const string DECONSTRUCT = "Deconstruct";
