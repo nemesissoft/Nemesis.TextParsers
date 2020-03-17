@@ -11,7 +11,9 @@ using Nemesis.TextParsers.Utils;
 /*TODO  
 tests - more than 8 params
 recursive tests + exploratory tests 
-    */
+    FromText = entry 
+     
+     */
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -50,7 +52,7 @@ namespace Nemesis.TextParsers.Parsers
                 _transformers = ctor.GetParameters()
                  .Select(p => TextTransformer.Default.GetTransformer(p.ParameterType))
                  .ToArray();
-                //TODO add debug sanctify check deconstruct ~= ctor
+                //TODO add debug sanity check deconstruct ~= ctor
 
                 _parser = CreateParser(ctor);
                 _formatter = CreateFormatter(deconstruct);
@@ -173,6 +175,7 @@ namespace Nemesis.TextParsers.Parsers
                 $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({string.Join(", ", _ctor?.GetParameters().Select(p => p.ParameterType.GetFriendlyName()) ?? Enumerable.Empty<string>())})";
         }
 
+        //TODO: should this class be registered automatically or parser can be used on demand ? => both + imperative
         //TODO: make non-static add option for transformer: char? bracketChar, char delimiter ...
         //TODO: how to take these parameters ? i.e. attributes, convention, configuration
         [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
@@ -187,7 +190,7 @@ namespace Nemesis.TextParsers.Parsers
 
         private const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         private const string DECONSTRUCT = "Deconstruct";
-        //TODO should we support also Deconstruct extension methods ?
+        //TODO should we support also Deconstruct extension methods ? => add deconstruct methodInfo 
         //TODO support only non-byref types in ctor
         private static bool TryGetDeconstruct(Type type, out (MethodInfo deconstruct, ConstructorInfo ctor) result)
         {
