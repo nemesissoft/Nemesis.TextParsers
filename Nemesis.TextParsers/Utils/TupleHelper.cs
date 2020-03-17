@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
@@ -10,10 +12,16 @@ namespace Nemesis.TextParsers.Utils
         private readonly char _escapingSequenceStart;
         private readonly char _tupleStart;
         private readonly char _tupleEnd;
-        
+
         public TupleHelper(char tupleDelimiter = ',', char nullElementMarker = '∅',
             char escapingSequenceStart = '\\', char tupleStart = '(', char tupleEnd = ')')
         {
+#if DEBUG
+            var unique = new HashSet<char>
+                {tupleDelimiter, nullElementMarker, escapingSequenceStart, tupleStart, tupleEnd};
+            Debug.Assert(unique.Count == 5, $"{nameof(TupleHelper)} requires unique characters to be used for parsing/formatting purposes");
+#endif
+
             _tupleDelimiter = tupleDelimiter;
             _nullElementMarker = nullElementMarker;
             _escapingSequenceStart = escapingSequenceStart;

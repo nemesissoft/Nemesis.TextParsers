@@ -5,7 +5,14 @@ using Nemesis.Essentials.Design;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
-{
+{/*TODO  
+tests - more than 8 params
+recursive tests + exploratory tests 
+    
+    MetaTransformer.GetByProperties
+
+    //TODO: should this class be registered automatically or parser can be used on demand ? => both + imperative + FromText = entry 
+     */
     [TestFixture]
     class DeconstructableTests
     {
@@ -14,7 +21,7 @@ namespace Nemesis.TextParsers.Tests
         {
             var sut = TextTransformer.Default.GetTransformer<CarrotAndOnionFactors>();
 
-            var actual = sut.ParseFromText("(123.456789, 1|2|3|3.14, 12:34:56)");
+            var actual = sut.ParseFromText("(123.456789; 1|2|3|3.14; 12:34:56)");
 
             var expected = new CarrotAndOnionFactors(
                 123.456789M,
