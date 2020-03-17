@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
@@ -11,7 +11,7 @@ using Nemesis.TextParsers.Utils;
 /*TODO
  more than 8 params 
 tests 
-recursive tests
+recursive tests + exploratory tests 
     */
 
 namespace Nemesis.TextParsers.Parsers
@@ -23,35 +23,105 @@ namespace Nemesis.TextParsers.Parsers
         {
             var type = typeof(TDeconstructable);
 
-            if (!TryGetDeconstruct(type, out var genesisPair))
-                throw new NotSupportedException($"{nameof(DeconstructionTransformerCreator)} supports cases with at lease one {DECONSTRUCT} method with matching constructor");
-
+            if (!TryGetDeconstruct(type, out var genesisPair) ||
+                genesisPair.deconstruct.GetParameters().Length == 0 ||
+                genesisPair.ctor.GetParameters().Length == 0
+               )
+                throw new NotSupportedException($"{nameof(DeconstructionTransformerCreator)} supports cases with at lease one non-nullary {DECONSTRUCT} method with matching constructor");
 
             var transType = typeof(DeconstructionTransformer<>).MakeGenericType(type);
 
-            return (ITransformer<TDeconstructable>)Activator.CreateInstance(transType);
+            return (ITransformer<TDeconstructable>)Activator
+                .CreateInstance(transType, genesisPair.deconstruct, genesisPair.ctor);
         }
 
         private sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
         {
-            private readonly ITransformer[] _transformers;
-            private readonly MethodInfo _deconstruct;
+            private delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
+            private delegate string FormatterDelegate(TDeconstructable element, TupleHelper helper, ITransformer[] transformers);
+
             private readonly ConstructorInfo _ctor;
+            private readonly ITransformer[] _transformers;
+            private readonly ParserDelegate _parser;
+            private readonly FormatterDelegate _formatter;
 
             public DeconstructionTransformer(MethodInfo deconstruct, ConstructorInfo ctor)
             {
-                _deconstruct = deconstruct;
                 _ctor = ctor;
-                _transformers = _deconstruct.GetParameters()
-                    .Select(p => TextTransformer.Default.GetTransformer(p.ParameterType))
-                    .ToArray();
+                _transformers = ctor.GetParameters()
+                 .Select(p => TextTransformer.Default.GetTransformer(p.ParameterType))
+                 .ToArray();
+                //TODO add debug sanctify check deconstruct ~= ctor
+
+                _parser = CreateParser(ctor);
+                _formatter = CreateFormatter(deconstruct);
             }
 
+            private static ParserDelegate CreateParser(ConstructorInfo ctor)
+            {
+                var @params = ctor.GetParameters();
+                byte arity = (byte)@params.Length;
+
+                var input = Expression.Parameter(typeof(ReadOnlySpan<char>), "input");
+                var helper = Expression.Parameter(typeof(TupleHelper), "helper");
+                var transformers = Expression.Parameter(typeof(ITransformer[]), "transformers");
+
+                var enumerator = Expression.Variable(typeof(TokenSequence<char>.TokenSequenceEnumerator), "enumerator");
+                var fields = @params.Select((p, i) => Expression.Variable(p.ParameterType, $"t{i + 1}")).ToList();
+
+                var expressions = new List<Expression>(5 + arity * 2)
+                {
+                    Expression.Assign(enumerator,
+                        Expression.Call(helper, nameof(TupleHelper.ParseStart), null, input, Expression.Constant(arity))
+                        )
+                };
+
+                for (int i = 0; i < arity; i++)
+                {
+                    if (i > 0)
+                        expressions.Add(
+                            Expression.Call(helper, nameof(TupleHelper.ParseNext), null,
+                                enumerator, Expression.Constant((byte)(i + 1)))
+                        );
+
+                    var field = fields[i];
+
+                    var trans = Expression.Convert(
+                        Expression.ArrayIndex(transformers, Expression.Constant(i)),
+                        typeof(ISpanParser<>).MakeGenericType(field.Type)
+                    );
+
+
+                    var assignment = Expression.Assign(
+                        field,
+                        Expression.Call(helper, nameof(TupleHelper.ParseElement), new[] { field.Type }, enumerator, trans)
+                    );
+                    expressions.Add(assignment);
+                }
+
+                expressions.Add(
+                    Expression.Call(helper, nameof(TupleHelper.ParseEnd), null, enumerator, Expression.Constant(arity))
+                );
+                expressions.Add(
+                    Expression.New(ctor, fields)
+                    );
+
+                var body = Expression.Block(
+                    new[] { enumerator }.Concat(fields),
+                    expressions);
+
+                var λ = Expression.Lambda<ParserDelegate>(body, input, helper, transformers);
+                return λ.Compile();
+            }
+
+            private FormatterDelegate CreateFormatter(MethodInfo deconstruct)
+            {
+                //TODO
+                return null;
+            }
 
             /*public override (T1, T2, T3, T4) Parse(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -93,153 +163,31 @@ namespace Nemesis.TextParsers.Parsers
                 accumulator.Dispose();
                 return text;
             }*/
-            
-            public override TDeconstructable Parse(in ReadOnlySpan<char> input)
-            {
-                throw new NotImplementedException();
-            }
 
-            public override string Format(TDeconstructable element)
-            {
-                throw new NotImplementedException();
-            }
+            public override TDeconstructable Parse(in ReadOnlySpan<char> input) =>
+                input.IsEmpty ? default : _parser(input, _helper, _transformers);
 
-            public override string ToString() => 
-                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({string.Join(", ", _deconstruct?.GetParameters().Select(p => p.ParameterType.GetFriendlyName()) ?? Enumerable.Empty<string>())})";
+            public override string Format(TDeconstructable element) =>
+                element is null ? null : _formatter(element, _helper, _transformers);
+
+            public override string ToString() =>
+                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({string.Join(", ", _ctor?.GetParameters().Select(p => p.ParameterType.GetFriendlyName()) ?? Enumerable.Empty<string>())})";
         }
 
-        private static class Helper
-        {
-            private const char TUPLE_DELIMITER = ',';
-            private const char NULL_ELEMENT_MARKER = '∅';
-            private const char ESCAPING_SEQUENCE_START = '\\';
-            private const char TUPLE_START = '(';
-            private const char TUPLE_END = ')';
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void StartFormat(ref ValueSequenceBuilder<char> accumulator) =>
-                accumulator.Append(TUPLE_START);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void EndFormat(ref ValueSequenceBuilder<char> accumulator) =>
-                accumulator.Append(TUPLE_END);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) =>
-                accumulator.Append(TUPLE_DELIMITER);
-
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity)
-            {
-                input = UnParenthesize(input);
-
-                var kvpTokens = input.Tokenize(TUPLE_DELIMITER, ESCAPING_SEQUENCE_START, true);
-                var enumerator = kvpTokens.GetEnumerator();
-
-                if (!enumerator.MoveNext())
-                    throw new ArgumentException($@"Tuple of arity={arity} separated by '{TUPLE_DELIMITER}' was not found");
-
-                return enumerator;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
-            {
-                int length = span.Length;
-                if (length < 2) throw GetStateException();
-
-                int start = 0;
-                for (; start < length; start++)
-                    if (!char.IsWhiteSpace(span[start]))
-                        break;
-
-                bool tupleStartsWithParenthesis = start < span.Length && span[start] == TUPLE_START;
-
-                if (!tupleStartsWithParenthesis) throw GetStateException();
-
-                int end = span.Length - 1;
-                for (; end > start; end--)
-                    if (!char.IsWhiteSpace(span[end]))
-                        break;
-
-                bool tupleEndsWithParenthesis = end > 0 && span[end] == TUPLE_END;
-
-                if (!tupleEndsWithParenthesis) throw GetStateException();
-
-                return span.Slice(start + 1, end - start - 1);
-
-                static Exception GetStateException() => new ArgumentException(
-                         "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace");
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
-            {
-                static string ToOrdinal(byte number)
-                {
-                    int rem = number % 100;
-                    if (rem >= 11 && rem <= 13) return $"{number}th";
-
-                    return (number % 10) switch
-                    {
-                        1 => $"{number}st",
-                        2 => $"{number}nd",
-                        3 => $"{number}rd",
-                        _ => $"{number}th",
-                    };
-                }
-
-                if (!enumerator.MoveNext())
-                    throw new ArgumentException($"{ToOrdinal(index)} tuple element was not found");
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity)
-            {
-                if (enumerator.MoveNext())
-                {
-                    var remaining = enumerator.Current.ToString();
-                    throw new ArgumentException($@"Tuple of arity={arity} separated by '{TUPLE_DELIMITER}' cannot have more than {arity} elements: '{remaining}'");
-                }
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser)
-            {
-                ReadOnlySpan<char> input = enumerator.Current;
-                var unescapedInput = input.UnescapeCharacter(ESCAPING_SEQUENCE_START, TUPLE_DELIMITER);
-
-                if (unescapedInput.Length == 1 && unescapedInput[0].Equals(NULL_ELEMENT_MARKER))
-                    return default;
-                else
-                {
-                    unescapedInput = unescapedInput.UnescapeCharacter
-                            (ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, ESCAPING_SEQUENCE_START);
-
-                    return parser.Parse(unescapedInput);
-                }
-            }
-
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
-            {
-                string elementText = formatter.Format(element);
-                if (elementText == null)
-                    accumulator.Append(NULL_ELEMENT_MARKER);
-                else
-                {
-                    foreach (char c in elementText)
-                    {
-                        if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == TUPLE_DELIMITER)
-                            accumulator.Append(ESCAPING_SEQUENCE_START);
-                        accumulator.Append(c);
-                    }
-                }
-            }
-        }
+        //TODO: make non-static add option for transformer: char? bracketChar, char delimiter ...
+        [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
+        [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
+        private static readonly TupleHelper _helper = new TupleHelper(
+            tupleDelimiter: ',',
+            nullElementMarker: '∅',
+            escapingSequenceStart: '\\',
+            tupleStart: '(',
+            tupleEnd: ')');
 
         private const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         private const string DECONSTRUCT = "Deconstruct";
+        //TODO should we support also Deconstruct extension methods ?
+        //TODO support only non-byref types in ctor
         private static bool TryGetDeconstruct(Type type, out (MethodInfo deconstruct, ConstructorInfo ctor) result)
         {
             result = default;
@@ -261,9 +209,15 @@ namespace Nemesis.TextParsers.Parsers
             {
                 bool AreEqualByParamTypes()
                 {
+                    static Type FlattenRef(Type type) =>
+                        type.IsByRef ? type.GetElementType() : type;
+
                     // ReSharper disable once LoopCanBeConvertedToQuery
                     for (var i = 0; i < left.Count; i++)
-                        if (left[i].ParameterType != right[i].ParameterType)
+                        if (FlattenRef(left[i].ParameterType)
+                                        !=
+                            FlattenRef(right[i].ParameterType)
+                           )
                             return false;
                     return true;
                 }
@@ -286,6 +240,6 @@ namespace Nemesis.TextParsers.Parsers
 
         public bool CanHandle(Type type) => TryGetDeconstruct(type, out _);
 
-        public sbyte Priority => 126;
+        public sbyte Priority => 126; //TODO should that be the last transformer in responsibility chain ?
     }
 }
