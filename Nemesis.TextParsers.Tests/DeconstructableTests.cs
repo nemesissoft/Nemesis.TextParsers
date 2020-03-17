@@ -12,7 +12,13 @@ recursive tests + exploratory tests
     MetaTransformer.GetByProperties
 
     //TODO: should this class be registered automatically or parser can be used on demand ? => both + imperative + FromText = entry 
-     */
+     
+    test- start and end with same character. 
+    with (', null) sequence. 
+    with '' empty tuple. 
+    with empty text with no border. 
+    with no border and trailing/leading spaces
+    */
     [TestFixture]
     class DeconstructableTests
     {

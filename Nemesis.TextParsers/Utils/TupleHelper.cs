@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
@@ -10,17 +8,25 @@ namespace Nemesis.TextParsers.Utils
         private readonly char _tupleDelimiter;
         private readonly char _nullElementMarker;
         private readonly char _escapingSequenceStart;
-        private readonly char _tupleStart;
-        private readonly char _tupleEnd;
+        private readonly char? _tupleStart;
+        private readonly char? _tupleEnd;
 
         public TupleHelper(char tupleDelimiter = ',', char nullElementMarker = '∅',
-            char escapingSequenceStart = '\\', char tupleStart = '(', char tupleEnd = ')')
+            char escapingSequenceStart = '\\', char? tupleStart = '(', char? tupleEnd = ')')
         {
-#if DEBUG
-            var unique = new HashSet<char>
-                {tupleDelimiter, nullElementMarker, escapingSequenceStart, tupleStart, tupleEnd};
-            Debug.Assert(unique.Count == 5, $"{nameof(TupleHelper)} requires unique characters to be used for parsing/formatting purposes");
-#endif
+            if (tupleDelimiter == nullElementMarker ||
+                tupleDelimiter == escapingSequenceStart ||
+                tupleDelimiter == tupleStart ||
+                tupleDelimiter == tupleEnd ||
+
+                nullElementMarker == escapingSequenceStart ||
+                nullElementMarker == tupleStart ||
+                nullElementMarker == tupleEnd ||
+
+                escapingSequenceStart == tupleStart ||
+                escapingSequenceStart == tupleEnd
+            )
+                throw new ArgumentException($"{nameof(TupleHelper)} requires unique characters to be used for parsing/formatting purposes. {tupleStart} and {tupleEnd} can be equal to each other");
 
             _tupleDelimiter = tupleDelimiter;
             _nullElementMarker = nullElementMarker;
@@ -30,10 +36,18 @@ namespace Nemesis.TextParsers.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void StartFormat(ref ValueSequenceBuilder<char> accumulator) => accumulator.Append(_tupleStart);
+        public void StartFormat(ref ValueSequenceBuilder<char> accumulator)
+        {
+            if (_tupleStart is { } c)
+                accumulator.Append(c);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void EndFormat(ref ValueSequenceBuilder<char> accumulator) => accumulator.Append(_tupleEnd);
+        public void EndFormat(ref ValueSequenceBuilder<char> accumulator)
+        {
+            if (_tupleEnd is { } c)
+                accumulator.Append(c);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) => accumulator.Append(_tupleDelimiter);
@@ -53,34 +67,49 @@ namespace Nemesis.TextParsers.Utils
             return enumerator;
         }
 
+        //TODO move that to common helpers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
         {
-            int length = span.Length;
-            if (length < 2) throw GetStateException();
+            if (_tupleStart is null && _tupleEnd is null)
+                return span;
+
+            int minLength = (_tupleStart.HasValue ? 1 : 0) + (_tupleEnd.HasValue ? 1 : 0);
+            if (span.Length < minLength) throw GetStateException();
 
             int start = 0;
-            for (; start < length; start++)
-                if (!char.IsWhiteSpace(span[start]))
-                    break;
 
-            bool tupleStartsWithParenthesis = start < span.Length && span[start] == _tupleStart;
+            if (_tupleStart.HasValue)
+            {
+                for (; start < span.Length; start++)
+                    if (!char.IsWhiteSpace(span[start]))
+                        break;
 
-            if (!tupleStartsWithParenthesis) throw GetStateException();
+                bool startsWithChar = start < span.Length && span[start] == _tupleStart.Value;
+                if (!startsWithChar) throw GetStateException();
+
+                ++start;
+            }
+            
 
             int end = span.Length - 1;
-            for (; end > start; end--)
-                if (!char.IsWhiteSpace(span[end]))
-                    break;
 
-            bool tupleEndsWithParenthesis = end > 0 && span[end] == _tupleEnd;
+            if (_tupleEnd.HasValue)
+            {
+                for (; end > start; end--)
+                    if (!char.IsWhiteSpace(span[end]))
+                        break;
 
-            if (!tupleEndsWithParenthesis) throw GetStateException();
+                bool endsWithChar = end > 0 && span[end] == _tupleEnd.Value;
+                if (!endsWithChar) throw GetStateException();
 
-            return span.Slice(start + 1, end - start - 1);
+                --end;
+            }
+
+            return span.Slice(start, end - start + 1);
 
             Exception GetStateException() => new ArgumentException(
-                     $"Tuple representation has to start with '{_tupleStart}' and end with '{_tupleEnd}' optionally lead in the beginning or trailed in the end by whitespace");
+                     $"Tuple representation has to start with '{(_tupleStart is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(_tupleEnd is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,5 +177,9 @@ namespace Nemesis.TextParsers.Utils
                 }
             }
         }
+
+
+        public override string ToString() =>
+            $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
     }
 }
