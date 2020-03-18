@@ -130,7 +130,7 @@ namespace Nemesis.TextParsers.Parsers
                     dictType.IsGenericType && dictType.GetGenericTypeDefinition() == iDict
                         ? dictType
                         : TypeMeta.GetGenericRealization(dictType, iDict)
-                          ?? throw new InvalidOperationException($"Type has to be or implement {iDict.Name}<,>");
+                          ?? throw new InvalidOperationException($"Type has to be or implement {iDict.GetFriendlyName()}");
                 meta = (genericInterfaceType.GenericTypeArguments[0], genericInterfaceType.GenericTypeArguments[1]);
                 return true;
             }
@@ -156,7 +156,7 @@ namespace Nemesis.TextParsers.Parsers
                     dictType.IsGenericType && dictType.GetGenericTypeDefinition() == iReadOnlyDict
                         ? dictType
                         : TypeMeta.GetGenericRealization(dictType, iReadOnlyDict)
-                          ?? throw new InvalidOperationException($"Type has to be or implement {iReadOnlyDict.Name}<,>");
+                          ?? throw new InvalidOperationException($"Type has to be or implement {iReadOnlyDict.GetFriendlyName()}");
                 Type keyType = genericInterfaceType.GenericTypeArguments[0],
                    valueType = genericInterfaceType.GenericTypeArguments[1];
 

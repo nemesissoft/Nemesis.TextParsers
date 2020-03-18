@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,7 +15,7 @@ namespace Nemesis.TextParsers.Parsers
         /// <summary>
         /// Use Deconstruct provided in parsed type. Choose overload with larges number of parameters with matching constructor 
         /// </summary>
-        ConstructorDeconstructPair = 0,
+        DefaultConstructorDeconstructPair = 0,
         /// <summary>
         /// Use deconstruct-like method provided by other parameter i.e. void DeconstructMe(this instance, out field1, out field2). If method is static then first parameter should be of Deconstructed type  
         /// </summary>
@@ -31,7 +30,7 @@ namespace Nemesis.TextParsers.Parsers
         public char? Start { get; private set; } = '(';
         public char? End { get; private set; } = ')';
 
-        public DeconstructionMethod Mode { get; private set; } = DeconstructionMethod.ConstructorDeconstructPair;
+        public DeconstructionMethod Mode { get; private set; } = DeconstructionMethod.DefaultConstructorDeconstructPair;
         public MethodInfo Deconstruct { get; private set; }
         public ConstructorInfo Ctor { get; private set; }
 
@@ -40,40 +39,40 @@ namespace Nemesis.TextParsers.Parsers
         /// Get default instance. Always return new instance 
         /// </summary>
         public static DeconstructionTransformerSettings Default => new DeconstructionTransformerSettings();
-        
+
 
         #region With
         [PublicAPI]
         public S WithTupleDelimiter(char delimiter) { Delimiter = delimiter; return this; }
-       
+
         [PublicAPI]
         public S WithNullElementMarker(char nullElementMarker) { NullElementMarker = nullElementMarker; return this; }
-       
+
         [PublicAPI]
         public S WithEscapingSequenceStart(char escapingSequenceStart) { EscapingSequenceStart = escapingSequenceStart; return this; }
-       
+
         [PublicAPI]
         public S WithTupleStart(char start) { Start = start; return this; }
-       
+
         [PublicAPI]
         public S WithTupleEnd(char end) { End = end; return this; }
-       
+
         [PublicAPI]
         public S WithBorders(char start, char end) { (Start, End) = (start, end); return this; }
-       
+
         [PublicAPI]
         public S WithoutBorders() { (Start, End) = (null, null); return this; }
-        
+
         [PublicAPI]
         public S WithDefaultDeconstruction()
         {
-            Mode = DeconstructionMethod.ConstructorDeconstructPair;
+            Mode = DeconstructionMethod.DefaultConstructorDeconstructPair;
             Deconstruct = null;
             Ctor = null;
 
             return this;
         }
-       
+
         [PublicAPI]
         public S WithCustomDeconstruction(MethodInfo deconstruct, ConstructorInfo ctor)
         {
@@ -88,11 +87,12 @@ namespace Nemesis.TextParsers.Parsers
 
 
         public const string DECONSTRUCT = "Deconstruct";
-        public static bool TryGetDefaultDeconstruct(Type type, out (MethodInfo deconstruct, ConstructorInfo ctor) result)
+        public static bool TryGetDefaultDeconstruct(Type type, out MethodInfo deconstruct, out ConstructorInfo ctor)
         {
-            const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+            const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-            result = default;
+            deconstruct = default;
+            ctor = default;
 
             var ctors = type.GetConstructors(ALL_FLAGS).Select(c => (ctor: c, @params: c.GetParameters())).ToList();
             if (ctors.Count == 0) return false;
@@ -102,77 +102,122 @@ namespace Nemesis.TextParsers.Parsers
                 .Select(m => (method: m, @params: m.GetParameters()))
                 .Where(pair => string.Equals(pair.method.Name, DECONSTRUCT, StringComparison.Ordinal) &&
                                pair.@params.Length > 0 &&
-                               pair.@params.All(p => p.IsOut) //TODO + check if param type is supported for transformation ?
+                               pair.@params.All(p => p.IsOut) //TODO + check if param type is supported for transformation+recurrence  ?
                 )
                 .OrderByDescending(p => p.@params.Length);
-
-            static bool IsCompatible(IReadOnlyList<ParameterInfo> left, IReadOnlyList<ParameterInfo> right)
-            {
-                bool AreEqualByParamTypes()
-                {
-                    static Type FlattenRef(Type type) =>
-                        type.IsByRef ? type.GetElementType() : type;
-
-                    // ReSharper disable once LoopCanBeConvertedToQuery
-                    for (var i = 0; i < left.Count; i++)
-                        if (FlattenRef(left[i].ParameterType)
-                                        !=
-                            FlattenRef(right[i].ParameterType)
-                           )
-                            return false;
-                    return true;
-                }
-
-                return left != null && right != null && left.Count == right.Count && AreEqualByParamTypes();
-            }
 
             foreach (var (method, @params) in deconstructs)
             {
                 var ctorPair = ctors.FirstOrDefault(p => IsCompatible(p.@params, @params));
-                if (ctorPair.ctor is { } ctor)
+                if (ctorPair.ctor is { } c)
                 {
-                    result = (method, ctor);
+                    deconstruct = method;
+                    ctor = c;
+
                     return true;
                 }
             }
 
             return false;
         }
+
+        private static bool IsCompatible(IReadOnlyList<ParameterInfo> left, IReadOnlyList<ParameterInfo> right)
+        {
+            bool AreEqualByParamTypes()
+            {
+                static Type FlattenRef(Type type) =>
+                    type.IsByRef ? type.GetElementType() : type;
+
+                // ReSharper disable once LoopCanBeConvertedToQuery
+                for (var i = 0; i < left.Count; i++)
+                    if (FlattenRef(left[i].ParameterType)
+                        !=
+                        FlattenRef(right[i].ParameterType)
+                    )
+                        return false;
+                return true;
+            }
+
+            return left != null && right != null && left.Count == right.Count && AreEqualByParamTypes();
+        }
+
+        public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>()
+        {
+            // ReSharper disable ArgumentsStyleNamedExpression
+            var helper = new TupleHelper(tupleDelimiter: Delimiter, nullElementMarker: NullElementMarker,
+                escapingSequenceStart: EscapingSequenceStart, tupleStart: Start, tupleEnd: End);
+            // ReSharper restore ArgumentsStyleNamedExpression
+
+            MethodInfo deconstruct;
+            ConstructorInfo ctor;
+            switch (Mode)
+            {
+                case DeconstructionMethod.DefaultConstructorDeconstructPair:
+                    {
+                        if (!TryGetDefaultDeconstruct(typeof(TDeconstructable), out deconstruct, out ctor) ||
+                            deconstruct is null || deconstruct.GetParameters().Length == 0 ||
+                            ctor is null || ctor.GetParameters().Length == 0
+                        )
+                            throw new NotSupportedException($"Default deconstruction method supports cases with at lease one non-nullary {DECONSTRUCT} method with matching constructor");
+                        break;
+                    }
+                case DeconstructionMethod.ProvidedDeconstructMethod:
+                    deconstruct = Deconstruct;
+                    ctor = Ctor;
+                    break;
+                default:
+                    throw new NotSupportedException($"{nameof(Mode)} = {Mode} is not supported");
+            }
+            if (deconstruct is null || ctor is null)
+                throw new NotSupportedException($"{DECONSTRUCT} and constructor have to be provided");
+
+            if (deconstruct.IsStatic)
+            {
+                if (deconstruct.GetParameters() is { } dp && ctor.GetParameters() is { } cp && (
+                    dp.Length < 2 ||
+                    dp.Length != cp.Length + 1 ||
+                    !dp[0].ParameterType.IsAssignableFrom(typeof(TDeconstructable)) ||
+                    !IsCompatible(dp.Skip(1).ToList(), cp)
+                ))
+                    throw new NotSupportedException(
+                        $"Static {DECONSTRUCT} method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance");
+            }
+            else if (!IsCompatible(deconstruct.GetParameters(), ctor.GetParameters()))
+                throw new NotSupportedException(
+                    $"Instance {DECONSTRUCT} method has to be compatible with provided constructor and should have same number of parameters");
+
+
+            var transformers = ctor.GetParameters()
+                     .Select(p => TextTransformer.Default.GetTransformer(p.ParameterType))
+                     .ToArray();
+
+            var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);
+            var formatter = DeconstructionTransformer<TDeconstructable>.CreateFormatter(deconstruct);
+
+            return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter);
+        }
     }
 
-    public sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
+    internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
     {
-        private delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
-        private delegate string FormatterDelegate(TDeconstructable element, TupleHelper helper, ITransformer[] transformers);
+        public delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
+        public delegate string FormatterDelegate(TDeconstructable element, TupleHelper helper, ITransformer[] transformers);
 
-        private readonly ConstructorInfo _ctor;
+
+        private readonly TupleHelper _helper;
         private readonly ITransformer[] _transformers;
         private readonly ParserDelegate _parser;
         private readonly FormatterDelegate _formatter;
 
-        //TODO: make non-static add option for transformer: char? bracketChar, char delimiter ...
-        [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
-        [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
-        private static readonly TupleHelper _helper = new TupleHelper(
-            tupleDelimiter: ';',
-            nullElementMarker: '∅',
-            escapingSequenceStart: '\\',
-            tupleStart: '(',
-            tupleEnd: ')');
-
-        public DeconstructionTransformer(MethodInfo deconstruct, ConstructorInfo ctor)
+        internal DeconstructionTransformer(TupleHelper helper, ITransformer[] transformers, ParserDelegate parser, FormatterDelegate formatter)
         {
-            _ctor = ctor;
-            _transformers = ctor.GetParameters()
-             .Select(p => TextTransformer.Default.GetTransformer(p.ParameterType))
-             .ToArray();
-            //TODO add debug sanity check deconstruct ~= ctor
-
-            _parser = CreateParser(ctor);
-            _formatter = CreateFormatter(deconstruct);
+            _helper = helper;
+            _transformers = transformers;
+            _parser = parser;
+            _formatter = formatter;
         }
 
-        private static ParserDelegate CreateParser(ConstructorInfo ctor)
+        internal static ParserDelegate CreateParser(ConstructorInfo ctor)
         {
             var @params = ctor.GetParameters();
             byte arity = (byte)@params.Length;
@@ -229,8 +274,9 @@ namespace Nemesis.TextParsers.Parsers
             return λ.Compile();
         }
 
-        private FormatterDelegate CreateFormatter(MethodInfo deconstruct)
+        internal static FormatterDelegate CreateFormatter(MethodInfo deconstruct)
         {
+            //TODO support static and instance Deconstruct
             return null;
         }
 
@@ -252,8 +298,9 @@ namespace Nemesis.TextParsers.Parsers
             Helper.ParseEnd(ref enumerator, ARITY);
 
             return (t1, t2, t3, t4);
-        }
+        }*/
 
+        /*
         public override string Format((T1, T2, T3, T4) element)
         {
             Span<char> initialBuffer = stackalloc char[32];
@@ -285,6 +332,18 @@ namespace Nemesis.TextParsers.Parsers
             element is null ? null : _formatter(element, _helper, _transformers);
 
         public override string ToString() =>
-            $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({string.Join(", ", _ctor?.GetParameters().Select(p => p.ParameterType.GetFriendlyName()) ?? Enumerable.Empty<string>())})";
+            $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()})";
+
+        private string GetTupleDefinition()
+        {
+            var def = _transformers?.Select(t =>
+                TypeMeta.TryGetGenericRealization(t.GetType(), typeof(ITransformer<>), out var realization)
+                 ? realization.GenericTypeArguments[0].GetFriendlyName()
+                 : "object"
+                ) ?? Enumerable.Empty<string>();
+
+            return string.Join(", ", def);
+
+        }
     }
 }

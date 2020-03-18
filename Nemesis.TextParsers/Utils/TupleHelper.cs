@@ -67,7 +67,7 @@ namespace Nemesis.TextParsers.Utils
             return enumerator;
         }
 
-        //TODO move that to common helpers
+        //TODO move that to common helpers + parse Complex class using common logic 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
         {

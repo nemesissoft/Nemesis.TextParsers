@@ -7,7 +7,11 @@ using NUnit.Framework;
 namespace Nemesis.TextParsers.Tests
 {/*TODO  
 tests - more than 8 params
-recursive tests + exploratory tests 
+recursive tests (,,, (,))
+
+    static Deconstruct(this IInterface, ...)
+
+exploratory tests 
     
     MetaTransformer.GetByProperties
 
