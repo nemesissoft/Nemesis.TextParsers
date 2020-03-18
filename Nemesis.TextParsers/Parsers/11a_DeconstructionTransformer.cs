@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -276,8 +277,66 @@ namespace Nemesis.TextParsers.Parsers
 
         internal static FormatterDelegate CreateFormatter(MethodInfo deconstruct)
         {
-            //TODO support static and instance Deconstruct
-            return null;
+            static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
+
+            var @params = deconstruct.IsStatic
+                ? deconstruct.GetParameters().Skip(1).ToArray()
+                : deconstruct.GetParameters();
+            //byte arity = (byte)(@params.Length - (deconstruct.IsStatic ? 1 : 0));
+
+            var element = Expression.Parameter(typeof(TDeconstructable), "element");
+            var helper = Expression.Parameter(typeof(TupleHelper), "helper");
+            var transformers = Expression.Parameter(typeof(ITransformer[]), "transformers");
+
+            var accumulator = Expression.Variable(typeof(ValueSequenceBuilder<char>), "accumulator");
+            var initialBuffer = Expression.Variable(typeof(char[]), "initialBuffer");
+            var temps = @params.Select((p, i) => Expression.Variable(FlattenRef(p.ParameterType), $"temp{i + 1}")).ToList();
+
+            var rentMethod = Method.OfExpression<Func<ArrayPool<char>, int, char[]>>((ap, i) => ap.Rent(i));
+            var returnMethod = Method.OfExpression<Action<ArrayPool<char>, char[], bool>>((ap, arr, clear) => ap.Return(arr, clear));
+
+            var arrayPoolAccess = Expression.Property(null, Property.Of((ArrayPool<char> ap) => ArrayPool<char>.Shared));
+            var rentInitialBuffer = Expression.Assign(initialBuffer,
+                Expression.Call(arrayPoolAccess, rentMethod, Expression.Constant(10))
+            );
+            var returnInitialBuffer = Expression.Call(arrayPoolAccess, returnMethod, initialBuffer, Expression.Constant(false));
+
+
+            var deconstructExp = deconstruct.IsStatic
+                ? Expression.Call(deconstruct, new[] { element }.Concat(temps)) //TODO add convert
+                : Expression.Call(element, deconstruct, temps);
+            var expressions = new List<Expression>(5 + @params.Length)
+            {
+                deconstructExp,
+                Expression.Assign(accumulator,
+                    Expression.New(
+                        typeof(ValueSequenceBuilder<char>).GetConstructor(new []{typeof(Span<char>)}) ?? throw new MissingMemberException($"No proper ctor in {nameof(ValueSequenceBuilder<char>)}"),
+                        initialBuffer
+                    )
+                ),
+                Expression.Call(helper, nameof(TupleHelper.StartFormat), null, accumulator)
+            };
+
+
+
+
+
+
+            expressions.Add(
+                Expression.Call(helper, nameof(TupleHelper.EndFormat), null, accumulator)
+                );
+            //expressions.Add(
+
+
+            /* accumulator.AsSpan().ToString();  */
+
+
+            var body = Expression.Block(
+                new[] { accumulator, initialBuffer }.Concat(temps),
+                expressions);
+
+            var λ = Expression.Lambda<FormatterDelegate>(body, element, helper, transformers);
+            return λ.Compile();
         }
 
         /*public override (T1, T2, T3, T4) Parse(in ReadOnlySpan<char> input)
@@ -301,29 +360,36 @@ namespace Nemesis.TextParsers.Parsers
         }*/
 
         /*
-        public override string Format((T1, T2, T3, T4) element)
-        {
-            Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            Helper.StartFormat(ref accumulator);
+        public string Format2((T1, T2, T3) element)
+            {
+                var initialBuffer = ArrayPool<char>.Shared.Rent(10);
+                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                
+                try
+                {
+                    var (temp1, temp2, temp3) = element;
+                                        
+                    Helper.StartFormat(ref accumulator);
 
-            Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            Helper.AddDelimiter(ref accumulator);
+                    Helper.FormatElement(_transformer1, temp1, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
 
-            Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-            Helper.AddDelimiter(ref accumulator);
+                    Helper.FormatElement(_transformer2, temp2, ref accumulator);
+                    Helper.AddDelimiter(ref accumulator);
 
-            Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-            Helper.AddDelimiter(ref accumulator);
-
-            Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                    Helper.FormatElement(_transformer3, temp3, ref accumulator);
 
 
-            Helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
-        }*/
+                    Helper.EndFormat(ref accumulator);
+                    var text = accumulator.AsSpan().ToString();                    
+                    return text;
+                }
+                finally
+                {
+                    accumulator.Dispose();
+                    ArrayPool<char>.Shared.Return(initialBuffer);
+                }
+            }*/
 
         public override TDeconstructable Parse(in ReadOnlySpan<char> input) =>
             input.IsEmpty ? default : _parser(input, _helper, _transformers);

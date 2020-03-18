@@ -9,7 +9,7 @@ namespace Nemesis.TextParsers.Tests
 tests - more than 8 params
 recursive tests (,,, (,))
 
-    static Deconstruct(this IInterface, ...)
+    static Deconstruct(this IInterface, ...) convariance va contravariance 
 
 exploratory tests 
     
