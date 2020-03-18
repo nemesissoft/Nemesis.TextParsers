@@ -65,7 +65,7 @@ namespace Nemesis.TextParsers.Parsers
         //public bool CanHandle(Type type) => typeof(TElement) == type;
         public Type Type => typeof(TElement);
 
-        public override string ToString() => $"Transform {Type.Name}";
+        public override string ToString() => $"Transform {Type.GetFriendlyName()}";
     }
 
     [UsedImplicitly]

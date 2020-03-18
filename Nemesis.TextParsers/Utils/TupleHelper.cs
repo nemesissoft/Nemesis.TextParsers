@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
+    //TODO change to readonly struct ?. Add tests
     public class TupleHelper
     {
         private readonly char _tupleDelimiter;
@@ -75,7 +76,7 @@ namespace Nemesis.TextParsers.Utils
                 return span;
 
             int minLength = (_tupleStart.HasValue ? 1 : 0) + (_tupleEnd.HasValue ? 1 : 0);
-            if (span.Length < minLength) throw GetStateException();
+            if (span.Length < minLength) throw GetStateException(span.ToString());
 
             int start = 0;
 
@@ -86,11 +87,11 @@ namespace Nemesis.TextParsers.Utils
                         break;
 
                 bool startsWithChar = start < span.Length && span[start] == _tupleStart.Value;
-                if (!startsWithChar) throw GetStateException();
+                if (!startsWithChar) throw GetStateException(span.ToString());
 
                 ++start;
             }
-            
+
 
             int end = span.Length - 1;
 
@@ -101,15 +102,17 @@ namespace Nemesis.TextParsers.Utils
                         break;
 
                 bool endsWithChar = end > 0 && span[end] == _tupleEnd.Value;
-                if (!endsWithChar) throw GetStateException();
+                if (!endsWithChar) throw GetStateException(span.ToString());
 
                 --end;
             }
 
             return span.Slice(start, end - start + 1);
 
-            Exception GetStateException() => new ArgumentException(
-                     $"Tuple representation has to start with '{(_tupleStart is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(_tupleEnd is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace");
+            Exception GetStateException(string text) => new ArgumentException(
+                     $@"Tuple representation has to start with '{(_tupleStart is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(_tupleEnd is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
+These requirements were not met in:
+'{text ?? "<NULL>"}'");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

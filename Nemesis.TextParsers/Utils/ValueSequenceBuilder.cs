@@ -55,7 +55,7 @@ namespace Nemesis.TextParsers.Utils
 
         private void Grow()
         {
-            T[] array = ArrayPool<T>.Shared.Rent(_current.Length * 2);
+            T[] array = ArrayPool<T>.Shared.Rent(Math.Max(_current.Length * 2, 16));
             _current.CopyTo(array);
             T[] prevFromPool = _arrayFromPool;
             _current = _arrayFromPool = array;
