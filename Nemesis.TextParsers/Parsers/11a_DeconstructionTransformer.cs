@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -36,11 +37,9 @@ namespace Nemesis.TextParsers.Parsers
         public ConstructorInfo Ctor { get; private set; }
 
         public override string ToString() =>
-            $@"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'
-Mode = {Mode}
-Deconstructed by {(Deconstruct == null ? "<default>" : $"{Deconstruct.DeclaringType.GetFriendlyName()}.{Deconstruct.Name}({string.Join(", ", Deconstruct.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}
-Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFriendlyName()}({string.Join(", ", Ctor.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}
-";
+            $@"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}' Mode = {Mode}. 
+Deconstructed by {(Deconstruct == null ? "<default>" : $"{Deconstruct.DeclaringType.GetFriendlyName()}.{Deconstruct.Name}({string.Join(", ", Deconstruct.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}. 
+Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFriendlyName()}({string.Join(", ", Ctor.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}.";
 
         private DeconstructionTransformerSettings() { }
         /// <summary>
@@ -225,7 +224,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             _parser = parser;
             _formatter = formatter;
         }
-        
+
         /*
          public override (T1, T2, T3, T4) Parse(in ReadOnlySpan<char> input)
          {
@@ -344,7 +343,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             var expressions = new List<Expression>(7 + 2 * arity)
             {
-                rentInitialBuffer, 
+                rentInitialBuffer,
                 accumulatorInit,
                 deconstruct.IsStatic
                     ? Expression.Call(deconstruct, new[] { element }.Concat(temps)) //TODO add convert
@@ -372,26 +371,27 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             }
 
             expressions.Add(Expression.Call(helper, nameof(TupleHelper.EndFormat), null, accumulator));
-            expressions.Add(accumulatorToString);
 
+            var text = Expression.Variable(typeof(string), "text");
+            expressions.Add(
+                Expression.Assign(text, accumulatorToString)
+                );
+            expressions.Add(returnInitialBuffer);
+            expressions.Add(text);
 
-
+            
             var tryBody = Expression.Block(
-                new[] { accumulator, initialBuffer }.Concat(temps),
+                new[] { accumulator, initialBuffer, text }.Concat(temps),
                 expressions);
 
             var finallyBody = Expression.Block(
-                new[] { accumulator, initialBuffer }.Concat(temps),
-                accumulatorDispose, returnInitialBuffer);
+                new[] { accumulator },
+                accumulatorDispose);
 
             var tryFinally = Expression.TryFinally(tryBody, finallyBody);
 
-            var body = Expression.Block(
-                new[] { accumulator, initialBuffer }.Concat(temps),
-                tryFinally
-                );
 
-            var λ = Expression.Lambda<FormatterDelegate>(body, element, helper, transformers);
+            var λ = Expression.Lambda<FormatterDelegate>(tryFinally, element, helper, transformers);
             return λ.Compile();
         }
 

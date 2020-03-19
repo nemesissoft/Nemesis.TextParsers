@@ -173,7 +173,8 @@ namespace Nemesis.TextParsers.Parsers
             }
             catch (FormatException e)
             {
-                throw new FormatException($"{nameof(Boolean)} type does not recognize sequence {input.ToString()}", e);
+                var seq = input.ToString();
+                throw new FormatException($"{nameof(Boolean)} type does not recognize sequence {seq}", e);
             }
         }
 
