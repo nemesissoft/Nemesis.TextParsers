@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
-using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -108,6 +108,10 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [TypeConverter(typeof(BadPointConverter))]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
         struct PointWithBadConverter
         {
             public int X { get; }
@@ -125,7 +129,10 @@ namespace Nemesis.TextParsers.Tests
                 destinationType != typeof(string);
         }
 
-
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
         struct PointWithoutConverter
         {
             public int X { get; }

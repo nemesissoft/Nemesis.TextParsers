@@ -14,7 +14,7 @@ using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
 namespace Nemesis.TextParsers.Tests
 {
 
-    //TODO change priority with Any trans 
+    
     //TODO add TypeConverter with deconstruct 
 
     /*TODO

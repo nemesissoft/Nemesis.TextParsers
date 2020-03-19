@@ -44,6 +44,6 @@ namespace Nemesis.TextParsers.Parsers
 
         public bool CanHandle(Type type) => true;
 
-        public sbyte Priority => 127;
+        public sbyte Priority => sbyte.MaxValue;
     }
 }

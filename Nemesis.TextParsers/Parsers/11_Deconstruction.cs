@@ -1,6 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
-using S = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
+using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -8,9 +8,9 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class DeconstructionTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TDeconstructable> CreateTransformer<TDeconstructable>() 
-            => S.Default.ToTransformer<TDeconstructable>();
+            => Sett.Default.ToTransformer<TDeconstructable>();
 
-        public bool CanHandle(Type type) => S.TryGetDefaultDeconstruct(type, out _, out _);
+        public bool CanHandle(Type type) => Sett.TryGetDefaultDeconstruct(type, out _, out _);
 
         public sbyte Priority => 120;
     }
