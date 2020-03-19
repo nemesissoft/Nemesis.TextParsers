@@ -144,11 +144,18 @@ Whole number from -2147483648 to 2147483647 or null";
             new TestCaseData(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
         };
 
+        private static string NormalizeNewLines(string s) => s?
+            .Replace(Environment.NewLine, " ")
+            .Replace("\n", " ")
+            .Replace("\r", " ");
+
         [TestCaseSource(nameof(GetSyntaxData))]
         public void AggressionBased_GetSyntax(Type type, string expectedSyntax) =>
             Assert.That(
-                TextConverterSyntaxAttribute.GetConverterSyntax(type),
-                Is.EqualTo(expectedSyntax)
+                NormalizeNewLines(TextConverterSyntaxAttribute.GetConverterSyntax(type)),
+                Is.EqualTo(
+                    NormalizeNewLines(expectedSyntax)
+                    )
                 );
     }
 }
