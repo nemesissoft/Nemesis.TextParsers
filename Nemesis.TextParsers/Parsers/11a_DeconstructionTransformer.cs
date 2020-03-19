@@ -178,7 +178,6 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             if (deconstruct is null || ctor is null)
                 throw new NotSupportedException($"{DECONSTRUCT} and constructor have to be provided");
 
-            //todo check all params to be isOut 
             if (deconstruct.IsStatic)
             {
                 if (deconstruct.GetParameters() is { } dp && ctor.GetParameters() is { } cp && (
@@ -189,10 +188,24 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 ))
                     throw new NotSupportedException(
                         $"Static {DECONSTRUCT} method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance");
+
+                if (deconstruct.GetParameters().Skip(1).Any(p => !p.IsOut))
+                    throw new NotSupportedException(
+                        $"Static {DECONSTRUCT} method must have all but first params as out params (IsOut==true)");
             }
-            else if (!IsCompatible(deconstruct.GetParameters(), ctor.GetParameters()))
-                throw new NotSupportedException(
-                    $"Instance {DECONSTRUCT} method has to be compatible with provided constructor and should have same number of parameters");
+            else
+            {
+                if (deconstruct.GetParameters() is { } dp && (
+                    dp.Length == 0 ||
+                    !IsCompatible(dp, ctor.GetParameters())
+                ))
+                    throw new NotSupportedException(
+                        $"Instance {DECONSTRUCT} method has to be compatible with provided constructor and should have same number of parameters");
+
+                if (deconstruct.GetParameters().Any(p => !p.IsOut))
+                    throw new NotSupportedException(
+                        $"Instance {DECONSTRUCT} method must have all out params (IsOut==true)");
+            }
 
 
             var transformers = ctor.GetParameters()
@@ -379,7 +392,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             expressions.Add(returnInitialBuffer);
             expressions.Add(text);
 
-            
+
             var tryBody = Expression.Block(
                 new[] { accumulator, initialBuffer, text }.Concat(temps),
                 expressions);
