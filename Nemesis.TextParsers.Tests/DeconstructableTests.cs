@@ -168,7 +168,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         }
 
         
-        [TestCase(@"(Mike;36;(Wrocław;52200))", typeof(ArgumentException), "These requirements were not met in: '(Wrocław'")]
+        [TestCase(@"(Mike;36;(Wrocław;52200))", typeof(ArgumentException), "These requirements were not met in:'(Wrocław'")]
         [TestCase(@"(Mike;36;(Wrocław);52200))", typeof(ArgumentException), "2nd tuple element was not found after 'Wrocław'")]
         [TestCase(@"(Mike;36;(Wrocław\;52200);123))", typeof(ArgumentException), "cannot have more than 3 elements: '123)'")]
         public void Parse_NegativeTest(string wrongInput, Type expectedException, string expectedMessagePart)

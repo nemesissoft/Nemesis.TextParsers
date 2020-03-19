@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using Nemesis.TextParsers.Parsers;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -58,14 +59,75 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void NoConverter_NegativeTest()
         {
-            var conv = TypeDescriptor.GetConverter(typeof(PointWithoutConverter));
-            Assert.That(conv, Is.TypeOf<TypeConverter>());
+            var sut = new TypeConverterTransformerCreator();
+
+            Assert.That(
+                () => sut.CreateTransformer<PointWithoutConverter>(),
+                Throws.TypeOf<NotSupportedException>()
+                    .With.Message.EqualTo(@"PointWithoutConverter is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
+                );
+            
+            Assert.That(
+                () => sut.CreateTransformer<object>(),
+                Throws.TypeOf<NotSupportedException>()
+                    .With.Message.EqualTo(@"object is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
+                );
+        }
+        
+        [Test]
+        public void AnyHandler_NegativeTest()
+        {
+            Assert.That(
+                TypeDescriptor.GetConverter(typeof(PointWithoutConverter)),
+                Is.TypeOf<TypeConverter>()
+            );
+
+            Assert.That(
+                TypeDescriptor.GetConverter(typeof(object)),
+                Is.TypeOf<TypeConverter>()
+            );
+
 
             Assert.That(
                 () => TextTransformer.Default.GetTransformer<PointWithoutConverter>(),
                 Throws.TypeOf<NotSupportedException>()
-                    .With.Message.EqualTo("PointWithoutConverter is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
-                );
+                    .With.Message.EqualTo(@"PointWithoutConverter is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+            );
+
+            Assert.That(
+                () => TextTransformer.Default.GetTransformer<object>(),
+                Throws.TypeOf<NotSupportedException>()
+                    .With.Message.EqualTo(@"object is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+            );
+        } 
+        
+        [TestCase(typeof(PointWithConverter), true)]
+        [TestCase(typeof(string), true)]
+        [TestCase(typeof(TimeSpan), true)]
+        [TestCase(typeof(TimeSpan[]), true)]
+        
+        [TestCase(typeof(PointWithBadConverter), false)]
+        [TestCase(typeof(PointWithoutConverter), false)]
+        [TestCase(typeof(object), false)]
+        [TestCase(typeof(object[]), false)]
+        [TestCase(typeof(object[][]), false)]
+        [TestCase(typeof(object[,]), false)]
+        [TestCase(typeof(ICollection<object>), false)]
+        [TestCase(typeof(IDictionary<object, object>), false)]
+        [TestCase(typeof(IReadOnlyList<object>), false)]
+        [TestCase(typeof(List<object>), false)]
+        [TestCase(typeof(PointWithoutConverter?), false)]
+        [TestCase(typeof(PointWithBadConverter?), false)]
+        [TestCase(typeof(ValueTuple<object, object>), false)]
+        [TestCase(typeof(KeyValuePair<object, object>), false)]
+        public void IsSupportedForTransformation(Type type, bool expected)
+        {
+            var ttt1 = TextTransformer.Default.GetTransformer<object[,]>().ParseFromText("");
+            var ttt2 = TextTransformer.Default.GetTransformer<object[][]>().ParseFromText("");
+
+
+            var actual = TextTransformer.Default.IsSupportedForTransformation(type);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
 
