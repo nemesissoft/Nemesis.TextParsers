@@ -8,7 +8,6 @@ using System.Numerics;
 using System.Reflection;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
-using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
@@ -250,28 +249,13 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception e)
             {
-                if (e is TargetInvocationException tie && tie.InnerException is { } inner)
-                    e = inner;
-
-                if (data.expectedException == e.GetType())
-                {
-                    if (e is OverflowException oe)
-                        Console.WriteLine("Expected overflow: " + oe.Message);
-                    else if (e is FormatException fe)
-                        Console.WriteLine("Expected bad format: " + fe.Message);
-                    else if (e is InvalidOperationException ioe)
-                        Console.WriteLine("Expected invalid operation: " + ioe.Message);
-                    else
-                        Console.WriteLine("Expected: " + e.Message);
-                }
-                else
-                    Assert.Fail($@"Unexpected external exception: {e}");
+                TestHelper.AssertException(e, data.expectedException, null);
             }
             if (passed)
                 Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? new string[0])}");
         }
 
-        private static IReadOnlyList<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
+        private static IEnumerable<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
             where TNumber : struct, IComparable, IComparable<TNumber>, IEquatable<TNumber>, IFormattable
         {
             var result = new List<TNumber>();

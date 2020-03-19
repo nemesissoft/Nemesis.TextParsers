@@ -1,0 +1,4 @@
+﻿[*.{cs,vb}]
+
+# IDE0071: Simplify interpolation
+dotnet_style_prefer_simplified_interpolation = true:none

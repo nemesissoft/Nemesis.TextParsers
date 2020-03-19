@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.*" />
     <PackageReference Include="FluentAssertions" Version="5.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />

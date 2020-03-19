@@ -67,7 +67,6 @@ namespace Nemesis.TextParsers.Utils
             return enumerator;
         }
 
-        //TODO move that to common helpers + parse Complex class using common logic 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
         {
@@ -131,8 +130,9 @@ These requirements were not met in:
                 };
             }
 
+            var current = enumerator.Current;
             if (!enumerator.MoveNext())
-                throw new ArgumentException($"{ToOrdinal(index)} tuple element was not found");
+                throw new ArgumentException($"{ToOrdinal(index)} tuple element was not found after '{current.ToString()}'");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

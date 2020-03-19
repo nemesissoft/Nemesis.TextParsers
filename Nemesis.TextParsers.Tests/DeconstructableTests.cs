@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Reflection;
 using FluentAssertions;
+using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
-using Nemesis.TextParsers.Parsers;
-using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
 using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
@@ -30,8 +28,9 @@ exploratory tests
     
     MetaTransformer.GetByProperties
 
-    test escaping sequences 
-    test- start and end with same character. 
+    test different escaping sequences +  null marker + Delimiter
+        address : (Wrocław);52200)   - success where ) is pars of string  
+        
     with (', null) sequence. 
     with '' empty tuple. 
     with empty text with no border. 
@@ -41,10 +40,11 @@ exploratory tests
         
         test all thrown exceptions in DecoTrans
         test TupleHelper +test all thrown exceptions
+//TODO move UnParenthesize to common helpers + parse Complex class using common logic 
 update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
     */
     [TestFixture]
-    class DeconstructableTests
+    internal class DeconstructableTests
     {
         internal static IEnumerable<TCD> CorrectData() => new[]
         {
@@ -63,7 +63,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         public void ParseAndFormat(Type type, object instance, string text)
         {
             var tester = Method.OfExpression<Action<object, string, Func<Sett, Sett>>>(
-                (i, t, m) => ParseAndFormatHelper(i, t, m)
+                (i, t, m) => FormatAndParseHelper(i, t, m)
             ).GetGenericMethodDefinition();
 
             tester = tester.MakeGenericMethod(type);
@@ -71,7 +71,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             tester.Invoke(null, new[] { instance, text, null });
         }
 
-        private static void ParseAndFormatHelper<TDeconstructable>(TDeconstructable instance, string text, Func<Sett, Sett> settingsMutator = null)
+        private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, Func<Sett, Sett> settingsMutator = null)
         {
             var settings = Sett.Default;
             settings = settingsMutator?.Invoke(settings) ?? settings;
@@ -90,20 +90,105 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
         }
 
+        private static void ParseHelper<TDeconstructable>(TDeconstructable expected, string input, Func<Sett, Sett> settingsMutator = null)
+        {
+            var settings = Sett.Default;
+            settings = settingsMutator?.Invoke(settings) ?? settings;
+
+            var sut = settings.ToTransformer<TDeconstructable>();
+
+
+            var actualParsed1 = sut.ParseFromText(input);
+            var formatted1 = sut.Format(actualParsed1);
+            var actualParsed2 = sut.ParseFromText(formatted1);
+
+
+            IsMutuallyEquivalent(actualParsed1, expected);
+            IsMutuallyEquivalent(actualParsed2, expected);
+            IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        }
+
         [Test]
-        public void ParseAndFormat_CustomDeconstruct() => ParseAndFormatHelper(
+        public void ParseAndFormat_CustomDeconstruct() => FormatAndParseHelper(
                 new DataWithNoDeconstruct("Mike", "Wrocław", 36, 3.14), @"{Mike;Wrocław;36;3.14}",
                 s => s.WithBorders('{', '}').WithCustomDeconstruction(DataWithNoDeconstructExt.DeconstructMethod,
                     DataWithNoDeconstructExt.Constructor));
 
-        //TODO
-        //new TCD(typeof(Person), new Person("Mike", 36, new Address("Wrocław", 52200)), @"(Mike;36;(Wrocław;52200))"),
-        //new TCD(typeof(Person), new Person("Mike", 36, new Address("Wrocław", 52200)), @"(Mike;36;(Wrocław);52200))"),
-        //new TCD(typeof(Person), new Person("Mike", 36, new Address("Wrocław", 52200)), @"(Mike;36;(Wrocław\;52200);123))"),
         [Test]
-        public void NegativeTest()
+        public void ParseAndFormat_NoBorders()
         {
+            FormatAndParseHelper(
+                new ThreeStrings("A", "B", "C"), @"A;B;C",
+                s => s.WithoutBorders());
 
+            FormatAndParseHelper(
+                new ThreeStrings(" A", "B", "C "), @" A;B;C ",
+                s => s.WithoutBorders());
+        }
+
+        [Test]
+        public void ParseAndFormat_SameBorders()
+        {
+            FormatAndParseHelper(
+                new ThreeStrings("A", "B", "C"), @"/A;B;C/",
+                s => s.WithBorders('/', '/'));
+
+            ParseHelper(
+                new ThreeStrings("A", "B", "C"), @"    /A;B;C/    ",
+                s => s.WithBorders('/', '/'));
+
+
+            ParseHelper(
+                new ThreeStrings("A", "B", "C"), @"    AA;B;CA    ",
+                s => s.WithBorders('A', 'A'));
+        }
+
+        [Test]
+        public void ParseAndFormat_MixedBorders()
+        {
+            FormatAndParseHelper(
+                new ThreeStrings("A", "B", "C"), @"/A;B;C",
+                s => s.WithoutBorders().WithStart('/')
+                );
+
+            FormatAndParseHelper(
+                new ThreeStrings("A", "B", "C"), @"A;B;C/",
+                s => s.WithoutBorders().WithEnd('/')
+                );
+
+            FormatAndParseHelper(
+                new ThreeStrings(" A", "B", "C"), @" A;B;C/",
+                s => s.WithoutBorders().WithEnd('/')
+            );
+
+            FormatAndParseHelper(
+                new ThreeStrings(" A", "B", "C "), @"/ A;B;C ",
+                s => s.WithoutBorders().WithStart('/')
+            );
+        }
+
+        
+        [TestCase(@"(Mike;36;(Wrocław;52200))", typeof(ArgumentException), "These requirements were not met in: '(Wrocław'")]
+        [TestCase(@"(Mike;36;(Wrocław);52200))", typeof(ArgumentException), "2nd tuple element was not found after 'Wrocław'")]
+        [TestCase(@"(Mike;36;(Wrocław\;52200);123))", typeof(ArgumentException), "cannot have more than 3 elements: '123)'")]
+        public void Parse_NegativeTest(string wrongInput, Type expectedException, string expectedMessagePart)
+        {
+            var sut = Sett.Default
+                .ToTransformer<Person>();
+
+            bool passed = false;
+            Person parsed = default;
+            try
+            {
+                parsed = sut.ParseFromText(wrongInput);
+                passed = true;
+            }
+            catch (Exception actual)
+            {
+                TestHelper.AssertException(actual, expectedException, expectedMessagePart);
+            }
+            if (passed)
+                Assert.Fail($"'{wrongInput}' should not be parseable to:{Environment.NewLine}\t{parsed}");
         }
 
 
@@ -127,6 +212,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 Time = time;
             }
 
+            [UsedImplicitly]
             public void Deconstruct(out decimal carrot, out float[] onionFactors, out TimeSpan time)
             {
                 carrot = Carrot;
@@ -161,6 +247,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 Address = address;
             }
 
+            [UsedImplicitly]
             public void Deconstruct(out string name, out int age, out Address address)
             {
                 name = Name;
@@ -180,6 +267,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 ZipCode = zipCode;
             }
 
+            [UsedImplicitly]
             public void Deconstruct(out string city, out int zipCode)
             {
                 city = City;
@@ -220,7 +308,8 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             public Complex N13 { get; }
 
             // ReSharper disable once MemberCanBePrivate.Local
-            public LargeStruct(double n1, float n2, int n3, uint n4, short n5, ushort n6, byte n7, sbyte n8, long n9, ulong n10, decimal n11, BigInteger n12, Complex n13)
+            public LargeStruct(double n1, float n2, int n3, uint n4, short n5, ushort n6, byte n7, sbyte n8,
+                long n9, ulong n10, decimal n11, BigInteger n12, Complex n13)
             {
                 N1 = n1;
                 N2 = n2;
@@ -237,7 +326,9 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 N13 = n13;
             }
 
-            public void Deconstruct(out double n1, out float n2, out int n3, out uint n4, out short n5, out ushort n6, out byte n7, out sbyte n8, out long n9, out ulong n10, out decimal n11, out BigInteger n12, out Complex n13)
+            [UsedImplicitly]
+            public void Deconstruct(out double n1, out float n2, out int n3, out uint n4, out short n5, out ushort n6,
+                out byte n7, out sbyte n8, out long n9, out ulong n10, out decimal n11, out BigInteger n12, out Complex n13)
             {
                 n1 = N1;
                 n2 = N2;
@@ -259,6 +350,28 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 -123456789, 123456789, -1234, 1234, 127, -127, long.MinValue / 2, ulong.MaxValue / 2,
                 Math.Round((decimal)Math.Pow(Math.E, Math.PI), 8),
                 BigInteger.Parse("123456789012345678901234567890"), new Complex(Math.Round(Math.PI, 8), Math.Round(Math.E, 8)));
+        }
+
+        private readonly struct ThreeStrings
+        {
+            public string A { get; }
+            public string B { get; }
+            public string C { get; }
+
+            public ThreeStrings(string a, string b, string c)
+            {
+                A = a;
+                B = b;
+                C = c;
+            }
+
+            [UsedImplicitly]
+            public void Deconstruct(out string a, out string b, out string c)
+            {
+                a = A;
+                b = B;
+                c = C;
+            }
         }
     }
 
