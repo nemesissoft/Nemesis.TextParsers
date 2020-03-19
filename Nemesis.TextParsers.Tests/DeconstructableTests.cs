@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers.Tests
 
     /*TODO
     perf tests
-
+    //TODO perf test class vs readonly struct 
 recursive tests (,,, (,)) + test for no borders 
 
     static Deconstruct(this IInterface, ...) convariance va contravariance 
@@ -38,8 +38,9 @@ exploratory tests
     with no border and trailing/leading spaces
 
 
-        provided deconstruct method
-        test all thrown exceptions
+        
+        test all thrown exceptions in DecoTrans
+        test TupleHelper +test all thrown exceptions
 update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
     */
     [TestFixture]

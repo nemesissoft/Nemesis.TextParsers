@@ -3,8 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
-    //TODO change to readonly struct ?. Add tests
-    public class TupleHelper
+    public readonly struct TupleHelper : IEquatable<TupleHelper>
     {
         private readonly char _tupleDelimiter;
         private readonly char _nullElementMarker;
@@ -76,7 +75,7 @@ namespace Nemesis.TextParsers.Utils
                 return span;
 
             int minLength = (_tupleStart.HasValue ? 1 : 0) + (_tupleEnd.HasValue ? 1 : 0);
-            if (span.Length < minLength) throw GetStateException(span.ToString());
+            if (span.Length < minLength) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd);
 
             int start = 0;
 
@@ -87,7 +86,7 @@ namespace Nemesis.TextParsers.Utils
                         break;
 
                 bool startsWithChar = start < span.Length && span[start] == _tupleStart.Value;
-                if (!startsWithChar) throw GetStateException(span.ToString());
+                if (!startsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd);
 
                 ++start;
             }
@@ -102,15 +101,15 @@ namespace Nemesis.TextParsers.Utils
                         break;
 
                 bool endsWithChar = end > 0 && span[end] == _tupleEnd.Value;
-                if (!endsWithChar) throw GetStateException(span.ToString());
+                if (!endsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd);
 
                 --end;
             }
 
             return span.Slice(start, end - start + 1);
 
-            Exception GetStateException(string text) => new ArgumentException(
-                     $@"Tuple representation has to start with '{(_tupleStart is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(_tupleEnd is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
+            static Exception GetStateException(string text, char? start, char? end) => new ArgumentException(
+                     $@"Tuple representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
 These requirements were not met in:
 '{text ?? "<NULL>"}'");
         }
@@ -184,5 +183,31 @@ These requirements were not met in:
 
         public override string ToString() =>
             $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
+
+        public bool Equals(TupleHelper other) => 
+            _tupleDelimiter == other._tupleDelimiter &&
+            _nullElementMarker == other._nullElementMarker &&
+            _escapingSequenceStart == other._escapingSequenceStart &&
+            _tupleStart == other._tupleStart &&
+            _tupleEnd == other._tupleEnd;
+
+        public override bool Equals(object obj) => obj is TupleHelper other && Equals(other);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = _tupleDelimiter.GetHashCode();
+                hashCode = (hashCode * 397) ^ _nullElementMarker.GetHashCode();
+                hashCode = (hashCode * 397) ^ _escapingSequenceStart.GetHashCode();
+                hashCode = (hashCode * 397) ^ _tupleStart.GetHashCode();
+                hashCode = (hashCode * 397) ^ _tupleEnd.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public static bool operator ==(TupleHelper left, TupleHelper right) => left.Equals(right);
+
+        public static bool operator !=(TupleHelper left, TupleHelper right) => !left.Equals(right);
     }
 }
