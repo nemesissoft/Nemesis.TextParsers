@@ -232,7 +232,7 @@ namespace Nemesis.TextParsers.Utils
             var genericInterfaceType =
                 collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
                     ? collectionType
-                    : TypeMeta.GetConcreteInterfaceOfType(collectionType, typeof(IEnumerable<>))
+                    : TypeMeta.GetGenericRealization(collectionType, typeof(IEnumerable<>))
                       ?? throw new InvalidOperationException("Type has to be or implement IEnumerable<>");
 
             return genericInterfaceType.GenericTypeArguments[0];

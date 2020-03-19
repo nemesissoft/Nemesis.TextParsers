@@ -4,15 +4,8 @@ using System.Globalization;
 
 namespace Nemesis.TextParsers.Utils
 {
-    public sealed class UniversalTextTypeConverter<TValue> : TypeConverter
+    public sealed class UniversalTextTypeConverter<TValue> : TextTypeConverter
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
-            sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
-            destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
-
-
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
             value is string text
                 ? TextTransformer.Default.GetTransformer<TValue>().ParseFromText(text)

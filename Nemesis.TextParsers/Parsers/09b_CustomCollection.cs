@@ -129,7 +129,7 @@ namespace Nemesis.TextParsers.Parsers
                 var genericInterfaceType =
                     collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == iCollection
                         ? collectionType
-                        : TypeMeta.GetConcreteInterfaceOfType(collectionType, iCollection)
+                        : TypeMeta.GetGenericRealization(collectionType, iCollection)
                           ?? throw new InvalidOperationException($"Type has to be or implement {iCollection.Name}<>");
                 elementType = genericInterfaceType.GenericTypeArguments[0];
                 return true;
@@ -155,7 +155,7 @@ namespace Nemesis.TextParsers.Parsers
                 var genericInterfaceType =
                     collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == iReadOnlyColl
                         ? collectionType
-                        : TypeMeta.GetConcreteInterfaceOfType(collectionType, iReadOnlyColl)
+                        : TypeMeta.GetGenericRealization(collectionType, iReadOnlyColl)
                           ?? throw new InvalidOperationException($"Type has to be or implement {iReadOnlyColl.Name}<>");
                 var elementType = genericInterfaceType.GenericTypeArguments[0];
                 var iListType = typeof(IList<>).MakeGenericType(elementType);

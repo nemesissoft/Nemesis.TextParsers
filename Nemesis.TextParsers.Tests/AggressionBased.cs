@@ -25,7 +25,7 @@ namespace Nemesis.TextParsers.Tests
         string ToString();
     }
 
-    //[TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements")]
+    [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     [TextFactory(typeof(AggressionBasedFactoryChecked<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
@@ -44,6 +44,7 @@ namespace Nemesis.TextParsers.Tests
         public static readonly SpanCollectionSerializer Instance = new SpanCollectionSerializer('#', ';', '=', '∅', '\\');
     }
 
+    [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     [TextFactory(typeof(AggressionBasedFactoryChecked<>))]
     internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
     {

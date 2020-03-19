@@ -168,7 +168,7 @@ namespace Nemesis.TextParsers.Utils
                 dictType.IsGenericType && dictType.GetGenericTypeDefinition() is { } definition &&
                 (definition == typeof(IDictionary<,>) || definition == typeof(IReadOnlyDictionary<,>))
                     ? dictType
-                    : TypeMeta.GetConcreteInterfaceOfType(dictType, typeof(IDictionary<,>))
+                    : TypeMeta.GetGenericRealization(dictType, typeof(IDictionary<,>))
                       ?? throw new InvalidOperationException("Type has to be or implement IDictionary<,> or IReadOnlyDictionary<,>");
 
             return (genType.GenericTypeArguments[0], genType.GenericTypeArguments[1]);

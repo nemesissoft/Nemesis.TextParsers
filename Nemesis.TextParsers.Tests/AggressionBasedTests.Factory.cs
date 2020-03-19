@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
 using FacIntCheck = Nemesis.TextParsers.Tests.AggressionBasedFactoryChecked<int>;
 using System.Collections;
+using Nemesis.TextParsers.Utils;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 
 namespace Nemesis.TextParsers.Tests
@@ -118,5 +119,36 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values) =>
             Assert.Throws<ArgumentException>(() => FacIntCheck.FromValues(values));
+
+        private const string AGG_BASED_STRING_SYNTAX =
+            @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
+escape '#' with ""\#""and '\' with double backslash ""\\""
+
+Elements syntax:
+UTF-16 character string";
+
+        private const string AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX = @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
+escape '#' with ""\#""and '\' with double backslash ""\\""
+
+Elements syntax:
+Elements separated with pipe ('|') i.e.
+1|2|3
+(escape '|' with ""\|""and '\' with double backslash ""\\"")
+Element syntax:
+Whole number from -2147483648 to 2147483647 or null";
+
+        private static IEnumerable<TestCaseData> GetSyntaxData() => new[]
+        {
+            new TestCaseData(typeof(IAggressionBased<string>), AGG_BASED_STRING_SYNTAX),
+            new TestCaseData(typeof(AggressionBased3<string>), AGG_BASED_STRING_SYNTAX),
+            new TestCaseData(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
+        };
+
+        [TestCaseSource(nameof(GetSyntaxData))]
+        public void AggressionBased_GetSyntax(Type type, string expectedSyntax) =>
+            Assert.That(
+                TextConverterSyntaxAttribute.GetConverterSyntax(type),
+                Is.EqualTo(expectedSyntax)
+                );
     }
 }
