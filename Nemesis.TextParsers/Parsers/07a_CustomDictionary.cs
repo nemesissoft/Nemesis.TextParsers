@@ -12,6 +12,11 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
     {
+        private readonly ITransformerStore _transformerStore;
+        public CustomDictionaryTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
+
         public ITransformer<TDictionary> CreateTransformer<TDictionary>()
         {
             var dictType = typeof(TDictionary);
@@ -174,7 +179,15 @@ namespace Nemesis.TextParsers.Parsers
             return false;
         }
 
-        public bool CanHandle(Type type) => IsCustomDictionary(type, out _) || IsReadOnlyDictionary(type, out _);
+        public bool CanHandle(Type type) =>
+            IsCustomDictionary(type, out var meta1) &&
+            _transformerStore.IsSupportedForTransformation(meta1.keyType) &&
+            _transformerStore.IsSupportedForTransformation(meta1.valueType)
+            ||
+            IsReadOnlyDictionary(type, out var meta2) &&
+            _transformerStore.IsSupportedForTransformation(meta2.keyType) &&
+            _transformerStore.IsSupportedForTransformation(meta2.valueType)
+        ;
 
         public sbyte Priority => 51;
     }

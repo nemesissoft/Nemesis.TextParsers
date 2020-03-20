@@ -13,11 +13,13 @@ namespace Nemesis.TextParsers.Tests
     {
         (object transformer, MethodInfo formatMethod, MethodInfo parseMethod) GetSut(Type tupleType)
         {
+            var store = TextTransformer.Default;
+
             const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
             var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
                           tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
-                ? new KeyValuePairTransformerCreator()
-                : (ICanCreateTransformer)new ValueTupleTransformerCreator();
+                ? new KeyValuePairTransformerCreator(store)
+                : (ICanCreateTransformer)new ValueTupleTransformerCreator(store);
             
             Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}" );
 

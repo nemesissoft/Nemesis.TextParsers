@@ -4,7 +4,8 @@ namespace Nemesis.TextParsers.Utils
 {
     public sealed class DeconstructableTextTypeConverter<TDeconstructable> : BaseTextConverter<TDeconstructable>
     {
-        private static readonly ITransformer<TDeconstructable> _transformer = Sett.Default.ToTransformer<TDeconstructable>();
+        private static readonly ITransformer<TDeconstructable> _transformer = 
+            Sett.Default.ToTransformer<TDeconstructable>(TextTransformer.Default);
 
         public override TDeconstructable ParseString(string text) => _transformer.ParseFromText(text);
         
@@ -14,7 +15,8 @@ namespace Nemesis.TextParsers.Utils
 
     public sealed class DeconstructableNullableTextTypeConverter<TDeconstructable> : BaseNullableTextConverter<TDeconstructable>
     {
-        private static readonly ITransformer<TDeconstructable> _transformer = Sett.Default.ToTransformer<TDeconstructable>();
+        private static readonly ITransformer<TDeconstructable> _transformer = 
+            Sett.Default.ToTransformer<TDeconstructable>(TextTransformer.Default);
 
         protected override TDeconstructable ParseNull() => default;
 

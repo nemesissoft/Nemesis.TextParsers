@@ -15,11 +15,20 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class DeconstructionTransformerCreator : ICanCreateTransformer
     {
+        private readonly ITransformerStore _transformerStore;
+        public DeconstructionTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
         public ITransformer<TDeconstructable> CreateTransformer<TDeconstructable>()
-            => S.Default.ToTransformer<TDeconstructable>();
+            => S.Default.ToTransformer<TDeconstructable>(_transformerStore);
 
-        public bool CanHandle(Type type) => S.TryGetDefaultDeconstruct(type, out _, out _);
 
+        public bool CanHandle(Type type) =>
+            S.TryGetDefaultDeconstruct(type, out _, out var ctor) &&
+            ctor.GetParameters() is { } cp && cp.Length > 0 &&
+            cp.All(pi => _transformerStore.IsSupportedForTransformation(pi.ParameterType))
+        ;
+        
         public sbyte Priority => 110;
     }
 
@@ -120,7 +129,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 .Select(m => (method: m, @params: m.GetParameters()))
                 .Where(pair => string.Equals(pair.method.Name, DECONSTRUCT, StringComparison.Ordinal) &&
                                pair.@params.Length > 0 &&
-                               pair.@params.All(p => p.IsOut) //TODO + check if param type is supported for transformation+recurrence  ?
+                               pair.@params.All(p => p.IsOut)
                 )
                 .OrderByDescending(p => p.@params.Length);
 
@@ -159,7 +168,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return left != null && right != null && left.Count == right.Count && AreEqualByParamTypes();
         }
 
-        public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>()
+        public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>(ITransformerStore transformerStore)
         {
             // ReSharper disable ArgumentsStyleNamedExpression
             var helper = new TupleHelper(tupleDelimiter: Delimiter, nullElementMarker: NullElementMarker,
@@ -189,6 +198,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             if (deconstruct is null || ctor is null)
                 throw new NotSupportedException($"{DECONSTRUCT} and constructor have to be provided");
 
+            static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
+
             if (deconstruct.IsStatic)
             {
                 if (deconstruct.GetParameters() is { } dp && ctor.GetParameters() is { } cp && (
@@ -200,9 +211,13 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                     throw new NotSupportedException(
                         $"Static {DECONSTRUCT} method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance");
 
-                if (deconstruct.GetParameters().Skip(1).Any(p => !p.IsOut))
+                if (deconstruct.GetParameters().Skip(1)
+                    .Any(p => !p.IsOut || 
+                              !transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
+                    )
+                )
                     throw new NotSupportedException(
-                        $"Static {DECONSTRUCT} method must have all but first params as out params (IsOut==true)");
+                        $"Static {DECONSTRUCT} method must have all but first params as out params (IsOut==true). Types should be recognizable by TransformerStore");
             }
             else
             {
@@ -213,14 +228,18 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                     throw new NotSupportedException(
                         $"Instance {DECONSTRUCT} method has to be compatible with provided constructor and should have same number of parameters");
 
-                if (deconstruct.GetParameters().Any(p => !p.IsOut))
+                if (deconstruct.GetParameters()
+                    .Any(p => !p.IsOut ||
+                              !transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
+                    )
+                )
                     throw new NotSupportedException(
-                        $"Instance {DECONSTRUCT} method must have all out params (IsOut==true)");
+                        $"Instance {DECONSTRUCT} method must have all out params (IsOut==true). Types should be recognizable by TransformerStore");
             }
 
 
             var transformers = ctor.GetParameters()
-                     .Select(p => TextTransformer.Default.GetTransformer(p.ParameterType))
+                     .Select(p => transformerStore.GetTransformer(p.ParameterType))
                      .ToArray();
 
             var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);

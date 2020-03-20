@@ -46,6 +46,8 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
     [TestFixture]
     internal class DeconstructableTests
     {
+        private static readonly ITransformerStore _transformerStore = TextTransformer.Default;
+
         internal static IEnumerable<TCD> CorrectData() => new[]
         {
             new TCD(typeof(CarrotAndOnionFactors),
@@ -76,7 +78,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             var settings = Sett.Default;
             settings = settingsMutator?.Invoke(settings) ?? settings;
 
-            var sut = settings.ToTransformer<TDeconstructable>();
+            var sut = settings.ToTransformer<TDeconstructable>(_transformerStore);
 
 
             var actualFormatted = sut.Format(instance);
@@ -95,7 +97,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             var settings = Sett.Default;
             settings = settingsMutator?.Invoke(settings) ?? settings;
 
-            var sut = settings.ToTransformer<TDeconstructable>();
+            var sut = settings.ToTransformer<TDeconstructable>(_transformerStore);
 
 
             var actualParsed1 = sut.ParseFromText(input);
@@ -174,7 +176,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         public void Parse_NegativeTest(string wrongInput, Type expectedException, string expectedMessagePart)
         {
             var sut = Sett.Default
-                .ToTransformer<Person>();
+                .ToTransformer<Person>(_transformerStore);
 
             bool passed = false;
             Person parsed = default;

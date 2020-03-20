@@ -147,7 +147,7 @@ namespace Nemesis.TextParsers
         public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(ReadOnlySpan<char> text,
             DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys)
         {
-            var parsedPairs = ParsePairsStream<TKey, TValue>(text, out var capacity);
+            var parsedPairs = ParsePairsStream<TKey, TValue>(text, out ushort capacity);
             return parsedPairs.ToDictionary(kind, behaviour, capacity);
         }
 
