@@ -10,7 +10,6 @@ using AutoFixture;
 using FluentAssertions;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
-using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -91,7 +90,7 @@ namespace Nemesis.TextParsers.Tests
             }
 
             _fixture.Register<string>(() => GetRandomString(_rand, 'A', 'Z'));
-            
+
             _fixture.Register<double>(() => GetRandomDouble(_rand));
             _fixture.Register<float>(() => (float)GetRandomDouble(_rand));
             _fixture.Register<decimal>(() => (decimal)GetRandomDouble(_rand, 10000, false));
@@ -152,7 +151,7 @@ namespace Nemesis.TextParsers.Tests
 
             fixture.Register<IAggressionBased<TElement>>(Creator3);
         }
-        
+
 
         private static IEnumerable<string> GetTypeNamesForCategory(ExploratoryTestCategory category) =>
             _allTestCases.Where(d => d.category == category).Select(d => d.friendlyName);
@@ -160,6 +159,8 @@ namespace Nemesis.TextParsers.Tests
 
         private static IEnumerable<string> GetEnums() => GetTypeNamesForCategory(ExploratoryTestCategory.Enums);
         private static IEnumerable<string> GetStructs() => GetTypeNamesForCategory(ExploratoryTestCategory.Structs);
+        private static IEnumerable<string> GetValueTuples() => GetTypeNamesForCategory(ExploratoryTestCategory.ValueTuples);
+
         private static IEnumerable<string> GetArrays() => GetTypeNamesForCategory(ExploratoryTestCategory.Arrays);
         private static IEnumerable<string> GetDictionaries() => GetTypeNamesForCategory(ExploratoryTestCategory.Dictionaries);
         private static IEnumerable<string> GetCollections() => GetTypeNamesForCategory(ExploratoryTestCategory.Collections);
@@ -171,6 +172,9 @@ namespace Nemesis.TextParsers.Tests
 
         [TestCaseSource(nameof(GetStructs))]
         public void Structs(string typeName) => ShouldParseAndFormat(typeName);
+
+        [TestCaseSource(nameof(GetValueTuples))]
+        public void ValueTuples(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetArrays))]
         public void Arrays(string typeName) => ShouldParseAndFormat(typeName);
@@ -282,6 +286,7 @@ namespace Nemesis.TextParsers.Tests
     {
         Enums,
         Structs,
+        ValueTuples,
 
         Arrays,
         Dictionaries,
@@ -298,7 +303,7 @@ namespace Nemesis.TextParsers.Tests
         public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)>
             GetAllTestTypes(IList<Type> allTypes)
         {
-            var typeComparer = Comparer<Type>.Create((t1, t2) => 
+            var typeComparer = Comparer<Type>.Create((t1, t2) =>
                 string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
             );
 
@@ -330,6 +335,24 @@ namespace Nemesis.TextParsers.Tests
             var remaining = allTypes;
 
             var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(structs).ToList();
+
+            var rand = new Random();
+            Type GetRandomSimpleType() => simpleTypes[rand.Next(simpleTypes.Count)];
+
+            var valueTuples = new List<(int arity, Type tupleType)>
+            {
+                (1, typeof(ValueTuple<>)),
+                (2, typeof(ValueTuple<,>)),
+                (3, typeof(ValueTuple<,,>)),
+                (4, typeof(ValueTuple<,,,>)),
+                (5, typeof(ValueTuple<,,,,>)),
+                (6, typeof(ValueTuple<,,,,,>)),
+                (7, typeof(ValueTuple<,,,,,,>)),
+            }.Select(pair =>
+                pair.tupleType.MakeGenericType(
+                    Enumerable.Repeat(0, pair.arity)
+                        .Select(i => GetRandomSimpleType()).ToArray())
+            ).ToList();
 
             static Type GetNullableCounterpart(Type t) => t.IsNullable(out var underlyingType)
                 ? underlyingType
@@ -368,6 +391,8 @@ namespace Nemesis.TextParsers.Tests
 
             ProjectAndAdd(ExploratoryTestCategory.Enums, enums);
             ProjectAndAdd(ExploratoryTestCategory.Structs, structs);
+            ProjectAndAdd(ExploratoryTestCategory.ValueTuples, valueTuples);
+
             ProjectAndAdd(ExploratoryTestCategory.Arrays, arrays);
             ProjectAndAdd(ExploratoryTestCategory.Dictionaries, dictionaries);
             ProjectAndAdd(ExploratoryTestCategory.Collections, collections);

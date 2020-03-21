@@ -168,7 +168,17 @@ namespace Nemesis.TextParsers.Tests
                 var coll = typeof(ICollection<>);
                 var dict = typeof(IDictionary<,>);
                 var kvp = typeof(KeyValuePair<,>);
-                var tuple4 = typeof(ValueTuple<,,,>);
+                var tupleTypes = new List<(int arity, Type tupleType)>
+                {
+                    (1, typeof(ValueTuple<>)),
+                    (2, typeof(ValueTuple<,>)),
+                    (3, typeof(ValueTuple<,,>)),
+                    (4, typeof(ValueTuple<,,,>)),
+                    (5, typeof(ValueTuple<,,,,>)),
+                    (6, typeof(ValueTuple<,,,,,>)),
+                    (7, typeof(ValueTuple<,,,,,,>)),
+                };
+
 
                 foreach (var type in types)
                 {
@@ -187,7 +197,11 @@ namespace Nemesis.TextParsers.Tests
                     yield return (dict.MakeGenericType(type, GetRandomType()), expected);
                     yield return (dict.MakeGenericType(GetRandomType(), type), expected);
 
-                    yield return (tuple4.MakeGenericType(type, GetRandomType(), GetRandomType(), GetRandomType()), expected);
+                    foreach ((int arity, var tupleType) in tupleTypes)
+                        yield return (
+                            tupleType.MakeGenericType(new[] { type }.Concat(Enumerable.Repeat(0, arity -1).Select(i => GetRandomType())).ToArray()),
+                            expected
+                       );
                 }
             }
 
@@ -219,7 +233,7 @@ namespace Nemesis.TextParsers.Tests
 
                 bool pass = actual == expected;
 
-                Console.WriteLine($"{ToTick(actual)} as{(pass ? " " : " NOT " )}expected for {type.GetFriendlyName()}");
+                Console.WriteLine($"{ToTick(actual)} as{(pass ? " " : " NOT ")}expected for {type.GetFriendlyName()}");
 
                 if (!pass)
                     allPassed = false;
