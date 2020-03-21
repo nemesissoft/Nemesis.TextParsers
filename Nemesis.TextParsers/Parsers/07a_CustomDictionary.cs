@@ -12,6 +12,11 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
     {
+        private readonly ITransformerStore _transformerStore;
+        public CustomDictionaryTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
+
         public ITransformer<TDictionary> CreateTransformer<TDictionary>()
         {
             var dictType = typeof(TDictionary);
@@ -130,7 +135,7 @@ namespace Nemesis.TextParsers.Parsers
                     dictType.IsGenericType && dictType.GetGenericTypeDefinition() == iDict
                         ? dictType
                         : TypeMeta.GetGenericRealization(dictType, iDict)
-                          ?? throw new InvalidOperationException($"Type has to be or implement {iDict.Name}<,>");
+                          ?? throw new InvalidOperationException($"Type has to be or implement {iDict.GetFriendlyName()}");
                 meta = (genericInterfaceType.GenericTypeArguments[0], genericInterfaceType.GenericTypeArguments[1]);
                 return true;
             }
@@ -156,7 +161,7 @@ namespace Nemesis.TextParsers.Parsers
                     dictType.IsGenericType && dictType.GetGenericTypeDefinition() == iReadOnlyDict
                         ? dictType
                         : TypeMeta.GetGenericRealization(dictType, iReadOnlyDict)
-                          ?? throw new InvalidOperationException($"Type has to be or implement {iReadOnlyDict.Name}<,>");
+                          ?? throw new InvalidOperationException($"Type has to be or implement {iReadOnlyDict.GetFriendlyName()}");
                 Type keyType = genericInterfaceType.GenericTypeArguments[0],
                    valueType = genericInterfaceType.GenericTypeArguments[1];
 
@@ -174,7 +179,15 @@ namespace Nemesis.TextParsers.Parsers
             return false;
         }
 
-        public bool CanHandle(Type type) => IsCustomDictionary(type, out _) || IsReadOnlyDictionary(type, out _);
+        public bool CanHandle(Type type) =>
+            IsCustomDictionary(type, out var meta1) &&
+            _transformerStore.IsSupportedForTransformation(meta1.keyType) &&
+            _transformerStore.IsSupportedForTransformation(meta1.valueType)
+            ||
+            IsReadOnlyDictionary(type, out var meta2) &&
+            _transformerStore.IsSupportedForTransformation(meta2.keyType) &&
+            _transformerStore.IsSupportedForTransformation(meta2.valueType)
+        ;
 
         public sbyte Priority => 51;
     }

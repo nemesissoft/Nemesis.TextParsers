@@ -7,9 +7,14 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class ArrayTransformerCreator : ICanCreateTransformer
     {
+        private readonly ITransformerStore _transformerStore;
+        public ArrayTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
         public ITransformer<TArray> CreateTransformer<TArray>()
         {
-            var elementType = typeof(TArray).GetElementType();
+            if (!TryGetElements(typeof(TArray), out var elementType) || elementType == null)
+                throw new NotSupportedException($"Type {typeof(TArray).GetFriendlyName()} is not supported by {GetType().Name}");
 
             var transType = typeof(InnerArrayTransformer<>).MakeGenericType(elementType);
 
@@ -29,7 +34,26 @@ namespace Nemesis.TextParsers.Parsers
             public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}[]";
         }
 
-        public bool CanHandle(Type type) => type.IsArray;
+        public bool CanHandle(Type type) =>
+            TryGetElements(type, out var elementType) &&
+            _transformerStore.IsSupportedForTransformation(elementType)
+        ;
+
+        private static bool TryGetElements(Type type, out Type elementType)
+        {
+            if (type.IsArray &&
+                type.GetArrayRank() == 1 /*do not support multi dimension arrays - jagged arrays should be preferred anyway */
+            )
+            {
+                elementType = type.GetElementType();
+                return true;
+            }
+            else
+            {
+                elementType = null;
+                return false;
+            }
+        }
 
         public sbyte Priority => 60;
     }

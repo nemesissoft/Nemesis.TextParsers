@@ -8,13 +8,17 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class LeanCollectionTransformerCreator : ICanCreateTransformer
     {
-        public ITransformer<TCollection> CreateTransformer<TCollection>()
+        private readonly ITransformerStore _transformerStore;
+        public LeanCollectionTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+        public ITransformer<TLean> CreateTransformer<TLean>()
         {
-            Type elementType = typeof(TCollection).GenericTypeArguments[0];
-            
+            if (!TryGetElements(typeof(TLean), out var elementType) || elementType == null)
+                throw new NotSupportedException($"Type {typeof(TLean).GetFriendlyName()} is not supported by {GetType().Name}");
+
             var transType = typeof(InnerLeanCollectionTransformer<>).MakeGenericType(elementType);
 
-            return (ITransformer<TCollection>)Activator.CreateInstance(transType);
+            return (ITransformer<TLean>)Activator.CreateInstance(transType);
         }
 
         private class InnerLeanCollectionTransformer<TElement> : TransformerBase<LeanCollection<TElement>>
@@ -28,7 +32,24 @@ namespace Nemesis.TextParsers.Parsers
             public override string ToString() => $"Transform LeanCollection<{typeof(TElement).GetFriendlyName()}>";
         }
 
-        public bool CanHandle(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(LeanCollection<>);
+        public bool CanHandle(Type type) =>
+            TryGetElements(type, out var elementType) &&
+            _transformerStore.IsSupportedForTransformation(elementType);
+
+        private static bool TryGetElements(Type type, out Type elementType)
+        {
+            if (type.IsGenericType && !type.IsGenericTypeDefinition &&
+                TypeMeta.TryGetGenericRealization(type, typeof(LeanCollection<>), out var lean))
+            {
+                elementType = lean.GenericTypeArguments[0];
+                return true;
+            }
+            else
+            {
+                elementType = null;
+                return false;
+            }
+        }
 
         public sbyte Priority => 71;
     }

@@ -13,22 +13,20 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class SimpleTransformerCreator : ICanCreateTransformer
     {
-        private readonly IReadOnlyDictionary<Type, object> _simpleTransformers;
+        private readonly IReadOnlyDictionary<Type, ITransformer> _simpleTransformers;
 
-        public SimpleTransformerCreator() : this(GetDefaultTransformers()) { }
+        public SimpleTransformerCreator() => _simpleTransformers = GetDefaultTransformers();
 
-        public SimpleTransformerCreator([NotNull] IReadOnlyDictionary<Type, object> simpleTransformers) =>
-            _simpleTransformers = simpleTransformers ?? throw new ArgumentNullException(nameof(simpleTransformers));
-
-        private static IReadOnlyDictionary<Type, object> GetDefaultTransformers()
+        private static IReadOnlyDictionary<Type, ITransformer> GetDefaultTransformers()
         {
             var types = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
-            var simpleTransformers = new Dictionary<Type, object>(30);
+            var simpleTransformers = new Dictionary<Type, ITransformer>(30);
 
             foreach (var type in types)
                 if (typeof(ICanTransformType).IsAssignableFrom(type) &&
+                    typeof(ITransformer).IsAssignableFrom(type) &&
                     type.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
                 {
                     var instance = (ICanTransformType)Activator.CreateInstance(type);
@@ -37,9 +35,9 @@ namespace Nemesis.TextParsers.Parsers
                     if (simpleTransformers.ContainsKey(elementType))
                         throw new NotSupportedException($"Automatic registration does not support multiple simple transformers to handle type {elementType}");
 
-                    simpleTransformers[elementType] = instance;
+                    simpleTransformers[elementType] = (ITransformer)instance;
                 }
-
+            
             return simpleTransformers;
         }
 
@@ -65,7 +63,7 @@ namespace Nemesis.TextParsers.Parsers
         //public bool CanHandle(Type type) => typeof(TElement) == type;
         public Type Type => typeof(TElement);
 
-        public override string ToString() => $"Transform {Type.Name}";
+        public override string ToString() => $"Transform {Type.GetFriendlyName()}";
     }
 
     [UsedImplicitly]
@@ -173,7 +171,8 @@ namespace Nemesis.TextParsers.Parsers
             }
             catch (FormatException e)
             {
-                throw new FormatException($"{nameof(Boolean)} type does not recognize sequence {input.ToString()}", e);
+                var seq = input.ToString();
+                throw new FormatException($"{nameof(Boolean)} type does not recognize sequence {seq}", e);
             }
         }
 

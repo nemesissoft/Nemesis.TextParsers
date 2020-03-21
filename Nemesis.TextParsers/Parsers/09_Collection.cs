@@ -9,11 +9,17 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class CollectionTransformerCreator : ICanCreateTransformer //standard .net framework collection handler 
     {
+        private readonly ITransformerStore _transformerStore;
+        public CollectionTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
+
         public ITransformer<TCollection> CreateTransformer<TCollection>()
         {
             var collectionType = typeof(TCollection);
 
-            var (_, kind, elementType) = CollectionMetaHelper.GetCollectionMeta(collectionType);
+            if (!TryGetElements(collectionType, out _, out var kind, out var elementType) || elementType == null)
+                throw new NotSupportedException($"Type {collectionType.GetFriendlyName()} is not supported by {GetType().Name}");
 
             var transType = typeof(InnerCollectionTransformer<,>).MakeGenericType(elementType, collectionType);
 
@@ -36,7 +42,25 @@ namespace Nemesis.TextParsers.Parsers
             public override string ToString() => $"Transform {typeof(TCollection).GetFriendlyName()} AS {_kind}<{typeof(TElement).GetFriendlyName()}>";
         }
 
-        public bool CanHandle(Type type) => CollectionMetaHelper.IsTypeSupported(type);
+        public bool CanHandle(Type type) =>
+            TryGetElements(type, out bool isArray, out var kind, out var elementType) &&
+            !isArray &&
+            kind != CollectionKind.Unknown &&
+            _transformerStore.IsSupportedForTransformation(elementType);
+
+        private static bool TryGetElements(Type type, out bool isArray, out CollectionKind kind, out Type elementType)
+        {
+            if (CollectionMetaHelper.IsTypeSupported(type))
+            {
+                (isArray, kind, elementType) = CollectionMetaHelper.GetCollectionMeta(type);
+                return true;
+            }
+            else
+            {
+                (isArray, kind, elementType) = (default, default, default);
+                return false;
+            }
+        }
 
         public sbyte Priority => 70;
     }

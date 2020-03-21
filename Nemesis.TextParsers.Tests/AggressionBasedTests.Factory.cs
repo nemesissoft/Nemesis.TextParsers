@@ -123,13 +123,11 @@ namespace Nemesis.TextParsers.Tests
         private const string AGG_BASED_STRING_SYNTAX =
             @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
 escape '#' with ""\#""and '\' with double backslash ""\\""
-
 Elements syntax:
 UTF-16 character string";
 
         private const string AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX = @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
 escape '#' with ""\#""and '\' with double backslash ""\\""
-
 Elements syntax:
 Elements separated with pipe ('|') i.e.
 1|2|3
@@ -144,18 +142,16 @@ Whole number from -2147483648 to 2147483647 or null";
             new TestCaseData(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
         };
 
-        private static string NormalizeNewLines(string s) => s?
-            .Replace(Environment.NewLine, " ")
-            .Replace("\n", " ")
-            .Replace("\r", " ");
+        
 
         [TestCaseSource(nameof(GetSyntaxData))]
         public void AggressionBased_GetSyntax(Type type, string expectedSyntax) =>
             Assert.That(
-                NormalizeNewLines(TextConverterSyntaxAttribute.GetConverterSyntax(type)),
+                TextConverterSyntaxAttribute.GetConverterSyntax(type),
                 Is.EqualTo(
-                    NormalizeNewLines(expectedSyntax)
+                    expectedSyntax
                     )
+                .Using(IgnoreNewLinesComparer.EqualityComparer)
                 );
     }
 }

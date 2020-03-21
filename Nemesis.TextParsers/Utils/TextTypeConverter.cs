@@ -40,10 +40,13 @@ namespace Nemesis.TextParsers.Utils
     public abstract class BaseNullableTextConverter<TValue> : TextTypeConverter
     {
         public sealed override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
-            value is null ?
-                ParseNull() :
-                (value is string text ? ParseString(text) : default);
-
+            value switch
+            {
+                null => ParseNull(),
+                string text => ParseString(text),
+                _ => default
+            };
+        
         protected abstract TValue ParseNull();
 
         protected abstract TValue ParseString(string text);
@@ -60,6 +63,7 @@ namespace Nemesis.TextParsers.Utils
         protected abstract string FormatToString(TValue value);
     }
 
+    //in future this can be taken from text transformers 
     [PublicAPI]
     // ReSharper disable RedundantAttributeUsageProperty
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]

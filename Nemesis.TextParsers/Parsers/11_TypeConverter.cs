@@ -6,7 +6,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    public sealed class AnyTransformerCreator : ICanCreateTransformer
+    public sealed class TypeConverterTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TElement> CreateTransformer<TElement>() =>
             TypeDescriptor.GetConverter(typeof(TElement)) switch
@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers.Parsers
                     new ConverterTransformer<TElement>(t2),
 
                 _ => throw new NotSupportedException(
-                    $"{typeof(TElement).GetFriendlyName()} is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string"
+                    $"Cannot create transformer for {typeof(TElement).GetFriendlyName()} based on {nameof(TypeConverterTransformerCreator)}"
                 )
             };
 
@@ -42,8 +42,18 @@ namespace Nemesis.TextParsers.Parsers
             public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {_typeConverter?.GetType().GetFriendlyName()}";
         }
 
-        public bool CanHandle(Type type) => true;
+        public bool CanHandle(Type type) =>
+            TypeDescriptor.GetConverter(type) is { } typeConverter && (
+                typeConverter.GetType().DerivesOrImplementsGeneric(typeof(ITransformer<>))
+                    ||
+                IsProperTypeConverter(typeConverter)
+        );
 
-        public sbyte Priority => 127;
+        private static bool IsProperTypeConverter(TypeConverter typeConverter) =>
+            typeConverter.GetType() != typeof(TypeConverter) &&
+            typeConverter.CanConvertFrom(typeof(string)) &&
+            typeConverter.CanConvertTo(typeof(string));
+
+        public sbyte Priority => 120;
     }
 }

@@ -559,12 +559,3 @@ namespace Nemesis.TextParsers.Tests
         }
     }
 }
-
-/* \.Call Nemesis\.TextParsers\.EnumTransformerHelper\.CharEq\(\s*input,\s*(\d+),\s*('\w'),\s*('\w')\)
-   =>
-   \(input[\1]==\2 || input[\1]==\3 \)
- 
-\.Return\s*exit\s*\{\s*\.Constant<System\.Byte>\((\d+)\)\s*\}
- =>
- return \1;
- */

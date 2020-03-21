@@ -12,6 +12,10 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
     {
+        private readonly ITransformerStore _transformerStore;
+        public CustomCollectionTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
         public ITransformer<TCollection> CreateTransformer<TCollection>()
         {
             var collectionType = typeof(TCollection);
@@ -58,11 +62,11 @@ namespace Nemesis.TextParsers.Parsers
             private readonly bool _supportsDeserializationLogic;
             protected CollectionTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
-            
+
             public override TCollection Parse(in ReadOnlySpan<char> input) //input.IsEmpty ? default :
             {
                 var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
-                TCollection result = GetCollection(stream);
+                var result = GetCollection(stream);
 
                 if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
                     callback.OnDeserialization(this);
@@ -81,9 +85,7 @@ namespace Nemesis.TextParsers.Parsers
         private sealed class CustomCollectionTransformer<TElement, TCollection> : CollectionTransformer<TElement, TCollection>
             where TCollection : ICollection<TElement>, new()
         {
-            public CustomCollectionTransformer(bool supportsDeserializationLogic) : base(supportsDeserializationLogic)
-            {
-            }
+            public CustomCollectionTransformer(bool supportsDeserializationLogic) : base(supportsDeserializationLogic) { }
 
             protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
             {
@@ -101,7 +103,7 @@ namespace Nemesis.TextParsers.Parsers
         {
             private readonly Func<IList<TElement>, TCollection> _listConversion;
 
-            public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic) 
+            public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic)
                 => _listConversion = listConversion;
 
             protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
@@ -172,7 +174,13 @@ namespace Nemesis.TextParsers.Parsers
             return false;
         }
 
-        public bool CanHandle(Type type) => IsCustomCollection(type, out _) || IsReadOnlyCollection(type, out _);
+        public bool CanHandle(Type type) =>
+            IsCustomCollection(type, out var elementType) &&
+            _transformerStore.IsSupportedForTransformation(elementType)
+            ||
+            IsReadOnlyCollection(type, out var meta) &&
+            _transformerStore.IsSupportedForTransformation(meta.elementType)
+        ;
 
         public sbyte Priority => 72;
     }

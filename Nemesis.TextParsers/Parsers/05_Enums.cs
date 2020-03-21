@@ -7,8 +7,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Utils;
+using Nemesis.TextParsers.Runtime;
 #if NETCOREAPP3_0
-    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
     using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
@@ -21,25 +22,11 @@ namespace Nemesis.TextParsers.Parsers
     {
         public ITransformer<TEnum> CreateTransformer<TEnum>()
         {
-            Type enumType = typeof(TEnum), underlyingType = Enum.GetUnderlyingType(enumType);
+            var enumType = typeof(TEnum);
 
-            switch (Type.GetTypeCode(underlyingType))
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-
-                case TypeCode.Int32:
-                case TypeCode.UInt32:
-
-                case TypeCode.Int64:
-                case TypeCode.UInt64:
-                    break;
-                default:
-                    throw new NotSupportedException($"UnderlyingType {underlyingType.Name} is not supported for enum parsing");
-            }
+            if (!TryGetUnderlyingType(enumType, out var underlyingType) || underlyingType == null)
+                throw new NotSupportedException($@"Type {enumType.GetFriendlyName()} is not supported by {GetType().Name}. 
+UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numeric one");
 
             var numberHandler = NumberHandlerCache.GetNumberHandler(underlyingType) ??
                 throw new NotSupportedException($"UnderlyingType {underlyingType.Name} was not found in parser cache");
@@ -49,7 +36,32 @@ namespace Nemesis.TextParsers.Parsers
             return (ITransformer<TEnum>)Activator.CreateInstance(transType, numberHandler);
         }
 
-        public bool CanHandle(Type type) => type.IsEnum;
+        public bool CanHandle(Type type) => TryGetUnderlyingType(type, out _);
+
+        private static bool TryGetUnderlyingType(Type type, out Type underlyingType)
+        {
+            if (!type.IsEnum)
+            {
+                underlyingType = null;
+                return false;
+            }
+            else
+            {
+                underlyingType = Enum.GetUnderlyingType(type);
+                return Type.GetTypeCode(underlyingType) switch
+                {
+                    TypeCode.Byte => true,
+                    TypeCode.SByte => true,
+                    TypeCode.Int16 => true,
+                    TypeCode.UInt16 => true,
+                    TypeCode.Int32 => true,
+                    TypeCode.UInt32 => true,
+                    TypeCode.Int64 => true,
+                    TypeCode.UInt64 => true,
+                    _ => false
+                };
+            }
+        }
 
         public sbyte Priority => 30;
     }

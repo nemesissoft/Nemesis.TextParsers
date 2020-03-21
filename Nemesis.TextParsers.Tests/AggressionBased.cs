@@ -162,7 +162,7 @@ namespace Nemesis.TextParsers.Tests
         {
             unchecked
             {
-                var hashCode = PassiveValue?.GetHashCode() ?? 0;
+                int hashCode = PassiveValue?.GetHashCode() ?? 0;
                 hashCode = (hashCode * 397) ^ (NormalValue?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (AggressiveValue?.GetHashCode() ?? 0);
                 return hashCode;

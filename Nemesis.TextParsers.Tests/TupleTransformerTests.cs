@@ -13,11 +13,13 @@ namespace Nemesis.TextParsers.Tests
     {
         (object transformer, MethodInfo formatMethod, MethodInfo parseMethod) GetSut(Type tupleType)
         {
+            var store = TextTransformer.Default;
+
             const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
             var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
                           tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
-                ? new KeyValuePairTransformerCreator()
-                : (ICanCreateTransformer)new ValueTupleTransformerCreator();
+                ? new KeyValuePairTransformerCreator(store)
+                : (ICanCreateTransformer)new ValueTupleTransformerCreator(store);
             
             Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}" );
 
@@ -142,7 +144,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         private const string NO_PARENTHESES_ERROR =
-            "Tuple representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace";
+            "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
         internal static IEnumerable<(Type, string, Type, string)> Bad_KeyValuePair_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),

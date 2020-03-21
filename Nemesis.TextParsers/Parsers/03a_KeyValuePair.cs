@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
@@ -10,17 +11,27 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
     {
+        private readonly ITransformerStore _transformerStore;
+        public KeyValuePairTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
         public ITransformer<TPair> CreateTransformer<TPair>()
         {
-            var pairType = typeof(TPair);
+            if (!TryGetElements(typeof(TPair), out var keyType, out var valueType))
+                throw new NotSupportedException($"Type {typeof(TPair).GetFriendlyName()} is not supported by {GetType().Name}");
 
-            Type keyType = pairType.GenericTypeArguments[0],
-               valueType = pairType.GenericTypeArguments[1];
+            var m = _createTransformerCoreMethod.MakeGenericMethod(keyType, valueType);
 
-            var transType = typeof(InnerPairTransformer<,>).MakeGenericType(keyType, valueType);
-
-            return (ITransformer<TPair>)Activator.CreateInstance(transType);
+            return (ITransformer<TPair>)m.Invoke(this, null);
         }
+
+        private static readonly MethodInfo _createTransformerCoreMethod = Method.OfExpression<
+            Func<KeyValuePairTransformerCreator, ITransformer<KeyValuePair<int, int>>>
+        >(creator => creator.CreateTransformerCore<int, int>()).GetGenericMethodDefinition();
+
+        private ITransformer<KeyValuePair<TKey, TValue>> CreateTransformerCore<TKey, TValue>() =>
+            new InnerPairTransformer<TKey, TValue>(_transformerStore.GetTransformer<TKey>(), _transformerStore.GetTransformer<TValue>());
+
 
         private sealed class InnerPairTransformer<TKey, TValue> : TransformerBase<KeyValuePair<TKey, TValue>>
         {
@@ -31,10 +42,10 @@ namespace Nemesis.TextParsers.Parsers
             private readonly ITransformer<TKey> _keyTransformer;
             private readonly ITransformer<TValue> _valueTransformer;
 
-            public InnerPairTransformer()
+            public InnerPairTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer)
             {
-                _keyTransformer = TextTransformer.Default.GetTransformer<TKey>();
-                _valueTransformer = TextTransformer.Default.GetTransformer<TValue>();
+                _keyTransformer = keyTransformer;
+                _valueTransformer = valueTransformer;
             }
 
             public override KeyValuePair<TKey, TValue> Parse(in ReadOnlySpan<char> input)
@@ -75,7 +86,7 @@ namespace Nemesis.TextParsers.Parsers
                 {
                     unescapedInput = unescapedInput.UnescapeCharacter
                             (ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, ESCAPING_SEQUENCE_START);
-                    
+
                     return parser.Parse(unescapedInput);
                 }
             }
@@ -115,7 +126,26 @@ namespace Nemesis.TextParsers.Parsers
             public override string ToString() => $"Transform KeyValuePair<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>";
         }
 
-        public bool CanHandle(Type type) => type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+        public bool CanHandle(Type type) =>
+            TryGetElements(type, out var keyType, out var valueType) &&
+            _transformerStore.IsSupportedForTransformation(keyType) &&
+            _transformerStore.IsSupportedForTransformation(valueType);
+
+        private static bool TryGetElements(Type type, out Type keyType, out Type valueType)
+        {
+            if (type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
+                TypeMeta.TryGetGenericRealization(type, typeof(KeyValuePair<,>), out var kvp))
+            {
+                keyType = kvp.GenericTypeArguments[0];
+                valueType = kvp.GenericTypeArguments[1];
+                return true;
+            }
+            else
+            {
+                keyType = valueType = null;
+                return false;
+            }
+        }
 
         public sbyte Priority => 11;
     }
