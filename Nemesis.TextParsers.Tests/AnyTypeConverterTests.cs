@@ -168,7 +168,7 @@ namespace Nemesis.TextParsers.Tests
                 var coll = typeof(ICollection<>);
                 var dict = typeof(IDictionary<,>);
                 var kvp = typeof(KeyValuePair<,>);
-                var tupleTypes = new List<(int arity, Type tupleType)>
+                var tupleTypes = new (int arity, Type tupleType)[]
                 {
                     (1, typeof(ValueTuple<>)),
                     (2, typeof(ValueTuple<,>)),

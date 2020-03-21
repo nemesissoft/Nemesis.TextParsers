@@ -7,9 +7,9 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using AutoFixture;
-using FluentAssertions;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -253,13 +253,6 @@ namespace Nemesis.TextParsers.Tests
                 var parsed3 = ParseAndAssert(text3);
                 IsMutuallyEquivalent(parsed1, parsed3);
             }
-
-            static void IsMutuallyEquivalent(object o1, object o2)
-            {
-                o1.Should().BeEquivalentTo(o2);
-                o2.Should().BeEquivalentTo(o1);
-            }
-
 
             object ParseAndAssert(string text)
             {

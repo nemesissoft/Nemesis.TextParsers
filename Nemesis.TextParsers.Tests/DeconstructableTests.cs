@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Reflection;
-using FluentAssertions;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
 using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -193,12 +193,6 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 Assert.Fail($"'{wrongInput}' should not be parseable to:{Environment.NewLine}\t{parsed}");
         }
 
-
-        private static void IsMutuallyEquivalent(object o1, object o2)
-        {
-            o1.Should().BeEquivalentTo(o2);
-            o2.Should().BeEquivalentTo(o1);
-        }
 
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
         private struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactors>

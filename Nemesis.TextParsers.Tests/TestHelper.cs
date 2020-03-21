@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -32,6 +33,12 @@ namespace Nemesis.TextParsers.Tests
             };
 
             Console.WriteLine(message);
+        }
+
+        public static void IsMutuallyEquivalent(object o1, object o2)
+        {
+            o1.Should().BeEquivalentTo(o2);
+            o2.Should().BeEquivalentTo(o1);
         }
     }
 
