@@ -54,7 +54,7 @@ namespace Nemesis.TextParsers.Utils
             {
                 var hashCode = IsArray.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int)Kind;
-                hashCode = (hashCode * 397) ^ (ElementType != null ? ElementType.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ElementType?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

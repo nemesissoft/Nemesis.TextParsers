@@ -2,3 +2,6 @@
 
 # IDE0071: Simplify interpolation
 dotnet_style_prefer_simplified_interpolation = true:none
+
+# IDE0070: Use 'System.HashCode'
+dotnet_diagnostic.IDE0070.severity = none

@@ -28,7 +28,7 @@ namespace Nemesis.TextParsers.Parsers
             ctor.GetParameters() is { } cp && cp.Length > 0 &&
             cp.All(pi => _transformerStore.IsSupportedForTransformation(pi.ParameterType))
         ;
-        
+
         public sbyte Priority => 110;
     }
 
@@ -212,7 +212,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                         $"Static {DECONSTRUCT} method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance");
 
                 if (deconstruct.GetParameters().Skip(1)
-                    .Any(p => !p.IsOut || 
+                    .Any(p => !p.IsOut ||
                               !transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
                     )
                 )
@@ -249,18 +249,21 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
     }
 
-    internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
+    internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>, ISupportEmpty<TDeconstructable>
     {
         public delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
         public delegate string FormatterDelegate(TDeconstructable element, TupleHelper helper, ITransformer[] transformers);
+        public delegate TDeconstructable EmptyGenerator();
 
 
         private readonly TupleHelper _helper;
         private readonly ITransformer[] _transformers;
         private readonly ParserDelegate _parser;
         private readonly FormatterDelegate _formatter;
+        private readonly EmptyGenerator _emptyGenerator = null;
 
-        internal DeconstructionTransformer(TupleHelper helper, ITransformer[] transformers, ParserDelegate parser, FormatterDelegate formatter)
+        internal DeconstructionTransformer(TupleHelper helper, ITransformer[] transformers, 
+            ParserDelegate parser, FormatterDelegate formatter)
         {
             _helper = helper;
             _transformers = transformers;
@@ -438,7 +441,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return λ.Compile();
         }
 
-        private static void CreateFormatterData(MethodInfo deconstruct,
+        private static void CreateFormatterData(MethodBase deconstruct,
             out int arity, out ParameterExpression element, out ParameterExpression helper,
             out ParameterExpression transformers, out ParameterExpression accumulator, out ParameterExpression initialBuffer,
             out IReadOnlyList<ParameterExpression> temps, out Expression rentInitialBuffer, out Expression returnInitialBuffer,
@@ -495,19 +498,23 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         public override string Format(TDeconstructable element) =>
             element is null ? null : _formatter(element, _helper, _transformers);
 
-        public override string ToString() =>
-            $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()})";
+        public TDeconstructable GetEmpty() => _emptyGenerator();
 
-        private string GetTupleDefinition()
+        public override string ToString()
         {
-            var def = _transformers?.Select(t =>
-                TypeMeta.TryGetGenericRealization(t.GetType(), typeof(ITransformer<>), out var realization)
-                 ? realization.GenericTypeArguments[0].GetFriendlyName()
-                 : "object"
-                ) ?? Enumerable.Empty<string>();
+            string GetTupleDefinition()
+            {
+                var def = _transformers?.Select(t =>
+                    TypeMeta.TryGetGenericRealization(t.GetType(), typeof(ITransformer<>), out var realization)
+                     ? realization.GenericTypeArguments[0].GetFriendlyName()
+                     : "object"
+                    ) ?? Enumerable.Empty<string>();
 
-            return string.Join(", ", def);
+                return string.Join(", ", def);
+            }
 
+            return
+                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()})";
         }
     }
 }

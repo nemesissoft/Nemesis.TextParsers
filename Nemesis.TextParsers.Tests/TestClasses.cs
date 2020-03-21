@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
@@ -57,21 +57,11 @@ namespace Nemesis.TextParsers.Tests
                 new Point(int.Parse(arr[0]), int.Parse(arr[1])) : default;
     }
 
-    internal sealed class PointConverter : TypeConverter
+    internal sealed class PointConverter : BaseTextConverter<Point>
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
-            sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        public override Point ParseString(string text) => Point.FromText(text);
 
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
-            destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
-
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
-            value is string text ? Point.FromText(text) : default;
-
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
-            destinationType == typeof(string) ?
-                value?.ToString() :
-                base.ConvertTo(context, culture, value, destinationType);
+        public override string FormatToString(Point value) => value.ToString();
     }
 
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
@@ -388,91 +378,49 @@ namespace Nemesis.TextParsers.Tests
         Option3
     }
 
-    public abstract class TextTypeConverter : TypeConverter
-    {
-        public sealed override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
-            sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-
-        public sealed override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
-            destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
-    }
-
-    public abstract class BaseTextConverter<TValue> : TextTypeConverter
-    {
-        public sealed override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
-            value is string text ? ParseString(text) : default;
-
-        public abstract TValue ParseString(string text);
-
-
-        public sealed override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
-            destinationType == typeof(string) ?
-                FormatToString((TValue)value) :
-                base.ConvertTo(context, culture, value, destinationType);
-
-        public abstract string FormatToString(TValue value);
-    }
-
     internal sealed class OptionConverter : BaseTextConverter<Option>, ITransformer<Option>
     {
-        public override Option ParseString(string text)
-        {
-            switch (text.ToLowerInvariant())
+        public override Option ParseString(string text) =>
+            text.ToLowerInvariant() switch
             {
-                case "option1":
-                case "o1":
-                    return new Option(OptionEnum.Option1);
-                case "option2":
-                case "o2":
-                    return new Option(OptionEnum.Option2);
-                case "option3":
-                case "o3":
-                    return new Option(OptionEnum.Option3);
-                //case "none":
-                default:
-                    return new Option(OptionEnum.None);
-            }
-        }
+                "option1" => new Option(OptionEnum.Option1),
+                "o1" => new Option(OptionEnum.Option1),
+                "option2" => new Option(OptionEnum.Option2),
+                "o2" => new Option(OptionEnum.Option2),
+                "option3" => new Option(OptionEnum.Option3),
+                "o3" => new Option(OptionEnum.Option3),
+                // "none"
+                _ => new Option(OptionEnum.None)
+            };
 
         public override string FormatToString(Option value) => value.ToString();
 
         public Option Parse(in ReadOnlySpan<char> text)
         {
+            static bool TryParseInt(ReadOnlySpan<char> input, out int result) =>
+                int.TryParse(
+#if NETFRAMEWORK
+                    input.ToString()
+#else
+                    input
+#endif
+                    , out result);
+
+
             var input = text.Trim();
 
-            if (input.Length == 2 &&
-                (input[0] == 'o' || input[0] == 'O') &&
-                char.IsDigit(input[1]) &&
-                int.Parse(input[1].ToString()) is { } i1 &&
-                i1 >= 1 && i1 <= 3
-            )
-                return new Option((OptionEnum)i1);
-            else if (input.Length == 7 &&
-                   (input[0] == 'o' || input[0] == 'O') &&
-                   (input[1] == 'p' || input[1] == 'P') &&
-                   (input[2] == 't' || input[2] == 'T') &&
-                   (input[3] == 'i' || input[3] == 'I') &&
-                   (input[4] == 'o' || input[4] == 'O') &&
-                   (input[5] == 'n' || input[5] == 'N') &&
-
-                   int.TryParse(
-#if NETFRAMEWORK
-                input.Slice(6, 1).ToString()
-#else
-                input.Slice(6, 1)
-#endif
-                , out int i2) &&
-                   i2 >= 1 && i2 <= 3
-            )
-                return new Option((OptionEnum)i2);
-            else
-                return int.TryParse(
-#if NETFRAMEWORK
-                input.ToString()
-#else
-                input
-#endif
-                    , out int i3) ? new Option((OptionEnum)i3) : new Option(OptionEnum.None);
+            return input.Length switch
+            {
+                2 when (input[0] == 'o' || input[0] == 'O') && char.IsDigit(input[1]) &&
+                       int.Parse(input[1].ToString()) is { } i1 && i1 >= 1 && i1 <= 3 => new Option((OptionEnum) i1),
+                
+                7 when (input[0] == 'o' || input[0] == 'O') && (input[1] == 'p' || input[1] == 'P') &&
+                       (input[2] == 't' || input[2] == 'T') && (input[3] == 'i' || input[3] == 'I') &&
+                       (input[4] == 'o' || input[4] == 'O') && (input[5] == 'n' || input[5] == 'N') &&
+                       TryParseInt(input.Slice(6, 1), out int i2) && i2 >= 1 && i2 <= 3 => new Option((OptionEnum) i2),
+                
+                _ => TryParseInt(input, out int i3) ? new Option((OptionEnum) i3) : new Option(OptionEnum.None)
+            };
         }
 
         public string Format(Option element) => element.ToString();
@@ -484,5 +432,67 @@ namespace Nemesis.TextParsers.Tests
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
         public string FormatObject(object element) => Format((Option)element);
+    }
+
+    [TypeConverter(typeof(PointConverter2))]
+    [DebuggerDisplay("X = {" + nameof(X) + "}, Y = {" + nameof(Y) + "}")]
+    struct PointWithConverter : IEquatable<PointWithConverter>
+    {
+        public int X { get; }
+        public int Y { get; }
+
+        public PointWithConverter(int x, int y) => (X, Y) = (x, y);
+
+        public bool Equals(PointWithConverter other) => X == other.X && Y == other.Y;
+
+        public override bool Equals(object obj) => obj is PointWithConverter other && Equals(other);
+
+        public override int GetHashCode() => unchecked((X * 397) ^ Y);
+    }
+
+    sealed class PointConverter2 : BaseTextConverter<PointWithConverter>
+    {
+        private static PointWithConverter FromText(string text) =>
+            text.Split(';') is { } arr && arr.Length == 2
+                ? new PointWithConverter(int.Parse(arr[0]), int.Parse(arr[1]))
+                : default;
+
+        public override PointWithConverter ParseString(string text) => FromText(text);
+
+        public override string FormatToString(PointWithConverter pwc) => $"{pwc.X};{pwc.Y}";
+    }
+
+    [TypeConverter(typeof(BadPointConverter))]
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    struct PointWithBadConverter
+    {
+        public int X { get; }
+        public int Y { get; }
+
+        public PointWithBadConverter(int x, int y) => (X, Y) = (x, y);
+    }
+
+    sealed class BadPointConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
+            sourceType != typeof(string);
+
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
+            destinationType != typeof(string);
+    }
+
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    struct PointWithoutConverter
+    {
+        public int X { get; }
+        public int Y { get; }
+
+        public PointWithoutConverter(int x, int y) => (X, Y) = (x, y);
     }
 }

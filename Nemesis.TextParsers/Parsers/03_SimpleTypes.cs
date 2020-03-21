@@ -25,13 +25,14 @@ namespace Nemesis.TextParsers.Parsers
             var simpleTransformers = new Dictionary<Type, ITransformer>(30);
 
             foreach (var type in types)
-                if (typeof(ICanTransformType).IsAssignableFrom(type) &&
-                    typeof(ITransformer).IsAssignableFrom(type) &&
-                    type.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
+                if (type.DerivesOrImplementsGeneric(typeof(ITransformer<>)) &&
+                    TypeMeta.TryGetGenericRealization(type, typeof(SimpleTransformer<>), out var simpleType)
+                )
                 {
-                    var instance = (ICanTransformType)Activator.CreateInstance(type);
+                    var elementType = simpleType.GenericTypeArguments[0];
 
-                    var elementType = instance.Type;
+                    var instance = Activator.CreateInstance(type);
+
                     if (simpleTransformers.ContainsKey(elementType))
                         throw new NotSupportedException($"Automatic registration does not support multiple simple transformers to handle type {elementType}");
 
@@ -58,20 +59,19 @@ namespace Nemesis.TextParsers.Parsers
         internal static NumberFormatInfo InvInfo = NumberFormatInfo.InvariantInfo;
     }
 
-    public abstract class SimpleTransformer<TElement> : TransformerBase<TElement>, ICanTransformType
+    public abstract class SimpleTransformer<TElement> : TransformerBase<TElement>
     {
-        //public bool CanHandle(Type type) => typeof(TElement) == type;
-        public Type Type => typeof(TElement);
-
-        public override string ToString() => $"Transform {Type.GetFriendlyName()}";
+        public sealed override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}";
     }
 
     [UsedImplicitly]
-    public sealed class StringParser : SimpleTransformer<string>
+    public sealed class StringParser : SimpleTransformer<string>, ISupportEmpty<string>
     {
         public override string Parse(in ReadOnlySpan<char> input) => input.ToString();
 
         public override string Format(string element) => element;
+        
+        public string GetEmpty() => "";
     }
 
     #region Structs

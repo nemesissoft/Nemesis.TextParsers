@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers.Parsers
             return (ITransformer<TArray>)Activator.CreateInstance(transType);
         }
 
-        private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>
+        private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>, ISupportEmpty<TElement[]>
         {
             public override TElement[] Parse(in ReadOnlySpan<char> input) =>
                     //input.IsEmpty ? default :
@@ -30,6 +30,8 @@ namespace Nemesis.TextParsers.Parsers
             public override string Format(TElement[] array) =>
                     //array == null ? null :
                     SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
+
+            public TElement[] GetEmpty() => Array.Empty<TElement>();
 
             public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}[]";
         }

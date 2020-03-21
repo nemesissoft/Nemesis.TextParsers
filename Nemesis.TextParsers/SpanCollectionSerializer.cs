@@ -56,7 +56,7 @@ namespace Nemesis.TextParsers
 
         [PureMethod]
         public IReadOnlyCollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text, CollectionKind kind = CollectionKind.List) =>
-            ParseStream<TTo>(text, out var capacity).ToCollection(kind, capacity);
+            ParseStream<TTo>(text, out ushort capacity).ToCollection(kind, capacity);
 
 
         public LeanCollection<T> ParseLeanCollection<T>(string text) =>
