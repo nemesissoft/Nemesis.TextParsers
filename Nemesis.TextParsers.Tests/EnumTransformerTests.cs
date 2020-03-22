@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers.Tests
 
     internal enum Enum3 { E3_1_Int, E3_2_Int, E3_3_Int }
 
-    internal enum ByteEnum : byte { B1, B2, B3 }
+    internal enum ByteEnum : byte { B1 = 0, B2 = 1, B3 = 2 }
 
     internal enum SByteEnum : sbyte { Sb1 = -10, Sb2 = 0, Sb3 = 5, Sb4 = 10 }
 

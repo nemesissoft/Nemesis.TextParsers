@@ -46,31 +46,8 @@ namespace Nemesis.TextParsers.Tests
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeAnyTest()
         {
-            static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
-            {
-                var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased<int>(null))
-                    .GetGenericMethodDefinition();
 
-                foreach (var elementType in simpleTypes)
-                {
-                    var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                    concreteMethod.Invoke(null, new object[] { fixture });
-                }
-            }
 
-            static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
-            {
-                var registerMethod = Method
-                    .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
-                    .GetGenericMethodDefinition();
-
-                foreach (var elementType in structs)
-                {
-                    var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                    concreteMethod.Invoke(null, new object[] { fixture, randomSource });
-                }
-            }
-            
 
             _fixture.Register<string>(() => _randomSource.NextString('A', 'Z'));
 
@@ -86,19 +63,24 @@ namespace Nemesis.TextParsers.Tests
             _fixture.Register<Enum1>(() => (Enum1)_randomSource.Next(0, 100));
 
 
-
-            var simpleTypes = _allTestCases
-                .Where(d => d.category == ExploratoryTestCategory.Structs || d.category == ExploratoryTestCategory.Enums)
+            var structs = _allTestCases
+                .Where(d => d.category == ExploratoryTestCategory.Structs ||
+                            d.category == ExploratoryTestCategory.Enums)
                 .Select(d => d.type)
+                .ToList();
+
+
+            var simpleTypes = structs
                 .Concat(new[] { typeof(string) });
-            RegisterAllAggressionBased(_fixture, simpleTypes);
+            FixtureUtils.RegisterAllAggressionBased(_fixture, simpleTypes);
 
 
-            var nonNullableStructs = _allTestCases
-                .Where(d => d.category == ExploratoryTestCategory.Structs || d.category == ExploratoryTestCategory.Enums)
-                .Select(d => d.type)
+            var nonNullableStructs = structs
                 .Where(t => t.IsValueType && Nullable.GetUnderlyingType(t) == null);
-            RegisterAllNullable(_fixture, _randomSource, nonNullableStructs);
+            FixtureUtils.RegisterAllNullable(_fixture, _randomSource, nonNullableStructs);
+
+
+            FixtureUtils.RegisterAllCollections(_fixture, _randomSource, structs);
         }
 
         [SetUp]
@@ -107,46 +89,6 @@ namespace Nemesis.TextParsers.Tests
         {
             int seed = _randomSource.UseNewSeed();
             Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext?.Test?.Name ?? "<no name>"} - seed = {seed}");
-        }
-
-        private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource) 
-            where TUnderlyingType : struct
-        {
-            TUnderlyingType? Creator() => randomSource.NextDouble() < 0.1 
-                ? (TUnderlyingType?)null 
-                : fixture.Create<TUnderlyingType>();
-
-            fixture.Register(Creator);
-        }
-
-        private static void RegisterAggressionBased<TElement>(IFixture fixture)
-        {
-            AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
-
-            AggressionBased3<TElement> Creator3()
-            {
-                TElement pass = fixture.Create<TElement>(),
-                    norm = fixture.Create<TElement>(),
-                    aggr = fixture.Create<TElement>();
-
-                int i = 0;
-                while (StructuralEquality.Equals(pass, norm) && StructuralEquality.Equals(pass, aggr))
-                {
-                    norm = fixture.Create<TElement>();
-                    aggr = fixture.Create<TElement>();
-
-                    if (i++ > 100)
-                        throw new InvalidOperationException($"Cannot create instance for {typeof(TElement).GetFriendlyName()}");
-                }
-
-                return new AggressionBased3<TElement>(pass, norm, aggr);
-            }
-
-            fixture.Register(Creator1);
-
-            fixture.Register(Creator3);
-
-            fixture.Register<IAggressionBased<TElement>>(Creator3);
         }
 
 
@@ -185,20 +127,25 @@ namespace Nemesis.TextParsers.Tests
         private void ShouldParseAndFormat(ExploratoryTestCategory category)
         {
             var failed = new List<string>();
-            var caseNo = 1;
+            var caseNo = 0;
 
             foreach (var type in GetTypeNamesFor(category))
                 try
                 {
+                    caseNo++;
                     ShouldParseAndFormat(type);
                 }
                 catch (Exception e)
                 {
-                    failed.Add($"Case {caseNo++:000} {e}");
+                    var ex = e is TargetInvocationException tie && tie.InnerException is { } inner
+                        ? inner
+                        : e;
+
+                    failed.Add($"Case {caseNo:000} {ex.Message}");
                 }
 
-            Assert.That(failed, Is.Empty,
-                () => $"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
+            if (failed.Count > 0)
+                Assert.Fail($"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
         }
 
         private static readonly MethodInfo _tester = Method.OfExpression<Action<ExploratoryTests>>(
@@ -221,19 +168,35 @@ namespace Nemesis.TextParsers.Tests
             try
             {
                 reason = "Transformer retrieval";
-                ITransformer transformer = TextTransformer.Default.GetTransformer<T>();
+                var transformer = TextTransformer.Default.GetTransformer<T>();
                 Assert.That(transformer, Is.Not.Null);
 
                 //nulls
                 reason = $"Parsing null with {transformer}";
                 var parsedNull1 = ParseAndAssert(null);
                 reason = "Formatting null";
-                var nullText = transformer.FormatObject(parsedNull1);
-
+                var nullText = transformer.Format(parsedNull1);
 
                 reason = $"NULL:{nullText ?? "<NULL>"}";
                 var parsedNull2 = ParseAndAssert(nullText);
                 IsMutuallyEquivalent(parsedNull1, parsedNull2);
+
+
+
+                //empty
+                reason = $"Parsing empty with {transformer}";
+                var empty = transformer is IEmptySource<T> emptySource
+                    ? emptySource.GetEmpty()
+                    : default;
+
+                reason = "Formatting empty";
+                var emptyText = transformer.Format(empty);
+                reason = "Parsing empty";
+                var parsedEmpty1 = ParseAndAssert(emptyText);
+
+                IsMutuallyEquivalent(parsedEmpty1, empty);
+
+
 
                 //instances
                 var instances = _fixture.CreateMany<T>(30);
@@ -241,7 +204,7 @@ namespace Nemesis.TextParsers.Tests
                 foreach (var instance in instances)
                 {
                     reason = $"Transforming {i}";
-                    string text = transformer.FormatObject(instance);
+                    string text = transformer.Format(instance);
                     reason = $"{i++:00}. {text}";
 
                     var parsed1 = ParseAndAssert(text);
@@ -251,17 +214,17 @@ namespace Nemesis.TextParsers.Tests
                     IsMutuallyEquivalent(parsed1, instance);
 
 
-                    string text3 = transformer.FormatObject(parsed1);
+                    string text3 = transformer.Format(parsed1);
                     var parsed3 = ParseAndAssert(text3);
                     IsMutuallyEquivalent(parsed1, parsed3);
                 }
 
 
-                object ParseAndAssert(string text)
+                T ParseAndAssert(string text)
                 {
-                    var parsed = transformer.ParseObject(text);
+                    var parsed = transformer.ParseFromText(text);
 
-                    if (parsed == null) return null;
+                    if (parsed == null) return default;
 
 
                     if (Nullable.GetUnderlyingType(testType) is { } underlyingType)
@@ -275,6 +238,10 @@ namespace Nemesis.TextParsers.Tests
 
                     return parsed;
                 }
+            }
+            catch (AssertionException ae)
+            {
+                throw new Exception($"Failed for {friendlyName} during: {reason} due to {ae.Message}");
             }
             catch (Exception e)
             {
@@ -436,5 +403,112 @@ namespace Nemesis.TextParsers.Tests
             //class
             typeof(string), typeof(Uri),
         };
+    }
+
+    static class FixtureUtils
+    {
+        public static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
+        {
+            var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased<int>(fix))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in simpleTypes)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture });
+            }
+        }
+
+        public static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
+        {
+            var registerMethod = Method
+                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in structs)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            }
+        }
+
+        public static void RegisterAllCollections(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
+        {
+            var registerMethod = Method
+                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterCollections<int>(fix, rs))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in elementTypes)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            }
+        }
+
+        private static void RegisterAggressionBased<TElement>(IFixture fixture)
+        {
+            AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
+
+            AggressionBased3<TElement> Creator3()
+            {
+                TElement pass = fixture.Create<TElement>(),
+                    norm = fixture.Create<TElement>(),
+                    aggr = fixture.Create<TElement>();
+
+                int i = 0;
+                while (StructuralEquality.Equals(pass, norm) && StructuralEquality.Equals(pass, aggr))
+                {
+                    norm = fixture.Create<TElement>();
+                    aggr = fixture.Create<TElement>();
+
+                    if (i++ > 100)
+                        throw new InvalidOperationException($"Cannot create instance for {typeof(TElement).GetFriendlyName()}");
+                }
+
+                return new AggressionBased3<TElement>(pass, norm, aggr);
+            }
+
+            fixture.Register(Creator1);
+
+            fixture.Register(Creator3);
+
+            fixture.Register<IAggressionBased<TElement>>(Creator3);
+        }
+
+        private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource)
+            where TUnderlyingType : struct
+        {
+            TUnderlyingType? Creator() => randomSource.NextDouble() < 0.1
+                ? (TUnderlyingType?)null
+                : fixture.Create<TUnderlyingType>();
+
+            fixture.Register(Creator);
+        }
+
+        private static void RegisterCollections<TElement>(Fixture fixture, RandomSource randomSource)
+        {
+            TElement[] ArrayCreator()
+            {
+                int length = randomSource.Next(2, 6);
+                var array = new TElement[length];
+                for (int i = 0; i < array.Length; i++)
+                    array[i] = fixture.Create<TElement>();
+
+                return array;
+            }
+
+            List<TElement> ListCreator()
+            {
+                int length = randomSource.Next(2, 6);
+                var list = new List<TElement>(length);
+                for (int i = 0; i < length; i++)
+                    list.Add(fixture.Create<TElement>());
+
+                return list;
+            }
+
+            fixture.Register(ArrayCreator);
+            fixture.Register(ListCreator);
+        }
     }
 }
