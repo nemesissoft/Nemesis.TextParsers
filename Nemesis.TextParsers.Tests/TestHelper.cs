@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using FluentAssertions;
+using JetBrains.Annotations;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -44,7 +45,9 @@ namespace Nemesis.TextParsers.Tests
 
     internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>
     {
+        [PublicAPI]
         public static readonly IComparer<string> Comparer = new IgnoreNewLinesComparer();
+        [PublicAPI]
         public static readonly IEqualityComparer<string> EqualityComparer = new IgnoreNewLinesComparer();
 
         public int Compare(string x, string y) => string.CompareOrdinal(NormalizeNewLines(x), NormalizeNewLines(y));
@@ -57,5 +60,56 @@ namespace Nemesis.TextParsers.Tests
             .Replace(Environment.NewLine, "")
             .Replace("\n", "")
             .Replace("\r", "");
+    }
+
+    [PublicAPI]
+    internal class RandomSource
+    {
+        private int _seed;
+        private Random _rand;
+
+        public RandomSource() => UseNewSeed();
+
+        public RandomSource(int seed) => UseNewSeed(seed);
+
+        public int UseNewSeed()
+        {
+            _seed = Environment.TickCount;
+            _rand = new Random(_seed);
+            return _seed;
+        }
+
+        public void UseNewSeed(int newSeed)
+        {
+            _seed = newSeed;
+            _rand = new Random(_seed);
+        }
+
+        public int Next() => _rand.Next();
+        public int Next(int maxValue) => _rand.Next(maxValue);
+        public int Next(int minValue, int maxValue) => _rand.Next(minValue, maxValue);
+        public double NextDouble() => _rand.NextDouble();
+
+
+
+        public string NextString(char start, char end, int length = 10)
+        {
+            var chars = new char[length];
+            for (var i = 0; i < chars.Length; i++)
+                chars[i] = (char)_rand.Next(start, end + 1);
+            return new string(chars);
+        }
+
+        public double NextFloatingNumber(int magnitude = 1000, bool generateSpecialValues = true)
+        {
+            if (generateSpecialValues && _rand.NextDouble() is { } chance && chance < 0.1)
+            {
+                if (chance < 0.045) return double.PositiveInfinity;
+                else if (chance < 0.09) return double.NegativeInfinity;
+                else return double.NaN;
+            }
+            else
+                return Math.Round((_rand.NextDouble() - 0.5) * 2 * magnitude, 3);
+        }
     }
 }

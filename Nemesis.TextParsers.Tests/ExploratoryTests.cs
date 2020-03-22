@@ -17,7 +17,8 @@ namespace Nemesis.TextParsers.Tests
     public sealed class ExploratoryTests
     {
         private readonly Fixture _fixture = new Fixture();
-        private Random _rand = new Random();
+        private readonly RandomSource _randomSource = new RandomSource();
+
 
         private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type)> _allTestCases =
             ExploratoryTestsData.GetAllTestTypes(
@@ -57,47 +58,32 @@ namespace Nemesis.TextParsers.Tests
                 }
             }
 
-            static void RegisterAllNullable(Fixture fixture, Random rand, IEnumerable<Type> structs)
+            static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
             {
-                var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterNullable<int>(null, null))
+                var registerMethod = Method
+                    .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
                     .GetGenericMethodDefinition();
 
                 foreach (var elementType in structs)
                 {
                     var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                    concreteMethod.Invoke(null, new object[] { fixture, rand });
+                    concreteMethod.Invoke(null, new object[] { fixture, randomSource });
                 }
             }
+            
 
-            static string GetRandomString(Random rand, char start, char end, int length = 10)
-            {
-                var chars = new char[length];
-                for (var i = 0; i < chars.Length; i++)
-                    chars[i] = (char)rand.Next(start, end + 1);
-                return new string(chars);
-            }
+            _fixture.Register<string>(() => _randomSource.NextString('A', 'Z'));
 
-            static double GetRandomDouble(Random rand, int magnitude = 1000, bool generateSpecialValues = true)
-            {
-                if (generateSpecialValues && rand.NextDouble() is { } chance && chance < 0.1)
-                {
-                    if (chance < 0.045) return double.PositiveInfinity;
-                    else if (chance < 0.09) return double.NegativeInfinity;
-                    else return double.NaN;
-                }
-                else
-                    return Math.Round((rand.NextDouble() - 0.5) * 2 * magnitude, 3);
-            }
+            _fixture.Register<double>(() => _randomSource.NextFloatingNumber());
+            _fixture.Register<float>(() => (float)_randomSource.NextFloatingNumber());
+            _fixture.Register<decimal>(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
+            _fixture.Register<Complex>(() => new Complex(
+                _randomSource.NextFloatingNumber(1000, false),
+                _randomSource.NextFloatingNumber(1000, false)
+            ));
 
-            _fixture.Register<string>(() => GetRandomString(_rand, 'A', 'Z'));
-
-            _fixture.Register<double>(() => GetRandomDouble(_rand));
-            _fixture.Register<float>(() => (float)GetRandomDouble(_rand));
-            _fixture.Register<decimal>(() => (decimal)GetRandomDouble(_rand, 10000, false));
-            _fixture.Register<Complex>(() => new Complex(GetRandomDouble(_rand, 1000, false), GetRandomDouble(_rand, 1000, false)));
-
-            _fixture.Register<BigInteger>(() => BigInteger.Parse(GetRandomString(_rand, '0', '9', 30)));
-            _fixture.Register<Enum1>(() => (Enum1)_rand.Next(0, 100));
+            _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
+            _fixture.Register<Enum1>(() => (Enum1)_randomSource.Next(0, 100));
 
 
 
@@ -112,22 +98,23 @@ namespace Nemesis.TextParsers.Tests
                 .Where(d => d.category == ExploratoryTestCategory.Structs || d.category == ExploratoryTestCategory.Enums)
                 .Select(d => d.type)
                 .Where(t => t.IsValueType && Nullable.GetUnderlyingType(t) == null);
-            RegisterAllNullable(_fixture, _rand, nonNullableStructs);
+            RegisterAllNullable(_fixture, _randomSource, nonNullableStructs);
         }
 
         [SetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeEachTest()
         {
-            int seed = Environment.TickCount;
-            _rand = new Random(seed);
-            Console.WriteLine($"{nameof(ExploratoryTests)} - seed = {seed}");
+            int seed = _randomSource.UseNewSeed();
+            Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext?.Test?.Name ?? "<no name>"} - seed = {seed}");
         }
 
-
-        private static void RegisterNullable<TElement>(IFixture fixture, Random rand) where TElement : struct
+        private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource) 
+            where TUnderlyingType : struct
         {
-            TElement? Creator() => rand.NextDouble() < 0.1 ? (TElement?)null : fixture.Create<TElement>();
+            TUnderlyingType? Creator() => randomSource.NextDouble() < 0.1 
+                ? (TUnderlyingType?)null 
+                : fixture.Create<TUnderlyingType>();
 
             fixture.Register(Creator);
         }
@@ -199,8 +186,8 @@ namespace Nemesis.TextParsers.Tests
         {
             var failed = new List<string>();
             var caseNo = 1;
-            
-            foreach (Type type in GetTypeNamesFor(category))
+
+            foreach (var type in GetTypeNamesFor(category))
                 try
                 {
                     ShouldParseAndFormat(type);
