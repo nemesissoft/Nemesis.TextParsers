@@ -171,7 +171,7 @@ namespace Nemesis.TextParsers.Tests
 
 
         [TestCaseSource(nameof(GetEmptyInstance_Data))]
-        public void GetEmptyInstance(Type type, object expected)
+        public void GetEmptyInstanceTest(Type type, object expected)
         {
             var actual = TextTransformer.Default.GetEmptyInstance(type);
 
