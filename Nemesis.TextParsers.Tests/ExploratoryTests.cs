@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers.Tests
         private readonly Fixture _fixture = new Fixture();
         private Random _rand = new Random();
 
-        private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> _allTestCases =
+        private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type)> _allTestCases =
             ExploratoryTestsData.GetAllTestTypes(
                 ExploratoryTestsData.GetStandardTypes().Concat(
                     new[]
@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers.Tests
                 else
                     return Math.Round((rand.NextDouble() - 0.5) * 2 * magnitude, 3);
             }
-            
+
             _fixture.Register<string>(() => GetRandomString(_rand, 'A', 'Z'));
 
             _fixture.Register<double>(() => GetRandomDouble(_rand));
@@ -127,7 +127,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static void RegisterNullable<TElement>(IFixture fixture, Random rand) where TElement : struct
         {
-            TElement? Creator() => rand.NextDouble() < 0.1 ? (TElement?) null : fixture.Create<TElement>();
+            TElement? Creator() => rand.NextDouble() < 0.1 ? (TElement?)null : fixture.Create<TElement>();
 
             fixture.Register(Creator);
         }
@@ -163,56 +163,55 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
-        private static IEnumerable<string> GetTypeNamesForCategory(ExploratoryTestCategory category) =>
-            _allTestCases.Where(d => d.category == category).Select(d => d.friendlyName);
+        private static IEnumerable<Type> GetTypeNamesFor(ExploratoryTestCategory category) =>
+            _allTestCases.Where(d => d.category == category).Select(d => d.type);
 
+        [Test]
+        public void Enums() => ShouldParseAndFormat(ExploratoryTestCategory.Enums);
 
-        private static IEnumerable<string> GetEnums() => GetTypeNamesForCategory(ExploratoryTestCategory.Enums);
-        private static IEnumerable<string> GetStructs() => GetTypeNamesForCategory(ExploratoryTestCategory.Structs);
-        private static IEnumerable<string> GetValueTuples() => GetTypeNamesForCategory(ExploratoryTestCategory.ValueTuples);
+        [Test]
+        public void Structs() => ShouldParseAndFormat(ExploratoryTestCategory.Structs);
 
-        private static IEnumerable<string> GetArrays() => GetTypeNamesForCategory(ExploratoryTestCategory.Arrays);
-        private static IEnumerable<string> GetDictionaries() => GetTypeNamesForCategory(ExploratoryTestCategory.Dictionaries);
-        private static IEnumerable<string> GetCollections() => GetTypeNamesForCategory(ExploratoryTestCategory.Collections);
-        private static IEnumerable<string> GetAggressionBased() => GetTypeNamesForCategory(ExploratoryTestCategory.AggressionBased);
-        private static IEnumerable<string> GetClasses() => GetTypeNamesForCategory(ExploratoryTestCategory.Classes);
+        [Test]
+        public void ValueTuples() => ShouldParseAndFormat(ExploratoryTestCategory.ValueTuples);
 
-        [TestCaseSource(nameof(GetEnums))]
-        public void Enums(string typeName) => ShouldParseAndFormat(typeName);
+        [Test]
+        public void Arrays() => ShouldParseAndFormat(ExploratoryTestCategory.Arrays);
 
-        [TestCaseSource(nameof(GetStructs))]
-        public void Structs(string typeName) => ShouldParseAndFormat(typeName);
+        [Test]
+        public void Dictionaries() => ShouldParseAndFormat(ExploratoryTestCategory.Dictionaries);
 
-        [TestCaseSource(nameof(GetValueTuples))]
-        public void ValueTuples(string typeName) => ShouldParseAndFormat(typeName);
+        [Test]
+        public void Collections() => ShouldParseAndFormat(ExploratoryTestCategory.Collections);
 
-        /*[TestCaseSource(nameof(GetArrays))]
-        public void Arrays(string typeName) => ShouldParseAndFormat(typeName);
+        [Test]
+        public void AggressionBased() => ShouldParseAndFormat(ExploratoryTestCategory.AggressionBased);
 
-        [TestCaseSource(nameof(GetDictionaries))]
-        public void Dictionaries(string typeName) => ShouldParseAndFormat(typeName);
-
-        [TestCaseSource(nameof(GetCollections))]
-        public void Collections(string typeName) => ShouldParseAndFormat(typeName);
-
-        [TestCaseSource(nameof(GetAggressionBased))]
-        public void AggressionBased(string typeName) => ShouldParseAndFormat(typeName);
-
-        [TestCaseSource(nameof(GetClasses))]
-        public void Classes(string typeName) => ShouldParseAndFormat(typeName);*/
+        [Test]
+        public void Classes() => ShouldParseAndFormat(ExploratoryTestCategory.Classes);
 
         [Test]
         public void Remaining() =>
-            CollectionAssert.IsEmpty(GetTypeNamesForCategory(ExploratoryTestCategory.Remaining));
+            CollectionAssert.IsEmpty(GetTypeNamesFor(ExploratoryTestCategory.Remaining));
 
 
-        private void ShouldParseAndFormat(string typeName)
+        private void ShouldParseAndFormat(ExploratoryTestCategory category)
         {
-            var type = _allTestCases.Where(d => d.friendlyName == typeName).Select(d => d.type).SingleOrDefault();
+            var failed = new List<string>();
+            var caseNo = 1;
+            
+            foreach (Type type in GetTypeNamesFor(category))
+                try
+                {
+                    ShouldParseAndFormat(type);
+                }
+                catch (Exception e)
+                {
+                    failed.Add($"Case {caseNo++:000} {e}");
+                }
 
-            Assert.That(type, Is.Not.Null, "Type not found");
-
-            ShouldParseAndFormat(type);
+            Assert.That(failed, Is.Empty,
+                () => $"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
         }
 
         private static readonly MethodInfo _tester = Method.OfExpression<Action<ExploratoryTests>>(
@@ -222,65 +221,77 @@ namespace Nemesis.TextParsers.Tests
         private void ShouldParseAndFormat(Type testType)
         {
             var tester = _tester.MakeGenericMethod(testType);
-
             tester.Invoke(this, null);
         }
 
         private void ShouldParseAndFormatHelper<T>()
         {
             Type testType = typeof(T);
+            string friendlyName = testType.GetFriendlyName();
+            string reason = "<none>";
 
 
-            ITransformer transformer = TextTransformer.Default.GetTransformer<T>();
-            Assert.That(transformer, Is.Not.Null);
-            //Console.WriteLine(transformer);
-
-            //nulls
-            var parsedNull1 = ParseAndAssert(null);
-            var nullText = transformer.FormatObject(parsedNull1);
-
-            //Console.WriteLine($"NULL:{nullText ?? "<NULL>"}");
-
-            var parsedNull2 = ParseAndAssert(nullText);
-            IsMutuallyEquivalent(parsedNull1, parsedNull2);
-
-            //instances
-            var instances = _fixture.CreateMany<T>(30);
-            //int i = 1;
-            foreach (var instance in instances)
+            try
             {
-                string text = transformer.FormatObject(instance);
-                //Console.WriteLine("{0:00}. {1}", i++, text);
+                reason = "Transformer retrieval";
+                ITransformer transformer = TextTransformer.Default.GetTransformer<T>();
+                Assert.That(transformer, Is.Not.Null);
 
-                var parsed1 = ParseAndAssert(text);
-                var parsed2 = ParseAndAssert(text);
+                //nulls
+                reason = $"Parsing null with {transformer}";
+                var parsedNull1 = ParseAndAssert(null);
+                reason = "Formatting null";
+                var nullText = transformer.FormatObject(parsedNull1);
 
-                IsMutuallyEquivalent(parsed1, parsed2);
-                IsMutuallyEquivalent(parsed1, instance);
+
+                reason = $"NULL:{nullText ?? "<NULL>"}";
+                var parsedNull2 = ParseAndAssert(nullText);
+                IsMutuallyEquivalent(parsedNull1, parsedNull2);
+
+                //instances
+                var instances = _fixture.CreateMany<T>(30);
+                int i = 1;
+                foreach (var instance in instances)
+                {
+                    reason = $"Transforming {i}";
+                    string text = transformer.FormatObject(instance);
+                    reason = $"{i++:00}. {text}";
+
+                    var parsed1 = ParseAndAssert(text);
+                    var parsed2 = ParseAndAssert(text);
+
+                    IsMutuallyEquivalent(parsed1, parsed2);
+                    IsMutuallyEquivalent(parsed1, instance);
 
 
-                string text3 = transformer.FormatObject(parsed1);
-                var parsed3 = ParseAndAssert(text3);
-                IsMutuallyEquivalent(parsed1, parsed3);
+                    string text3 = transformer.FormatObject(parsed1);
+                    var parsed3 = ParseAndAssert(text3);
+                    IsMutuallyEquivalent(parsed1, parsed3);
+                }
+
+
+                object ParseAndAssert(string text)
+                {
+                    var parsed = transformer.ParseObject(text);
+
+                    if (parsed == null) return null;
+
+
+                    if (Nullable.GetUnderlyingType(testType) is { } underlyingType)
+                        Assert.That(parsed, Is.TypeOf(underlyingType));
+                    else if (testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
+                        Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.GetFriendlyName()}");
+                    else if (testType.IsInterface)
+                        Assert.That(parsed, Is.AssignableTo(testType));
+                    else
+                        Assert.That(parsed, Is.TypeOf(testType));
+
+                    return parsed;
+                }
             }
-
-            object ParseAndAssert(string text)
+            catch (Exception e)
             {
-                var parsed = transformer.ParseObject(text);
-
-                if (parsed == null) return null;
-
-
-                if (Nullable.GetUnderlyingType(testType) is { } underlyingType)
-                    Assert.That(parsed, Is.TypeOf(underlyingType));
-                else if (testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
-                    Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.GetFriendlyName()}");
-                else if (testType.IsInterface)
-                    Assert.That(parsed, Is.AssignableTo(testType));
-                else
-                    Assert.That(parsed, Is.TypeOf(testType));
-
-                return parsed;
+                throw new Exception($"Failed for {friendlyName} during: {reason}", e);
             }
         }
     }
@@ -303,7 +314,7 @@ namespace Nemesis.TextParsers.Tests
 
     static class ExploratoryTestsData
     {
-        public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)>
+        public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type)>
             GetAllTestTypes(IList<Type> allTypes)
         {
             var typeComparer = Comparer<Type>.Create((t1, t2) =>
@@ -387,10 +398,10 @@ namespace Nemesis.TextParsers.Tests
 
 
 
-            var @return = new List<(ExploratoryTestCategory category, Type type, string friendlyName)>();
+            var @return = new List<(ExploratoryTestCategory category, Type type)>();
 
             void ProjectAndAdd(ExploratoryTestCategory category, IEnumerable<Type> types) =>
-                @return.AddRange(types.Select(t => (category, t, t.GetFriendlyName())).Distinct());
+                @return.AddRange(types.Select(t => (category, t)).Distinct());
 
             ProjectAndAdd(ExploratoryTestCategory.Enums, enums);
             ProjectAndAdd(ExploratoryTestCategory.Structs, structs);
