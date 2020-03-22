@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
+using TCD = NUnit.Framework.TestCaseData;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -145,6 +148,91 @@ namespace Nemesis.TextParsers.Tests
                     allPassed = false;
             }
             Assert.IsTrue(allPassed);
+        }
+
+
+        internal static IEnumerable<TCD> GetEmptyInstance_Data() => new[]
+        {
+            new TCD(typeof(string), ""),
+            new TCD(typeof(bool), false),
+            new TCD(typeof(int), 0),
+            new TCD(typeof(uint?), null),
+            new TCD(typeof(float), 0.0f),
+            new TCD(typeof(double?), null),
+            new TCD(typeof(FileMode), (FileMode) 0),
+            new TCD(typeof(List<string>), new List<string>()),
+            new TCD(typeof(IReadOnlyList<int>), new List<int>()),
+            new TCD(typeof(Dictionary<string, float?>), new Dictionary<string, float?>()),
+            new TCD(typeof(decimal[]), new decimal[0]),
+            new TCD(typeof(BigInteger[][]), new BigInteger[0][]),
+            new TCD(typeof(Complex), new Complex(0.0, 0.0)),
+            new TCD(typeof(LotsOfData),LotsOfData.Empty),
+        };
+
+
+        [TestCaseSource(nameof(GetEmptyInstance_Data))]
+        public void GetEmptyInstance(Type type, object expected)
+        {
+            var actual = TextTransformer.Default.GetEmptyInstance(type);
+
+            IsMutuallyEquivalent(actual, expected);
+        }
+
+
+        class LotsOfData
+        {
+            public string D1 { get; }
+            public bool D2 { get; }
+            public int D3 { get; }
+            public uint? D4 { get; }
+            public float D5 { get; }
+            public double? D6 { get; }
+            public FileMode D7 { get; }
+            public List<string> D8 { get; }
+            public IReadOnlyList<int> D9 { get; }
+            public Dictionary<string, float?> D10 { get; }
+            public decimal[] D11 { get; }
+            public BigInteger[][] D12 { get; }
+            public Complex D13 { get; }
+
+            public LotsOfData(string d1, bool d2, int d3, uint? d4, float d5, double? d6, FileMode d7, List<string> d8, IReadOnlyList<int> d9, Dictionary<string, float?> d10, decimal[] d11, BigInteger[][] d12, Complex d13)
+            {
+                D1 = d1;
+                D2 = d2;
+                D3 = d3;
+                D4 = d4;
+                D5 = d5;
+                D6 = d6;
+                D7 = d7;
+                D8 = d8;
+                D9 = d9;
+                D10 = d10;
+                D11 = d11;
+                D12 = d12;
+                D13 = d13;
+            }
+
+            [UsedImplicitly]
+            public void Deconstruct(out string d1, out bool d2, out int d3, out uint? d4, out float d5, out double? d6, out FileMode d7, out List<string> d8, out IReadOnlyList<int> d9, out Dictionary<string, float?> d10, out decimal[] d11, out BigInteger[][] d12, out Complex d13)
+            {
+                d1 = D1;
+                d2 = D2;
+                d3 = D3;
+                d4 = D4;
+                d5 = D5;
+                d6 = D6;
+                d7 = D7;
+                d8 = D8;
+                d9 = D9;
+                d10 = D10;
+                d11 = D11;
+                d12 = D12;
+                d13 = D13;
+            }
+
+            public static readonly LotsOfData Empty = new LotsOfData("", false, 0, null, 0.0f, null, 0, new List<string>(),
+                new List<int>(), new Dictionary<string, float?>(), new decimal[0], new BigInteger[0][], new Complex(0.0, 0.0)
+            );
         }
     }
 }

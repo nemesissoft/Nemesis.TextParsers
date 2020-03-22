@@ -65,13 +65,13 @@ namespace Nemesis.TextParsers.Parsers
     }
 
     [UsedImplicitly]
-    public sealed class StringParser : SimpleTransformer<string>, ISupportEmpty<string>
+    public sealed class StringParser : SimpleTransformer<string>
     {
         public override string Parse(in ReadOnlySpan<char> input) => input.ToString();
 
         public override string Format(string element) => element;
         
-        public string GetEmpty() => "";
+        public override string GetEmpty() => "";
     }
 
     #region Structs

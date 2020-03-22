@@ -158,8 +158,8 @@ namespace Nemesis.TextParsers.Tests
                 Assert.Pass("Test is not supported for non-flag enums");
 
             var sb = new StringBuilder();
-            bool allPassed = true;
-            foreach (TUnderlying number in GetEnumValues())
+            var failed = new List<string>();
+            foreach (var number in GetEnumValues())
             {
                 if (number.CompareTo(_numberHandler.Zero) <= 0)
                     continue;
@@ -184,18 +184,22 @@ namespace Nemesis.TextParsers.Tests
                 //var native1 = (TEnum)Enum.Parse(typeof(TEnum), text, true);
                 var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
                 bool pass = Equals(actual, native);
-                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number} ({text})");
+
+                string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number} ({text})";
 
                 if (!pass)
-                    allPassed = false;
+                    failed.Add(message);
             }
-            Assert.IsTrue(allPassed);
+            Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
         }
+
+        internal static Func<string> GetFailedMessageBuilder(IEnumerable<string> failed) =>
+            () => $"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}";
 
         [Test]
         public void ParseNumber()
         {
-            bool allPassed = true;
+            var failed = new List<string>();
             foreach (TUnderlying number in GetEnumValues())
             {
                 var actual = _sut.Parse(number.ToString().AsSpan());
@@ -204,21 +208,21 @@ namespace Nemesis.TextParsers.Tests
 
                 bool pass = Equals(actual, native);
 
-                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number}");
+                string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number}";
 
                 if (!pass)
-                    allPassed = false;
+                    failed.Add(message);
             }
-            Assert.IsTrue(allPassed);
+            Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
         }
 
         [Test]
         public void ParseText()
         {
-            bool allPassed = true;
+            var failed = new List<string>();
 
             IReadOnlyList<(TEnum Enum, string Text)> enumToText = GetEnumToText();
-            
+
             foreach (var (enumValue, text) in enumToText)
             {
                 var actual = _sut.Parse(text.AsSpan());
@@ -228,20 +232,19 @@ namespace Nemesis.TextParsers.Tests
                             Equals(actualNative, enumValue) &&
                             Equals(actual, actualNative);
 
-                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{actualNative}', '{enumValue}', {enumValue:D}, 0x{enumValue:X}");
+                string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{actualNative}', '{enumValue}', {enumValue:D}, 0x{enumValue:X}";
 
                 if (!pass)
-                    allPassed = false;
+                    failed.Add(message);
             }
 
-
-            Assert.IsTrue(allPassed);
+            Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
         }
 
         [Test]
         public void Format()
         {
-            bool allPassed = true;
+            var failed = new List<string>();
 
             foreach (var (enumValue, text) in GetEnumToText())
             {
@@ -252,14 +255,13 @@ namespace Nemesis.TextParsers.Tests
                             Equals(actualNative, text) &&
                             Equals(actual, actualNative);
 
-                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{actualNative}', '{text}'");
-
+                string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{actualNative}', '{text}'";
 
                 if (!pass)
-                    allPassed = false;
+                    failed.Add(message);
             }
 
-            Assert.IsTrue(allPassed);
+            Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
         }
     }
 
@@ -272,7 +274,7 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void ParseViaCSharpCode()
         {
-            bool allPassed = true;
+            var failed = new List<string>();
 
             for (int i = 0; i < 135; i++)
             {
@@ -286,15 +288,15 @@ namespace Nemesis.TextParsers.Tests
                             Equals(actualNative, enumValue) &&
                             Equals(actual, actualNative);
 
-                Console.WriteLine($"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{actualNative}', '{enumValue}', {enumValue:D}, 0x{enumValue:X}");
+                string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{actualNative}', '{enumValue}', {enumValue:D}, 0x{enumValue:X}";
 
                 if (!pass)
-                    allPassed = false;
+                    failed.Add(message);
             }
 
-
-            Assert.IsTrue(allPassed);
-
+            Assert.That(failed, Is.Empty, () =>
+                $"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}"
+            );
         }
 
         private static DaysOfWeek ParseDaysOfWeek(ReadOnlySpan<char> input)

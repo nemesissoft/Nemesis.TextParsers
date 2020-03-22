@@ -14,9 +14,6 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 namespace Nemesis.TextParsers.Tests
 {
 
-    
-    //TODO add TypeConverter with deconstruct 
-
     /*TODO
     perf tests
     //TODO perf test class vs readonly struct 

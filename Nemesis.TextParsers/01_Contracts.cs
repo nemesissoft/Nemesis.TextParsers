@@ -29,12 +29,15 @@ namespace Nemesis.TextParsers
         TElement ParseFromText(string text);//for tests - ReadOnlySpan<char> cannot be boxed
     }
 
-    public interface ISupportEmpty<out TElement>
+    public interface IEmptySource { object GetEmptyObject(); }
+    
+
+    public interface IEmptySource<out TElement> : IEmptySource
     {
         TElement GetEmpty();
     }
 
-    public abstract class TransformerBase<TElement> : ITransformer<TElement>
+    public abstract class TransformerBase<TElement> : ITransformer<TElement>, IEmptySource<TElement>
     {
         public abstract TElement Parse(in ReadOnlySpan<char> input);
 
@@ -48,6 +51,10 @@ namespace Nemesis.TextParsers
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
         public string FormatObject(object element) => Format((TElement)element);
+       
+        public virtual TElement GetEmpty() => default;
+
+        public object GetEmptyObject() => GetEmpty();
     }
 
     public interface ICanCreateTransformer

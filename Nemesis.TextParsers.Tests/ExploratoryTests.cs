@@ -17,7 +17,7 @@ namespace Nemesis.TextParsers.Tests
     public sealed class ExploratoryTests
     {
         private readonly Fixture _fixture = new Fixture();
-        private readonly Random _rand = new Random();
+        private Random _rand = new Random();
 
         private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type, string friendlyName)> _allTestCases =
             ExploratoryTestsData.GetAllTestTypes(
@@ -43,7 +43,7 @@ namespace Nemesis.TextParsers.Tests
 
         [OneTimeSetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
-        public void BeforeEveryTest()
+        public void BeforeAnyTest()
         {
             static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
             {
@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers.Tests
                 else
                     return Math.Round((rand.NextDouble() - 0.5) * 2 * magnitude, 3);
             }
-
+            
             _fixture.Register<string>(() => GetRandomString(_rand, 'A', 'Z'));
 
             _fixture.Register<double>(() => GetRandomDouble(_rand));
@@ -115,9 +115,19 @@ namespace Nemesis.TextParsers.Tests
             RegisterAllNullable(_fixture, _rand, nonNullableStructs);
         }
 
+        [SetUp]
+        [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
+        public void BeforeEachTest()
+        {
+            int seed = Environment.TickCount;
+            _rand = new Random(seed);
+            Console.WriteLine($"{nameof(ExploratoryTests)} - seed = {seed}");
+        }
+
+
         private static void RegisterNullable<TElement>(IFixture fixture, Random rand) where TElement : struct
         {
-            TElement? Creator() => rand.NextDouble() < 0.1 ? (TElement?)null : fixture.Create<TElement>();
+            TElement? Creator() => rand.NextDouble() < 0.1 ? (TElement?) null : fixture.Create<TElement>();
 
             fixture.Register(Creator);
         }
@@ -176,7 +186,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(GetValueTuples))]
         public void ValueTuples(string typeName) => ShouldParseAndFormat(typeName);
 
-        [TestCaseSource(nameof(GetArrays))]
+        /*[TestCaseSource(nameof(GetArrays))]
         public void Arrays(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetDictionaries))]
@@ -189,7 +199,7 @@ namespace Nemesis.TextParsers.Tests
         public void AggressionBased(string typeName) => ShouldParseAndFormat(typeName);
 
         [TestCaseSource(nameof(GetClasses))]
-        public void Classes(string typeName) => ShouldParseAndFormat(typeName);
+        public void Classes(string typeName) => ShouldParseAndFormat(typeName);*/
 
         [Test]
         public void Remaining() =>
@@ -223,24 +233,24 @@ namespace Nemesis.TextParsers.Tests
 
             ITransformer transformer = TextTransformer.Default.GetTransformer<T>();
             Assert.That(transformer, Is.Not.Null);
-            Console.WriteLine(transformer);
+            //Console.WriteLine(transformer);
 
             //nulls
             var parsedNull1 = ParseAndAssert(null);
             var nullText = transformer.FormatObject(parsedNull1);
 
-            Console.WriteLine($"NULL:{nullText ?? "<NULL>"}");
+            //Console.WriteLine($"NULL:{nullText ?? "<NULL>"}");
 
             var parsedNull2 = ParseAndAssert(nullText);
             IsMutuallyEquivalent(parsedNull1, parsedNull2);
 
             //instances
             var instances = _fixture.CreateMany<T>(30);
-            int i = 1;
+            //int i = 1;
             foreach (var instance in instances)
             {
                 string text = transformer.FormatObject(instance);
-                Console.WriteLine("{0:00}. {1}", i++, text);
+                //Console.WriteLine("{0:00}. {1}", i++, text);
 
                 var parsed1 = ParseAndAssert(text);
                 var parsed2 = ParseAndAssert(text);

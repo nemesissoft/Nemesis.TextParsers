@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers.Parsers
             return (ITransformer<TDictionary>)Activator.CreateInstance(transType, kind);
         }
 
-        private sealed class InnerDictionaryTransformer<TKey, TValue, TDict> : TransformerBase<TDict>, ISupportEmpty<TDict>
+        private sealed class InnerDictionaryTransformer<TKey, TValue, TDict> : TransformerBase<TDict>
             where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             private readonly DictionaryKind _kind;
@@ -39,7 +39,7 @@ namespace Nemesis.TextParsers.Parsers
             public override string Format(TDict dict) =>//dict == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
 
-            public TDict GetEmpty() =>
+            public override TDict GetEmpty() =>
                 (TDict)(_kind switch
                 {
                     DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),

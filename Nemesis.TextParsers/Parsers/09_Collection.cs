@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using JetBrains.Annotations;
@@ -28,7 +27,7 @@ namespace Nemesis.TextParsers.Parsers
             return (ITransformer<TCollection>)Activator.CreateInstance(transType, kind);
         }
 
-        private sealed class InnerCollectionTransformer<TElement, TCollection> : TransformerBase<TCollection>, ISupportEmpty<TCollection>
+        private sealed class InnerCollectionTransformer<TElement, TCollection> : TransformerBase<TCollection>
             where TCollection : IEnumerable<TElement>
         {
             private readonly CollectionKind _kind;
@@ -41,7 +40,7 @@ namespace Nemesis.TextParsers.Parsers
             public override string Format(TCollection coll) => //coll == null ? null :
                 SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
-            public TCollection GetEmpty() =>
+            public override TCollection GetEmpty() =>
                 (TCollection)(_kind switch
                 {
                     CollectionKind.ReadOnlyCollection => new ReadOnlyCollection<TElement>(new List<TElement>(0)),

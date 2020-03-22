@@ -148,26 +148,6 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return false;
         }
 
-        private static bool IsCompatible(IReadOnlyList<ParameterInfo> left, IReadOnlyList<ParameterInfo> right)
-        {
-            bool AreEqualByParamTypes()
-            {
-                static Type FlattenRef(Type type) =>
-                    type.IsByRef ? type.GetElementType() : type;
-
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                for (var i = 0; i < left.Count; i++)
-                    if (FlattenRef(left[i].ParameterType)
-                        !=
-                        FlattenRef(right[i].ParameterType)
-                    )
-                        return false;
-                return true;
-            }
-
-            return left != null && right != null && left.Count == right.Count && AreEqualByParamTypes();
-        }
-
         public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>(ITransformerStore transformerStore)
         {
             // ReSharper disable ArgumentsStyleNamedExpression
@@ -195,10 +175,25 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 default:
                     throw new NotSupportedException($"{nameof(Mode)} = {Mode} is not supported");
             }
-            if (deconstruct is null || ctor is null)
-                throw new NotSupportedException($"{DECONSTRUCT} and constructor have to be provided");
 
-            static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
+            CheckCtorAndDeconstruct<TDeconstructable>(ctor, deconstruct, transformerStore);
+
+
+            var transformers = ctor.GetParameters()
+                     .Select(p => transformerStore.GetTransformer(p.ParameterType))
+                     .ToArray();
+
+            var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);
+            var formatter = DeconstructionTransformer<TDeconstructable>.CreateFormatter(deconstruct);
+            var emptyGenerator = DeconstructionTransformer<TDeconstructable>.CreateEmptyGenerator(ctor, transformerStore);
+
+            return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter, emptyGenerator);
+        }
+
+        private static void CheckCtorAndDeconstruct<TDeconstructable>(ConstructorInfo ctor, MethodInfo deconstruct, ITransformerStore transformerStore)
+        {
+            if (deconstruct is null || ctor is null)
+                throw new NotSupportedException($"{DECONSTRUCT} and constructor have to be provided, depending on {nameof(Mode)} - either manually or object needs to expose compatible ctor/Deconstruct pair");
 
             if (deconstruct.IsStatic)
             {
@@ -236,20 +231,29 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                     throw new NotSupportedException(
                         $"Instance {DECONSTRUCT} method must have all out params (IsOut==true). Types should be recognizable by TransformerStore");
             }
+        }
 
+        private static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
 
-            var transformers = ctor.GetParameters()
-                     .Select(p => transformerStore.GetTransformer(p.ParameterType))
-                     .ToArray();
+        private static bool IsCompatible(IReadOnlyList<ParameterInfo> left, IReadOnlyList<ParameterInfo> right)
+        {
+            bool AreEqualByParamTypes()
+            {
+                // ReSharper disable once LoopCanBeConvertedToQuery
+                for (var i = 0; i < left.Count; i++)
+                    if (FlattenRef(left[i].ParameterType)
+                        !=
+                        FlattenRef(right[i].ParameterType)
+                    )
+                        return false;
+                return true;
+            }
 
-            var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);
-            var formatter = DeconstructionTransformer<TDeconstructable>.CreateFormatter(deconstruct);
-
-            return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter);
+            return left != null && right != null && left.Count == right.Count && AreEqualByParamTypes();
         }
     }
 
-    internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>, ISupportEmpty<TDeconstructable>
+    internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
     {
         public delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
         public delegate string FormatterDelegate(TDeconstructable element, TupleHelper helper, ITransformer[] transformers);
@@ -260,15 +264,19 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         private readonly ITransformer[] _transformers;
         private readonly ParserDelegate _parser;
         private readonly FormatterDelegate _formatter;
-        private readonly EmptyGenerator _emptyGenerator = null;
+        private readonly EmptyGenerator _emptyGenerator;
 
-        internal DeconstructionTransformer(TupleHelper helper, ITransformer[] transformers, 
-            ParserDelegate parser, FormatterDelegate formatter)
+        internal DeconstructionTransformer(TupleHelper helper, [NotNull] ITransformer[] transformers,
+            [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, [NotNull] EmptyGenerator emptyGenerator)
         {
-            _helper = helper;
-            _transformers = transformers;
-            _parser = parser;
-            _formatter = formatter;
+            _helper = helper != default
+                ? helper
+                : throw new ArgumentException($"Default {nameof(TupleHelper)} instance should not be used for transformations");
+
+            _transformers = transformers ?? throw new ArgumentNullException(nameof(transformers));
+            _parser = parser ?? throw new ArgumentNullException(nameof(parser));
+            _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            _emptyGenerator = emptyGenerator ?? throw new ArgumentNullException(nameof(emptyGenerator));
         }
 
         /*
@@ -441,6 +449,20 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return λ.Compile();
         }
 
+        internal static EmptyGenerator CreateEmptyGenerator(ConstructorInfo ctor, ITransformerStore transformerStore)
+        {
+            var emptyInstances = ctor.GetParameters()
+                    .Select(p => p.ParameterType)
+                    .Select(type => Expression.Constant(transformerStore.GetEmptyInstance(type), type))
+                ;
+
+            var @new = Expression.New(ctor, emptyInstances);
+
+            var λ = Expression.Lambda<EmptyGenerator>(@new);
+            return λ.Compile();
+        }
+
+
         private static void CreateFormatterData(MethodBase deconstruct,
             out int arity, out ParameterExpression element, out ParameterExpression helper,
             out ParameterExpression transformers, out ParameterExpression accumulator, out ParameterExpression initialBuffer,
@@ -498,7 +520,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         public override string Format(TDeconstructable element) =>
             element is null ? null : _formatter(element, _helper, _transformers);
 
-        public TDeconstructable GetEmpty() => _emptyGenerator();
+        public override TDeconstructable GetEmpty() => _emptyGenerator();
 
         public override string ToString()
         {

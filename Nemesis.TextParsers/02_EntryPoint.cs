@@ -15,6 +15,9 @@ namespace Nemesis.TextParsers
         ITransformer GetTransformer(Type type);
 
         bool IsSupportedForTransformation(Type type);
+
+        object GetEmptyInstance(Type type);
+        TElement GetEmptyInstance<TElement>();
     }
 
     public static class TextTransformer
@@ -67,14 +70,14 @@ namespace Nemesis.TextParsers
                 };
             }
 
-            
+
             var transformerCreators = new List<ICanCreateTransformer>(16);
             var store = new StandardTransformerStore(transformerCreators);
 
             transformerCreators.AddRange(
                 from type in types
                 where typeof(ICanCreateTransformer).IsAssignableFrom(type)
-                select CreateTransformer(type, store) 
+                select CreateTransformer(type, store)
             );
 
             if (!IsUnique(transformerCreators.Select(d => d.Priority)))
@@ -85,6 +88,8 @@ namespace Nemesis.TextParsers
             return store;
         }
 
+        #region GetTransformer
+
         public ITransformer<TElement> GetTransformer<TElement>() =>
             (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), t => GetTransformerCore<TElement>());
 
@@ -92,20 +97,6 @@ namespace Nemesis.TextParsers
             _transformerCache.GetOrAdd(elementType, type =>
                 (ITransformer)_getTransformerMethodGeneric.MakeGenericMethod(type).Invoke(this, null)
             );
-
-
-        private readonly ConcurrentDictionary<Type, bool> _isSupportedCache = new ConcurrentDictionary<Type, bool>();
-
-        public bool IsSupportedForTransformation(Type type) =>
-            type != null &&
-            _isSupportedCache.GetOrAdd(type, IsSupportedForTransformationCore);
-
-
-        private bool IsSupportedForTransformationCore(Type type) =>
-            !type.IsGenericTypeDefinition &&
-            _transformerCreators.FirstOrDefault(c => c.CanHandle(type)) is { } creator &&
-            !(creator is AnyTransformerCreator);
-
 
         static StandardTransformerStore() =>
             _getTransformerMethodGeneric = Method.OfExpression<Func<StandardTransformerStore, ITransformer<int>>>(
@@ -117,7 +108,7 @@ namespace Nemesis.TextParsers
 
         private ITransformer<TElement> GetTransformerCore<TElement>()
         {
-            Type type = typeof(TElement);
+            var type = typeof(TElement);
 
             if (type.IsGenericTypeDefinition)
                 throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
@@ -127,6 +118,34 @@ namespace Nemesis.TextParsers
                     return creator.CreateTransformer<TElement>();
 
             throw new NotSupportedException($"Type '{type.GetFriendlyName()}' is not supported for string transformations. Provide appropriate chain of responsibility");
-        }
+        } 
+        #endregion
+
+
+        #region IsSupported
+
+        private readonly ConcurrentDictionary<Type, bool> _isSupportedCache = new ConcurrentDictionary<Type, bool>();
+
+        public bool IsSupportedForTransformation(Type type) =>
+            type != null &&
+            _isSupportedCache.GetOrAdd(type, IsSupportedForTransformationCore);
+
+        private bool IsSupportedForTransformationCore(Type type) =>
+            !type.IsGenericTypeDefinition &&
+            _transformerCreators.FirstOrDefault(c => c.CanHandle(type)) is { } creator &&
+            !(creator is AnyTransformerCreator);
+
+        #endregion
+
+
+        public object GetEmptyInstance(Type type) =>
+            GetTransformer(type) is IEmptySource emptySource
+                ? emptySource.GetEmptyObject()
+                : TypeMeta.GetSystemDefault(type);
+
+        public TElement GetEmptyInstance<TElement>() => 
+            GetTransformer<TElement>() is IEmptySource<TElement> emptySource
+                ? emptySource.GetEmpty() 
+                : default;
     }
 }
