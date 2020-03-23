@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Utils
@@ -46,7 +47,7 @@ namespace Nemesis.TextParsers.Utils
                 string text => ParseString(text),
                 _ => default
             };
-        
+
         protected abstract TValue ParseNull();
 
         protected abstract TValue ParseString(string text);
@@ -89,17 +90,18 @@ namespace Nemesis.TextParsers.Utils
                 specialChars.Select(c => $@"escape '{c}' with ""\{c}""")
             ) + @"and '\' with double backslash ""\\""";
 
-        private static string GetSyntax(Type t)
+        private static string GetSyntaxFromAttribute(Type source, Type originalType)
         {
-            var attr = t?.GetCustomAttribute<TextConverterSyntaxAttribute>(true);
+            var attr = source?.GetCustomAttribute<TextConverterSyntaxAttribute>(true);
             if (attr == null) return null;
 
             (string syntax, var specialChars) = (attr.Syntax, attr.SpecialCharacters);
 
             string elementsSyntax =
-                t.IsGenericType && !t.IsGenericTypeDefinition && t.GenericTypeArguments is { } genArgs && genArgs.Length > 0
-                ? string.Join(NL, genArgs.Select(GetConverterSyntax))
-                : "";
+                originalType.IsGenericType && !originalType.IsGenericTypeDefinition &&
+                originalType.GenericTypeArguments is { } genArgs && genArgs.Length > 0
+                  ? string.Join(NL, genArgs.Select(GetConverterSyntax))
+                  : "";
 
             return syntax
                    +
@@ -114,19 +116,21 @@ namespace Nemesis.TextParsers.Utils
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            string fromType = GetSyntax(type);
+            string fromType = GetSyntaxFromAttribute(type, type);
 
             string fromConverter =
-                type.GetCustomAttribute<TypeConverterAttribute>(true)?.ConverterTypeName is var converterTypeName && converterTypeName != null
-                    ? GetSyntax(Type.GetType(converterTypeName, false))
+                type.GetCustomAttribute<TypeConverterAttribute>(true)?.ConverterTypeName is var converterTypeName &&
+                converterTypeName != null && Type.GetType(converterTypeName, false) is { } converterType
+                    ? GetSyntaxFromAttribute(converterType, type)
                     : null;
 
-            if (!string.IsNullOrWhiteSpace(fromType) && !string.IsNullOrWhiteSpace(fromConverter))
-                return $"{fromType}{Environment.NewLine}{Environment.NewLine}{fromConverter}";
-            else if (!string.IsNullOrWhiteSpace(fromType))
-                return fromType;
-            else if (!string.IsNullOrWhiteSpace(fromConverter))
-                return fromConverter;
+            string fromTextFactory =
+                type.GetCustomAttribute<TextFactoryAttribute>(true)?.FactoryType is { } factoryType
+                    ? GetSyntaxFromAttribute(factoryType, type)
+                    : null;
+
+            if (TryConcat(fromType, fromConverter, fromTextFactory, out string message))
+                return message;
             else if (typeof(string) == type)
                 return "UTF-16 character string";
             else
@@ -141,7 +145,8 @@ namespace Nemesis.TextParsers.Utils
 
                 (bool isNumeric, var min, var max, bool isFloating) = GetNumberMeta(type);
                 if (isNumeric)
-                    return FormattableString.Invariant($"{(isFloating ? "Floating" : "Whole")} number from {min} to {max}{(isNullable ? " or null" : "")}");
+                    return FormattableString.Invariant(
+                        $"{(isFloating ? "Floating" : "Whole")} number from {min} to {max}{(isNullable ? " or null" : "")}");
                 else if (typeof(bool) == type)
                     return FormattableString.Invariant($"'{true}' or '{false}'{(isNullable ? " or null" : "")}");
 
@@ -153,33 +158,37 @@ namespace Nemesis.TextParsers.Utils
 
                 else if (typeof(DateTime) == type)
                     // ReSharper disable once StringLiteralTypo
-                    return $"ISO 8601 roundtrip datetime literal (yyyy-MM-ddTHH:mm:ss.fffffffK) {(isNullable ? " or null" : "")}";
+                    return
+                        $"ISO 8601 roundtrip datetime literal (yyyy-MM-ddTHH:mm:ss.fffffffK) {(isNullable ? " or null" : "")}";
 
                 else if (type.IsEnum)
-                    return FormattableString.Invariant($"'{string.Join(", ", Enum.GetValues(type).Cast<object>())}'{(isNullable ? " or null" : "")}");
+                    return FormattableString.Invariant(
+                        $"'{string.Join(", ", Enum.GetValues(type).Cast<object>())}'{(isNullable ? " or null" : "")}");
 
 
                 else if (TypeMeta.TryGetGenericRealization(type, typeof(IDictionary<,>), out var dictType))
                 {
                     string keySyntax = GetConverterSyntax(dictType.GenericTypeArguments[0]),
-                           valSyntax = GetConverterSyntax(dictType.GenericTypeArguments[1]);
+                        valSyntax = GetConverterSyntax(dictType.GenericTypeArguments[1]);
 
                     return @$"KEY=VALUE pairs separated with semicolons(';') i.e.
 key1=value1;key2=value2;key3=value3
 ({GetEscapeSequences('=', ';')})"
-                        +
-                        (string.IsNullOrWhiteSpace(keySyntax) ? "" : $"{NL}Key syntax:{NL}{keySyntax}")
-                        +
-                        (string.IsNullOrWhiteSpace(valSyntax) ? "" : $"{NL}Value syntax:{NL}{valSyntax}")
+                           +
+                           (string.IsNullOrWhiteSpace(keySyntax) ? "" : $"{NL}Key syntax:{NL}{keySyntax}")
+                           +
+                           (string.IsNullOrWhiteSpace(valSyntax) ? "" : $"{NL}Value syntax:{NL}{valSyntax}")
                         ;
                 }
 
-                else if (TypeMeta.TryGetGenericRealization(type, typeof(ICollection<>), out var collType) || type.IsArray)
+                else if (TypeMeta.TryGetGenericRealization(type, typeof(ICollection<>), out var collType) ||
+                         type.IsArray)
                 {
                     var elemType = (type.IsArray
-                        ? type.GetElementType()
-                        : collType?.GenericTypeArguments[0]
-                    ) ?? throw new NotSupportedException($"Type {type.GetFriendlyName()} is not supported for formatting");
+                            ? type.GetElementType()
+                            : collType?.GenericTypeArguments[0]
+                        ) ?? throw new NotSupportedException(
+                            $"Type {type.GetFriendlyName()} is not supported for formatting");
 
                     string elemSyntax = GetConverterSyntax(elemType);
 
@@ -200,6 +209,28 @@ key1=value1;key2=value2;key3=value3
 
                 return null;
             }
+        }
+
+        private static bool TryConcat(string fromType, string fromConverter, string fromTextFactory, out string message)
+        {
+            message = "";
+
+            if (!string.IsNullOrWhiteSpace(fromType))
+                message += fromType;
+            if (!string.IsNullOrWhiteSpace(fromConverter))
+            {
+                if (message.Length > 0)
+                    message += NL + NL;
+                message += fromConverter;
+            }
+            if (!string.IsNullOrWhiteSpace(fromTextFactory))
+            {
+                if (message.Length > 0)
+                    message += NL + NL;
+                message += fromTextFactory;
+            }
+
+            return !string.IsNullOrWhiteSpace(message);
         }
 
         private static (bool IsNumeric, object Min, object Max, bool IsFloating) GetNumberMeta(Type type)

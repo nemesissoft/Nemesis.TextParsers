@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 
+// ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture(TestOf = typeof(IAggressionBased<>))]

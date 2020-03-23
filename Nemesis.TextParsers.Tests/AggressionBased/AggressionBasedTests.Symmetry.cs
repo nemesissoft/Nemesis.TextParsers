@@ -11,6 +11,7 @@ using Dss = System.Collections.Generic.Dictionary<string, string>;
 using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
+// ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture(TestOf = typeof(IAggressionBased<>))]

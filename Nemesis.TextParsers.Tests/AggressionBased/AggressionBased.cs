@@ -12,6 +12,7 @@ using Nemesis.TextParsers.Utils;
     using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
+// ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
     [PublicAPI]
@@ -25,7 +26,6 @@ namespace Nemesis.TextParsers.Tests
         string ToString();
     }
 
-    [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     [TextFactory(typeof(AggressionBasedFactoryChecked<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
@@ -44,7 +44,6 @@ namespace Nemesis.TextParsers.Tests
         public static readonly SpanCollectionSerializer Instance = new SpanCollectionSerializer('#', ';', '=', '∅', '\\');
     }
 
-    [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     [TextFactory(typeof(AggressionBasedFactoryChecked<>))]
     internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
     {
@@ -228,6 +227,7 @@ namespace Nemesis.TextParsers.Tests
     }
 
     [PublicAPI]
+    [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     public static class AggressionBasedFactoryChecked<TValue>
     {
         public static IAggressionBased<TValue> FromText(string text) => string.IsNullOrEmpty(text) ?
