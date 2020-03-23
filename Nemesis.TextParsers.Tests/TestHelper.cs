@@ -90,7 +90,7 @@ namespace Nemesis.TextParsers.Tests
         public int Next(int minValue, int maxValue) => _rand.Next(minValue, maxValue);
         public double NextDouble() => _rand.NextDouble();
 
-
+        public TElement NextElement<TElement>(IReadOnlyList<TElement> list) => list[Next(list.Count)];
 
         public string NextString(char start, char end, int length = 10)
         {

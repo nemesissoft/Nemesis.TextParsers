@@ -20,33 +20,42 @@ namespace Nemesis.TextParsers.Tests
         private readonly RandomSource _randomSource = new RandomSource();
 
 
-        private static readonly IReadOnlyCollection<(ExploratoryTestCategory category, Type type)> _allTestCases =
-            ExploratoryTestsData.GetAllTestTypes(
-                ExploratoryTestsData.GetStandardTypes().Concat(
-                    new[]
-                    {
-                        typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum), typeof(Int64Enum), typeof(UInt64Enum),
-                        typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+        private static IReadOnlyCollection<(ExploratoryTestCategory category, Type type)> _allTestCases;
 
-                        typeof(Fruits[]),typeof(Dictionary<Fruits, double>),
-                        typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
-                        typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
+        static void GetTestCases(RandomSource randomSource)
+        {
+            var baseTypes = ExploratoryTestsData.GetStandardTypes().Concat(
+                new[]
+                {
+                    typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum),
+                    typeof(Int64Enum), typeof(UInt64Enum),
+                    typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
 
-                        typeof(IAggressionBased<int>), typeof(IAggressionBased<string>), typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
-                        typeof(AggressionBased3<float?>),
-                        typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
-                        typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
-                        typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
-                        typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
-                        typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
-                    }
-                    ).ToList());
+                    typeof(Fruits[]), typeof(Dictionary<Fruits, double>),
+                    typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
+                    typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
+
+                    typeof(IAggressionBased<int>), typeof(IAggressionBased<string>),
+                    typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
+                    typeof(AggressionBased3<float?>),
+                    typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
+                    typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
+                    typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
+                    typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
+                    typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
+                }
+            ).ToList();
+
+            _allTestCases = ExploratoryTestsData.GetAllTestTypes(randomSource, baseTypes);
+        }
 
         [OneTimeSetUp]
         [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeAnyTest()
         {
-
+            int seed = _randomSource.UseNewSeed();
+            Console.WriteLine($"{GetType().Name} initial seed = {seed}");
+            GetTestCases(_randomSource);
 
 
             _fixture.Register<string>(() => _randomSource.NextString('A', 'Z'));
@@ -185,9 +194,7 @@ namespace Nemesis.TextParsers.Tests
 
                 //empty
                 reason = $"Parsing empty with {transformer}";
-                var empty = transformer is IEmptySource<T> emptySource
-                    ? emptySource.GetEmpty()
-                    : default;
+                var empty = transformer.GetEmpty();
 
                 reason = "Formatting empty";
                 var emptyText = transformer.Format(empty);
@@ -269,7 +276,7 @@ namespace Nemesis.TextParsers.Tests
     static class ExploratoryTestsData
     {
         public static IReadOnlyCollection<(ExploratoryTestCategory category, Type type)>
-            GetAllTestTypes(IList<Type> allTypes)
+            GetAllTestTypes(RandomSource randomSource, IList<Type> allTypes)
         {
             var typeComparer = Comparer<Type>.Create((t1, t2) =>
                 string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
@@ -304,8 +311,14 @@ namespace Nemesis.TextParsers.Tests
 
             var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(structs).ToList();
 
-            var rand = new Random();
-            Type GetRandomSimpleType() => simpleTypes[rand.Next(simpleTypes.Count)];
+
+            var simpleTypesCopy = simpleTypes;
+            Type GetRandomSimpleType() => randomSource.NextElement(simpleTypesCopy);
+
+            Type GetRandomTupleType(int arity, Type tupleType) =>
+                tupleType.MakeGenericType(
+                    Enumerable.Repeat(0, arity)
+                        .Select(i => GetRandomSimpleType()).ToArray());
 
             var valueTuples = new List<(int arity, Type tupleType)>
             {
@@ -316,10 +329,7 @@ namespace Nemesis.TextParsers.Tests
                 (5, typeof(ValueTuple<,,,,>)),
                 (6, typeof(ValueTuple<,,,,,>)),
                 (7, typeof(ValueTuple<,,,,,,>)),
-            }.Select(pair =>
-                pair.tupleType.MakeGenericType(
-                    Enumerable.Repeat(0, pair.arity)
-                        .Select(i => GetRandomSimpleType()).ToArray())
+            }.SelectMany(pair => Enumerable.Repeat(0, 6).Select(i => GetRandomTupleType(pair.arity, pair.tupleType))
             ).ToList();
 
             static Type GetNullableCounterpart(Type t) => t.IsNullable(out var underlyingType)

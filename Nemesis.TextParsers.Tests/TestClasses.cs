@@ -395,6 +395,9 @@ namespace Nemesis.TextParsers.Tests
 
         public override string FormatToString(Option value) => value.ToString();
 
+
+
+
         public Option Parse(in ReadOnlySpan<char> text)
         {
             static bool TryParseInt(ReadOnlySpan<char> input, out int result) =>
@@ -423,15 +426,22 @@ namespace Nemesis.TextParsers.Tests
             };
         }
 
-        public string Format(Option element) => element.ToString();
-
         public Option ParseFromText(string text) => Parse(text.AsSpan());
-
+        
         public object ParseObject(string text) => Parse(text.AsSpan());
 
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
+
+
+        public string Format(Option element) => element.ToString();
         public string FormatObject(object element) => Format((Option)element);
+
+        
+
+        
+        public Option GetEmpty() => new Option(OptionEnum.None);
+        public object GetEmptyObject() => GetEmpty();
     }
 
     [TypeConverter(typeof(PointConverter2))]

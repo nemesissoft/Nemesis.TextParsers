@@ -58,7 +58,7 @@ namespace Nemesis.TextParsers.Utils
         {
             input = UnParenthesize(input);
 
-            var kvpTokens = input.Tokenize(_tupleDelimiter, _escapingSequenceStart, true);
+            var kvpTokens = input.Tokenize(_tupleDelimiter, _escapingSequenceStart, false);
             var enumerator = kvpTokens.GetEnumerator();
 
             if (!enumerator.MoveNext())

@@ -316,7 +316,7 @@ namespace Nemesis.TextParsers.Tests
 
             return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
 
-            Exception GetException(int numberOfElements) => new ArgumentException(
+            static Exception GetException(int numberOfElements) => new ArgumentException(
                 // ReSharper disable once UseNameofExpression
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", "values");
         }
@@ -427,7 +427,7 @@ namespace Nemesis.TextParsers.Tests
             else
                 return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
 
-            Exception GetException(int numberOfElements) => new ArgumentException(
+            static Exception GetException(int numberOfElements) => new ArgumentException(
                 // ReSharper disable once UseNameofExpression
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", "values");
         }

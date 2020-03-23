@@ -118,7 +118,7 @@ namespace Nemesis.TextParsers
                     return creator.CreateTransformer<TElement>();
 
             throw new NotSupportedException($"Type '{type.GetFriendlyName()}' is not supported for string transformations. Provide appropriate chain of responsibility");
-        } 
+        }
         #endregion
 
 
@@ -138,14 +138,14 @@ namespace Nemesis.TextParsers
         #endregion
 
 
-        public object GetEmptyInstance(Type type) =>
-            GetTransformer(type) is IEmptySource emptySource
-                ? emptySource.GetEmptyObject()
-                : TypeMeta.GetSystemDefault(type);
+        #region GetEmptyInstance
 
-        public TElement GetEmptyInstance<TElement>() => 
-            GetTransformer<TElement>() is IEmptySource<TElement> emptySource
-                ? emptySource.GetEmpty() 
-                : default;
+        public object GetEmptyInstance(Type type) =>
+            GetTransformer(type).GetEmptyObject();
+
+        public TElement GetEmptyInstance<TElement>() =>
+            GetTransformer<TElement>().GetEmpty();
+
+        #endregion
     }
 }
