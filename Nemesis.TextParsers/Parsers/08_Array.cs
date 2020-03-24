@@ -23,13 +23,11 @@ namespace Nemesis.TextParsers.Parsers
 
         private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>
         {
-            public override TElement[] Parse(in ReadOnlySpan<char> input) =>
-                    //input.IsEmpty ? default :
+            protected override TElement[] ParseCore(in ReadOnlySpan<char> input) =>
                     SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
 
             public override string Format(TElement[] array) =>
-                    //array == null ? null :
-                    SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
+                SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
 
             public override TElement[] GetEmpty() => Array.Empty<TElement>();
 

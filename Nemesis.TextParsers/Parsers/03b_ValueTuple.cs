@@ -46,10 +46,8 @@ namespace Nemesis.TextParsers.Parsers
             public Tuple1Transformer(ITransformerStore transformerStore) => 
                 _transformer1 = transformerStore.GetTransformer<T1>();
 
-            public override ValueTuple<T1> Parse(in ReadOnlySpan<char> input)
+            protected override ValueTuple<T1> ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -89,10 +87,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformer2 = transformerStore.GetTransformer<T2>();
             }
 
-            public override (T1, T2) Parse(in ReadOnlySpan<char> input)
+            protected override (T1, T2) ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -142,10 +138,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformer3 = transformerStore.GetTransformer<T3>();
             }
 
-            public override (T1, T2, T3) Parse(in ReadOnlySpan<char> input)
+            protected override (T1, T2, T3) ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -202,10 +196,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformer4 = transformerStore.GetTransformer<T4>();
             }
 
-            public override (T1, T2, T3, T4) Parse(in ReadOnlySpan<char> input)
+            protected override (T1, T2, T3, T4) ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -270,10 +262,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformer5 = transformerStore.GetTransformer<T5>();
             }
 
-            public override (T1, T2, T3, T4, T5) Parse(in ReadOnlySpan<char> input)
+            protected override (T1, T2, T3, T4, T5) ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -346,10 +336,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformer6 = transformerStore.GetTransformer<T6>();
             }
 
-            public override (T1, T2, T3, T4, T5, T6) Parse(in ReadOnlySpan<char> input)
+            protected override (T1, T2, T3, T4, T5, T6) ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -429,10 +417,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformer7 = transformerStore.GetTransformer<T7>();
             }
 
-            public override (T1, T2, T3, T4, T5, T6, T7) Parse(in ReadOnlySpan<char> input)
+            protected override (T1, T2, T3, T4, T5, T6, T7) ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);
@@ -520,10 +506,8 @@ namespace Nemesis.TextParsers.Parsers
                 _transformerRest = transformerStore.GetTransformer<TRest>();
             }
 
-            public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Parse(in ReadOnlySpan<char> input)
+            protected override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var enumerator = Helper.ParseStart(input, ARITY);
 
                 var t1 = Helper.ParseElement(ref enumerator, _transformer1);

@@ -65,7 +65,7 @@ namespace Nemesis.TextParsers.Parsers
             protected DictionaryTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
 
 
-            public override TDict Parse(in ReadOnlySpan<char> input) //input.IsEmpty ? default :
+            protected override TDict ParseCore(in ReadOnlySpan<char> input) 
             {
                 var stream = SpanCollectionSerializer.DefaultInstance.ParsePairsStream<TKey, TValue>(input, out _);
                 TDict result = GetDictionary(stream);

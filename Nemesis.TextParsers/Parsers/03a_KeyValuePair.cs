@@ -48,10 +48,8 @@ namespace Nemesis.TextParsers.Parsers
                 _valueTransformer = valueTransformer;
             }
 
-            public override KeyValuePair<TKey, TValue> Parse(in ReadOnlySpan<char> input)
+            protected override KeyValuePair<TKey, TValue> ParseCore(in ReadOnlySpan<char> input)
             {
-                if (input.IsEmpty) return default;
-
                 var kvpTokens = input.Tokenize(TUPLE_DELIMITER, ESCAPING_SEQUENCE_START, true);
 
                 var enumerator = kvpTokens.GetEnumerator();

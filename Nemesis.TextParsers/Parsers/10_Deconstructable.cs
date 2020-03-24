@@ -514,8 +514,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
 
-        public override TDeconstructable Parse(in ReadOnlySpan<char> input) =>
-            input.IsEmpty ? default : _parser(input, _helper, _transformers);
+        protected override TDeconstructable ParseCore(in ReadOnlySpan<char> input) =>
+            _parser(input, _helper, _transformers);
 
         public override string Format(TDeconstructable element) =>
             element is null ? null : _formatter(element, _helper, _transformers);

@@ -23,7 +23,7 @@ namespace Nemesis.TextParsers.Parsers
 
         private class InnerLeanCollectionTransformer<TElement> : TransformerBase<LeanCollection<TElement>>
         {
-            public override LeanCollection<TElement> Parse(in ReadOnlySpan<char> input) =>
+            protected override LeanCollection<TElement> ParseCore(in ReadOnlySpan<char> input) =>
                 SpanCollectionSerializer.DefaultInstance.ParseLeanCollection<TElement>(input);
 
             public override string Format(LeanCollection<TElement> coll) =>

@@ -30,8 +30,7 @@ namespace Nemesis.TextParsers.Parsers
                 _elementParser = transformerStore.GetTransformer<TElement>();
 
 
-            public override TElement? Parse(in ReadOnlySpan<char> input) =>
-                input.IsEmpty ? (TElement?)null : _elementParser.Parse(input);
+            protected override TElement? ParseCore(in ReadOnlySpan<char> input) => _elementParser.Parse(input);
 
             public override string Format(TElement? element) =>
                 element.HasValue ? _elementParser.Format(element.Value) : null;

@@ -84,9 +84,9 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         //check performance comparison in Benchmark project - ToEnumBench
         internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
-        public override TEnum Parse(in ReadOnlySpan<char> input)
+        protected override TEnum ParseCore(in ReadOnlySpan<char> input)
         {
-            if (input.IsEmpty || input.IsWhiteSpace()) return default;
+            if (input.IsWhiteSpace()) return default;
 
             var enumStream = input.Split(',').GetEnumerator();
 

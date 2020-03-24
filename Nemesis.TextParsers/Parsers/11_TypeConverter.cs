@@ -31,7 +31,7 @@ namespace Nemesis.TextParsers.Parsers
             public ConverterTransformer(TypeConverter typeConverter) => _typeConverter = typeConverter;
 
 
-            public override TElement Parse(in ReadOnlySpan<char> input) =>
+            protected override TElement ParseCore(in ReadOnlySpan<char> input) =>
                 (TElement)_typeConverter.ConvertFromInvariantString(input.ToString());
 
             public override string Format(TElement element) =>

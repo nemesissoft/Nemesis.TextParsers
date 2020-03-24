@@ -33,31 +33,46 @@ namespace Nemesis.TextParsers
     public interface ITransformer<TElement> : ISpanParser<TElement>, IFormatter<TElement>, ITransformer
     {
         TElement Parse(string text);
-       
+
         TElement GetNull();
         TElement GetEmpty();
     }
 
     public abstract class TransformerBase<TElement> : ITransformer<TElement>
     {
-        public abstract TElement Parse(in ReadOnlySpan<char> input);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        TElement ITransformer<TElement>.Parse(string text) => text == null ? default : Parse(text.AsSpan());
+        protected abstract TElement ParseCore(in ReadOnlySpan<char> input);
 
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object ParseObject(string text) => text == null ? default : Parse(text.AsSpan());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
-        /*=>
-                    text switch
-                    {
-                        null => default,
-                        "" => GetEmpty(),
-                        _ => Parse(text.AsSpan())
-                    };*/
+        public TElement Parse(in ReadOnlySpan<char> input) => input.IsEmpty ? GetEmpty() : ParseCore(input);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object ParseObject(in ReadOnlySpan<char> input) => input.IsEmpty ? GetEmpty() : ParseCore(input);
+
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        TElement ITransformer<TElement>.Parse(string text) => text switch
+            {
+                null => GetNull(),
+                "" => GetEmpty(),
+                _ => ParseCore(text.AsSpan())
+            };
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object ParseObject(string text) => 
+            text switch
+            {
+                null => GetNull(),
+                "" => GetEmpty(),
+                _ => ParseCore(text.AsSpan())
+            };
+
+
+       
+        
+
 
 
 
@@ -66,7 +81,9 @@ namespace Nemesis.TextParsers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string FormatObject(object element) => Format((TElement)element);
 
-        
+
+
+
 
 
         public virtual TElement GetEmpty() => default;
@@ -105,23 +122,27 @@ namespace Nemesis.TextParsers
         private readonly ISpanParser<TElement> _parser;
         private readonly IFormatter<TElement> _formatter;
         private readonly Func<TElement> _emptyValueProvider;
+        private readonly Func<TElement> _nullValueProvider;
 
         public CompositionTransformer([NotNull] ISpanParser<TElement> parser,
             [NotNull] IFormatter<TElement> formatter,
-            Func<TElement> emptyValueProvider = null)
+            Func<TElement> emptyValueProvider = null, Func<TElement> nullValueProvider = null)
         {
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));
             _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
             _emptyValueProvider = emptyValueProvider;
+            _nullValueProvider = nullValueProvider;
         }
 
-        public override TElement Parse(in ReadOnlySpan<char> input) => _parser.Parse(input);
+        protected override TElement ParseCore(in ReadOnlySpan<char> input) => _parser.Parse(input);
 
         public override string Format(TElement element) => _formatter.Format(element);
 
         public override TElement GetEmpty() =>
             _emptyValueProvider != null ? _emptyValueProvider() : base.GetEmpty();
 
+        public override TElement GetNull() => 
+            _nullValueProvider != null ? _nullValueProvider() : base.GetNull();
 
         public override string ToString() => $"{_parser?.ToString() ?? ""};{_formatter?.ToString() ?? ""}";
     }

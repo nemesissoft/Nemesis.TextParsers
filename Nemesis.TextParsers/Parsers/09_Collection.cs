@@ -34,7 +34,7 @@ namespace Nemesis.TextParsers.Parsers
             public InnerCollectionTransformer(CollectionKind kind) => _kind = kind;
 
 
-            public override TCollection Parse(in ReadOnlySpan<char> input) => //input.IsEmpty ? default :
+            protected override TCollection ParseCore(in ReadOnlySpan<char> input) => 
                 (TCollection)SpanCollectionSerializer.DefaultInstance.ParseCollection<TElement>(input, _kind);
 
             public override string Format(TCollection coll) => //coll == null ? null :
