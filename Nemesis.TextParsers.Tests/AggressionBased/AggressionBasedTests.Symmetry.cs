@@ -156,7 +156,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
-            var ab3 = transformer.ParseFromText(inputText);
+            var ab3 = transformer.Parse(inputText);
             CheckType(ab3, "3");
             var text3 = ab3.ToString();
             var text3A = transformer.Format(ab3);
@@ -214,9 +214,9 @@ namespace Nemesis.TextParsers.Tests
             var textNull = sut.Format(@null);
 
 
-            var parsed1 = sut.ParseFromText(text1);
-            var parsed3 = sut.ParseFromText(text3);
-            var parsedNull = sut.ParseFromText(textNull);
+            var parsed1 = sut.Parse(text1);
+            var parsed3 = sut.Parse(text3);
+            var parsedNull = sut.Parse(textNull);
 
 
             IsMutuallyEquivalent(null1, parsed1);
@@ -255,8 +255,8 @@ namespace Nemesis.TextParsers.Tests
             string text3 = sut.Format(empty3);
 
 
-            var parsed1 = sut.ParseFromText(text1);
-            var parsed3 = sut.ParseFromText(text3);
+            var parsed1 = sut.Parse(text1);
+            var parsed3 = sut.Parse(text3);
 
 
             IsMutuallyEquivalent(empty1, parsed1);

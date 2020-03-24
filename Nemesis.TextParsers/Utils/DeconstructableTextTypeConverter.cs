@@ -7,7 +7,7 @@ namespace Nemesis.TextParsers.Utils
         private static readonly ITransformer<TDeconstructable> _transformer = 
             Sett.Default.ToTransformer<TDeconstructable>(TextTransformer.Default);
 
-        public override TDeconstructable ParseString(string text) => _transformer.ParseFromText(text);
+        public override TDeconstructable ParseString(string text) => _transformer.Parse(text);
         
 
         public override string FormatToString(TDeconstructable value) => _transformer.Format(value);
@@ -20,7 +20,7 @@ namespace Nemesis.TextParsers.Utils
 
         protected override TDeconstructable ParseNull() => default;
 
-        protected override TDeconstructable ParseString(string text) => _transformer.ParseFromText(text);
+        protected override TDeconstructable ParseString(string text) => _transformer.Parse(text);
         
 
         protected override string FormatNull() => null;

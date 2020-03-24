@@ -229,7 +229,7 @@ namespace Nemesis.TextParsers.Tests
 
                 T ParseAndAssert(string text)
                 {
-                    var parsed = transformer.ParseFromText(text);
+                    var parsed = transformer.Parse(text);
 
                     if (parsed == null) return default;
 

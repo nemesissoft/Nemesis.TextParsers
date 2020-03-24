@@ -426,7 +426,7 @@ namespace Nemesis.TextParsers.Tests
             };
         }
 
-        public Option ParseFromText(string text) => Parse(text.AsSpan());
+        public Option Parse(string text) => Parse(text.AsSpan());
         
         public object ParseObject(string text) => Parse(text.AsSpan());
 

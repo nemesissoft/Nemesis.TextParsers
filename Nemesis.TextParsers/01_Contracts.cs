@@ -31,7 +31,7 @@ namespace Nemesis.TextParsers
 
     public interface ITransformer<TElement> : ISpanParser<TElement>, IFormatter<TElement>, ITransformer
     {
-        TElement ParseFromText(string text);//for tests - ReadOnlySpan<char> cannot be boxed
+        TElement Parse(string text);
         TElement GetEmpty();
     }
 
@@ -43,7 +43,7 @@ namespace Nemesis.TextParsers
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        TElement ITransformer<TElement>.ParseFromText(string text) => text == null ? default : Parse(text.AsSpan());
+        TElement ITransformer<TElement>.Parse(string text) => text == null ? default : Parse(text.AsSpan());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object ParseObject(string text) => text == null ? default : Parse(text.AsSpan());

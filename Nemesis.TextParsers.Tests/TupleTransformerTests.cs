@@ -122,18 +122,18 @@ namespace Nemesis.TextParsers.Tests
             string textActual = transformer.Format(tuple);
 
 
-            var parsed1 = transformer.ParseFromText(input);
+            var parsed1 = transformer.Parse(input);
             Assert.That(parsed1, Is.EqualTo(tuple));
 
 
             string text = transformer.Format(parsed1);
 
 
-            var parsed2 = transformer.ParseFromText(text);
+            var parsed2 = transformer.Parse(text);
             Assert.That(parsed2, Is.EqualTo(tuple));
 
 
-            var parsed3 = transformer.ParseFromText(textActual);
+            var parsed3 = transformer.Parse(textActual);
             Assert.That(parsed3, Is.EqualTo(tuple));
 
 
@@ -216,7 +216,7 @@ namespace Nemesis.TextParsers.Tests
             object parsed = null;
             try
             {
-                parsed = transformer.ParseFromText(input);
+                parsed = transformer.Parse(input);
                 passed = true;
             }
             catch (Exception actual)

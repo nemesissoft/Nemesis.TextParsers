@@ -179,7 +179,7 @@ namespace Nemesis.TextParsers.Tests
             Console.WriteLine(sut);
 
 
-            var parsed = sut.ParseFromText(input);
+            var parsed = sut.Parse(input);
 
             CheckTypeAndCardinality(parsed, expectedCardinality, expectedType);
 
@@ -188,7 +188,7 @@ namespace Nemesis.TextParsers.Tests
             Console.WriteLine(text);
 
 
-            var parsed2 = sut.ParseFromText(text);
+            var parsed2 = sut.Parse(text);
             if (parsed2 is IEnumerable enumerable2)
                 Assert.That(parsed, Is.EquivalentTo(enumerable2));
             else

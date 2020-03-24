@@ -605,7 +605,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(text, Is.EqualTo(data.expectedText));
 
 
-            var parsed = sut.ParseFromText(text);
+            var parsed = sut.Parse(text);
             Assert.That(parsed, Is.EqualTo(data.instance));
         }
 
@@ -627,7 +627,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int?[]>>();
-            var parsed3 = trans.ParseFromText(@"3000|\∅|\∅|4000");
+            var parsed3 = trans.Parse(@"3000|\∅|\∅|4000");
             Assert.That(
                 ((IAggressionValuesProvider<int?[]>)parsed3).Values.SingleOrDefault(),
                 Is.EquivalentTo(new int?[] { 3000, null, null, 4000 }));

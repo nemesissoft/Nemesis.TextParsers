@@ -4,7 +4,6 @@ using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Nemesis.TextParsers;
 using Newtonsoft.Json;
-using Nemesis.TextParsers.Parsers;
 
 namespace Benchmarks
 {
@@ -17,7 +16,7 @@ namespace Benchmarks
 
       int[] fromJson = System.Text.Json.JsonSerializer.Deserialize<int[]>(json);
       int[] fromJsonNet = Newtonsoft.Json.JsonConvert.DeserializeObject<int[]>(jsonNet);
-      var fromTp = Nemesis.TextParsers.TextTransformer.Default.GetTransformer<int[]>().ParseFromText(tp);
+      var fromTp = Nemesis.TextParsers.TextTransformer.Default.GetTransformer<int[]>().Parse(tp);
 
       var jsonBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(array);        */
     [MemoryDiagnoser]
@@ -91,7 +90,7 @@ namespace Benchmarks
             int[] array = null;
             string source = _textParsersText;
             for (uint i = 0; i < ITERATIONS; i++)
-                array = _transformer.ParseFromText(source);
+                array = _transformer.Parse(source);
 
             return array?.Length ?? 0;
         }

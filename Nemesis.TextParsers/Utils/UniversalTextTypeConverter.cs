@@ -8,7 +8,7 @@ namespace Nemesis.TextParsers.Utils
     {
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
             value is string text
-                ? TextTransformer.Default.GetTransformer<TValue>().ParseFromText(text)
+                ? TextTransformer.Default.GetTransformer<TValue>().Parse(text)
                 : base.ConvertFrom(context, culture, value);
 
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>

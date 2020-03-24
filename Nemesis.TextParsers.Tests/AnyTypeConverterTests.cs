@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             var actualTexts = data.Select(pwc => sut.Format(pwc)).ToList();
-            var actual = actualTexts.Select(text => sut.ParseFromText(text)).ToList();
+            var actual = actualTexts.Select(text => sut.Parse(text)).ToList();
 
 
             Assert.That(actual, Is.EquivalentTo(data));
@@ -35,7 +35,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             var actualText = sut.Format(data);
-            var actual = sut.ParseFromText(actualText);
+            var actual = sut.Parse(actualText);
 
 
             Assert.That(actual, Is.EquivalentTo(data));

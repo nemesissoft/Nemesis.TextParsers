@@ -82,8 +82,8 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             Assert.That(actualFormatted, Is.EqualTo(text));
 
 
-            var actualParsed1 = sut.ParseFromText(text);
-            var actualParsed2 = sut.ParseFromText(actualFormatted);
+            var actualParsed1 = sut.Parse(text);
+            var actualParsed2 = sut.Parse(actualFormatted);
             IsMutuallyEquivalent(actualParsed1, instance);
             IsMutuallyEquivalent(actualParsed2, instance);
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
@@ -97,9 +97,9 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             var sut = settings.ToTransformer<TDeconstructable>(_transformerStore);
 
 
-            var actualParsed1 = sut.ParseFromText(input);
+            var actualParsed1 = sut.Parse(input);
             var formatted1 = sut.Format(actualParsed1);
-            var actualParsed2 = sut.ParseFromText(formatted1);
+            var actualParsed2 = sut.Parse(formatted1);
 
 
             IsMutuallyEquivalent(actualParsed1, expected);
@@ -177,8 +177,8 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             Assert.That(actualFormatted, Is.EqualTo(text));
 
 
-            var actualParsed1 = sut.ParseFromText(text);
-            var actualParsed2 = sut.ParseFromText(actualFormatted);
+            var actualParsed1 = sut.Parse(text);
+            var actualParsed2 = sut.Parse(actualFormatted);
             IsMutuallyEquivalent(actualParsed1, instance);
             IsMutuallyEquivalent(actualParsed2, instance);
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
@@ -196,7 +196,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             Person parsed = default;
             try
             {
-                parsed = sut.ParseFromText(wrongInput);
+                parsed = sut.Parse(wrongInput);
                 passed = true;
             }
             catch (Exception actual)
@@ -411,7 +411,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
 
 
             [UsedImplicitly]
-            public static DataWithCustomDeconstructableTransformer FromText(string text) => _transformer.ParseFromText(text);
+            public static DataWithCustomDeconstructableTransformer FromText(string text) => _transformer.Parse(text);
             public override string ToString() => _transformer.Format(this);
         }
     }
