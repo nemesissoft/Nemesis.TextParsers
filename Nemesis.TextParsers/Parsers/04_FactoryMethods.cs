@@ -6,7 +6,7 @@ using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Parsers
 {
-    public abstract class FactoryMethodTransformer : ICanCreateTransformer
+    public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
     {
         public ITransformer<TElement> CreateTransformer<TElement>()
         {
@@ -20,14 +20,40 @@ namespace Nemesis.TextParsers.Parsers
             formatterType = formatterType.MakeGenericType(elementType);
             var formatter = (IFormatter<TElement>)Activator.CreateInstance(formatterType);
 
+            Func<TElement> emptyValueProvider = GetEmptyValueProvider<TElement>();
 
-            return new CompositionTransformer<TElement>(parser, formatter);
+            return new CompositionTransformer<TElement>(parser, formatter, emptyValueProvider);
         }
-
+        
         public bool CanHandle(Type type) =>
             GetFactoryMethodContainer(type) is { } containerType &&
-            containerType.GetMethods(STATIC_METHOD_FLAGS)
+            containerType.GetMethods(STATIC_MEMBER_FLAGS)
                 .Any(m => FactoryMethodPredicate(m, type));
+
+
+        private Func<TElement> GetEmptyValueProvider<TElement>()
+        {
+            var elementType = typeof(TElement);
+            Type factoryMethodContainer = GetFactoryMethodContainer(elementType);
+
+
+            if (factoryMethodContainer != null && 
+                factoryMethodContainer.GetProperty("Empty", STATIC_MEMBER_FLAGS) is { } property &&
+                property.PropertyType.IsAssignableFrom(elementType)
+               )
+            {
+                Expression prop = Expression.Property(null, property);
+                if(property.PropertyType != elementType)
+                    prop = Expression.Convert(prop, elementType);
+
+                return Expression.Lambda<Func<TElement>>(prop).Compile();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
 
         protected abstract Type GetFactoryMethodContainer(Type type);
 
@@ -38,7 +64,7 @@ namespace Nemesis.TextParsers.Parsers
             Type factoryMethodContainer = GetFactoryMethodContainer(elementType)
                  ?? throw new InvalidOperationException($"Missing factory declaration for {elementType.GetFriendlyName()}");
 
-            var conversionMethods = factoryMethodContainer.GetMethods(STATIC_METHOD_FLAGS)
+            var conversionMethods = factoryMethodContainer.GetMethods(STATIC_MEMBER_FLAGS)
                 .Where(m => FactoryMethodPredicate(m, elementType)).ToList();
 
             MethodInfo parseMethod =
@@ -94,7 +120,7 @@ namespace Nemesis.TextParsers.Parsers
                 (m.ReturnType.IsAbstract || m.ReturnType.IsInterface) && returnType.DerivesOrImplementsGeneric(m.ReturnType)
             );
 
-        private const BindingFlags STATIC_METHOD_FLAGS = BindingFlags.Public | BindingFlags.Static;
+        private const BindingFlags STATIC_MEMBER_FLAGS = BindingFlags.Public | BindingFlags.Static;
 
         private abstract class InnerParser<TElement> : ISpanParser<TElement>
         {

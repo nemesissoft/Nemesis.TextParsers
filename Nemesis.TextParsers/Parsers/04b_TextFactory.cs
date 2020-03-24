@@ -6,7 +6,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
-    public sealed class TextFactoryTransformer : FactoryMethodTransformer
+    public sealed class TextFactoryTransformerCreator : FactoryMethodTransformerCreator
     {
         protected override Type GetFactoryMethodContainer(Type type)
         {

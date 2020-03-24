@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -166,7 +167,8 @@ namespace Nemesis.TextParsers.Tests
             new TCD(typeof(decimal[]), new decimal[0]),
             new TCD(typeof(BigInteger[][]), new BigInteger[0][]),
             new TCD(typeof(Complex), new Complex(0.0, 0.0)),
-            new TCD(typeof(LotsOfData),LotsOfData.Empty),
+            new TCD(typeof(LotsOfDeconstructableData), LotsOfDeconstructableData.EmptyInstance),
+            new TCD(typeof(EmptyConvention), EmptyConvention.Empty),
         };
 
 
@@ -179,7 +181,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
-        class LotsOfData
+        class LotsOfDeconstructableData
         {
             public string D1 { get; }
             public bool D2 { get; }
@@ -195,7 +197,7 @@ namespace Nemesis.TextParsers.Tests
             public BigInteger[][] D12 { get; }
             public Complex D13 { get; }
 
-            public LotsOfData(string d1, bool d2, int d3, uint? d4, float d5, double? d6, FileMode d7, List<string> d8, IReadOnlyList<int> d9, Dictionary<string, float?> d10, decimal[] d11, BigInteger[][] d12, Complex d13)
+            public LotsOfDeconstructableData(string d1, bool d2, int d3, uint? d4, float d5, double? d6, FileMode d7, List<string> d8, IReadOnlyList<int> d9, Dictionary<string, float?> d10, decimal[] d11, BigInteger[][] d12, Complex d13)
             {
                 D1 = d1;
                 D2 = d2;
@@ -230,9 +232,50 @@ namespace Nemesis.TextParsers.Tests
                 d13 = D13;
             }
 
-            public static readonly LotsOfData Empty = new LotsOfData("", false, 0, null, 0.0f, null, 0, new List<string>(),
+            public static readonly LotsOfDeconstructableData EmptyInstance = new LotsOfDeconstructableData("", false, 0, null, 0.0f, null, 0, new List<string>(),
                 new List<int>(), new Dictionary<string, float?>(), new decimal[0], new BigInteger[0][], new Complex(0.0, 0.0)
             );
+        }
+
+        //this is to demonstrate support of LSP rule 
+        abstract class EmptyConventionBase { }
+
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        sealed class EmptyConvention : EmptyConventionBase, IEquatable<EmptyConvention>
+        {
+            public float Number { get; }
+            public DateTime Time { get; }
+
+            public EmptyConvention(float number, DateTime time)
+            {
+                Number = number;
+                Time = time;
+            }
+
+
+            //it's generally no a good idea for a property not to be deterministic. But this works well for our demo.
+            //And have a look at DateTime.Now ;-)
+            public static EmptyConventionBase Empty => new EmptyConvention(3.14f, DateTime.Now);
+
+            //this is just to conform to FactoryMethod convention 
+            [UsedImplicitly]
+            public static EmptyConvention FromText(string text) => throw new NotSupportedException("Not used");
+
+            #region Equals
+            public bool Equals(EmptyConvention other) =>
+                    !(other is null) && (ReferenceEquals(this, other) ||
+                        Number.Equals(other.Number) && Math.Abs(Time.Ticks - other.Time.Ticks) < 2 * TimeSpan.TicksPerMinute
+                     );
+
+            public override bool Equals(object obj) =>
+                !(obj is null) && (ReferenceEquals(this, obj) || obj is EmptyConvention ec && Equals(ec));
+
+            public override int GetHashCode() => unchecked((Number.GetHashCode() * 397) ^ Time.GetHashCode());
+
+            public static bool operator ==(EmptyConvention left, EmptyConvention right) => Equals(left, right);
+
+            public static bool operator !=(EmptyConvention left, EmptyConvention right) => !Equals(left, right); 
+            #endregion
         }
     }
 }

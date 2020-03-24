@@ -13,7 +13,7 @@ namespace Nemesis.TextParsers
 
 
         string FormatObject(object element);
-        
+
 
         object GetEmptyObject();
     }
@@ -33,7 +33,7 @@ namespace Nemesis.TextParsers
         TElement ParseFromText(string text);//for tests - ReadOnlySpan<char> cannot be boxed
         TElement GetEmpty();
     }
-    
+
     public abstract class TransformerBase<TElement> : ITransformer<TElement>
     {
         public abstract TElement Parse(in ReadOnlySpan<char> input);
@@ -48,7 +48,7 @@ namespace Nemesis.TextParsers
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
         public string FormatObject(object element) => Format((TElement)element);
-       
+
         public virtual TElement GetEmpty() => default;
 
         public object GetEmptyObject() => GetEmpty();
@@ -80,16 +80,23 @@ namespace Nemesis.TextParsers
     {
         private readonly ISpanParser<TElement> _parser;
         private readonly IFormatter<TElement> _formatter;
+        private readonly Func<TElement> _emptyValueProvider;
 
-        public CompositionTransformer(ISpanParser<TElement> parser, IFormatter<TElement> formatter)
+        public CompositionTransformer(ISpanParser<TElement> parser, IFormatter<TElement> formatter,
+            Func<TElement> emptyValueProvider = null)
         {
             _parser = parser;
             _formatter = formatter;
+            _emptyValueProvider = emptyValueProvider;
         }
 
         public override TElement Parse(in ReadOnlySpan<char> input) => _parser.Parse(input);
 
         public override string Format(TElement element) => _formatter.Format(element);
+
+        public override TElement GetEmpty() =>
+            _emptyValueProvider != null ? _emptyValueProvider() : base.GetEmpty();
+
 
         public override string ToString() => $"{_parser?.ToString() ?? ""};{_formatter?.ToString() ?? ""}";
     }

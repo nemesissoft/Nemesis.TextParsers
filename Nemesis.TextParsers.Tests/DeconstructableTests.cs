@@ -166,7 +166,24 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             );
         }
 
-        
+        [Test]
+        public void Custom_ConventionTransformer_BasedOnDeconstructable()
+        {
+            var sut = _transformerStore.GetTransformer<DataWithCustomDeconstructableTransformer>();
+            var instance = new DataWithCustomDeconstructableTransformer(3.14f, false);
+            var text = @"{3.14_False}";
+
+            var actualFormatted = sut.Format(instance);
+            Assert.That(actualFormatted, Is.EqualTo(text));
+
+
+            var actualParsed1 = sut.ParseFromText(text);
+            var actualParsed2 = sut.ParseFromText(actualFormatted);
+            IsMutuallyEquivalent(actualParsed1, instance);
+            IsMutuallyEquivalent(actualParsed2, instance);
+            IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        }
+
         [TestCase(@"(Mike;36;(Wrocław;52200))", typeof(ArgumentException), "These requirements were not met in:'(Wrocław'")]
         [TestCase(@"(Mike;36;(Wrocław);52200))", typeof(ArgumentException), "2nd tuple element was not found after 'Wrocław'")]
         [TestCase(@"(Mike;36;(Wrocław\;52200);123))", typeof(ArgumentException), "cannot have more than 3 elements: '123)'")]
@@ -365,6 +382,37 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 b = B;
                 c = C;
             }
+        }
+
+        readonly struct DataWithCustomDeconstructableTransformer
+        {
+            public float Number { get; }
+            public bool IsEnabled { get; }
+
+            public DataWithCustomDeconstructableTransformer(float number, bool isEnabled)
+            {
+                Number = number;
+                IsEnabled = isEnabled;
+            }
+
+            [UsedImplicitly]
+            public void Deconstruct(out float number, out bool isEnabled)
+            {
+                number = Number;
+                isEnabled = IsEnabled;
+            }
+
+            //create custom deconstructable transformer  
+            private static readonly ITransformer<DataWithCustomDeconstructableTransformer> _transformer =
+                Sett.Default
+                    .WithBorders('{', '}')
+                    .WithDelimiter('_')
+                    .ToTransformer<DataWithCustomDeconstructableTransformer>(_transformerStore);
+
+
+            [UsedImplicitly]
+            public static DataWithCustomDeconstructableTransformer FromText(string text) => _transformer.ParseFromText(text);
+            public override string ToString() => _transformer.Format(this);
         }
     }
 
