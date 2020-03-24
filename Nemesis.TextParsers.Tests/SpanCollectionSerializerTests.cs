@@ -589,27 +589,6 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(deser, Is.EqualTo(input));
         }
 
-        internal static IEnumerable<(string name, IAggressionBased<string> instance, string expectedText)> AggBasedNulls() => new[]
-        {
-            ("NULL", (IAggressionBased<string>) null, null),
-            ("1", AggressionBasedFactory<string>.FromOneValue(null), "∅"),
-            ("3", AggressionBasedFactory<string>.FromPassiveNormalAggressiveChecked(null, null, null), "∅#∅#∅"),
-        };
-
-        [TestCaseSource(nameof(AggBasedNulls))]
-        public void AggressionBased_NullVsNullValue_Tests((string name, IAggressionBased<string> instance, string expectedText) data)
-        {
-            var sut = TextTransformer.Default.GetTransformer<IAggressionBased<string>>();
-
-            var text = sut.Format(data.instance);
-            Assert.That(text, Is.EqualTo(data.expectedText));
-
-
-            var parsed = sut.Parse(text);
-            Assert.That(parsed, Is.EqualTo(data.instance));
-        }
-
-
         [Test]
         public void Complex_List_Roundtrip_Test()
         {

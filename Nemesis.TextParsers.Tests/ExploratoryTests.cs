@@ -37,12 +37,14 @@ namespace Nemesis.TextParsers.Tests
 
                     typeof(IAggressionBased<int>), typeof(IAggressionBased<string>),
                     typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
-                    typeof(AggressionBased3<float?>),
-                    typeof(AggressionBased3<int[]>), typeof(AggressionBased3<TimeSpan>),
-                    typeof(AggressionBased3<List<string>>), typeof(List<AggressionBased3<string>>),
-                    typeof(AggressionBased3<List<float>>), typeof(List<AggressionBased3<float>>),
-                    typeof(AggressionBased3<List<TimeSpan>>), typeof(List<AggressionBased3<TimeSpan>>),
-                    typeof(AggressionBased3<List<AggressionBased3<TimeSpan[]>>>),
+                    typeof(IAggressionBased<float?>),
+                    typeof(IAggressionBased<int[]>), 
+                    typeof(IAggressionBased<List<string>>), typeof(List<IAggressionBased<string>>),
+                    typeof(IAggressionBased<List<float>>), typeof(List<IAggressionBased<float>>),
+                    typeof(IAggressionBased<List<TimeSpan>>), typeof(List<IAggressionBased<TimeSpan>>),
+                    typeof(IAggressionBased<List<IAggressionBased<TimeSpan[]>>>),
+
+                    typeof(IAggressionBased<TimeSpan[]>), typeof(IAggressionBased<TimeSpan>), typeof(IAggressionBased<float>), typeof(IAggressionBased<string>),
                 }
             ).ToList();
 
@@ -69,7 +71,8 @@ namespace Nemesis.TextParsers.Tests
             ));
 
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
-            _fixture.Register<Enum1>(() => (Enum1)_randomSource.Next(0, 100));
+            _fixture.Register<Enum1>(() => (Enum1)_randomSource.Next(0, 10));
+            _fixture.Register<Enum2>(() => (Enum2)_randomSource.Next(0, 10));
 
 
             var structs = _allTestCases
@@ -79,9 +82,13 @@ namespace Nemesis.TextParsers.Tests
                 .ToList();
 
 
-            var simpleTypes = structs
-                .Concat(new[] { typeof(string) });
-            FixtureUtils.RegisterAllAggressionBased(_fixture, simpleTypes);
+            var aggBasedElements = _allTestCases
+                .Where(d => d.category == ExploratoryTestCategory.AggressionBased)
+                .Select(d => d.type)
+                .Where(t => TypeMeta.TryGetGenericRealization(t, typeof(IAggressionBased<>), out _))
+                .Select(t => TypeMeta.GetGenericRealization(t, typeof(IAggressionBased<>)).GenericTypeArguments[0])
+                .ToList();
+            FixtureUtils.RegisterAllAggressionBased(_fixture, aggBasedElements);
 
 
             var nonNullableStructs = structs
@@ -154,7 +161,7 @@ namespace Nemesis.TextParsers.Tests
                 }
 
             if (failed.Count > 0)
-                Assert.Fail($"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
+                Assert.Fail($"Failed cases({failed.Count} cases):{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
         }
 
         private static readonly MethodInfo _tester = Method.OfExpression<Action<ExploratoryTests>>(
@@ -206,6 +213,7 @@ namespace Nemesis.TextParsers.Tests
 
 
                 //instances
+                reason = "Creating fixtures";
                 var instances = _fixture.CreateMany<T>(30);
                 int i = 1;
                 foreach (var instance in instances)
@@ -341,8 +349,8 @@ namespace Nemesis.TextParsers.Tests
             var originalAggressionBased = aggressionBased.ToList();
 
             aggressionBased.UnionWith(
-                simpleTypes
-                    .SelectMany(t => new[] { typeof(AggressionBased1<>).MakeGenericType(t), typeof(AggressionBased3<>).MakeGenericType(t) })
+                simpleTypes.Union(valueTuples)
+                    .Select(t => typeof(IAggressionBased<>).MakeGenericType(t) )
                 );
 
             simpleTypes = simpleTypes.Concat(originalAggressionBased).ToList();
@@ -417,12 +425,12 @@ namespace Nemesis.TextParsers.Tests
 
     static class FixtureUtils
     {
-        public static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> simpleTypes)
+        public static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> elementTypes)
         {
             var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased<int>(fix))
                 .GetGenericMethodDefinition();
 
-            foreach (var elementType in simpleTypes)
+            foreach (var elementType in elementTypes)
             {
                 var concreteMethod = registerMethod.MakeGenericMethod(elementType);
                 concreteMethod.Invoke(null, new object[] { fixture });
