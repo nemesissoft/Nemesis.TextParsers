@@ -7,7 +7,7 @@ using System.Linq;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 #if NETCOREAPP3_0
-    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
     using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
@@ -214,8 +214,8 @@ namespace Nemesis.TextParsers.Tests
 
             if (ReferenceEquals(_values, o9Values)) return true;
 
-            using var enumerator = ((IReadOnlyList<TValue>) _values).GetEnumerator();
-            using var enumerator2 = ((IReadOnlyList<TValue>) o9Values).GetEnumerator();
+            using var enumerator = ((IReadOnlyList<TValue>)_values).GetEnumerator();
+            using var enumerator2 = ((IReadOnlyList<TValue>)o9Values).GetEnumerator();
             while (enumerator.MoveNext())
                 if (!enumerator2.MoveNext() || !IsStructurallyEqual(enumerator.Current, enumerator2.Current))
                     return false;
@@ -230,15 +230,18 @@ namespace Nemesis.TextParsers.Tests
     [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     public static class AggressionBasedFactoryChecked<TValue>
     {
-        public static IAggressionBased<TValue> FromText(string text) => string.IsNullOrEmpty(text) ?
-            AggressionBasedFactory<TValue>.FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)text : default) :
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _))
-        ;
+        public static IAggressionBased<TValue> FromText(string text) => 
+            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _));
 
-        public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) => text.IsEmpty ?
-            AggressionBasedFactory<TValue>.FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)"" : default) :
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _))
-        ;
+        public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) => 
+            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _));
+
+        [UsedImplicitly]
+        public static IAggressionBased<TValue> Empty { get; } = AggressionBasedFactory<TValue>.FromOneValue(TextTransformer.Default.GetEmptyInstance<TValue>());
+        [UsedImplicitly]
+        public static IAggressionBased<TValue> Null { get; } = AggressionBasedFactory<TValue>.FromOneValue(default);
+
+
 
         public static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
         {
@@ -431,7 +434,7 @@ namespace Nemesis.TextParsers.Tests
                 // ReSharper disable once UseNameofExpression
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", "values");
         }
-        
+
         public static IAggressionBased<TValue> FromTextCompact(string text) => string.IsNullOrEmpty(text) ?
             FromOneValue(typeof(TValue) == typeof(string) ? (TValue)(object)text : default) :
             FromValuesCompact(AggressionBasedSerializer.Instance.ParseStream<TValue>(text.AsSpan(), out _))

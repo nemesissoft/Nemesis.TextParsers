@@ -221,16 +221,17 @@ namespace Nemesis.TextParsers.Tests
 
             IsMutuallyEquivalent(null1, parsed1);
             IsMutuallyEquivalent(null3, parsed3);
-            // ReSharper disable once ExpressionIsAlwaysNull
-            IsMutuallyEquivalent(@null, parsedNull);
+
+            Assert.That(parsedNull, Is.Not.Null);
+            IsMutuallyEquivalent(parsedNull, AggressionBasedFactory<TElement>.FromOneValue(default));
         }
 
         private static IEnumerable<TCD> EmptyData() => new[]
         {
             new TCD(typeof(string), ""),
-            //new TCD(typeof(int[]), new int[0]),
-            //new TCD(typeof(ICollection<int>), new List<int>()),
-            //new TCD(typeof(ICollection<KeyValuePair<int, string>>), new List<KeyValuePair<int, string>>()),
+            new TCD(typeof(int[]), new int[0]),
+            new TCD(typeof(ICollection<int>), new List<int>()),
+            new TCD(typeof(ICollection<KeyValuePair<int, string>>), new List<KeyValuePair<int, string>>()),
         };
 
         [TestCaseSource(nameof(EmptyData))]
@@ -239,7 +240,7 @@ namespace Nemesis.TextParsers.Tests
             var tester = Method.Of<Action<int[]>>(Empty_SymmetryTestHelper)
                 .GetGenericMethodDefinition().MakeGenericMethod(type);
 
-            tester.Invoke(null, new []{ emptyValue });
+            tester.Invoke(null, new[] { emptyValue });
         }
 
         private static void Empty_SymmetryTestHelper<TCollection>(TCollection emptyValue)
@@ -261,6 +262,8 @@ namespace Nemesis.TextParsers.Tests
 
             IsMutuallyEquivalent(empty1, parsed1);
             IsMutuallyEquivalent(empty3, parsed3);
+
+            IsMutuallyEquivalent(parsed1, AggressionBasedFactory<TCollection>.FromOneValue(emptyValue));
         }
 
     }
