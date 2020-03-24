@@ -6,105 +6,137 @@ using NUnit.Framework;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture]
     class CollectionTransformerTests
     {
-        internal static IEnumerable<(Type contractType, string input, int cardinality, Type expectedType)> Correct_Data() => new[]
+        private static readonly Type[] _collectionTypes = 
         {
-            //nulls
-            (typeof(int[]), null, 0, null),
-            (typeof(List<int>), null, 0, null),
-            (typeof(IList<int>), null, 0, null),
-            (typeof(ICollection<int>), null, 0, null),
-            (typeof(IEnumerable<int>), null, 0, null),
-            (typeof(ReadOnlyCollection<int>), null, 0, null),
-            (typeof(IReadOnlyCollection<int>), null, 0, null),
-            (typeof(IReadOnlyList<int>), null, 0, null),
-            (typeof(ISet<int>), null, 0, null),
-            (typeof(HashSet<int>), null, 0, null),
-            (typeof(SortedSet<int>), null, 0, null),
-            (typeof(LinkedList<int>), null, 0, null),
-            (typeof(Stack<int>), null, 0, null),
-            (typeof(Queue<int>), null, 0, null),
-            (typeof(Dictionary<int, string>), null, 0, null),
-            (typeof(IDictionary<int, string>), null, 0, null),
-
-
-            //array
-            (typeof(float[][]), @"1\|2\|3 | 4\|5\|6\|7", 2, typeof(float[][])),
-            (typeof(int[]), @"10|2|3", 3, typeof(int[])),
-            (typeof(int[]), @"", 0, typeof(int[])),
-            
-            //collections
-            (typeof(List<int>), @"10|2|3", 3, typeof(List<int>)),
-            (typeof(IList<int>), @"15|2|3|5", 4, typeof(List<int>)),
-            (typeof(ICollection<int>), @"44|2|3|5", 4, typeof(List<int>)),
-            (typeof(IEnumerable<int>), @"55|2|3|5", 4, typeof(List<int>)),
-
-            (typeof(ReadOnlyCollection<int>), @"16|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
-            (typeof(IReadOnlyCollection<int>), @"26|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
-            (typeof(IReadOnlyList<int>), @"36|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
-
-            (typeof(ISet<int>), @"17|2|3|5", 4, typeof(HashSet<int>)),
-            (typeof(HashSet<int>), @"37|2|3|5", 4, typeof(HashSet<int>)),
-            (typeof(SortedSet<int>), @"27|2|3|5", 4, typeof(SortedSet<int>)),
-
-            (typeof(LinkedList<int>), @"37|2|3|5|16", 5, typeof(LinkedList<int>)),
-            (typeof(Stack<int>), @"37|2|3|5|26", 5, typeof(Stack<int>)),
-            (typeof(Queue<int>), @"37|2|3|5|36", 5, typeof(Queue<int>)),
-
-            (typeof(ObservableCollection<int>), @"18|14|12|13|10", 5, typeof(ObservableCollection<int>)),
-            
-
-            //lean collection
-            (typeof(LeanCollection<byte>), @"", 0, typeof(LeanCollection<byte>)),
-            (typeof(LeanCollection<int>), @"1", 1, typeof(LeanCollection<int>)),
-            (typeof(LeanCollection<uint>), @"1|2", 2, typeof(LeanCollection<uint>)),
-            (typeof(LeanCollection<short>), @"1|2|3", 3, typeof(LeanCollection<short>)),
-            (typeof(LeanCollection<ushort>), @"1|2|3|4", 4, typeof(LeanCollection<ushort>)),
-            (typeof(LeanCollection<float>), @"1|2|3|4|5", 5, typeof(LeanCollection<float>)),
-
-
+            typeof(int[]), typeof(int[][]),
+            typeof(List<int>), typeof(IList<int>), typeof(ICollection<int>), typeof(IEnumerable<int>),
+            typeof(ReadOnlyCollection<int>), typeof(IReadOnlyCollection<int>), typeof(IReadOnlyList<int>),
+            typeof(ISet<int>), typeof(HashSet<int>), typeof(SortedSet<int>),
+            typeof(LinkedList<int>), typeof(Stack<int>), typeof(Queue<int>),
+            typeof(ObservableCollection<int>),
             //dictionary like collection
-            (typeof(IEnumerable<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(List<KeyValuePair<int, string>>)),
-            (typeof(ICollection<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(List<KeyValuePair<int, string>>)),
-            (typeof(IReadOnlyCollection<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(ReadOnlyCollection<KeyValuePair<int, string>>)),
-            (typeof(IReadOnlyList<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(ReadOnlyCollection<KeyValuePair<int, string>>)),
+            typeof(IEnumerable<KeyValuePair<int, string>>), typeof(ICollection<KeyValuePair<int, string>>),
+            typeof(IReadOnlyCollection<KeyValuePair<int, string>>), typeof(IReadOnlyList<KeyValuePair<int, string>>),
 
-
-            //dictionary
-            (typeof(Dictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
-            (typeof(IDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
-
-            (typeof(ReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
-            (typeof(IReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
-
-            (typeof(SortedList<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedList<int, string>)),
-            (typeof(SortedDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedDictionary<int, string>)),
-
-            (typeof(Dictionary<int, string>), @"", 0, typeof(Dictionary<int, string>)),
-            (typeof(IDictionary<int, string>), @"", 0, typeof(Dictionary<int, string>)),
-            (typeof(SortedList<int, string>), @"", 0, typeof(SortedList<int, string>)),
-            (typeof(SortedDictionary<int, string>), @"", 0, typeof(SortedDictionary<int, string>)),
-
-
-            //custom collections 
-            (typeof(StringList), @"ABC|DEF|GHI", 3, typeof(StringList)),
-            (typeof(StringList), @"", 0, typeof(StringList)),
-            (typeof(Times10NumberList), @"2|5|99", 3, typeof(Times10NumberList)),
-            (typeof(ImmutableIntCollection ), @"1|22|333|4444|55555", 5, typeof(ImmutableIntCollection )),
-            (typeof(ImmutableNullableIntCollection ), @"1|2|3|4|5||7|∅|9", 9, typeof(ImmutableNullableIntCollection )),
-
-            //custom dictionary
-            (typeof(StringKeyedDictionary<int>), @"One=1;Two=2;Zero=0;Four=4", 4, typeof(StringKeyedDictionary<int>)),
-            (typeof(FloatValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(FloatValuedDictionary<int>)),
-            (typeof(ImmutableDecimalValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(ImmutableDecimalValuedDictionary<int>)),
+            typeof(Dictionary<int, string>), typeof(IDictionary<int, string>),
+            typeof(ReadOnlyDictionary<int, string>), typeof(IReadOnlyDictionary<int, string>),
+            typeof(SortedList<int, string>), typeof(SortedDictionary<int, string>),
+            //custom collections
+            typeof(StringList), typeof(Times10NumberList), typeof(ImmutableIntCollection), typeof(ImmutableNullableIntCollection),
+            //custom dictionaries 
+            typeof(StringKeyedDictionary<int>), typeof(FloatValuedDictionary<int>), typeof(ImmutableDecimalValuedDictionary<int>),
         };
+
+
+        internal static IEnumerable<(Type contractType, string input, int cardinality, Type expectedType)>
+            Correct_Data() => new[]
+            {
+                //array
+                (typeof(float[][]), @"1\|2\|3 | 4\|5\|6\|7", 2, typeof(float[][])),
+                (typeof(int[]), @"10|2|3", 3, typeof(int[])),
+
+
+                //collections
+                (typeof(List<int>), @"10|2|3", 3, typeof(List<int>)),
+                (typeof(IList<int>), @"15|2|3|5", 4, typeof(List<int>)),
+                (typeof(ICollection<int>), @"44|2|3|5", 4, typeof(List<int>)),
+                (typeof(IEnumerable<int>), @"55|2|3|5", 4, typeof(List<int>)),
+
+                (typeof(ReadOnlyCollection<int>), @"16|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
+                (typeof(IReadOnlyCollection<int>), @"26|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
+                (typeof(IReadOnlyList<int>), @"36|2|3|5", 4, typeof(ReadOnlyCollection<int>)),
+
+                (typeof(ISet<int>), @"17|2|3|5", 4, typeof(HashSet<int>)),
+                (typeof(HashSet<int>), @"37|2|3|5", 4, typeof(HashSet<int>)),
+                (typeof(SortedSet<int>), @"27|2|3|5", 4, typeof(SortedSet<int>)),
+
+                (typeof(LinkedList<int>), @"37|2|3|5|16", 5, typeof(LinkedList<int>)),
+                (typeof(Stack<int>), @"37|2|3|5|26", 5, typeof(Stack<int>)),
+                (typeof(Queue<int>), @"37|2|3|5|36", 5, typeof(Queue<int>)),
+
+                (typeof(ObservableCollection<int>), @"18|14|12|13|10", 5, typeof(ObservableCollection<int>)),
+
+
+                //lean collection
+                (typeof(LeanCollection<byte>), @"", 0, typeof(LeanCollection<byte>)),
+                (typeof(LeanCollection<int>), @"1", 1, typeof(LeanCollection<int>)),
+                (typeof(LeanCollection<uint>), @"1|2", 2, typeof(LeanCollection<uint>)),
+                (typeof(LeanCollection<short>), @"1|2|3", 3, typeof(LeanCollection<short>)),
+                (typeof(LeanCollection<ushort>), @"1|2|3|4", 4, typeof(LeanCollection<ushort>)),
+                (typeof(LeanCollection<float>), @"1|2|3|4|5", 5, typeof(LeanCollection<float>)),
+
+
+                //dictionary like collection
+                (typeof(IEnumerable<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(List<KeyValuePair<int, string>>)),
+                (typeof(ICollection<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(List<KeyValuePair<int, string>>)),
+                (typeof(IReadOnlyCollection<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(ReadOnlyCollection<KeyValuePair<int, string>>)),
+                (typeof(IReadOnlyList<KeyValuePair<int, string>>), @"1=One|2=Two|0=Zero", 3, typeof(ReadOnlyCollection<KeyValuePair<int, string>>)),
+
+
+                //dictionary
+                (typeof(Dictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
+                (typeof(IDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(Dictionary<int, string>)),
+
+                (typeof(ReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
+                (typeof(IReadOnlyDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(ReadOnlyDictionary<int, string>)),
+
+                (typeof(SortedList<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedList<int, string>)),
+                (typeof(SortedDictionary<int, string>), @"1=One;2=Two;0=Zero", 3, typeof(SortedDictionary<int, string>)),
+                
+
+                //custom collections 
+                (typeof(StringList), @"ABC|DEF|GHI", 3, typeof(StringList)),
+                (typeof(Times10NumberList), @"2|5|99", 3, typeof(Times10NumberList)),
+                (typeof(ImmutableIntCollection), @"1|22|333|4444|55555", 5, typeof(ImmutableIntCollection)),
+                (typeof(ImmutableNullableIntCollection), @"1|2|3|4|5||7|∅|9", 9, typeof(ImmutableNullableIntCollection)),
+
+                //custom dictionary
+                (typeof(StringKeyedDictionary<int>), @"One=1;Two=2;Zero=0;Four=4", 4, typeof(StringKeyedDictionary<int>)),
+                (typeof(FloatValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(FloatValuedDictionary<int>)),
+                (typeof(ImmutableDecimalValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(ImmutableDecimalValuedDictionary<int>)),
+            }
+            .Concat(_collectionTypes.Select(t => (t, (string) null, -1, (Type) null))) //null values
+            .Concat(_collectionTypes.Select(t => (t, "", 0, GetExpectedTypeFor(t)))) //empty
+        ;
+
+        private static Type GetExpectedTypeFor(Type contractType)
+        {
+            if (contractType.IsInterface && contractType.IsGenericType && !contractType.IsGenericTypeDefinition && contractType.GetGenericTypeDefinition() is { } definition)
+            {
+                var gta = contractType.GenericTypeArguments;
+
+                if (definition == typeof(IEnumerable<>) ||
+                    definition == typeof(ICollection<>) ||
+                    definition == typeof(IList<>))
+                    return typeof(List<>).MakeGenericType(gta);
+
+                else if (definition == typeof(IReadOnlyCollection<>) ||
+                         definition == typeof(IReadOnlyList<>) )
+                    return typeof(ReadOnlyCollection<>).MakeGenericType(gta);
+
+                else if (definition == typeof(ISet<>) )
+                    return typeof(HashSet<>).MakeGenericType(gta);
+                
+
+
+
+                else if (definition == typeof(IDictionary<,>))
+                    return typeof(Dictionary<,>).MakeGenericType(gta);
+
+                else if (definition == typeof(IReadOnlyDictionary<,>))
+                    return typeof(ReadOnlyDictionary<,>).MakeGenericType(gta);
+            }
+
+            return contractType;
+        }
 
         class StringList : List<string> { }
         class Times10NumberList : ICollection<int>, IDeserializationCallback
@@ -167,7 +199,7 @@ namespace Nemesis.TextParsers.Tests
                  .GetMethod(nameof(CollectionType_CompoundTestHelper), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                  ?? throw new MissingMethodException(GetType().FullName, nameof(CollectionType_CompoundTestHelper))
             ).GetGenericMethodDefinition();
-            
+
             tester = tester.MakeGenericMethod(data.contractType);
 
             tester.Invoke(null, new object[] { data.input, data.cardinality, data.expectedType });
@@ -176,23 +208,18 @@ namespace Nemesis.TextParsers.Tests
         private static void CollectionType_CompoundTestHelper<T>(string input, int expectedCardinality, Type expectedType)
         {
             var sut = TextTransformer.Default.GetTransformer<T>();
-            Console.WriteLine(sut);
+            
+            var parsed1 = sut.Parse(input);
+
+            CheckTypeAndCardinality(parsed1, expectedCardinality, expectedType);
 
 
-            var parsed = sut.Parse(input);
-
-            CheckTypeAndCardinality(parsed, expectedCardinality, expectedType);
-
-
-            string text = sut.Format(parsed);
-            Console.WriteLine(text);
-
-
+            string text = sut.Format(parsed1);
+            
             var parsed2 = sut.Parse(text);
-            if (parsed2 is IEnumerable enumerable2)
-                Assert.That(parsed, Is.EquivalentTo(enumerable2));
-            else
-                Assert.That(parsed, Is.EqualTo(parsed2));
+            
+            
+            IsMutuallyEquivalent(parsed1, parsed2);
         }
 
 
@@ -200,21 +227,18 @@ namespace Nemesis.TextParsers.Tests
         public void CollectionType_CompoundTest_NonGeneric((Type contractType, string input, int cardinality, Type expectedType) data)
         {
             var transformer = TextTransformer.Default.GetTransformer(data.contractType);
-            Console.WriteLine(transformer);
+            
+            var parsed1 = transformer.ParseObject(data.input);
 
-            var parsed = transformer.ParseObject(data.input);
+            CheckTypeAndCardinality(parsed1, data.cardinality, data.expectedType);
 
-            CheckTypeAndCardinality(parsed, data.cardinality, data.expectedType);
-
-            string text = transformer.FormatObject(parsed);
-            Console.WriteLine(text);
-
+            string text = transformer.FormatObject(parsed1);
+            
 
             var parsed2 = transformer.ParseObject(text);
-            if (parsed2 is IEnumerable enumerable2)
-                Assert.That(parsed, Is.EquivalentTo(enumerable2));
-            else
-                Assert.That(parsed, Is.EqualTo(parsed2));
+
+
+            IsMutuallyEquivalent(parsed1, parsed2);
         }
 
         private static void CheckTypeAndCardinality(object parsed, int expectedCardinality, Type expectedType)

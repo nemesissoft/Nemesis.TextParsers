@@ -9,7 +9,7 @@ using Nemesis.TextParsers.Utils;
 #if NETCOREAPP3_0
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
 // ReSharper disable once CheckNamespace
@@ -230,13 +230,16 @@ namespace Nemesis.TextParsers.Tests
     [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
     public static class AggressionBasedFactoryChecked<TValue>
     {
-        public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) => 
+        public static IAggressionBased<TValue> FromText(ReadOnlySpan<char> text) =>
             FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _));
 
         [UsedImplicitly]
-        public static IAggressionBased<TValue> Empty { get; } = AggressionBasedFactory<TValue>.FromOneValue(TextTransformer.Default.GetEmptyInstance<TValue>());
+        public static IAggressionBased<TValue> Empty => //this should not be cached
+            AggressionBasedFactory<TValue>.FromOneValue(TextTransformer.Default.GetEmptyInstance<TValue>());
+
         [UsedImplicitly]
-        public static IAggressionBased<TValue> Null { get; } = AggressionBasedFactory<TValue>.FromOneValue(default);
+        public static IAggressionBased<TValue> Null { get; } = //this can be safely cached - AB<T> is immutable
+            AggressionBasedFactory<TValue>.FromOneValue(default);
 
 
 

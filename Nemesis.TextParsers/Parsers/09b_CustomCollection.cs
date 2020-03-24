@@ -96,6 +96,8 @@ namespace Nemesis.TextParsers.Parsers
 
                 return result;
             }
+
+            public override TCollection GetEmpty() => new TCollection();
         }
 
         private sealed class ReadOnlyCollectionTransformer<TElement, TCollection> : CollectionTransformer<TElement, TCollection>
@@ -116,6 +118,8 @@ namespace Nemesis.TextParsers.Parsers
                 var result = _listConversion(innerList);
                 return result;
             }
+
+            public override TCollection GetEmpty() => _listConversion(new List<TElement>());
         }
 
         private static bool IsCustomCollection(Type collectionType, out Type elementType)

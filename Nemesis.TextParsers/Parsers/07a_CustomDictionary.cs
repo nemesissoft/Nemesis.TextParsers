@@ -100,6 +100,8 @@ namespace Nemesis.TextParsers.Parsers
 
                 return result;
             }
+            
+            public override TDict GetEmpty() => new TDict();
         }
 
         private sealed class ReadOnlyDictionaryTransformer<TKey, TValue, TDict> : DictionaryTransformer<TKey, TValue, TDict>
@@ -119,6 +121,8 @@ namespace Nemesis.TextParsers.Parsers
                 var result = _dictConversion(innerDict);
                 return result;
             }
+
+            public override TDict GetEmpty() => _dictConversion(new Dictionary<TKey, TValue>());
         }
 
         private static bool IsCustomDictionary(Type dictType, out (Type keyType, Type valueType) meta)
