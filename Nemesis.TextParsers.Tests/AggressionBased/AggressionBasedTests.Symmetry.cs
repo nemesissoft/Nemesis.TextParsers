@@ -144,7 +144,7 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(v1, Is.EquivalentTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
             }
 
-            var ab1 = AggressionBasedFactoryChecked<TElement>.FromText(inputText);
+            var ab1 = AggressionBasedFactoryChecked<TElement>.FromText(inputText.AsSpan());
             CheckType(ab1, "1");
             var text1 = ab1.ToString();
 
@@ -169,10 +169,10 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(text1, Is.EqualTo(text3), "3");
             Assert.That(text1, Is.EqualTo(text3A), "3A");
 
-            var parsed1 = AggressionBasedFactoryChecked<TElement>.FromText(text1);
-            var parsed2 = AggressionBasedFactoryChecked<TElement>.FromText(text2);
-            var parsed3 = AggressionBasedFactoryChecked<TElement>.FromText(text3);
-            var parsed3A = AggressionBasedFactoryChecked<TElement>.FromText(text3A);
+            var parsed1 = AggressionBasedFactoryChecked<TElement>.FromText(text1.AsSpan());
+            var parsed2 = AggressionBasedFactoryChecked<TElement>.FromText(text2.AsSpan());
+            var parsed3 = AggressionBasedFactoryChecked<TElement>.FromText(text3.AsSpan());
+            var parsed3A = AggressionBasedFactoryChecked<TElement>.FromText(text3A.AsSpan());
 
             CheckEquivalenceAb(ab1, parsed1, "1==p1");
             CheckEquivalenceAb(ab1, parsed2, "1==p2");

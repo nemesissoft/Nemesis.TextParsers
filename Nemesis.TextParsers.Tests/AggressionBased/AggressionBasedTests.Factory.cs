@@ -55,7 +55,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static void AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
         {
-            var actual = AggressionBasedFactoryChecked<TElement>.FromText(input);
+            var actual = AggressionBasedFactoryChecked<TElement>.FromText(input.AsSpan());
 
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
@@ -93,7 +93,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidValuesForFactory))]
         public void AggressionBasedFactory_FromText_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
         {
-            var actual = FacIntCheck.FromText(data.inputText);
+            var actual = FacIntCheck.FromText(data.inputText.AsSpan());
 
             Assert.That(actual, Is.Not.Null);
 
