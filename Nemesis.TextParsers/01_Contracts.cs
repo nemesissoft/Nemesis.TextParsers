@@ -61,8 +61,7 @@ namespace Nemesis.TextParsers
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object ParseObject(string text) => 
-            text switch
+        public object ParseObject(string text) => text switch
             {
                 null => GetNull(),
                 "" => GetEmpty(),
