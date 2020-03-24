@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using System.Linq;
-using System.Reflection;
+using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests
@@ -11,38 +10,25 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     class TupleTransformerTests
     {
-        (object transformer, MethodInfo formatMethod, MethodInfo parseMethod) GetSut(Type tupleType)
+        private static ITransformer<TTuple> GetSut<TTuple>()
         {
+            Type tupleType = typeof(TTuple);
+
             var store = TextTransformer.Default;
 
-            const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
             var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
                           tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
                 ? new KeyValuePairTransformerCreator(store)
                 : (ICanCreateTransformer)new ValueTupleTransformerCreator(store);
-            
-            Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}" );
 
-            var createTransformer = (creator.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                                    mi.Name == nameof(ICanCreateTransformer.CreateTransformer) && mi.IsGenericMethod)
-                                ?? throw new MissingMethodException("Method CreateTransformer does not exist"))
-                    .MakeGenericMethod(tupleType);
+            Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}");
 
-            object transformer = createTransformer.Invoke(creator, null);
+            var transformer = creator.CreateTransformer<TTuple>();
 
-            MethodInfo formatMethod = transformer.GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                    mi.Name == nameof(ITransformer<object>.Format))
-                    ?? throw new MissingMethodException("Method Format does not exist");
-
-            MethodInfo parseMethod = typeof(ITransformer<>).MakeGenericType(tupleType)
-                                  .GetMethods(ALL_FLAGS)
-                                  .SingleOrDefault(mi => mi.Name == nameof(ITransformer<object>.ParseFromText))
-                              ?? throw new MissingMethodException("Method ParseText does not exist");
-
-            return (transformer, formatMethod, parseMethod);
+            return transformer;
         }
 
-        private static IEnumerable<(Type, object, string)> Correct_KeyValuePair_Data() => new (Type, object, string)[]
+        private static IEnumerable<(Type, object, string)> Correct_Tuple_Data() => new (Type, object, string)[]
         {
             (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04=∅"),
             (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(TimeSpan.Zero, 15), @"∅=15"),
@@ -55,6 +41,9 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), @"=∅"),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, 3.14f), @"∅=3.14"),
 
+
+            (typeof(KeyValuePair<int, float?>), new KeyValuePair<int, float?>(0, null), null),
+            (typeof(KeyValuePair<int, float?>), new KeyValuePair<int, float?>(0, null), @""),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), null),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @""),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅=∅"),
@@ -88,7 +77,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal, bool, byte)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15), @"(3.14:15:09,3,3.14,Pi,3.14,true,15)"),
             (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew))"),
             (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode, int)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew, 89), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew\,89))"),
-            
+
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @""),
@@ -113,39 +102,48 @@ namespace Nemesis.TextParsers.Tests
             //Tuple with tuple fields
             (typeof( ((string, string), (string, string), string) ), (("N", "e"), ("s", "t") , "ed"), @"((N\,e),(s\,t),ed)"),
         };
-         
-        [TestCaseSource(nameof(Correct_KeyValuePair_Data))]
-        public void KeyValuePairTransformer_CompoundTest((Type tupleType, object tuple, string input) data)
+
+        [TestCaseSource(nameof(Correct_Tuple_Data))]
+        public void TupleTransformer_CompoundTest((Type tupleType, object tuple, string input) data)
         {
-            var (transformer, formatMethod, parseMethod) = GetSut(data.tupleType);
+            var tester = Method.OfExpression<Action<int, string>>(
+                (t, i) => TupleTransformer_CompoundTestHelper(t, i)
+            ).GetGenericMethodDefinition();
 
-            string textExpected = (string)formatMethod.Invoke(transformer, new[] { data.tuple });
-            Console.WriteLine(textExpected);
+            tester = tester.MakeGenericMethod(data.tupleType);
 
-            var parsed = parseMethod.Invoke(transformer, new object[] { data.input });
-            Console.WriteLine(data.input);
-            Assert.That(parsed, Is.EqualTo(data.tuple));
+            tester.Invoke(null, new[] { data.tuple, data.input });
+        }
 
+        private static void TupleTransformer_CompoundTestHelper<TTuple>(TTuple tuple, string input)
+        {
+            var transformer = GetSut<TTuple>();
 
-            string text = (string)formatMethod.Invoke(transformer, new[] { parsed });
-            Console.WriteLine(text);
-
-
-            var parsed2 = parseMethod.Invoke(transformer, new object[] { text });
-            Assert.That(parsed2, Is.EqualTo(data.tuple));
+            string textActual = transformer.Format(tuple);
 
 
-            var parsed3 = parseMethod.Invoke(transformer, new object[] { textExpected });
-            Assert.That(parsed3, Is.EqualTo(data.tuple));
+            var parsed1 = transformer.ParseFromText(input);
+            Assert.That(parsed1, Is.EqualTo(tuple));
 
 
-            Assert.That(parsed, Is.EqualTo(parsed2));
-            Assert.That(parsed, Is.EqualTo(parsed3));
+            string text = transformer.Format(parsed1);
+
+
+            var parsed2 = transformer.ParseFromText(text);
+            Assert.That(parsed2, Is.EqualTo(tuple));
+
+
+            var parsed3 = transformer.ParseFromText(textActual);
+            Assert.That(parsed3, Is.EqualTo(tuple));
+
+
+            Assert.That(parsed1, Is.EqualTo(parsed2));
+            Assert.That(parsed1, Is.EqualTo(parsed3));
         }
 
         private const string NO_PARENTHESES_ERROR =
             "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
-        internal static IEnumerable<(Type, string, Type, string)> Bad_KeyValuePair_Data() => new[]
+        internal static IEnumerable<(Type, string, Type, string)> Bad_Tuple_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
             (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
@@ -155,6 +153,8 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"'15' has no matching value"),
             (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"'' has no matching value"),
             (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"' ' has no matching value"),
+            
+
 
 
             (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
@@ -196,24 +196,35 @@ namespace Nemesis.TextParsers.Tests
 
         };
 
-        [TestCaseSource(nameof(Bad_KeyValuePair_Data))]
-        public void KeyValuePairTransformer_NegativeTest((Type tupleType, string input, Type expectedException, string expectedErrorMessagePart) data)
+        [TestCaseSource(nameof(Bad_Tuple_Data))]
+        public void TupleTransformer_NegativeTest((Type tupleType, string input, Type expectedException, string expectedErrorMessagePart) data)
         {
-            var (transformer, _, parseMethod) = GetSut(data.tupleType);
+            var tester = Method.OfExpression<Action<string, Type, string>>(
+                (p1,p2,p3) => TupleTransformer_NegativeTest_Helper<int>(p1, p2, p3)
+            ).GetGenericMethodDefinition();
+
+            tester = tester.MakeGenericMethod(data.tupleType);
+
+            tester.Invoke(null, new object[] { data.input, data.expectedException, data.expectedErrorMessagePart });
+        }
+        
+        private static void TupleTransformer_NegativeTest_Helper<TTuple>(string input, Type expectedException, string expectedErrorMessagePart)
+        {
+            var transformer = GetSut<TTuple>();
 
             bool passed = false;
             object parsed = null;
             try
             {
-                parsed = parseMethod.Invoke(transformer, new object[] { data.input });
+                parsed = transformer.ParseFromText(input);
                 passed = true;
             }
             catch (Exception actual)
             {
-                TestHelper.AssertException(actual, data.expectedException, data.expectedErrorMessagePart);
+                TestHelper.AssertException(actual, expectedException, expectedErrorMessagePart);
             }
             if (passed)
-                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine}\t{parsed}");
+                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine}\t{parsed}");
         }
     }
 }

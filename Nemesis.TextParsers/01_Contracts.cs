@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
@@ -41,12 +42,17 @@ namespace Nemesis.TextParsers
         public abstract string Format(TElement element);
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         TElement ITransformer<TElement>.ParseFromText(string text) => text == null ? default : Parse(text.AsSpan());
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object ParseObject(string text) => text == null ? default : Parse(text.AsSpan());
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string FormatObject(object element) => Format((TElement)element);
 
         public virtual TElement GetEmpty() => default;
