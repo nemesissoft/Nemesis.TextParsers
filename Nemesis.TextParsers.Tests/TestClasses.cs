@@ -442,6 +442,10 @@ namespace Nemesis.TextParsers.Tests
         
         public Option GetEmpty() => new Option(OptionEnum.None);
         public object GetEmptyObject() => GetEmpty();
+
+
+        public Option GetNull() => new Option(OptionEnum.None);
+        public object GetNullObject() => GetNull();
     }
 
     [TypeConverter(typeof(PointConverter2))]

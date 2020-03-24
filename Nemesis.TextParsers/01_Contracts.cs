@@ -16,6 +16,7 @@ namespace Nemesis.TextParsers
         string FormatObject(object element);
 
 
+        object GetNullObject();
         object GetEmptyObject();
     }
 
@@ -32,32 +33,49 @@ namespace Nemesis.TextParsers
     public interface ITransformer<TElement> : ISpanParser<TElement>, IFormatter<TElement>, ITransformer
     {
         TElement Parse(string text);
+       
+        TElement GetNull();
         TElement GetEmpty();
     }
 
     public abstract class TransformerBase<TElement> : ITransformer<TElement>
     {
         public abstract TElement Parse(in ReadOnlySpan<char> input);
-
-        public abstract string Format(TElement element);
-
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         TElement ITransformer<TElement>.Parse(string text) => text == null ? default : Parse(text.AsSpan());
 
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object ParseObject(string text) => text == null ? default : Parse(text.AsSpan());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
+        /*=>
+                    text switch
+                    {
+                        null => default,
+                        "" => GetEmpty(),
+                        _ => Parse(text.AsSpan())
+                    };*/
 
+
+
+        public abstract string Format(TElement element);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string FormatObject(object element) => Format((TElement)element);
 
-        public virtual TElement GetEmpty() => default;
+        
 
+
+        public virtual TElement GetEmpty() => default;
         public object GetEmptyObject() => GetEmpty();
+
+
+
+        public virtual TElement GetNull() => default;
+        public object GetNullObject() => GetNull();
     }
 
     public interface ICanCreateTransformer
@@ -88,11 +106,12 @@ namespace Nemesis.TextParsers
         private readonly IFormatter<TElement> _formatter;
         private readonly Func<TElement> _emptyValueProvider;
 
-        public CompositionTransformer(ISpanParser<TElement> parser, IFormatter<TElement> formatter,
+        public CompositionTransformer([NotNull] ISpanParser<TElement> parser,
+            [NotNull] IFormatter<TElement> formatter,
             Func<TElement> emptyValueProvider = null)
         {
-            _parser = parser;
-            _formatter = formatter;
+            _parser = parser ?? throw new ArgumentNullException(nameof(parser));
+            _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
             _emptyValueProvider = emptyValueProvider;
         }
 
