@@ -155,7 +155,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
-        internal static IEnumerable<(Type, string, Type)> Bad_ListParseData() => new[]
+        internal static IEnumerable<(Type elementType, string input, Type expectedException)> Bad_ListParseData() => new[]
         {
             (typeof(IList<>), @"A|B|C", typeof(InvalidOperationException)),
             // ReSharper disable once StringLiteralTypo
@@ -164,43 +164,43 @@ namespace Nemesis.TextParsers.Tests
             (typeof(bool), @"no", typeof(FormatException)),
             (typeof(bool), @"0", typeof(FormatException)),
 
-#if !DEBUG
+
             (typeof(byte), @"abc", typeof(FormatException)),
-            (typeof(byte), @"17|", typeof(FormatException)),
+            (typeof(byte), @"17| ", typeof(FormatException)),
             (typeof(byte), @"17abc", typeof(FormatException)),
 
             (typeof(sbyte), @"abc", typeof(FormatException)),
-            (typeof(sbyte), @"17|", typeof(FormatException)),
+            (typeof(sbyte), @"17| ", typeof(FormatException)),
             (typeof(sbyte), @"17abc", typeof(FormatException)),
 
             (typeof(short), @"abc", typeof(FormatException)),
-            (typeof(short), @"17|", typeof(FormatException)),
+            (typeof(short), @"17| ", typeof(FormatException)),
             (typeof(short), @"17abc", typeof(FormatException)),
 
             (typeof(ushort), @"abc", typeof(FormatException)),
-            (typeof(ushort), @"17|", typeof(FormatException)),
+            (typeof(ushort), @"17| ", typeof(FormatException)),
             (typeof(ushort), @"17abc", typeof(FormatException)),
 
             (typeof(int), @"abc", typeof(FormatException)),
-            (typeof(int), @"17|", typeof(FormatException)),
+            (typeof(int), @"17| ", typeof(FormatException)),
             (typeof(int), @"17abc", typeof(FormatException)),
 
             (typeof(uint), @"abc", typeof(FormatException)),
-            (typeof(uint), @"17|", typeof(FormatException)),
+            (typeof(uint), @"17| ", typeof(FormatException)),
             (typeof(uint), @"17abc", typeof(FormatException)),
 
             (typeof(long), @"abc", typeof(FormatException)),
-            (typeof(long), @"17|", typeof(FormatException)),
+            (typeof(long), @"17| ", typeof(FormatException)),
             (typeof(long), @"17abc", typeof(FormatException)),
 
             (typeof(ulong), @"abc", typeof(FormatException)),
-            (typeof(ulong), @"17|", typeof(FormatException)),
+            (typeof(ulong), @"17| ", typeof(FormatException)),
             (typeof(ulong), @"17abc", typeof(FormatException)),
 
             (typeof(float), @"abc", typeof(FormatException)),
-            (typeof(float), @"17|", typeof(FormatException)),
+            (typeof(float), @"17| ", typeof(FormatException)),
             (typeof(float), @"17abc", typeof(FormatException)),
-#endif
+
 
             (typeof(byte), @"-1|0", typeof(OverflowException)),
             (typeof(byte), @"255|256", typeof(OverflowException)),

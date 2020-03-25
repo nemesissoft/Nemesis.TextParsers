@@ -330,7 +330,7 @@ namespace Nemesis.TextParsers.Tests
 
             var valueTuples = new List<(int arity, Type tupleType)>
             {
-                (1, typeof(ValueTuple<>)),
+              //(1, typeof(ValueTuple<>)),
                 (2, typeof(ValueTuple<,>)),
                 (3, typeof(ValueTuple<,,>)),
                 (4, typeof(ValueTuple<,,,>)),
