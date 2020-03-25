@@ -18,8 +18,8 @@ recursive tests (,,, (,)) + test for no borders
 exploratory tests 
     
 
-    test different escaping sequences +  null marker + Delimiter
-        address : (Wrocław);52200)   - success where ) is pars of string  
+    
+        
         
     with (', null) sequence. 
     with '' empty tuple. 
@@ -43,6 +43,8 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                     new CarrotAndOnionFactors(123.456789M, new[] { 1, 2, 3, (float)Math.Round(Math.PI, 2) }, TimeSpan.Parse("12:34:56")),
                     @"(123.456789;1|2|3|3.14;12:34:56)"),
             new TCD(typeof(Address), new Address("Wrocław", 52200), @"(Wrocław;52200)"),
+            new TCD(typeof(Address), new Address("Wrocław)", 52200), @"(Wrocław);52200)"),
+            new TCD(typeof(Address), new Address("(Wrocław)", 52200), @"((Wrocław);52200)"),
             new TCD(typeof(Address), new Address("A", 1), @"(A;1)"),
             new TCD(typeof(Person), new Person("Mike", 36, new Address("Wrocław", 52200)), @"(Mike;36;(Wrocław\;52200))"),
 
@@ -143,7 +145,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         }
 
         [Test]
-        public void ParseAndFormat_MixedBorders()
+        public void ParseAndFormat_MixedBorders_WithOptionalWhitespace()
         {
             FormatAndParseHelper(
                 new ThreeStrings("A", "B", "C"), @"/A;B;C",
@@ -165,6 +167,34 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 s => s.WithoutBorders().WithStart('/')
             );
         }
+        
+        [Test]
+        public void ParseAndFormat_NonStandardControlCharacters()
+        {
+            //(\∅;∅;\\t123\\ABC\\\∅DEF\∅GHI\;)
+            var data = new ThreeStrings("∅␀", null, @"\t123\ABC\∅DEF∅GHI;/:");
+            
+            FormatAndParseHelper(data, @"(\∅␀;∅;\\t123\\ABC\\\∅DEF\∅GHI\;/:)");
+
+            FormatAndParseHelper(data, @"(∅\␀;␀;\\t123\\ABC\\∅DEF∅GHI\;/:)",
+                s=>s.WithNullElementMarker('␀')
+                );
+            
+            FormatAndParseHelper(data, @"(/∅␀;∅;\t123\ABC\/∅DEF/∅GHI/;//:)",
+                s=>s.WithEscapingSequenceStart('/')
+                );
+
+            FormatAndParseHelper(data, @"(\∅␀:∅:\\t123\\ABC\\\∅DEF\∅GHI;/\:)",
+                s => s.WithDelimiter(':')
+            );
+            
+            FormatAndParseHelper(data, @"(∅/␀:␀:\t123\ABC\∅DEF∅GHI;///:)",
+                s => s.WithDelimiter(':')
+                      .WithEscapingSequenceStart('/')
+                      .WithNullElementMarker('␀')
+            );
+        }
+
 
         [Test]
         public void Custom_ConventionTransformer_BasedOnDeconstructable()

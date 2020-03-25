@@ -58,8 +58,8 @@ namespace Nemesis.TextParsers.Utils
         {
             input = UnParenthesize(input);
 
-            var kvpTokens = input.Tokenize(_tupleDelimiter, _escapingSequenceStart, false);
-            var enumerator = kvpTokens.GetEnumerator();
+            var tokens = input.Tokenize(_tupleDelimiter, _escapingSequenceStart, false);
+            var enumerator = tokens.GetEnumerator();
 
             if (!enumerator.MoveNext())
                 throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{_tupleDelimiter}' was not found");
