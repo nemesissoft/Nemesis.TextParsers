@@ -54,7 +54,7 @@ namespace Nemesis.TextParsers.Utils
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity)
+        public TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity, string typeName = null)
         {
             input = UnParenthesize(input);
 
@@ -62,19 +62,19 @@ namespace Nemesis.TextParsers.Utils
             var enumerator = kvpTokens.GetEnumerator();
 
             if (!enumerator.MoveNext())
-                throw new ArgumentException($@"Tuple of arity={arity} separated by '{_tupleDelimiter}' was not found");
+                throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{_tupleDelimiter}' was not found");
 
             return enumerator;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
+        private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span, string typeName = null)
         {
             if (_tupleStart is null && _tupleEnd is null)
                 return span;
 
             int minLength = (_tupleStart.HasValue ? 1 : 0) + (_tupleEnd.HasValue ? 1 : 0);
-            if (span.Length < minLength) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd);
+            if (span.Length < minLength) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd, typeName);
 
             int start = 0;
 
@@ -85,7 +85,7 @@ namespace Nemesis.TextParsers.Utils
                         break;
 
                 bool startsWithChar = start < span.Length && span[start] == _tupleStart.Value;
-                if (!startsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd);
+                if (!startsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd, typeName);
 
                 ++start;
             }
@@ -100,15 +100,15 @@ namespace Nemesis.TextParsers.Utils
                         break;
 
                 bool endsWithChar = end > 0 && span[end] == _tupleEnd.Value;
-                if (!endsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd);
+                if (!endsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd, typeName);
 
                 --end;
             }
 
             return span.Slice(start, end - start + 1);
 
-            static Exception GetStateException(string text, char? start, char? end) => new ArgumentException(
-                     $@"Tuple representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
+            static Exception GetStateException(string text, char? start, char? end, string typeName) => new ArgumentException(
+                     $@"{typeName ?? "Tuple" } representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
 These requirements were not met in:
 '{text ?? "<NULL>"}'");
         }
@@ -132,16 +132,16 @@ These requirements were not met in:
 
             var current = enumerator.Current;
             if (!enumerator.MoveNext())
-                throw new ArgumentException($"{ToOrdinal(index)} tuple element was not found after '{current.ToString()}'");
+                throw new ArgumentException($"{ToOrdinal(index)} element was not found after '{current.ToString()}'");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity)
+        public void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity, string typeName = null)
         {
             if (enumerator.MoveNext())
             {
                 var remaining = enumerator.Current.ToString();
-                throw new ArgumentException($@"Tuple of arity={arity} separated by '{_tupleDelimiter}' cannot have more than {arity} elements: '{remaining}'");
+                throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{_tupleDelimiter}' cannot have more than {arity} elements: '{remaining}'");
             }
         }
 
@@ -184,7 +184,7 @@ These requirements were not met in:
         public override string ToString() =>
             $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
 
-        public bool Equals(TupleHelper other) => 
+        public bool Equals(TupleHelper other) =>
             _tupleDelimiter == other._tupleDelimiter &&
             _nullElementMarker == other._nullElementMarker &&
             _escapingSequenceStart == other._escapingSequenceStart &&

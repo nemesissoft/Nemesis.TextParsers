@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -35,6 +36,12 @@ namespace Nemesis.TextParsers.Parsers
 
         private sealed class InnerPairTransformer<TKey, TValue> : TransformerBase<KeyValuePair<TKey, TValue>>
         {
+            [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
+            [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
+            public static readonly TupleHelper _helper = new TupleHelper(
+                tupleDelimiter: ',', nullElementMarker: '∅', escapingSequenceStart: '\\',
+                tupleStart: '(', tupleEnd: ')');
+
             private const char TUPLE_DELIMITER = '=';
             private const char NULL_ELEMENT_MARKER = '∅';
             private const char ESCAPING_SEQUENCE_START = '\\';

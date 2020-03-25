@@ -586,11 +586,8 @@ namespace Nemesis.TextParsers.Parsers
         [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
         [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
         public static readonly TupleHelper Helper = new TupleHelper(
-                tupleDelimiter: ',',
-                nullElementMarker: '∅',
-                escapingSequenceStart: '\\',
-                tupleStart: '(',
-                tupleEnd: ')');
+                tupleDelimiter: ',', nullElementMarker: '∅', escapingSequenceStart: '\\',
+                tupleStart: '(', tupleEnd: ')');
 
         private const byte MAX_ARITY = 8;
 

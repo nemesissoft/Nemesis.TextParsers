@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -19,6 +20,8 @@ namespace Nemesis.TextParsers.Parsers
 
         private static IReadOnlyDictionary<Type, ITransformer> GetDefaultTransformers()
         {
+            const BindingFlags PUB_STAT_FLAGS = BindingFlags.Public | BindingFlags.Static;
+
             var types = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
@@ -30,15 +33,33 @@ namespace Nemesis.TextParsers.Parsers
                 )
                 {
                     var elementType = simpleType.GenericTypeArguments[0];
+                    var transformerElementType = typeof(ITransformer<>).MakeGenericType(elementType);
 
-                    var instance = Activator.CreateInstance(type);
+
+                    object instance;
+                    if (type.GetProperty("Instance", PUB_STAT_FLAGS) is { } singletonProperty && singletonProperty.GetMethod != null &&
+                        transformerElementType.IsAssignableFrom(singletonProperty.PropertyType)
+                    )
+                    {
+                        instance = singletonProperty.GetValue(null);
+                    }
+                    else if (type.GetField("Instance", PUB_STAT_FLAGS) is { } singletonField &&
+                             transformerElementType.IsAssignableFrom(singletonField.FieldType)
+                    )
+                    {
+                        instance = singletonField.GetValue(null);
+                    }
+                    else
+                        instance = Activator.CreateInstance(type, false);
+
+
 
                     if (simpleTransformers.ContainsKey(elementType))
                         throw new NotSupportedException($"Automatic registration does not support multiple simple transformers to handle type {elementType}");
 
                     simpleTransformers[elementType] = (ITransformer)instance;
                 }
-            
+
             return simpleTransformers;
         }
 
@@ -70,7 +91,7 @@ namespace Nemesis.TextParsers.Parsers
         protected override string ParseCore(in ReadOnlySpan<char> input) => input.ToString();
 
         public override string Format(string element) => element;
-        
+
         public override string GetEmpty() => "";
     }
 
@@ -310,6 +331,10 @@ namespace Nemesis.TextParsers.Parsers
             };
 
         protected override string FormatString { get; } = "R";
+
+        public static readonly ITransformer<float> Instance = new SingleParser();
+
+        private SingleParser() { }
     }
 
     [UsedImplicitly]
@@ -333,6 +358,10 @@ namespace Nemesis.TextParsers.Parsers
             };
 
         protected override string FormatString { get; } = "R";
+        
+        public static readonly ITransformer<double> Instance = new DoubleParser();
+
+        private DoubleParser() { }
     }
 
     [UsedImplicitly]
@@ -426,64 +455,29 @@ namespace Nemesis.TextParsers.Parsers
         private const char ESCAPING_SEQUENCE_START = '\\';
         private const char START = '(';
         private const char END = ')';
+        private const string TYPE_NAME = "Complex number";
+
+        private static readonly TupleHelper _helper = new TupleHelper(DELIMITER, '∅', ESCAPING_SEQUENCE_START, START, END);
+        private static readonly ITransformer<double> _doubleParser = DoubleParser.Instance;
 
 
         protected override Complex ParseCore(in ReadOnlySpan<char> input)
         {
-            if (input.IsEmpty) throw new FormatException("Empty text is not valid complex number representation");
+            var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
-            var tokens = UnParenthesize(input).Tokenize(DELIMITER, ESCAPING_SEQUENCE_START, true);
+            double real = _helper.ParseElement(ref enumerator, _doubleParser);
 
-            var enumerator = tokens.GetEnumerator();
-
-            if (!enumerator.MoveNext())
-                throw new FormatException("Real part of complex number was not found");
-            var real = DoubleParser.ParseDouble(enumerator.Current);
-
-            if (!enumerator.MoveNext())
-                throw new FormatException("Imaginary part of complex number was not found");
-            var imaginary = DoubleParser.ParseDouble(enumerator.Current);
+            _helper.ParseNext(ref enumerator, 2);
+            double imaginary = _helper.ParseElement(ref enumerator, _doubleParser);
 
 
-            if (enumerator.MoveNext())
-                throw new FormatException($"Complex number representation consists of 2 parts separated by delimiter: {START}Real{DELIMITER} Imaginary{END}");
+            _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 
             return new Complex(real, imaginary);
         }
 
         public override string Format(Complex c) =>
             FormattableString.Invariant($"{START}{c.Real:R}{DELIMITER} {c.Imaginary:R}{END}");
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span)
-        {
-            int length = span.Length;
-            if (length < 2) throw GetStateException();
-
-            int start = 0;
-            for (; start < length; start++)
-                if (!char.IsWhiteSpace(span[start]))
-                    break;
-
-            bool startsWithParenthesis = start < span.Length && span[start] == START;
-
-            if (!startsWithParenthesis) throw GetStateException();
-
-            int end = span.Length - 1;
-            for (; end > start; end--)
-                if (!char.IsWhiteSpace(span[end]))
-                    break;
-
-            bool endsWithParenthesis = end > 0 && span[end] == END;
-
-            if (!endsWithParenthesis) throw GetStateException();
-
-            return span.Slice(start + 1, end - start - 1);
-
-            static Exception GetStateException() => new FormatException(
-                "Complex number representation has to start and end with parentheses optionally lead in the beginning or trailed in the end by whitespace");
-        }
     }
 
     #endregion

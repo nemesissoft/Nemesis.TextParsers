@@ -183,10 +183,10 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
             (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
 #endif
-            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi)",typeof(ArgumentException), @"5th tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14)",typeof(ArgumentException), @"4th tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3)",typeof(ArgumentException), @"3rd tuple element was not found"),
-            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09)",typeof(ArgumentException), @"2nd tuple element was not found"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi)",typeof(ArgumentException), @"5th element was not found after"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14)",typeof(ArgumentException), @"4th element was not found after"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3)",typeof(ArgumentException), @"3rd element was not found after"),
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09)",typeof(ArgumentException), @"2nd element was not found after"),
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi,3.14,MorePie)",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
             
 #if NETCOREAPP3_0 == false
