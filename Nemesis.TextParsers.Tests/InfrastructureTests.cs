@@ -16,7 +16,7 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     public class InfrastructureTests
     {
-        #region Test cases
+        #region IsSupported - Test cases
         [TestCase(typeof(PointWithConverter), true)]
         [TestCase(typeof(string), true)]
         [TestCase(typeof(TimeSpan), true)]
@@ -152,32 +152,61 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
-        internal static IEnumerable<TCD> GetEmptyInstance_Data() => new[]
+        //type, empty, null
+        internal static IEnumerable<TCD> GetEmptyNullInstance_Data() => new[]
         {
-            new TCD(typeof(string), ""),
-            new TCD(typeof(bool), false),
-            new TCD(typeof(int), 0),
-            new TCD(typeof(uint?), null),
-            new TCD(typeof(float), 0.0f),
-            new TCD(typeof(double?), null),
-            new TCD(typeof(FileMode), (FileMode) 0),
-            new TCD(typeof(List<string>), new List<string>()),
-            new TCD(typeof(IReadOnlyList<int>), new List<int>()),
-            new TCD(typeof(Dictionary<string, float?>), new Dictionary<string, float?>()),
-            new TCD(typeof(decimal[]), new decimal[0]),
-            new TCD(typeof(BigInteger[][]), new BigInteger[0][]),
-            new TCD(typeof(Complex), new Complex(0.0, 0.0)),
-            new TCD(typeof(LotsOfDeconstructableData), LotsOfDeconstructableData.EmptyInstance),
-            new TCD(typeof(EmptyConvention), EmptyConvention.Empty),
+            new TCD(typeof(string), "", null),
+            new TCD(typeof(bool), false, false),
+            new TCD(typeof(char), '\0', '\0'),
+
+            new TCD(typeof(byte), (byte) 0, (byte) 0),
+            new TCD(typeof(sbyte), (sbyte) 0, (sbyte) 0),
+            new TCD(typeof(short), (short) 0, (short) 0),
+            new TCD(typeof(ushort), (ushort) 0, (ushort) 0),
+            new TCD(typeof(int), 0, 0),
+            new TCD(typeof(uint), (uint) 0, (uint) 0),
+            new TCD(typeof(long), (long) 0, (long) 0),
+            new TCD(typeof(ulong), (ulong) 0, (ulong) 0),
+            new TCD(typeof(float), 0.0f, 0.0f),
+            new TCD(typeof(double), 0.0, 0.0),
+
+            new TCD(typeof(uint?), null, null),
+            new TCD(typeof(double?), null, null),
+
+            new TCD(typeof(FileMode), (FileMode) 0, (FileMode) 0),
+            
+            
+            new TCD(typeof(KeyValuePair<int, float>), default(KeyValuePair<int, float>), default(KeyValuePair<int, float>)),
+            new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), new KeyValuePair<string, float?>(null, null)),
+            //TODO what should be empty value ?
+            //new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), new KeyValuePair<string, float?>(null, null)),
+
+
+
+            new TCD(typeof(List<string>), new List<string>(), null),
+            new TCD(typeof(IReadOnlyList<int>), new List<int>(), null),
+            new TCD(typeof(Dictionary<string, float?>), new Dictionary<string, float?>(), null),
+            new TCD(typeof(decimal[]), new decimal[0], null),
+            new TCD(typeof(BigInteger[][]), new BigInteger[0][], null),
+            new TCD(typeof(Complex), new Complex(0.0, 0.0), new Complex(0.0, 0.0)),
+
+
+            new TCD(typeof(LotsOfDeconstructableData), LotsOfDeconstructableData.EmptyInstance, null),
+            new TCD(typeof(EmptyFactoryMethodConvention), EmptyFactoryMethodConvention.Empty, null),
         };
 
 
-        [TestCaseSource(nameof(GetEmptyInstance_Data))]
-        public void GetEmptyInstanceTest(Type type, object expected)
+        [TestCaseSource(nameof(GetEmptyNullInstance_Data))]
+        public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty,object expectedNull)
         {
-            var actual = TextTransformer.Default.GetEmptyInstance(type);
-
-            IsMutuallyEquivalent(actual, expected);
+            IsMutuallyEquivalent(
+                TextTransformer.Default.GetEmptyInstance(type),
+                expectedEmpty, "empty value should be as expected");
+            
+            
+            IsMutuallyEquivalent(
+                TextTransformer.Default.GetTransformer(type).GetNullObject(),
+                expectedNull, "null value should be as expected");
         }
 
 
@@ -241,12 +270,12 @@ namespace Nemesis.TextParsers.Tests
         abstract class EmptyConventionBase { }
 
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
-        sealed class EmptyConvention : EmptyConventionBase, IEquatable<EmptyConvention>
+        sealed class EmptyFactoryMethodConvention : EmptyConventionBase, IEquatable<EmptyFactoryMethodConvention>
         {
             public float Number { get; }
             public DateTime Time { get; }
 
-            public EmptyConvention(float number, DateTime time)
+            public EmptyFactoryMethodConvention(float number, DateTime time)
             {
                 Number = number;
                 Time = time;
@@ -255,26 +284,22 @@ namespace Nemesis.TextParsers.Tests
 
             //it's generally no a good idea for a property not to be deterministic. But this works well for our demo.
             //And have a look at DateTime.Now ;-)
-            public static EmptyConventionBase Empty => new EmptyConvention(3.14f, DateTime.Now);
+            public static EmptyConventionBase Empty => new EmptyFactoryMethodConvention(3.14f, DateTime.Now);
 
             //this is just to conform to FactoryMethod convention 
             [UsedImplicitly]
-            public static EmptyConvention FromText(string text) => throw new NotSupportedException("Not used");
+            public static EmptyFactoryMethodConvention FromText(string text) => throw new NotSupportedException("Not used");
 
             #region Equals
-            public bool Equals(EmptyConvention other) =>
+            public bool Equals(EmptyFactoryMethodConvention other) =>
                     !(other is null) && (ReferenceEquals(this, other) ||
                         Number.Equals(other.Number) && Math.Abs(Time.Ticks - other.Time.Ticks) < 2 * TimeSpan.TicksPerMinute
                      );
 
             public override bool Equals(object obj) =>
-                !(obj is null) && (ReferenceEquals(this, obj) || obj is EmptyConvention ec && Equals(ec));
+                !(obj is null) && (ReferenceEquals(this, obj) || obj is EmptyFactoryMethodConvention ec && Equals(ec));
 
             public override int GetHashCode() => unchecked((Number.GetHashCode() * 397) ^ Time.GetHashCode());
-
-            public static bool operator ==(EmptyConvention left, EmptyConvention right) => Equals(left, right);
-
-            public static bool operator !=(EmptyConvention left, EmptyConvention right) => !Equals(left, right); 
             #endregion
         }
     }

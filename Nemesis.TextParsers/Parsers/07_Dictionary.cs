@@ -33,7 +33,7 @@ namespace Nemesis.TextParsers.Parsers
             public InnerDictionaryTransformer(DictionaryKind kind) => _kind = kind;
 
 
-            protected override TDict ParseCore(in ReadOnlySpan<char> input) =>//input.IsEmpty ? default :
+            protected override TDict ParseCore(in ReadOnlySpan<char> input) =>
                 (TDict)SpanCollectionSerializer.DefaultInstance.ParseDictionary<TKey, TValue>(input, _kind);
 
             public override string Format(TDict dict) =>//dict == null ? null :

@@ -36,10 +36,10 @@ namespace Nemesis.TextParsers.Tests
             Console.WriteLine(message);
         }
 
-        public static void IsMutuallyEquivalent(object o1, object o2)
+        public static void IsMutuallyEquivalent(object o1, object o2, string because = "")
         {
-            o1.Should().BeEquivalentTo(o2);
-            o2.Should().BeEquivalentTo(o1);
+            o1.Should().BeEquivalentTo(o2, because);
+            o2.Should().BeEquivalentTo(o1, because);
         }
     }
 
