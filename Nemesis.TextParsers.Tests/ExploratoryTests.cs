@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Reflection;
 using AutoFixture;
 using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Tests.Deconstructable;
 using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
@@ -27,6 +28,8 @@ namespace Nemesis.TextParsers.Tests
             var baseTypes = ExploratoryTestsData.GetStandardTypes().Concat(
                 new[]
                 {
+                    typeof(Person), typeof(LargeStruct), typeof(LotsOfDeconstructableData),
+
                     typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum),
                     typeof(Int64Enum), typeof(UInt64Enum),
                     typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
@@ -200,15 +203,24 @@ namespace Nemesis.TextParsers.Tests
 
 
                 //empty
-                reason = $"Parsing empty with {transformer}";
-                var empty = transformer.GetEmpty();
+                reason = $"Retrieving empty with {transformer}";
+                var emptyInstance = transformer.GetEmpty();
 
-                reason = "Formatting empty";
-                var emptyText = transformer.Format(empty);
                 reason = "Parsing empty";
-                var parsedEmpty1 = ParseAndAssert(emptyText);
+                var parsedEmpty = ParseAndAssert("");
+                
+                reason = "Formatting empty";
+                string emptyText1 = transformer.Format(parsedEmpty);
+                string emptyText2 = transformer.Format(emptyInstance);
+                IsMutuallyEquivalent(emptyText1, emptyText2);
+                
+                reason = "Parsing empty";
+                var parsedEmpty1 = ParseAndAssert(emptyText1);
+                var parsedEmpty2 = ParseAndAssert(emptyText2);
 
-                IsMutuallyEquivalent(parsedEmpty1, empty);
+                IsMutuallyEquivalent(parsedEmpty, parsedEmpty1);
+                IsMutuallyEquivalent(parsedEmpty, parsedEmpty2);
+                IsMutuallyEquivalent(parsedEmpty, emptyInstance);
 
 
 

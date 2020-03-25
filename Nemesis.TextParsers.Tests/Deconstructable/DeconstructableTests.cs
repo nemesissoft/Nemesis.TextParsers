@@ -12,14 +12,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     perf tests
     //TODO perf test class vs readonly struct 
 recursive tests (,,, (,)) + test for no borders 
-
-    
-
-exploratory tests 
-    
-
-    
-        
+       
         
     with (', null) sequence. 
     with '' empty tuple. 
