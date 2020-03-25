@@ -149,10 +149,10 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
             (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException), @"Input string was not in a correct format"),
 
-            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"15=ABC pair cannot have more than 2 elements: 'TooMuch'"),
-            (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"'15' has no matching value"),
-            (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"'' has no matching value"),
-            (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"' ' has no matching value"),
+            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"Key=Value pair of arity=2 separated by '=' cannot have more than 2 elements: 'TooMuch'"),
+            (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"2nd element was not found after '15'"),
+            (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"2nd element was not found after '∅'"),
+            (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"2nd element was not found after ' '"),
             
 
 

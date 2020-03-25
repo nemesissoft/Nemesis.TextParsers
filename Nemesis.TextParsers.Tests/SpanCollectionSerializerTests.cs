@@ -360,6 +360,12 @@ namespace Nemesis.TextParsers.Tests
             (typeof(bool?), Enumerable.Range(1, 10).Select(i => i % 3 == 0 ? (bool?)null : (i % 2 == 0)).ToList(),
                 @"False|True|∅|True|False|∅|False|True|∅|True"),
 
+            (typeof(Complex), Enumerable.Range(1, 7).Select(i => new Complex(i*1.1, -i*2.2)).ToList(),
+                @"(1.1; -2.2)|(2.2; -4.4)|(3.3000000000000003; -6.6000000000000005)|(4.4; -8.8)|(5.5; -11)|(6.6000000000000005; -13.200000000000001)|(7.7000000000000011; -15.400000000000002)" ),
+
+            (typeof(Complex?), Enumerable.Range(1, 7).Select(i => i % 3 == 0 ? (Complex?)null :new Complex(i*1.1, -i*2.2)).ToList(),
+                @"(1.1; -2.2)|(2.2; -4.4)|∅|(4.4; -8.8)|(5.5; -11)|∅|(7.7000000000000011; -15.400000000000002)" ),
+
             (typeof(Point), Enumerable.Range(0, 6).Select(i => new Point(i * 10, i * 20)).ToList(),
                 @"∅|10;20|20;40|30;60|40;80|50;100"),
 
@@ -532,7 +538,7 @@ namespace Nemesis.TextParsers.Tests
         {
             static void CheckEquivalency(IReadOnlyCollection<TElement> left, IReadOnlyCollection<TElement> right)
             {
-                if(left is null)
+                if (left is null)
                     Assert.That(right, Is.Null);
                 else
                     Assert.That(left, Is.EquivalentTo(right));
@@ -565,7 +571,7 @@ namespace Nemesis.TextParsers.Tests
             CheckEquivalency(parsed1, parsed2);
             CheckEquivalency(parsed1, parsed3);
         }
-        
+
         [Test]
         public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long
         {
