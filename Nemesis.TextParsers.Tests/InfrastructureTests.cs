@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Utils;
@@ -174,8 +175,8 @@ namespace Nemesis.TextParsers.Tests
             new TCD(typeof(double?), null, null),
 
             new TCD(typeof(FileMode), (FileMode) 0, (FileMode) 0),
-            
-            
+
+
             new TCD(typeof(KeyValuePair<int, float>), default(KeyValuePair<int, float>), default(KeyValuePair<int, float>)),
             new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), new KeyValuePair<string, float?>(null, null)),
             //TODO what should be empty value ?
@@ -197,17 +198,75 @@ namespace Nemesis.TextParsers.Tests
 
 
         [TestCaseSource(nameof(GetEmptyNullInstance_Data))]
-        public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty,object expectedNull)
+        public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
         {
             IsMutuallyEquivalent(
                 TextTransformer.Default.GetEmptyInstance(type),
                 expectedEmpty, "empty value should be as expected");
-            
-            
+
+
             IsMutuallyEquivalent(
                 TextTransformer.Default.GetTransformer(type).GetNullObject(),
                 expectedNull, "null value should be as expected");
         }
+
+
+        //type, input, expectedOutput
+        internal static IEnumerable<TCD> EmptyNullParsingData() => new[]
+        {
+            new TCD(typeof(IAggressionBased<string>), "", new AggressionBased1<string>("")),
+            new TCD(typeof(IAggressionBased<string>), null, new AggressionBased1<string>(null)),
+
+            new TCD(typeof(IAggressionBased<string[]>), "", new AggressionBased1<string[]>(new string[0])),
+            new TCD(typeof(IAggressionBased<string[]>), null, new AggressionBased1<string[]>(null)),
+
+            new TCD(typeof(IAggressionBased<int>), "", new AggressionBased1<int>(0)),
+            new TCD(typeof(IAggressionBased<int>), null, new AggressionBased1<int>(0)),
+
+            new TCD(typeof(IAggressionBased<int?>), "", new AggressionBased1<int?>(null)),
+            new TCD(typeof(IAggressionBased<int?>), null, new AggressionBased1<int?>(null)),
+
+
+
+
+            new TCD(typeof(ValueTuple<int, int>), "", (0, 0)),
+            new TCD(typeof(ValueTuple<int, int>), null, (0, 0)),
+            new TCD(typeof(ValueTuple<int, int>), "(,)", (0, 0)),
+            new TCD(typeof(ValueTuple<int, int>), "(1,)", (1, 0)),
+            new TCD(typeof(ValueTuple<int, int>), "(,2)", (0, 2)),
+
+
+            new TCD(typeof(ValueTuple<string, int?>), "", ((string) null, (int?) null)),
+            new TCD(typeof(ValueTuple<int, int?>), "", (0, (int?) null)),
+        };
+
+
+        [TestCaseSource(nameof(EmptyNullParsingData))]
+        public void EmptyNullParsingTest(Type type, string input, object expectedOutput)
+        {
+            MethodInfo tester = Method.OfExpression<Action<string, object>>(
+                (i, eo) => EmptyNullParsingTest_Helper(i, eo)
+            ).GetGenericMethodDefinition();
+
+            tester = tester.MakeGenericMethod(type);
+            tester.Invoke(this, new[] { input, expectedOutput });
+        }
+
+        private static void EmptyNullParsingTest_Helper<T>(string input, T expectedOutput)
+        {
+            var sut = TextTransformer.Default.GetTransformer<T>();
+
+            var parsed1 = sut.Parse(input);
+
+            Assert.That(parsed1, Is.EqualTo(expectedOutput));
+
+            var text = sut.Format(parsed1);
+            var parsed2 = sut.Parse(text);
+
+            Assert.That(parsed2, Is.EqualTo(expectedOutput));
+        }
+
+
 
 
         class LotsOfDeconstructableData
