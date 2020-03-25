@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers.Tests
     //TODO perf test class vs readonly struct 
 recursive tests (,,, (,)) + test for no borders 
 
-    static Deconstruct(this IInterface, ...) convariance va contravariance 
+    
 
 exploratory tests 
     
@@ -111,6 +111,14 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 new DataWithNoDeconstruct("Mike", "Wrocław", 36, 3.14), @"{Mike;Wrocław;36;3.14}",
                 s => s.WithBorders('{', '}').WithCustomDeconstruction(DataWithNoDeconstructExt.DeconstructMethod,
                     DataWithNoDeconstructExt.Constructor));
+
+        [Test]
+        public void ParseAndFormat_DeconstructViaInterface() =>
+            FormatAndParseHelper(
+                new ExternallyDeconstructable(10.1f, 555.55M), @"{10.1;555.55}",
+                s => s.WithBorders('{', '}').WithCustomDeconstruction(ExternallyDeconstructableExt.DeconstructMethod,
+                    ExternallyDeconstructableExt.Constructor));
+
 
         [Test]
         public void ParseAndFormat_NoBorders()
@@ -300,6 +308,24 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             }
         }
 
+        internal interface IDeconstructable
+        {
+            float Weight { get; }
+            decimal Price { get; }
+        }
+
+        internal readonly struct ExternallyDeconstructable : IDeconstructable
+        {
+            public float Weight { get; }
+            public decimal Price { get; }
+
+            public ExternallyDeconstructable(float weight, decimal price)
+            {
+                Weight = weight;
+                Price = price;
+            }
+        }
+
         private struct LargeStruct
         {
             public double N1 { get; }
@@ -431,5 +457,21 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
 
         public static readonly ConstructorInfo Constructor = Ctor
             .Of(() => new DeconstructableTests.DataWithNoDeconstruct(default, default, default, default));
+    }
+
+    internal static class ExternallyDeconstructableExt
+    {
+        public static void Deconstruct(this DeconstructableTests.IDeconstructable deco, out float weight, out decimal price)
+        {
+            weight = deco.Weight;
+            price = deco.Price;
+        }
+
+        private delegate void DeCtorAction(DeconstructableTests.IDeconstructable d, out float weight, out decimal price);
+
+        public static readonly MethodInfo DeconstructMethod = Method.Of<DeCtorAction>(Deconstruct);
+
+        public static readonly ConstructorInfo Constructor = Ctor
+            .Of(() => new DeconstructableTests.ExternallyDeconstructable(default, default));
     }
 }

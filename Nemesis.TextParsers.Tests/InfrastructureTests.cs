@@ -179,7 +179,7 @@ namespace Nemesis.TextParsers.Tests
 
             new TCD(typeof(KeyValuePair<int, float>), default(KeyValuePair<int, float>), default(KeyValuePair<int, float>)),
             new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), new KeyValuePair<string, float?>(null, null)),
-            //TODO what should be empty value ?
+            //what should be empty value ?
             //new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), new KeyValuePair<string, float?>(null, null)),
 
 

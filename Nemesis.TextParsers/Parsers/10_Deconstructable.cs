@@ -397,12 +397,23 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             );
 
 
+            Expression GetConvertedSource()
+            {
+                var decoSourceType = deconstruct.GetParameters()[0].ParameterType;
+
+                return element.Type == decoSourceType
+                    ? (Expression) element
+                    : Expression.Convert(element, decoSourceType);
+            }
+
             var expressions = new List<Expression>(7 + 2 * arity)
             {
                 rentInitialBuffer,
                 accumulatorInit,
                 deconstruct.IsStatic
-                    ? Expression.Call(deconstruct, new[] { element }.Concat(temps)) //TODO add convert
+                    ? Expression.Call(deconstruct, //static method
+                                      new[] { GetConvertedSource() } //this T instance
+                                      .Concat(temps)) //out params
                     : Expression.Call(element, deconstruct, temps),
                 Expression.Call(helper, nameof(TupleHelper.StartFormat), null, accumulator)
             };
