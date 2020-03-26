@@ -34,14 +34,14 @@ namespace Benchmarks
                .WithoutBorders().ToTransformer<CarrotAndOnionFactorsConventionDeconstructable>(TextTransformer.Default);
         }
 
-
-        private const int ITERATIONS = 10000;
+        [Params(10, 100, 1000)]
+        public int N;
 
         [Benchmark(Baseline = true)]
         public int Standard()
         {
             int count = 0;
-            for (int i = 0; i < ITERATIONS; i++)
+            for (int i = 0; i < N; i++)
             {
                 var instance = (CarrotAndOnionFactorsStandard)_standard.ConvertFromInvariantString("15.5;1.1,2.2,3.3");
                 count += (int)instance.OnionFactor1;
@@ -53,7 +53,7 @@ namespace Benchmarks
         public int Dedicated()
         {
             int count = 0;
-            for (int i = 0; i < ITERATIONS; i++)
+            for (int i = 0; i < N; i++)
             {
                 var instance = _dedicated.ParseString("15.5;1.1,2.2,3.3");
                 count += (int)instance.OnionFactor1;
@@ -65,7 +65,7 @@ namespace Benchmarks
         public int Convention()
         {
             int count = 0;
-            for (int i = 0; i < ITERATIONS; i++)
+            for (int i = 0; i < N; i++)
             {
                 var instance = _convention.Parse("15.5;1.1,2.2,3.3".AsSpan());
                 count += (int)instance.OnionFactor1;
@@ -77,7 +77,7 @@ namespace Benchmarks
         public int Deconstructable()
         {
             int count = 0;
-            for (int i = 0; i < ITERATIONS; i++)
+            for (int i = 0; i < N; i++)
             {
                 var instance = _deconstructable.Parse("15.5;1.1;2.2;3.3");
                 count += (int)instance.OnionFactor1;
