@@ -173,7 +173,8 @@ namespace Nemesis.TextParsers.Parsers
                 : base(body, formatter, emptyValueProvider, nullValueProvider)
                 => _delegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
 
-            protected override TElement ParseCore(in ReadOnlySpan<char> input) => _delegate(input.ToString());
+            protected override TElement ParseCore(in ReadOnlySpan<char> input) => 
+                _delegate(input.ToString());//TODO get rid of allocation
         }
 
         private sealed class SpanFactoryTransformer<TElement> : FactoryTransformer<TElement>

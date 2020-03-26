@@ -9,6 +9,15 @@ namespace Benchmarks
     {
         private static void Main(string[] args)
         {
+#if DEBUG
+            var d = new Deconstructables();
+            d.GlobalSetup();
+            d.Standard();
+            d.Dedicated();
+            d.Convention();
+            d.Deconstructable();
+
+#endif
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }

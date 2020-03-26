@@ -165,7 +165,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                             deconstruct is null || deconstruct.GetParameters().Length == 0 ||
                             ctor is null || ctor.GetParameters().Length == 0
                         )
-                            throw new NotSupportedException($"Default deconstruction method supports cases with at lease one non-nullary {DECONSTRUCT} method with matching constructor");
+                            throw new NotSupportedException($"Deconstructable for {typeof(TDeconstructable).GetFriendlyName()} cannot be created. Default deconstruction method supports cases with at lease one non-nullary {DECONSTRUCT} method with matching constructor");
                         break;
                     }
                 case DeconstructionMethod.ProvidedDeconstructMethod:

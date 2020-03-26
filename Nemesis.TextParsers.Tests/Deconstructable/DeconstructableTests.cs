@@ -9,7 +9,7 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
-    perf tests
+    
 recursive tests (,,, (,)) + test for no borders 
        
         
