@@ -10,7 +10,6 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
     perf tests
-    //TODO perf test class vs readonly struct 
 recursive tests (,,, (,)) + test for no borders 
        
         

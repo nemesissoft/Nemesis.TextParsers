@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using EnumsNET;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
@@ -667,7 +668,8 @@ namespace Benchmarks
     }
 
     [MemoryDiagnoser]
-    [ClrJob, CoreJob]
+    [SimpleJob(RuntimeMoniker.Net47)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     public class HasFlagBench
     {
         private const int OPERATIONS_PER_INVOKE = 10_000;

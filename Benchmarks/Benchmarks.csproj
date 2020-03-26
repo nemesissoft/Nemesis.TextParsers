@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="morelinq" Version="3.2.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.*" />
     <PackageReference Include="Enums.NET" Version="3.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />    
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
