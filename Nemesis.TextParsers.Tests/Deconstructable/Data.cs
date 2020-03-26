@@ -229,7 +229,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
 
         [UsedImplicitly]
-        public static DataWithCustomDeconstructableTransformer FromText(string text) => _transformer.Parse(text);
+        public static DataWithCustomDeconstructableTransformer FromText(ReadOnlySpan<char> text) => _transformer.Parse(text);
         public override string ToString() => _transformer.Format(this);
     }
 

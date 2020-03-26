@@ -174,7 +174,9 @@ namespace Nemesis.TextParsers.Parsers
                 => _delegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
 
             protected override TElement ParseCore(in ReadOnlySpan<char> input) => 
-                _delegate(input.ToString());//TODO get rid of allocation
+                throw new NotSupportedException($"{nameof(StringFactoryTransformer<int>)} is meant only to parse strings. To parse ReadOnlySpan<char>, please use {nameof(SpanFactoryTransformer<int>)} via having convention method FromText(ReadOnlySpan<char> input)");
+
+            protected override TElement ParseText(string text) => _delegate(text);
         }
 
         private sealed class SpanFactoryTransformer<TElement> : FactoryTransformer<TElement>

@@ -226,7 +226,7 @@ namespace Nemesis.TextParsers.Tests
 
                 //instances
                 reason = "Creating fixtures";
-                var instances = _fixture.CreateMany<T>(30);
+                var instances = _fixture.CreateMany<T>(8);
                 int i = 1;
                 foreach (var instance in instances)
                 {

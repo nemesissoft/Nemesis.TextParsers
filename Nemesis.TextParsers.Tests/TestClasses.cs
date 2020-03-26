@@ -51,15 +51,24 @@ namespace Nemesis.TextParsers.Tests
         public override int GetHashCode() => unchecked((X * 397) ^ Y);
 
         public override string ToString() => $"{X};{Y}";
+        
+        public static Point FromText(ReadOnlySpan<char> text)
+        {
+            var enumerator = text.Split(';').GetEnumerator();
 
-        public static Point FromText(string text) =>
-            text.Split(';') is { } arr ?
-                new Point(int.Parse(arr[0]), int.Parse(arr[1])) : default;
+            if (!enumerator.MoveNext()) return default;
+            int x = Int32Parser.Instance.Parse(enumerator.Current);
+
+            if (!enumerator.MoveNext()) return default;
+            int y = Int32Parser.Instance.Parse(enumerator.Current);
+
+            return new Point(x, y);
+        }
     }
 
     internal sealed class PointConverter : BaseTextConverter<Point>
     {
-        public override Point ParseString(string text) => Point.FromText(text);
+        public override Point ParseString(string text) => Point.FromText(text.AsSpan());
 
         public override string FormatToString(Point value) => value.ToString();
     }
@@ -103,10 +112,25 @@ namespace Nemesis.TextParsers.Tests
         public override string ToString() => $"{X};{Y};{Width};{Height}";
 
         [UsedImplicitly]
-        public static Rect FromText(string text) =>
-            text.Split(';') is { } arr ?
-                new Rect(int.Parse(arr[0]), int.Parse(arr[1]),
-                    int.Parse(arr[2]), int.Parse(arr[3])) : default;
+        public static Rect FromText(ReadOnlySpan<char> text)
+        {
+            var enumerator = text.Split(';').GetEnumerator();
+
+            if (!enumerator.MoveNext()) return default;
+            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            
+            if (!enumerator.MoveNext()) return default;
+            int y = Int32Parser.Instance.Parse(enumerator.Current);
+
+            if (!enumerator.MoveNext()) return default;
+            int width = Int32Parser.Instance.Parse(enumerator.Current);
+            
+            if (!enumerator.MoveNext()) return default;
+            int height = Int32Parser.Instance.Parse(enumerator.Current);
+
+
+            return new Rect(x, y, width, height);
+        }
     }
 
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
@@ -214,9 +238,6 @@ namespace Nemesis.TextParsers.Tests
             static Exception GetException(int numberOfElements) => new ArgumentException(
                 $@"Sequence should contain 3 elements, but contained {(numberOfElements > 3 ? "more than 3" : numberOfElements.ToString())} elements");
         }
-
-        //[UsedImplicitly]
-        //public static ThreeElements<TElement> FromText(string text) => throw new NotSupportedException("This should never be used");
     }
 
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
@@ -415,19 +436,19 @@ namespace Nemesis.TextParsers.Tests
             return input.Length switch
             {
                 2 when (input[0] == 'o' || input[0] == 'O') && char.IsDigit(input[1]) &&
-                       int.Parse(input[1].ToString()) is { } i1 && i1 >= 1 && i1 <= 3 => new Option((OptionEnum) i1),
-                
+                       int.Parse(input[1].ToString()) is { } i1 && i1 >= 1 && i1 <= 3 => new Option((OptionEnum)i1),
+
                 7 when (input[0] == 'o' || input[0] == 'O') && (input[1] == 'p' || input[1] == 'P') &&
                        (input[2] == 't' || input[2] == 'T') && (input[3] == 'i' || input[3] == 'I') &&
                        (input[4] == 'o' || input[4] == 'O') && (input[5] == 'n' || input[5] == 'N') &&
-                       TryParseInt(input.Slice(6, 1), out int i2) && i2 >= 1 && i2 <= 3 => new Option((OptionEnum) i2),
-                
-                _ => TryParseInt(input, out int i3) ? new Option((OptionEnum) i3) : new Option(OptionEnum.None)
+                       TryParseInt(input.Slice(6, 1), out int i2) && i2 >= 1 && i2 <= 3 => new Option((OptionEnum)i2),
+
+                _ => TryParseInt(input, out int i3) ? new Option((OptionEnum)i3) : new Option(OptionEnum.None)
             };
         }
 
         public Option Parse(string text) => Parse(text.AsSpan());
-        
+
         public object ParseObject(string text) => Parse(text.AsSpan());
 
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
@@ -437,9 +458,9 @@ namespace Nemesis.TextParsers.Tests
         public string Format(Option element) => element.ToString();
         public string FormatObject(object element) => Format((Option)element);
 
-        
 
-        
+
+
         public Option GetEmpty() => new Option(OptionEnum.None);
         public object GetEmptyObject() => GetEmpty();
 
@@ -466,12 +487,20 @@ namespace Nemesis.TextParsers.Tests
 
     sealed class PointConverter2 : BaseTextConverter<PointWithConverter>
     {
-        private static PointWithConverter FromText(string text) =>
-            text.Split(';') is { } arr && arr.Length == 2
-                ? new PointWithConverter(int.Parse(arr[0]), int.Parse(arr[1]))
-                : default;
+        private static PointWithConverter FromText(ReadOnlySpan<char> text)
+        {
+            var enumerator = text.Split(';').GetEnumerator();
 
-        public override PointWithConverter ParseString(string text) => FromText(text);
+            if (!enumerator.MoveNext()) return default;
+            int x = Int32Parser.Instance.Parse(enumerator.Current);
+
+            if (!enumerator.MoveNext()) return default;
+            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            
+            return new PointWithConverter(x, y);
+        }
+
+        public override PointWithConverter ParseString(string text) => FromText(text.AsSpan());
 
         public override string FormatToString(PointWithConverter pwc) => $"{pwc.X};{pwc.Y}";
     }

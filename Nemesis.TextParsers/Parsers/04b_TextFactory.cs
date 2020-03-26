@@ -51,15 +51,7 @@ namespace Nemesis.TextParsers.Parsers
         public TextFactoryAttribute([NotNull] Type factoryType) => FactoryType = factoryType ?? throw new ArgumentNullException(nameof(factoryType));
     }
 
-    //TODO support non static factory classes via ITextFactoryString+ITextFactorySpan+ add TransformerStore injection
-    [UsedImplicitly]
-    public interface ITextFactoryString<out TElement>
-    {
-        [UsedImplicitly] TElement FromText(string text);
-        TElement Empty { get; }
-        TElement Null { get; }
-    }
-
+    //TODO support non static factory classes via ITextFactorySpan+ add TransformerStore injection
     [UsedImplicitly]
     public interface ITextFactorySpan<out TElement>
     {

@@ -10,7 +10,7 @@ namespace Benchmarks
         private static void Main(string[] args)
         {
 #if DEBUG
-            var d = new Deconstructables();
+            var d = new Deconstructables { N = 10 };
             d.GlobalSetup();
             d.Standard();
             d.Dedicated();

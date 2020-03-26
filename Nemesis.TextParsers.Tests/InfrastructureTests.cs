@@ -345,7 +345,8 @@ namespace Nemesis.TextParsers.Tests
 
         //this is just to conform to FactoryMethod convention 
         [UsedImplicitly]
-        public static EmptyFactoryMethodConvention FromText(string text) => throw new NotSupportedException("Not used");
+        public static EmptyFactoryMethodConvention FromText(ReadOnlySpan<char> text) => 
+            throw new NotSupportedException("Class should only be used for empty value tests");
 
         #region Equals
         public bool Equals(EmptyFactoryMethodConvention other) =>

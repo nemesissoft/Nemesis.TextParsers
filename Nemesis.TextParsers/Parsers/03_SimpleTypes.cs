@@ -275,6 +275,9 @@ namespace Nemesis.TextParsers.Parsers
 #else
             int.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
+
+        public static readonly ITransformer<int> Instance = new Int32Parser();
+        private Int32Parser() { }
     }
 
     [UsedImplicitly]

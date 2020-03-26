@@ -67,7 +67,7 @@ namespace Benchmarks
             int count = 0;
             for (int i = 0; i < N; i++)
             {
-                var instance = _convention.Parse("15.5;1.1,2.2,3.3".AsSpan());
+                var instance = _convention.Parse("15.5;1.1,2.2,3.3");
                 count += (int)instance.OnionFactor1;
             }
             return count;
@@ -144,12 +144,13 @@ namespace Benchmarks
                 $"{Carrot:G9};{OnionFactor1},{OnionFactor2},{OnionFactor3}"
             );
 
-            public static CarrotAndOnionFactorsConvention FromText(ReadOnlySpan<char> text)
+            //string is used for tests - normally ReadOnlySpan<char> should be preferred
+            public static CarrotAndOnionFactorsConvention FromText(string text)
             {
                 static float Parse(ReadOnlySpan<char> span) =>
                     float.Parse(span, NumberStyles.Float, CultureInfo.InvariantCulture);
 
-                var stream = text.Split(';').GetEnumerator();
+                var stream = text.AsSpan().Split(';').GetEnumerator();
 
                 stream.MoveNext();
 

@@ -29,8 +29,8 @@ namespace Nemesis.TextParsers.Tests
         public override string ToString() => Value.ToString("G17", CultureInfo.InvariantCulture);
 
         [UsedImplicitly]
-        public static LowPrecisionFloat FromText(string text) => new LowPrecisionFloat(
-            float.Parse(text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture)
+        public static LowPrecisionFloat FromText(ReadOnlySpan<char> text) => new LowPrecisionFloat(
+            SingleParser.ParseSingle(text)
                 );
 
         private static bool AlmostEqualUlps(float a, float b, uint maxUlpsDiff = 100 * 1024)
@@ -82,9 +82,9 @@ namespace Nemesis.TextParsers.Tests
             );
 
         [UsedImplicitly]
-        public static CarrotAndOnionFactors FromText(string text)
+        public static CarrotAndOnionFactors FromText(ReadOnlySpan<char> text)
         {
-            var stream = text.AsSpan().Split(';').GetEnumerator();
+            var stream = text.Split(';').GetEnumerator();
             var floatParser = TextTransformer.Default.GetTransformer<float>();
 
             if (!stream.MoveNext()) throw new FormatException($"At least one element is expected to parse {nameof(CarrotAndOnionFactors)}");

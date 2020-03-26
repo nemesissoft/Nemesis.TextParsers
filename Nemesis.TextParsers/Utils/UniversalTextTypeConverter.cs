@@ -6,14 +6,14 @@ namespace Nemesis.TextParsers.Utils
 {
     public sealed class UniversalTextTypeConverter<TValue> : TextTypeConverter
     {
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
-            value is string text
-                ? TextTransformer.Default.GetTransformer<TValue>().Parse(text)
-                : base.ConvertFrom(context, culture, value);
+        private static readonly ITransformer<TValue> _transformer =
+            TextTransformer.Default.GetTransformer<TValue>();
 
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
+             _transformer.Parse(value as string);
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
             destinationType == typeof(string)
-                ? TextTransformer.Default.GetTransformer<TValue>().Format((TValue)value)
+                ? _transformer.Format((TValue)value)
                 : base.ConvertTo(context, culture, value, destinationType);
     }
 }
