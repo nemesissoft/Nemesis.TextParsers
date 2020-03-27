@@ -178,9 +178,50 @@ namespace Nemesis.TextParsers.Tests
 
 
             new TCD(typeof(KeyValuePair<int, float>), default(KeyValuePair<int, float>), default(KeyValuePair<int, float>)),
-            new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), new KeyValuePair<string, float?>(null, null)),
-            //what should be empty value ?
-            //new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), new KeyValuePair<string, float?>(null, null)),
+            new TCD(typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), new KeyValuePair<string, float?>(null, null)),
+
+
+
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger?, bool>(0, null, false)),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger?, bool>(0, null, false))
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger>(0, 0)),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger>(0, 0))
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>), 
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode>(0)), 
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode>(0))
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>), 
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>()), 
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>(null, 0, 0M, null, null, null, null)
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>), 
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, new List<byte>(), new sbyte[0]), 
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>(null, 0, 0M, null, null, null)
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>>), 
+                new ValueTuple<string, int, decimal, double?, List<byte>>("", 0, 0M, null, new List<byte>()), 
+                new ValueTuple<string, int, decimal, double?, List<byte>>(null, 0, 0M, null, null)
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal, double?>), 
+                new ValueTuple<string, int, decimal, double?>("", 0, 0M, null), 
+                new ValueTuple<string, int, decimal, double?>(null, 0, 0M, null)
+            ),
+            new TCD(typeof(ValueTuple<string, int, decimal>), 
+                new ValueTuple<string, int, decimal>("", 0, 0M), 
+                new ValueTuple<string, int, decimal>(null, 0, 0M)
+            ),
+            new TCD(typeof(ValueTuple<string, int>), 
+                new ValueTuple<string, int>("", 0), 
+                new ValueTuple<string, int>(null, 0)
+            ),
+            new TCD(typeof(ValueTuple<string>), 
+                new ValueTuple<string>(""), 
+                new ValueTuple<string>(null)
+            ),
 
 
 
@@ -236,11 +277,14 @@ namespace Nemesis.TextParsers.Tests
             new TCD(typeof(ValueTuple<int, int>), "(,2)", (0, 2)),
 
 
-            new TCD(typeof(ValueTuple<string, int?>), "", ((string) null, (int?) null)),
+            new TCD(typeof(ValueTuple<string, int?>), @"", ("", (int?) null)),
+            new TCD(typeof(ValueTuple<string, int?>), @"(,)", ("", (int?) null)),
+            new TCD(typeof(ValueTuple<string, int?>), @"(∅,)", ((string)null, (int?) null)),
+            new TCD(typeof(ValueTuple<string, int?>), @"(\∅,)", ("∅", (int?) null)),
+            new TCD(typeof(ValueTuple<string, int?>), @"(∅ABC,)", ("∅ABC", (int?) null)),
+
             new TCD(typeof(ValueTuple<int, int?>), "", (0, (int?) null)),
         };
-
-
         [TestCaseSource(nameof(EmptyNullParsingData))]
         public void EmptyNullParsingTest(Type type, string input, object expectedOutput)
         {

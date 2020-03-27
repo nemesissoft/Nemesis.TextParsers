@@ -234,11 +234,11 @@ namespace Nemesis.TextParsers.Tests
             FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(text, out _));
 
         [UsedImplicitly]
-        public static IAggressionBased<TValue> Empty => //this should not be cached
+        public static IAggressionBased<TValue> Empty => //this should not be cached. Nobody wants to expose globally available i.e. empty collection just for people to be able to add elements to it ;-)
             AggressionBasedFactory<TValue>.FromOneValue(TextTransformer.Default.GetEmptyInstance<TValue>());
 
         [UsedImplicitly]
-        public static IAggressionBased<TValue> Null { get; } = //this can be safely cached - AB<T> is immutable
+        public static IAggressionBased<TValue> Null { get; } = //this can be safely cached as long as it wraps null/immutable objects - AB<T> is immutable itself
             AggressionBasedFactory<TValue>.FromOneValue(default);
 
 

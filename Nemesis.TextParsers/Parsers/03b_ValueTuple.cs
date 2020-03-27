@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
@@ -43,7 +42,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 1;
 
-            public Tuple1Transformer(ITransformerStore transformerStore) => 
+            public Tuple1Transformer(ITransformerStore transformerStore) =>
                 _transformer1 = transformerStore.GetTransformer<T1>();
 
             protected override ValueTuple<T1> ParseCore(in ReadOnlySpan<char> input)
@@ -72,6 +71,11 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()})";
+
+            public override ValueTuple<T1> GetEmpty() =>
+                new ValueTuple<T1>(
+                    _transformer1.GetEmpty()
+                );
         }
 
         private sealed class Tuple2Transformer<T1, T2> : TransformerBase<(T1, T2)>
@@ -121,6 +125,12 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2> GetEmpty() =>
+                new ValueTuple<T1, T2>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty()
+                );
         }
 
         private sealed class Tuple3Transformer<T1, T2, T3> : TransformerBase<(T1, T2, T3)>
@@ -177,6 +187,13 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2, T3> GetEmpty() =>
+                new ValueTuple<T1, T2, T3>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty(),
+                    _transformer3.GetEmpty()
+                );
         }
 
         private sealed class Tuple4Transformer<T1, T2, T3, T4> : TransformerBase<(T1, T2, T3, T4)>
@@ -241,6 +258,14 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2, T3, T4> GetEmpty() =>
+                new ValueTuple<T1, T2, T3, T4>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty(),
+                    _transformer3.GetEmpty(),
+                    _transformer4.GetEmpty()
+                );
         }
 
         private sealed class Tuple5Transformer<T1, T2, T3, T4, T5> : TransformerBase<(T1, T2, T3, T4, T5)>
@@ -313,6 +338,15 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2, T3, T4, T5> GetEmpty() =>
+                new ValueTuple<T1, T2, T3, T4, T5>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty(),
+                    _transformer3.GetEmpty(),
+                    _transformer4.GetEmpty(),
+                    _transformer5.GetEmpty()
+                );
         }
 
         private sealed class Tuple6Transformer<T1, T2, T3, T4, T5, T6> : TransformerBase<(T1, T2, T3, T4, T5, T6)>
@@ -392,6 +426,16 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2, T3, T4, T5, T6> GetEmpty() =>
+                new ValueTuple<T1, T2, T3, T4, T5, T6>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty(),
+                    _transformer3.GetEmpty(),
+                    _transformer4.GetEmpty(),
+                    _transformer5.GetEmpty(),
+                    _transformer6.GetEmpty()
+                );
         }
 
         private sealed class Tuple7Transformer<T1, T2, T3, T4, T5, T6, T7> : TransformerBase<(T1, T2, T3, T4, T5, T6, T7)>
@@ -479,6 +523,17 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2, T3, T4, T5, T6, T7> GetEmpty() =>
+                new ValueTuple<T1, T2, T3, T4, T5, T6, T7>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty(),
+                    _transformer3.GetEmpty(),
+                    _transformer4.GetEmpty(),
+                    _transformer5.GetEmpty(),
+                    _transformer6.GetEmpty(),
+                    _transformer7.GetEmpty()
+                );
         }
 
         private sealed class TupleRestTransformer<T1, T2, T3, T4, T5, T6, T7, TRest> : TransformerBase<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>> where TRest : struct
@@ -581,6 +636,18 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()},{typeof(TRest).GetFriendlyName()})";
+
+            public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> GetEmpty() =>
+                new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(
+                    _transformer1.GetEmpty(),
+                    _transformer2.GetEmpty(),
+                    _transformer3.GetEmpty(),
+                    _transformer4.GetEmpty(),
+                    _transformer5.GetEmpty(),
+                    _transformer6.GetEmpty(),
+                    _transformer7.GetEmpty(),
+                    _transformerRest.GetEmpty()
+                );
         }
 
         [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
@@ -606,7 +673,7 @@ namespace Nemesis.TextParsers.Parsers
             type.Name.StartsWith("ValueTuple`") &&
             typeof(ValueType).IsAssignableFrom(type);
 #else
-            typeof(ITuple).IsAssignableFrom(type);
+            typeof(System.Runtime.CompilerServices.ITuple).IsAssignableFrom(type);
 #endif
 
             elementTypes = isValueTuple ? type.GenericTypeArguments : null;

@@ -151,7 +151,7 @@ namespace Nemesis.TextParsers.Tests
             var actual = SpanCollectionSerializer.DefaultInstance.ParseCollection<LowPrecisionFloat>("3.14|1|2|3.0005");
 
             Assert.That(actual, Has.Count.EqualTo(4));
-            Assert.That(actual.Select(lpf => lpf.Value), Is.EquivalentTo(new[] { 3.14f, 1f, 2f, 3.0005f }));
+            Assert.That(actual.Select(lpf => lpf.Value), Is.EqualTo(new[] { 3.14f, 1f, 2f, 3.0005f }));
         }
 
 
@@ -170,7 +170,7 @@ namespace Nemesis.TextParsers.Tests
             var parsed = SpanCollectionSerializer.DefaultInstance.ParseCollection<CarrotAndOnionFactors>(formatted);
 
             Assert.That(parsed, Has.Count.EqualTo(2));
-            Assert.That(parsed, Is.EquivalentTo(list));
+            Assert.That(parsed, Is.EqualTo(list));
         }
     }
 }

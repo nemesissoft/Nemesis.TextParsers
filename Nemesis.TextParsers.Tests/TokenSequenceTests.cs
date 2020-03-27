@@ -56,7 +56,7 @@ namespace Nemesis.TextParsers.Tests
             if (data.expectedList == null)
                 Assert.That(result, Is.Null);
             else
-                Assert.That(result, Is.EquivalentTo(data.expectedList));
+                Assert.That(result, Is.EqualTo(data.expectedList));
         }
 
         [TestCase((string)null)]

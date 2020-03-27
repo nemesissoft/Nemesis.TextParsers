@@ -45,7 +45,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<int, float?>), new KeyValuePair<int, float?>(0, null), null),
             (typeof(KeyValuePair<int, float?>), new KeyValuePair<int, float?>(0, null), @""),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), null),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @""),
+            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), @""),
             (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅=∅"),
             (typeof(KeyValuePair<string, float>),  new KeyValuePair<string, float>(null, 0), @"∅=∅"),
 
@@ -80,9 +80,15 @@ namespace Nemesis.TextParsers.Tests
 
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
             (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @""),
-            (typeof((TimeSpan, int, float, string, decimal, byte)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0), @""),
-            (typeof((TimeSpan, int, float, string, decimal, byte, bool)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0, false), @""),
+            
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @""),
+            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), (string)null),
+
+            (typeof((TimeSpan, int, float, string, decimal, byte)), (TimeSpan.Zero, 0, 0f, "", 0m, (byte)0), @""),
+            (typeof((TimeSpan, int, float, string, decimal, byte)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0), (string)null),
+
+            (typeof((TimeSpan, int, float, string, decimal, byte, bool)), (TimeSpan.Zero, 0, 0f, "", 0m, (byte)0, false), @""),
+            (typeof((TimeSpan, int, float, string, decimal, byte, bool)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0, false), (string)null),
 
             (typeof((string, string, string, string, string)), (@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"(\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅)"),
 

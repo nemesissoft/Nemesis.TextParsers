@@ -91,7 +91,7 @@ namespace Nemesis.TextParsers.Tests
             if (data.expectedList == null)
                 Assert.That(result, Is.Null);
             else
-                Assert.That(result, Is.EquivalentTo(data.expectedList));
+                Assert.That(result, Is.EqualTo(data.expectedList));
 
             if (data.expectedList == null)
                 Console.WriteLine(@"NULL list");
@@ -144,7 +144,7 @@ namespace Nemesis.TextParsers.Tests
                 if (left is null)
                     Assert.That(right, Is.Null);
                 else
-                    Assert.That(left, Is.EquivalentTo(right));
+                    Assert.That(left, Is.EqualTo(right));
             }
 
             const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;

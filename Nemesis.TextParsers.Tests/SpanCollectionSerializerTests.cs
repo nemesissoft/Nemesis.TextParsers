@@ -94,7 +94,7 @@ namespace Nemesis.TextParsers.Tests
             if (data.expectedList == null)
                 Assert.That(result, Is.Null);
             else
-                Assert.That(result, Is.EquivalentTo(data.expectedList));
+                Assert.That(result, Is.EqualTo(data.expectedList));
 
 
             if (data.expectedList == null)
@@ -481,14 +481,16 @@ namespace Nemesis.TextParsers.Tests
                     new KeyValuePair<string, float?>("", 3.14f),
                     new KeyValuePair<string, float?>(null, 3.14f),
 
+                    new KeyValuePair<string, float?>("", null),
                     new KeyValuePair<string, float?>(null, null),
-                    new KeyValuePair<string, float?>(null, null),
-                    default,
+                    new KeyValuePair<string, float?>("", null),
+
                     default,
                     new KeyValuePair<string, float?>("", null),
                     new KeyValuePair<string, float?>("", 0),
+                    default
                 }.ToList(),
-                @"PI=3.14|PI=∅|=3.14|∅=3.14||∅=∅||∅=∅|=∅|=0"),
+                @"PI=3.14|PI=∅|=3.14|∅=3.14||∅=∅||∅=∅|=∅|=0|∅"),
 
             (typeof( (TimeSpan, int, float, string, decimal?) ),
                 new[]
@@ -516,7 +518,7 @@ namespace Nemesis.TextParsers.Tests
                     (TimeSpan.Zero, 0, 0f, (string)null, (decimal?)null),
                     default,
                     default,
-                    default,
+                    (TimeSpan.Zero, 0, 0f, "", (decimal?)null),
                 }.ToList(),
                 @"(3.14:15:09,3,3.1400001,Pi,3.14)|(31.14:15:09,3,3.1400001,Pi,\∅)|(-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅)|(00:00:00,0,0,,0)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)|∅|"),
         };
@@ -541,7 +543,7 @@ namespace Nemesis.TextParsers.Tests
                 if (left is null)
                     Assert.That(right, Is.Null);
                 else
-                    Assert.That(left, Is.EquivalentTo(right));
+                    Assert.That(left, Is.EqualTo(right));
             }
 
             var sut = SpanCollectionSerializer.DefaultInstance;
@@ -555,9 +557,9 @@ namespace Nemesis.TextParsers.Tests
 
 
             string text = sut.FormatCollection(parsed1);
-            Console.WriteLine($"EXP:{textExpected}");
-            Console.WriteLine($"INP:{input}");
-            Console.WriteLine($"TEX:{text}");
+            //Console.WriteLine($"EXP:{textExpected}");
+            //Console.WriteLine($"INP:{input}");
+            //Console.WriteLine($"TEX:{text}");
 
 
             var parsed2 = sut.ParseCollection<TElement>(text);
@@ -605,17 +607,17 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(text, Is.EqualTo("30|∅|∅|40"));
 
             var parsed = _sut.ParseArray<int?>(text);
-            Assert.That(parsed, Is.EquivalentTo(array));
+            Assert.That(parsed, Is.EqualTo(array));
 
             var parsed2 = _sut.ParseArray<int?>(@"300|||400");
-            Assert.That(parsed2, Is.EquivalentTo(new int?[] { 300, null, null, 400 }));
+            Assert.That(parsed2, Is.EqualTo(new int?[] { 300, null, null, 400 }));
 
 
             var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int?[]>>();
             var parsed3 = trans.Parse(@"3000|\∅|\∅|4000");
             Assert.That(
                 ((IAggressionValuesProvider<int?[]>)parsed3).Values.SingleOrDefault(),
-                Is.EquivalentTo(new int?[] { 3000, null, null, 4000 }));
+                Is.EqualTo(new int?[] { 3000, null, null, 4000 }));
         }
 
         #endregion
@@ -660,7 +662,7 @@ namespace Nemesis.TextParsers.Tests
             if (data.expectedDict == null)
                 Assert.That(result, Is.Null);
             else
-                Assert.That(result, Is.EquivalentTo(data.expectedDict));
+                Assert.That(result, Is.EqualTo(data.expectedDict));
 
 
             if (data.expectedDict == null)
@@ -731,7 +733,7 @@ namespace Nemesis.TextParsers.Tests
             var dict2 = _sut.ParseDictionary<int, TimeSpan>(text);
 
             Assert.That(text, Is.EqualTo("1=1.02:03:04;2=2.03:04:05;3=3.04:05:06;4=4.05:06:07;5=5.06:07:08"));
-            Assert.That(dict2, Is.EquivalentTo(dict));
+            Assert.That(dict2, Is.EqualTo(dict));
         }
 
         [Test]
@@ -747,7 +749,7 @@ namespace Nemesis.TextParsers.Tests
             //dict.Remove(dict.First().Key);
 
             var deser = _sut.ParseDictionary<IAggressionBased<float>, List<TimeSpan>>(text);
-            Assert.That(deser, Is.EquivalentTo(dict));
+            Assert.That(deser, Is.EqualTo(dict));
         }
 
         #endregion

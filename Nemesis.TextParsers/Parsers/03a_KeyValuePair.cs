@@ -29,7 +29,7 @@ namespace Nemesis.TextParsers.Parsers
         >(creator => creator.CreateTransformerCore<int, int>()).GetGenericMethodDefinition();
 
         private ITransformer<KeyValuePair<TKey, TValue>> CreateTransformerCore<TKey, TValue>() =>
-            new KeyValuePairTransformer<TKey, TValue>(_transformerStore.GetTransformer<TKey>(), _transformerStore.GetTransformer<TValue>());
+            new KeyValuePairTransformer<TKey, TValue>(_transformerStore);
 
 
         private const string TYPE_NAME = "Key=Value pair";
@@ -40,10 +40,10 @@ namespace Nemesis.TextParsers.Parsers
             private readonly ITransformer<TKey> _keyTransformer;
             private readonly ITransformer<TValue> _valueTransformer;
 
-            public KeyValuePairTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer)
+            public KeyValuePairTransformer(ITransformerStore transformerStore)
             {
-                _keyTransformer = keyTransformer;
-                _valueTransformer = valueTransformer;
+               _keyTransformer = transformerStore.GetTransformer<TKey>();
+                _valueTransformer = transformerStore.GetTransformer<TValue>();
             }
 
             protected override KeyValuePair<TKey, TValue> ParseCore(in ReadOnlySpan<char> input)
@@ -60,12 +60,12 @@ namespace Nemesis.TextParsers.Parsers
 
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
-            
+
             public override string Format(KeyValuePair<TKey, TValue> element)
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                
+
 
                 _helper.FormatElement(_keyTransformer, element.Key, ref accumulator);
                 _helper.AddDelimiter(ref accumulator);
@@ -79,6 +79,13 @@ namespace Nemesis.TextParsers.Parsers
             }
 
             public override string ToString() => $"Transform KeyValuePair<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>";
+
+
+            public override KeyValuePair<TKey, TValue> GetEmpty() =>
+                new KeyValuePair<TKey, TValue>(
+                    _keyTransformer.GetEmpty(),
+                    _valueTransformer.GetEmpty() 
+                );
         }
 
         public bool CanHandle(Type type) =>

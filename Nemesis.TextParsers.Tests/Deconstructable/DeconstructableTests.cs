@@ -18,6 +18,8 @@ recursive tests (,,, (,)) + test for no borders
     with empty text with no border. 
     with no border and trailing/leading spaces
 
+        get rid of Console.WriteLine + Is.EquivalentOf
+
 
         
         test all thrown exceptions in DecoTrans
