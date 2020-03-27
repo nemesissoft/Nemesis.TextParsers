@@ -28,118 +28,118 @@ namespace Nemesis.TextParsers.Tests
             return transformer;
         }
 
-        private static IEnumerable<(Type, object, string)> Correct_Tuple_Data() => new (Type, object, string)[]
+        private static IEnumerable<(ValueType instance, string input)> Correct_Tuple_Data() => new (ValueType, string)[]
         {
-            (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04=∅"),
-            (typeof(KeyValuePair<TimeSpan, int>), new KeyValuePair<TimeSpan, int>(TimeSpan.Zero, 15), @"∅=15"),
-            (typeof(KeyValuePair<TimeSpan?, int>), new KeyValuePair<TimeSpan?, int>(null, 15), @"∅=15"),
+            (new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04=∅"),
+            (new KeyValuePair<TimeSpan, int>(TimeSpan.Zero, 15), @"∅=15"),
+            (new KeyValuePair<TimeSpan?, int>(null, 15), @"∅=15"),
 
 
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("PI", 3.14f), @"PI=3.14"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("PI", null), @"PI=∅"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", 3.14f), @"=3.14"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), @"=∅"),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, 3.14f), @"∅=3.14"),
+            (new KeyValuePair<string, float?>("PI", 3.14f), @"PI=3.14"),
+            (new KeyValuePair<string, float?>("PI", null), @"PI=∅"),
+            (new KeyValuePair<string, float?>("", 3.14f), @"=3.14"),
+            (new KeyValuePair<string, float?>("", null), @"=∅"),
+            (new KeyValuePair<string, float?>(null, 3.14f), @"∅=3.14"),
 
 
-            (typeof(KeyValuePair<int, float?>), new KeyValuePair<int, float?>(0, null), null),
-            (typeof(KeyValuePair<int, float?>), new KeyValuePair<int, float?>(0, null), @""),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), null),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>("", null), @""),
-            (typeof(KeyValuePair<string, float?>), new KeyValuePair<string, float?>(null, null), @"∅=∅"),
-            (typeof(KeyValuePair<string, float>),  new KeyValuePair<string, float>(null, 0), @"∅=∅"),
+            (new KeyValuePair<int, float?>(0, null), null),
+            (new KeyValuePair<int, float?>(0, null), @""),
+            (new KeyValuePair<string, float?>(null, null), null),
+            (new KeyValuePair<string, float?>("", null), @""),
+            (new KeyValuePair<string, float?>(null, null), @"∅=∅"),
+            (new KeyValuePair<string, float>(null, 0), @"∅=∅"),
 
 
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, "PI"), @"3.14=PI"),
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(null, "PI"), @"∅=PI"),
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, ""), @"3.14="),
-            (typeof(KeyValuePair<float?, string>), new KeyValuePair<float?, string>(3.14f, null), @"3.14=∅"),
+            (new KeyValuePair<float?, string>(3.14f, "PI"), @"3.14=PI"),
+            (new KeyValuePair<float?, string>(null, "PI"), @"∅=PI"),
+            (new KeyValuePair<float?, string>(3.14f, ""), @"3.14="),
+            (new KeyValuePair<float?, string>(3.14f, null), @"3.14=∅"),
         
             //escaping tests
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(null, null), @"∅=∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅", null), @"\∅=∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" ∅ ", null), @" ∅ =∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" ∅ ", null), @" \∅ =∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"=", null), @"\==∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@" = ", null), @" \= =∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\", @"\=∅"), @"\∅\=\\\∅\=\\=\\\=\∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\,", @"\=∅"), @"\∅\=\\\∅\=\\,=\\\=\∅"),
-            (typeof(KeyValuePair<string, string>), new KeyValuePair<string, string>(@"∅=\∅=\, ", @" \=∅"), @"\∅\=\\\∅\=\\, = \\\=\∅"),
+            (new KeyValuePair<string, string>(null, null), @"∅=∅"),
+            (new KeyValuePair<string, string>(@"∅", null), @"\∅=∅"),
+            (new KeyValuePair<string, string>(@" ∅ ", null), @" ∅ =∅"),
+            (new KeyValuePair<string, string>(@" ∅ ", null), @" \∅ =∅"),
+            (new KeyValuePair<string, string>(@"=", null), @"\==∅"),
+            (new KeyValuePair<string, string>(@" = ", null), @" \= =∅"),
+            (new KeyValuePair<string, string>(@"∅=\∅=\", @"\=∅"), @"\∅\=\\\∅\=\\=\\\=\∅"),
+            (new KeyValuePair<string, string>(@"∅=\∅=\,", @"\=∅"), @"\∅\=\\\∅\=\\,=\\\=\∅"),
+            (new KeyValuePair<string, string>(@"∅=\∅=\, ", @" \=∅"), @"\∅\=\\\∅\=\\, = \\\=\∅"),
 
 
             //Tuples
-            (typeof(ValueTuple<TimeSpan>), new ValueTuple<TimeSpan>(new TimeSpan(3,14,15,9)), @"(3.14:15:09)"),
-            (typeof((TimeSpan, int)), (new TimeSpan(3,14,15,9), 3), @"(3.14:15:09,3)"),
-            (typeof((TimeSpan, int, float)), (new TimeSpan(3,14,15,9), 3, 3.14f), @"(3.14:15:09,3,3.14)"),
-            (typeof((TimeSpan, int, float, string)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi"), @"(3.14:15:09,3,3.14,Pi)"),
-            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)"),
-            (typeof((TimeSpan, int, float, string, decimal, bool)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true), @"(3.14:15:09,3,3.14,Pi,3.14,true)"),
-            (typeof((TimeSpan, int, float, string, decimal, bool, byte)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15), @"(3.14:15:09,3,3.14,Pi,3.14,true,15)"),
-            (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew))"),
-            (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode, int)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew, 89), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew\,89))"),
+            (new ValueTuple<TimeSpan>(new TimeSpan(3,14,15,9)), @"(3.14:15:09)"),
+            ((new TimeSpan(3,14,15,9), 3), @"(3.14:15:09,3)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f), @"(3.14:15:09,3,3.14)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi"), @"(3.14:15:09,3,3.14,Pi)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true), @"(3.14:15:09,3,3.14,Pi,3.14,true)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15), @"(3.14:15:09,3,3.14,Pi,3.14,true,15)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew))"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m, true, (byte)15, FileMode.CreateNew, 89), @"(3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew\,89))"),
 
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
+            ((TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
+            ((TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
             
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, "", 0m), @""),
-            (typeof((TimeSpan, int, float, string, decimal)), (TimeSpan.Zero, 0, 0f, (string)null, 0m), (string)null),
+            ((TimeSpan.Zero, 0, 0f, "", 0m), @""),
+            ((TimeSpan.Zero, 0, 0f, (string)null, 0m), (string)null),
 
-            (typeof((TimeSpan, int, float, string, decimal, byte)), (TimeSpan.Zero, 0, 0f, "", 0m, (byte)0), @""),
-            (typeof((TimeSpan, int, float, string, decimal, byte)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0), (string)null),
+            ((TimeSpan.Zero, 0, 0f, "", 0m, (byte)0), @""),
+            ((TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0), (string)null),
 
-            (typeof((TimeSpan, int, float, string, decimal, byte, bool)), (TimeSpan.Zero, 0, 0f, "", 0m, (byte)0, false), @""),
-            (typeof((TimeSpan, int, float, string, decimal, byte, bool)), (TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0, false), (string)null),
+            ((TimeSpan.Zero, 0, 0f, "", 0m, (byte)0, false), @""),
+            ((TimeSpan.Zero, 0, 0f, (string)null, 0m, (byte)0, false), (string)null),
 
-            (typeof((string, string, string, string, string)), (@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"(\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅)"),
+            ((@"∅\,", @",∅\", @"∅,\", @"\∅,", @",\∅"), @"(\∅\\\,,\,\∅\\,\∅\,\\,\\\∅\,,\,\\\∅)"),
 
-            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @" (3.14:15:09,3,3.14,Pi,3.14)"),
-            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @" (3.14:15:09,3,3.14,Pi,3.14)  "),
-            (typeof((TimeSpan, int, float, string, decimal)), (new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)  "),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @" (3.14:15:09,3,3.14,Pi,3.14)"),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @" (3.14:15:09,3,3.14,Pi,3.14)  "),
+            ((new TimeSpan(3,14,15,9), 3, 3.14f, "Pi", 3.14m), @"(3.14:15:09,3,3.14,Pi,3.14)  "),
 
-            (typeof((string, string)), ("A","B"), @"(A,B)"),
-            (typeof((string, string, string)), ("A","B","C"), @"(A,B,C)"),
-            (typeof((string, string, string, string)), ("A","B","C","D"), @"(A,B,C,D)"),
-            (typeof((string, string, string, string, string)), ("A","B","C","D","E"), @"(A,B,C,D,E)"),
+            (("A","B"), @"(A,B)"),
+            (("A","B","C"), @"(A,B,C)"),
+            (("A","B","C","D"), @"(A,B,C,D)"),
+            (("A","B","C","D","E"), @"(A,B,C,D,E)"),
             //rare case then brackets are actually used inside tuple values 
-            (typeof((string, string)), ("(A","B)"), @"((A,B))"),
-            (typeof((string, string, string)), ("(A","B","C)"), @"((A,B,C))"),
-            (typeof((string, string, string, string)), ("(A","B","(C)","D)"), @"((A,B,(C),D))"),
-            (typeof((string, string, string, string, string)), ("(A","(B","C)","D","E)"), @"((A,(B,C),D,E))"),
+            (("(A","B)"), @"((A,B))"),
+            (("(A","B","C)"), @"((A,B,C))"),
+            (("(A","B","(C)","D)"), @"((A,B,(C),D))"),
+            (("(A","(B","C)","D","E)"), @"((A,(B,C),D,E))"),
             //Tuple with tuple fields
-            (typeof( ((string, string), (string, string), string) ), (("N", "e"), ("s", "t") , "ed"), @"((N\,e),(s\,t),ed)"),
+            ((("N", "e"), ("s", "t") , "ed"), @"((N\,e),(s\,t),ed)"),
         };
 
         [TestCaseSource(nameof(Correct_Tuple_Data))]
-        public void TupleTransformer_CompoundTest((Type tupleType, object tuple, string input) data)
+        public void TupleTransformer_CompoundTest((ValueType instance, string input) data)
         {
             var tester = Method.OfExpression<Action<int, string>>(
                 (t, i) => TupleTransformer_CompoundTestHelper(t, i)
             ).GetGenericMethodDefinition();
 
-            tester = tester.MakeGenericMethod(data.tupleType);
+            tester = tester.MakeGenericMethod(data.instance.GetType());
 
-            tester.Invoke(null, new[] { data.tuple, data.input });
+            tester.Invoke(null, new object[] { data.instance, data.input });
         }
 
-        private static void TupleTransformer_CompoundTestHelper<TTuple>(TTuple tuple, string input)
+        private static void TupleTransformer_CompoundTestHelper<TTuple>(TTuple tuple, string input) where TTuple:struct
         {
-            var transformer = GetSut<TTuple>();
+            var sut = GetSut<TTuple>();
 
-            string textActual = transformer.Format(tuple);
+            string textActual = sut.Format(tuple);
 
 
-            var parsed1 = transformer.Parse(input);
+            var parsed1 = sut.Parse(input);
             Assert.That(parsed1, Is.EqualTo(tuple));
 
 
-            string text = transformer.Format(parsed1);
+            string text = sut.Format(parsed1);
 
 
-            var parsed2 = transformer.Parse(text);
+            var parsed2 = sut.Parse(text);
             Assert.That(parsed2, Is.EqualTo(tuple));
 
 
-            var parsed3 = transformer.Parse(textActual);
+            var parsed3 = sut.Parse(textActual);
             Assert.That(parsed3, Is.EqualTo(tuple));
 
 
@@ -149,7 +149,8 @@ namespace Nemesis.TextParsers.Tests
 
         private const string NO_PARENTHESES_ERROR =
             "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
-        internal static IEnumerable<(Type, string, Type, string)> Bad_Tuple_Data() => new[]
+        internal static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)> 
+            Bad_Tuple_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
             (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
@@ -216,13 +217,13 @@ namespace Nemesis.TextParsers.Tests
         
         private static void TupleTransformer_NegativeTest_Helper<TTuple>(string input, Type expectedException, string expectedErrorMessagePart)
         {
-            var transformer = GetSut<TTuple>();
+            var sut = GetSut<TTuple>();
 
             bool passed = false;
             object parsed = null;
             try
             {
-                parsed = transformer.Parse(input);
+                parsed = sut.Parse(input);
                 passed = true;
             }
             catch (Exception actual)
