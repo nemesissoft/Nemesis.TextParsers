@@ -30,7 +30,7 @@ namespace Nemesis.TextParsers.Tests
 
         [UsedImplicitly]
         public static LowPrecisionFloat FromText(ReadOnlySpan<char> text) => new LowPrecisionFloat(
-            SingleParser.ParseSingle(text)
+            SingleParser.Instance.Parse(text)
                 );
 
         private static bool AlmostEqualUlps(float a, float b, uint maxUlpsDiff = 100 * 1024)
