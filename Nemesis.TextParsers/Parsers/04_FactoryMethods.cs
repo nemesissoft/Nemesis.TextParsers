@@ -97,7 +97,7 @@ namespace Nemesis.TextParsers.Parsers
         
 
 
-        protected const string FACTORY_METHOD_NAME = nameof(ITextFactorySpan<object>.FromText);
+        protected const string FACTORY_METHOD_NAME = "FromText";
 
         private static bool FactoryMethodPredicate(MethodInfo m, Type returnType) =>
             m.Name == FACTORY_METHOD_NAME &&

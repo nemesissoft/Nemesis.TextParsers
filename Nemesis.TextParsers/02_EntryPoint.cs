@@ -50,13 +50,13 @@ namespace Nemesis.TextParsers
             var types = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
-            static ICanCreateTransformer CreateTransformer(Type type, ITransformerStore store)
+            static ICanCreateTransformer CreateTransformerCreator(Type type, ITransformerStore store)
             {
                 var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (ctors.Length != 1)
                     throw new NotSupportedException($"Only single constructor is supported for transformer creator: {type.GetFriendlyName()}");
 
-                var ctor = ctors.First();
+                var ctor = ctors[0];
                 var @params = ctor.GetParameters();
 
                 return @params.Length switch
@@ -77,7 +77,7 @@ namespace Nemesis.TextParsers
             transformerCreators.AddRange(
                 from type in types
                 where typeof(ICanCreateTransformer).IsAssignableFrom(type)
-                select CreateTransformer(type, store)
+                select CreateTransformerCreator(type, store)
             );
 
             if (!IsUnique(transformerCreators.Select(d => d.Priority)))

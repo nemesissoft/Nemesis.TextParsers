@@ -129,7 +129,12 @@ namespace Nemesis.TextParsers.Utils
                     ? GetSyntaxFromAttribute(factoryType, type)
                     : null;
 
-            if (TryConcat(fromType, fromConverter, fromTextFactory, out string message))
+            string fromTransformer =
+                type.GetCustomAttribute<TransformerAttribute>(true)?.TransformerType is { } transformerType
+                    ? GetSyntaxFromAttribute(transformerType, type)
+                    : null;
+
+            if (TryConcat(out string message, fromType, fromConverter, fromTextFactory, fromTransformer))
                 return message;
             else if (typeof(string) == type)
                 return "UTF-16 character string";
@@ -211,24 +216,17 @@ key1=value1;key2=value2;key3=value3
             }
         }
 
-        private static bool TryConcat(string fromType, string fromConverter, string fromTextFactory, out string message)
+        private static bool TryConcat(out string message, params string[] texts)
         {
             message = "";
 
-            if (!string.IsNullOrWhiteSpace(fromType))
-                message += fromType;
-            if (!string.IsNullOrWhiteSpace(fromConverter))
-            {
-                if (message.Length > 0)
-                    message += NL + NL;
-                message += fromConverter;
-            }
-            if (!string.IsNullOrWhiteSpace(fromTextFactory))
-            {
-                if (message.Length > 0)
-                    message += NL + NL;
-                message += fromTextFactory;
-            }
+            foreach (string text in texts)
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    if (message.Length > 0)
+                        message += NL + NL;
+                    message += text;
+                }
 
             return !string.IsNullOrWhiteSpace(message);
         }
