@@ -14,14 +14,16 @@ namespace Nemesis.TextParsers.Parsers
         public ITransformer<TTransformable> CreateTransformer<TTransformable>()
         {
             var transformable = typeof(TTransformable);
-            var transformerType = transformable.GetCustomAttribute<TransformerAttribute>()?.TransformerType;
+            var transformer = transformable.GetCustomAttribute<TransformerAttribute>()?.TransformerType;
 
-            if (transformerType == null || !transformerType.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
+            if (transformer == null ||
+                !IsTransformerSupported(transformable, transformer)
+            )
                 throw new NotSupportedException($"{transformable.GetFriendlyName()} is not supported by {nameof(TransformableCreator)}");
 
-            transformerType = PrepareGenericTransformer(transformable, transformerType);
+            transformer = PrepareGenericTransformer(transformable, transformer);
 
-            return (ITransformer<TTransformable>) CreateTransformer(transformerType, _transformerStore);
+            return (ITransformer<TTransformable>)CreateTransformer(transformer, _transformerStore);
         }
 
         private static ITransformer CreateTransformer(Type type, ITransformerStore store)
@@ -55,19 +57,31 @@ namespace Nemesis.TextParsers.Parsers
         }
 
 
-        public bool CanHandle(Type type) =>
-            type.GetCustomAttribute<TransformerAttribute>()?.TransformerType switch
+        public bool CanHandle(Type transformable) =>
+            transformable.GetCustomAttribute<TransformerAttribute>()?.TransformerType switch
             {
                 null => false,
-                { } tt when !tt.DerivesOrImplementsGeneric(typeof(ITransformer<>))
-                => throw new NotSupportedException(
-                    $"Transformer registered via {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)} has to implement {nameof(ITransformer<int>)}<>"),
+                { } transformer when !IsTransformerSupported(transformable, transformer) =>
+                throw new NotSupportedException(
+                    $"Transformer registered via {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)} has to implement {nameof(ITransformer<int>)}<>"
+                ),
                 _ => true
             };
 
+        private static bool IsTransformerSupported(in Type transformable, in Type transformer)
+        {
+            if (!transformer.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
+                return false;
+            else
+            {
+                var prepared = PrepareGenericTransformer(transformable, transformer);
+                return prepared.DerivesOrImplementsGeneric(typeof(ITransformer<>).MakeGenericType(transformable));
+            }
+        }
+
         public sbyte Priority => 15;
 
-        public override string ToString() => 
+        public override string ToString() =>
             $"Create transformer based on {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)}";
     }
 

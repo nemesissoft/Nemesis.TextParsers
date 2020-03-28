@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Buffers;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests.Transformable
 {
@@ -77,5 +81,80 @@ namespace Nemesis.TextParsers.Tests.Transformable
 
         public override ParsleyAndLeekFactors GetNull() =>
             new ParsleyAndLeekFactors(0, new[] { 0f, 0f });
+    }
+
+
+
+    //CustomList illustrates various aspects
+    //1. being able to transform interfaces/base classes 
+    [Transformer(typeof(CustomListTransformer<>))]
+    internal interface ICustomList<TElement> : IEnumerable<TElement>, IEquatable<ICustomList<TElement>>
+    {
+        bool IsNullContent { get; }
+    }
+
+    //2. concrete implementation does not need to register transformer, but it will only "inherit" transformers from it's base types, not interfaces 
+    internal class CustomList<TElement> : ICustomList<TElement>, IEquatable<ICustomList<TElement>>
+    {
+        private readonly IReadOnlyCollection<TElement> _collection;
+        public bool IsNullContent => _collection == null;
+
+        public CustomList(IReadOnlyCollection<TElement> collection) => _collection = collection;
+
+        public IEnumerator<TElement> GetEnumerator() => (_collection ?? Enumerable.Empty<TElement>()).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool Equals(ICustomList<TElement> other) =>
+            EnumerableEqualityComparer<TElement>.DefaultInstance.Equals(this, other);
+
+        public override bool Equals(object obj) =>
+            !(obj is null) && (ReferenceEquals(this, obj) || obj is CustomList<TElement> list && Equals(list));
+
+        public override int GetHashCode() => _collection?.GetHashCode() ?? 0;
+    }
+
+    internal class CustomListTransformer<TElement> : TransformerBase<ICustomList<TElement>>
+    {
+        //3. Transformable aspect support simple injection of ITransformerStore via it's constructor 
+        private readonly ITransformerStore _transformerStore;
+        public CustomListTransformer(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+
+
+        protected override ICustomList<TElement> ParseCore(in ReadOnlySpan<char> text)
+        {
+            //4. since we are parsing interface, implementers need to provide way to choose concrete implementation
+            //i.e. by saving type name if front of serialized message 
+            //Here we take one type to simplify implementation 
+            if (text.IsEmpty)
+                return new CustomList<TElement>(Array.Empty<TElement>());
+
+            var stream = text.Split(';').GetEnumerator();
+            var parser = _transformerStore.GetTransformer<TElement>();
+
+            var initialBuffer = ArrayPool<TElement>.Shared.Rent(16);
+            try
+            {
+                using var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
+
+                while (stream.MoveNext())
+                    accumulator.Append(parser.Parse(stream.Current));
+
+                return new CustomList<TElement>(accumulator.AsSpan().ToArray());
+            }
+            finally
+            {
+                ArrayPool<TElement>.Shared.Return(initialBuffer);
+            }
+        }
+
+        public override string Format(ICustomList<TElement> list) =>
+            list.IsNullContent ? null : string.Join("; ", list);
+
+
+        public override ICustomList<TElement> GetEmpty() =>
+            new CustomList<TElement>(new TElement[0]);
+
+        public override ICustomList<TElement> GetNull() =>
+            new CustomList<TElement>(null);
     }
 }

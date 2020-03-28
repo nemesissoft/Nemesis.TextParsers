@@ -34,6 +34,9 @@ namespace Nemesis.TextParsers.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Pop() => _current[--Length];
 
+        /// <summary>
+        /// Return values written so far to underlying memory 
+        /// </summary>
         public readonly ReadOnlySpan<T> AsSpan() => _current.Slice(0, Length);
 
         public readonly ReadOnlySpan<T> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
