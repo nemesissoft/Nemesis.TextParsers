@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers.Tests
             var actual = coll.ToList();
             Assert.That(actual, Has.Count.EqualTo(1));
 
-            Assert.That(actual, Is.EquivalentTo(new[] { 15.5f }));
+            Assert.That(actual, Is.EqualTo(new[] { 15.5f }));
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace Nemesis.TextParsers.Tests
             var actual = coll.ToList();
             Assert.That(actual, Has.Count.EqualTo(2));
 
-            Assert.That(actual, Is.EquivalentTo(new[] { 15.5f, 25.6f }));
+            Assert.That(actual, Is.EqualTo(new[] { 15.5f, 25.6f }));
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace Nemesis.TextParsers.Tests
             var actual = coll.ToList();
             Assert.That(actual, Has.Count.EqualTo(3));
 
-            Assert.That(actual, Is.EquivalentTo(new[] { 15.5f, 25.6f, 35.99f }));
+            Assert.That(actual, Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f }));
         }
 
         [TestCase(null, 0)]
@@ -67,7 +67,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Has.Count.EqualTo(expectedLength));
 
             if (elements != null)
-                Assert.That(actual, Is.EquivalentTo(elements));
+                Assert.That(actual, Is.EqualTo(elements));
         }
 
         [Test]
@@ -146,11 +146,13 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new[] { 1f, 8, 9, 5, 3, 4 }, new[] { 1.0f, 3.0f, 4.0f, 5.0f, 8.0f, 9.0f })]
         public void SortTest(float[] elements, float[] expectedElements)
         {
-            var coll1 = LeanCollectionFactory.FromArray(elements);
+            var test = LeanCollectionFactory.FromArray(elements);
 
-            coll1.Sort();
+            var actual = test.Sort().ToList();
 
-            Assert.That(coll1.ToList(), Is.EquivalentTo(expectedElements));
+            Assert.That(actual, Is.EqualTo(expectedElements));
+
+            Assert.That(actual, Is.Ordered);
         }
     }
 }

@@ -10,22 +10,13 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
-                  
-    with (', null) sequence. 
-    with '' empty tuple. 
-    with empty text with no border. 
-    with no border and trailing/leading spaces
+            empty Nullable<> aspect  + tests (person with null marker in name) + tests for null
 
-        get rid of  Is.EquivalentOf=> EqualsTo
 
-        empty Nullable<> aspect  + tests (person with null marker in name) + tests for null
-        improve AB<T> factory 
-
-        
-        test all thrown exceptions in DecoTrans
-        test TupleHelper +test all thrown exceptions
-update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
-    */
+    test all thrown exceptions in DecoTrans
+    test TupleHelper +test all thrown exceptions
+    update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
+        */
     [TestFixture]
     internal class DeconstructableTests
     {
@@ -40,6 +31,8 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             new TCD(typeof(Address), new Address("Wrocław)", 52200), @"(Wrocław);52200)"),
             new TCD(typeof(Address), new Address("(Wrocław)", 52200), @"((Wrocław);52200)"),
             new TCD(typeof(Address), new Address("A", 1), @"(A;1)"),
+            new TCD(typeof(Address), new Address(null, 1), @"(∅;1)"),
+            new TCD(typeof(Address), new Address("", 1), @"(;1)"),
             new TCD(typeof(Person), new Person("Mike", 36, new Address("Wrocław", 52200)), @"(Mike;36;(Wrocław\;52200))"),
 
             new TCD(typeof(LargeStruct), LargeStruct.Sample, @"(3.14159265;2.718282;-123456789;123456789;-1234;1234;127;-127;-4611686018427387904;9223372036854775807;23.14069263;123456789012345678901234567890;(3.14159265\; 2.71828183))"),
@@ -112,12 +105,28 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         [Test]
         public void ParseAndFormat_NoBorders()
         {
+            //this is just to test normal (bordered) behaviour 
+            ParseHelper(
+                new ThreeStrings("A", "B", "C"), @"    [A;B;C]   ",
+                s => s.WithBorders('[', ']'));
+            
             FormatAndParseHelper(
                 new ThreeStrings("A", "B", "C"), @"A;B;C",
                 s => s.WithoutBorders());
 
             FormatAndParseHelper(
                 new ThreeStrings(" A", "B", "C "), @" A;B;C ",
+                s => s.WithoutBorders());
+
+
+
+
+            ParseHelper(
+                new ThreeStrings("", "", ""), @"    [;;]   ",
+                s => s.WithBorders('[', ']'));
+
+            ParseHelper(
+                new ThreeStrings("", "", ""), @";;",
                 s => s.WithoutBorders());
         }
 

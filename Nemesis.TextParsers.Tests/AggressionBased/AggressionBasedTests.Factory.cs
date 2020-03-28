@@ -61,7 +61,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
 
             var values = ((IAggressionValuesProvider<TElement>)actual).Values;
-            Assert.That(values, Is.EquivalentTo(expectedOutput));
+            Assert.That(values, Is.EqualTo(expectedOutput));
         }
 
         private static IEnumerable<(string inputText, IEnumerable<int> inputValues, string expectedOutput, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues)> ValidValuesForFactory()
@@ -87,7 +87,7 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual.ToString(), Is.EqualTo(data.expectedOutput));
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EquivalentTo(data.expectedValuesCompacted));
+            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValuesCompacted));
         }
 
         [TestCaseSource(nameof(ValidValuesForFactory))]
@@ -97,7 +97,7 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual, Is.Not.Null);
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EquivalentTo(data.expectedValues));
+            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValues));
         }
 
         private static IEnumerable<IEnumerable<int>> FromValues_Invalid() => new IEnumerable<int>[]

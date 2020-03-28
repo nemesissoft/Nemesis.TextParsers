@@ -28,7 +28,7 @@ namespace Nemesis.TextParsers.Tests
                 actual.Add(part.ToString());
 
             string[] expected = str == "" ? new string[0] : str.Split(separator);
-            Assert.That(actual, Is.EquivalentTo(expected));
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [TestCase(",,", ',')]
@@ -48,7 +48,7 @@ namespace Nemesis.TextParsers.Tests
                 actual.Add(part.ToString());
 
             string[] expected = str.Split(separator);
-            Assert.That(actual, Is.EquivalentTo(expected));
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [TestCase(",,;,,", ',', ';')]
@@ -72,7 +72,7 @@ namespace Nemesis.TextParsers.Tests
                 actual.Add(part.ToString());
 
             string[] expected = str.Split(separator1, separator2);
-            Assert.That(actual, Is.EquivalentTo(expected));
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [TestCase(",|,;,,", ',', ';', '|')]
@@ -98,26 +98,26 @@ namespace Nemesis.TextParsers.Tests
                 actual.Add(part.ToString());
 
             string[] expected = str.Split(separator1, separator2, separator3);
-            Assert.That(actual, Is.EquivalentTo(expected));
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
-        [TestCase(",|/,;/,,", ',', ';', '|', '/')]
-        [TestCase("", 'a', ';', '|', '/')]
-        [TestCase("a", 'a', ';', '|', '/')]
-        [TestCase("aaaa", 'a', ';', '|', '/')]
-        [TestCase("aa;aa", 'a', ';', '|', '/')]
-        [TestCase("ab|a/b||a/b|ab", 'a', ';', '|', '/')]
-        [TestCase("ab/a;b|a;bab", 'a', ';', '|', '/')]
-        [TestCase("bab|ab/aba", 'a', ';', '|', '/')]
-        [TestCase("ba//b/ababa", 'a', ';', '|', '/')]
-        [TestCase("ba//ba;ba|ba/", 'a', ';', '|', '/')]
-        [TestCase("/aaa;aa|b/", 'a', ';', '|', '/')]
-        [TestCase("/baa;aaa/", 'a', ';', '|', '/')]
-        [TestCase("z/zz;zz/azzz/z;456|azz/zzazzz/|/", 'a', ';', '|', '/')]
-        [TestCase("|/zzz|;zzazzzzaz;|zzz/azzz/|", 'a', ';', '|', '/')]
-        [TestCase("1/23,;|45/6,/", ',', ';', '|', '/')]
-        [TestCase("/,;|/,;|/,;|/", ',', ';', '|', '/')]
-        public void SplitNTest(string str, char separator1, char separator2, char separator3, char separator4)
+        [TestCase(01, ",|/,;/,,", ',', ';', '|', '/')]
+        [TestCase(02, "", 'a', ';', '|', '/')]
+        [TestCase(03, "a", 'a', ';', '|', '/')]
+        [TestCase(04, "aaaa", 'a', ';', '|', '/')]
+        [TestCase(05, "aa;aa", 'a', ';', '|', '/')]
+        [TestCase(06, "ab|a/b||a/b|ab", 'a', ';', '|', '/')]
+        [TestCase(07, "ab/a;b|a;bab", 'a', ';', '|', '/')]
+        [TestCase(08, "bab|ab/aba", 'a', ';', '|', '/')]
+        [TestCase(09, "ba//b/ababa", 'a', ';', '|', '/')]
+        [TestCase(10, "ba//ba;ba|ba/", 'a', ';', '|', '/')]
+        [TestCase(11, "/aaa;aa|b/", 'a', ';', '|', '/')]
+        [TestCase(12, "/baa;aaa/", 'a', ';', '|', '/')]
+        [TestCase(13, "z/zz;zz/azzz/z;456|azz/zzazzz/|/", 'a', ';', '|', '/')]
+        [TestCase(14, "|/zzz|;zzazzzzaz;|zzz/azzz/|", 'a', ';', '|', '/')]
+        [TestCase(15, "1/23,;|45/6,/", ',', ';', '|', '/')]
+        [TestCase(16, "/,;|/,;|/,;|/", ',', ';', '|', '/')]
+        public void SplitNTest(int _, string str, char separator1, char separator2, char separator3, char separator4)
         {
             var actual = new List<string>();
             ReadOnlySpan<char> separators = stackalloc char[] { separator1, separator2, separator3, separator4 };
@@ -125,7 +125,7 @@ namespace Nemesis.TextParsers.Tests
                 actual.Add(part.ToString());
 
             string[] expected = str.Split(separator1, separator2, separator3, separator4);
-            Assert.That(actual, Is.EquivalentTo(expected));
+            Assert.That(actual, Is.EqualTo(expected));
         }
     }
 }

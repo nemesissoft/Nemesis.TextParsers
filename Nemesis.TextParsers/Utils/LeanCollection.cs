@@ -126,26 +126,27 @@ namespace Nemesis.TextParsers.Utils
                 }
                 else
                 {
-                    if (_index == -1 && _leanCollection._size >= CollectionSize.One)
+                    switch (_index)
                     {
-                        Current = _leanCollection._item1;
-                        canMove = true;
-                        --_index;
+                        case -1 when _leanCollection._size >= CollectionSize.One:
+                            Current = _leanCollection._item1;
+                            canMove = true;
+                            --_index;
+                            break;
+                        case -2 when _leanCollection._size >= CollectionSize.Two:
+                            Current = _leanCollection._item2;
+                            canMove = true;
+                            --_index;
+                            break;
+                        case -3 when _leanCollection._size >= CollectionSize.Three:
+                            Current = _leanCollection._item3;
+                            canMove = true;
+                            --_index;
+                            break;
+                        default:
+                            Current = default;
+                            break;
                     }
-                    else if (_index == -2 && _leanCollection._size >= CollectionSize.Two)
-                    {
-                        Current = _leanCollection._item2;
-                        canMove = true;
-                        --_index;
-                    }
-                    else if (_index == -3 && _leanCollection._size >= CollectionSize.Three)
-                    {
-                        Current = _leanCollection._item3;
-                        canMove = true;
-                        --_index;
-                    }
-                    else
-                        Current = default;
                 }
                 return canMove;
             }
@@ -209,6 +210,7 @@ namespace Nemesis.TextParsers.Utils
 
         public override string ToString() => SpanCollectionSerializer.DefaultInstance.FormatCollection(this);
 
+        [Pure]
         public LeanCollection<T> Sort(IComparer<T> comparer = null)
         {
             var size = _size;

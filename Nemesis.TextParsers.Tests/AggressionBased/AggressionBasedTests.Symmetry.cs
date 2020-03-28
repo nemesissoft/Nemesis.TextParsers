@@ -125,10 +125,10 @@ namespace Nemesis.TextParsers.Tests
                             Check(8, 2);
                         }
                         else
-                            Assert.That(fullValues, Is.EquivalentTo(compactValues).Using(equalityComparer));
+                            Assert.That(fullValues, Is.EqualTo(compactValues).Using(equalityComparer));
                         break;
                     case 9:
-                        Assert.That(fullValues, Is.EquivalentTo(compactValues).Using(equalityComparer));
+                        Assert.That(fullValues, Is.EqualTo(compactValues).Using(equalityComparer));
                         break;
                     default:
                         Assert.Fail("Not expected test case data");
@@ -141,7 +141,7 @@ namespace Nemesis.TextParsers.Tests
                 var v1 = ((IAggressionValuesProvider<TElement>)ab1).Values;
                 var v2 = ((IAggressionValuesProvider<TElement>)ab2).Values;
 
-                Assert.That(v1, Is.EquivalentTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
+                Assert.That(v1, Is.EqualTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
             }
 
             var ab1 = AggressionBasedFactoryChecked<TElement>.FromText(inputText.AsSpan());

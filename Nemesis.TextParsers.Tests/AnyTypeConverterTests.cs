@@ -22,7 +22,7 @@ namespace Nemesis.TextParsers.Tests
             var actual = actualTexts.Select(text => sut.Parse(text)).ToList();
 
 
-            Assert.That(actual, Is.EquivalentTo(data));
+            Assert.That(actual, Is.EqualTo(data));
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace Nemesis.TextParsers.Tests
             var actual = sut.Parse(actualText);
 
 
-            Assert.That(actual, Is.EquivalentTo(data));
+            Assert.That(actual, Is.EqualTo(data));
         }
 
         [Test]

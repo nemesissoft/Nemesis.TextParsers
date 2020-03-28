@@ -52,7 +52,7 @@ namespace Nemesis.TextParsers.Tests
             if (data.expectedDict == null)
                 Assert.That(result, Is.Null);
             else
-                Assert.That(result, Is.EquivalentTo(data.expectedDict));
+                Assert.That(result, Is.EqualTo(data.expectedDict));
 
             /*if (data.expectedDict == null)
                 Console.WriteLine(@"NULL dictionary");
@@ -85,7 +85,7 @@ namespace Nemesis.TextParsers.Tests
 
             var actual = ParseDictionary<int, TimeSpan>("1=1.02:03:04;2=2.03:04:05;3=3.04:05:06;4=4.05:06:07;5=5.06:07:08");
 
-            Assert.That(actual, Is.EquivalentTo(expected));
+            Assert.That(actual, Is.EqualTo(expected));
         }
     }
 }
