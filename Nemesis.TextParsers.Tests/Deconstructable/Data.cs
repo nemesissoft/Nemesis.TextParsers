@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Parsers;
 using TCD = NUnit.Framework.TestCaseData;
 using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
 
@@ -202,35 +203,61 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         }
     }
 
-    internal readonly struct DataWithCustomDeconstructableTransformer
+    [Transformer(typeof(DeconstructableTransformer))]
+    internal readonly struct DataWithCustomDeconstructableTransformer : IEquatable<DataWithCustomDeconstructableTransformer>
     {
         public float Number { get; }
         public bool IsEnabled { get; }
+        public decimal[] Prices { get; }
 
-        public DataWithCustomDeconstructableTransformer(float number, bool isEnabled)
+        public DataWithCustomDeconstructableTransformer(float number, bool isEnabled, decimal[] prices)
         {
             Number = number;
             IsEnabled = isEnabled;
+            Prices = prices;
         }
 
         [UsedImplicitly]
-        public void Deconstruct(out float number, out bool isEnabled)
+        public void Deconstruct(out float number, out bool isEnabled, out decimal[] prices)
         {
             number = Number;
             isEnabled = IsEnabled;
+            prices = Prices;
         }
 
-        //create custom deconstructable transformer  
-        private static readonly ITransformer<DataWithCustomDeconstructableTransformer> _transformer =
-            Sett.Default
+        public bool Equals(DataWithCustomDeconstructableTransformer other) =>
+            Number.Equals(other.Number) && IsEnabled == other.IsEnabled &&
+            EnumerableEqualityComparer<decimal>.DefaultInstance.Equals(Prices, other.Prices);
+
+        public override bool Equals(object obj) =>
+            obj is DataWithCustomDeconstructableTransformer other && Equals(other);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = Number.GetHashCode();
+                hashCode = (hashCode * 397) ^ IsEnabled.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Prices != null ? Prices.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+    }
+
+    internal class DeconstructableTransformer : CustomDeconstructionTransformer<DataWithCustomDeconstructableTransformer>
+    {
+        public DeconstructableTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
+
+        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
+            => prototype
                 .WithBorders('{', '}')
                 .WithDelimiter('_')
-                .ToTransformer<DataWithCustomDeconstructableTransformer>(TextTransformer.Default);
+                .WithNullElementMarker('␀')
+                .WithDeconstructableEmpty() //default value but just to be clear 
+        ;
 
-
-        [UsedImplicitly]
-        public static DataWithCustomDeconstructableTransformer FromText(ReadOnlySpan<char> text) => _transformer.Parse(text);
-        public override string ToString() => _transformer.Format(this);
+        public override DataWithCustomDeconstructableTransformer GetNull() =>
+            new DataWithCustomDeconstructableTransformer(666, true, new decimal[] { 6, 7, 8, 9 });
     }
 
 

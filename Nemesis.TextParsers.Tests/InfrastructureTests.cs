@@ -387,7 +387,7 @@ namespace Nemesis.TextParsers.Tests
         //And have a look at DateTime.Now ;-)
         public static EmptyConventionBase Empty => new EmptyFactoryMethodConvention(3.14f, DateTime.Now);
 
-        //this is just to conform to FactoryMethod convention 
+        //this is just to conform to FactoryMethod convention - will not be used 
         [UsedImplicitly]
         public static EmptyFactoryMethodConvention FromText(ReadOnlySpan<char> text) => 
             throw new NotSupportedException("Class should only be used for empty value tests");

@@ -47,7 +47,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         };
 
         [TestCaseSource(nameof(CorrectData))]
-        public void ParseAndFormat(Type type, object instance, string text)
+        public void FormatAndParse(Type type, object instance, string text)
         {
             var tester = Method.OfExpression<Action<object, string, Func<Sett, Sett>>>(
                 (i, t, m) => FormatAndParseHelper(i, t, m)
@@ -190,19 +190,34 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         }
 
 
-        [Test]
-        public void Custom_ConventionTransformer_BasedOnDeconstructable()
+        internal static IEnumerable<TCD> CustomDeconstructable_Data() => new[]
+        {
+            new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, new decimal[]{10,20,30}), @"{3.14_False_10|20|30}"),
+            new TCD(new DataWithCustomDeconstructableTransformer(666, true, new decimal[]{6,7,8,9 }), null), //overriden by custom transformer 
+            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), ""), //overriden by deconstructable aspect convention
+            
+            new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, null), @"{3.14_False_␀}"),
+            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_False_␀}"),
+            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_␀_␀}"),
+            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), @"{__}"),
+            
+        };
+
+        [TestCaseSource(nameof(CustomDeconstructable_Data))]
+        public void Custom_ConventionTransformer_BasedOnDeconstructable(DataWithCustomDeconstructableTransformer instance, string text)
         {
             var sut = _transformerStore.GetTransformer<DataWithCustomDeconstructableTransformer>();
-            var instance = new DataWithCustomDeconstructableTransformer(3.14f, false);
-            var text = @"{3.14_False}";
 
-            var actualFormatted = sut.Format(instance);
-            Assert.That(actualFormatted, Is.EqualTo(text));
-
-
+            
             var actualParsed1 = sut.Parse(text);
-            var actualParsed2 = sut.Parse(actualFormatted);
+            
+            var formattedInstance = sut.Format(instance);
+            var formattedActualParsed1 = sut.Format(actualParsed1);
+            
+            Assert.That(formattedActualParsed1, Is.EqualTo(formattedInstance));
+
+            var actualParsed2 = sut.Parse(formattedInstance);
+
             IsMutuallyEquivalent(actualParsed1, instance);
             IsMutuallyEquivalent(actualParsed2, instance);
             IsMutuallyEquivalent(actualParsed1, actualParsed2);

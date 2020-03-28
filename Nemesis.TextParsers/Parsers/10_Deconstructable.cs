@@ -7,7 +7,6 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
-
 using S = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
 
 namespace Nemesis.TextParsers.Parsers
@@ -51,6 +50,7 @@ namespace Nemesis.TextParsers.Parsers
         public char EscapingSequenceStart { get; private set; } = '\\';
         public char? Start { get; private set; } = '(';
         public char? End { get; private set; } = ')';
+        public bool UseDeconstructableEmpty { get; private set; } = true;
 
         public DeconstructionMethod Mode { get; private set; } = DeconstructionMethod.DefaultConstructorDeconstructPair;
         public MethodInfo Deconstruct { get; private set; }
@@ -59,7 +59,8 @@ namespace Nemesis.TextParsers.Parsers
         public override string ToString() =>
             $@"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}' Mode = {Mode}. 
 Deconstructed by {(Deconstruct == null ? "<default>" : $"{Deconstruct.DeclaringType.GetFriendlyName()}.{Deconstruct.Name}({string.Join(", ", Deconstruct.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}. 
-Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFriendlyName()}({string.Join(", ", Ctor.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}.";
+Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFriendlyName()}({string.Join(", ", Ctor.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}. 
+{(UseDeconstructableEmpty ? "With" : "Without")} deconstructable empty generator. ";
 
         private DeconstructionTransformerSettings() { }
         /// <summary>
@@ -109,7 +110,12 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             return this;
         }
-
+ 
+        [PublicAPI]
+        public S WithDeconstructableEmpty() { UseDeconstructableEmpty = true; return this; }
+        
+        [PublicAPI]
+        public S WithoutDeconstructableEmpty() { UseDeconstructableEmpty = false; return this; }
         #endregion
 
 
@@ -185,7 +191,9 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);
             var formatter = DeconstructionTransformer<TDeconstructable>.CreateFormatter(deconstruct);
-            var emptyGenerator = DeconstructionTransformer<TDeconstructable>.CreateEmptyGenerator(ctor, transformerStore);
+            var emptyGenerator = UseDeconstructableEmpty
+                ? DeconstructionTransformer<TDeconstructable>.CreateEmptyGenerator(ctor, transformerStore)
+                : null;
 
             return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter, emptyGenerator);
         }
@@ -267,7 +275,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         private readonly EmptyGenerator _emptyGenerator;
 
         internal DeconstructionTransformer(TupleHelper helper, [NotNull] ITransformer[] transformers,
-            [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, [NotNull] EmptyGenerator emptyGenerator)
+            [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
         {
             _helper = helper != default
                 ? helper
@@ -276,7 +284,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             _transformers = transformers ?? throw new ArgumentNullException(nameof(transformers));
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));
             _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
-            _emptyGenerator = emptyGenerator ?? throw new ArgumentNullException(nameof(emptyGenerator));
+
+            _emptyGenerator = emptyGenerator;
         }
 
         /*
@@ -402,7 +411,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 var decoSourceType = deconstruct.GetParameters()[0].ParameterType;
 
                 return element.Type == decoSourceType
-                    ? (Expression) element
+                    ? (Expression)element
                     : Expression.Convert(element, decoSourceType);
             }
 
@@ -533,7 +542,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         public override string Format(TDeconstructable element) =>
             element is null ? null : _formatter(element, _helper, _transformers);
 
-        public override TDeconstructable GetEmpty() => _emptyGenerator();
+        public override TDeconstructable GetEmpty() =>
+            _emptyGenerator != null ? _emptyGenerator() : base.GetEmpty();
 
         public override string ToString()
         {
@@ -549,7 +559,41 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             }
 
             return
-                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()})";
+                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()}).";
         }
+    }
+
+    public abstract class CustomDeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
+    {
+        private readonly string _description;
+        private readonly ITransformer<TDeconstructable> _transformer;
+
+        /// <summary>
+        /// Create base class that bounds 2 aspects - Deconstructable and Transformable 
+        /// </summary>
+        /// <param name="transformerStore">When used in standard way - this parameter gets injected by default</param>
+        protected CustomDeconstructionTransformer([NotNull] ITransformerStore transformerStore)
+        {
+            if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
+            var settings = S.Default;
+            settings = BuildSettings(settings);
+
+            _transformer = settings.ToTransformer<TDeconstructable>(transformerStore);
+
+            _description = $"{_transformer} Based on:{Environment.NewLine}{settings}";
+        }
+
+        protected abstract S BuildSettings(S prototype);
+
+        protected sealed override TDeconstructable ParseCore(in ReadOnlySpan<char> input) => 
+            _transformer.Parse(input);
+
+        public sealed override string Format(TDeconstructable element) => 
+            _transformer.Format(element);
+
+        public override TDeconstructable GetEmpty() => 
+            _transformer.GetEmpty();
+            
+        public sealed override string ToString() => _description;
     }
 }
