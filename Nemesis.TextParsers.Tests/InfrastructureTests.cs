@@ -135,21 +135,20 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void IsSupportedForTransformation_Exploratory()
         {
-            static string ToTick(bool result) => result ? "✔" : "✖";
+            //static string ToTick(bool result) => result ? "✔" : "✖";
+            //Console.WriteLine($"{ToTick(actual)} as{(pass ? " " : " NOT ")}expected for {type.GetFriendlyName()}");
 
-            var allPassed = true;
-            foreach ((var type, bool expected) in GetIsSupportedCases())
-            {
-                bool actual = TextTransformer.Default.IsSupportedForTransformation(type);
+            var expected = GetIsSupportedCases().ToList();
+            
+            var actual = expected
+                .Select(td => td.type)
+                .Select(type => (
+                    type,
+                    actual: TextTransformer.Default.IsSupportedForTransformation(type)
+                )).ToList();
 
-                bool pass = actual == expected;
 
-                Console.WriteLine($"{ToTick(actual)} as{(pass ? " " : " NOT ")}expected for {type.GetFriendlyName()}");
-
-                if (!pass)
-                    allPassed = false;
-            }
-            Assert.IsTrue(allPassed);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
 

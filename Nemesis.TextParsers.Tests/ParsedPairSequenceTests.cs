@@ -54,14 +54,13 @@ namespace Nemesis.TextParsers.Tests
             else
                 Assert.That(result, Is.EquivalentTo(data.expectedDict));
 
-
-            if (data.expectedDict == null)
+            /*if (data.expectedDict == null)
                 Console.WriteLine(@"NULL dictionary");
             else if (!data.expectedDict.Any())
                 Console.WriteLine(@"Empty dictionary");
             else
                 foreach (var kvp in data.expectedDict)
-                    Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");
+                    Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");*/
         }
 
         [TestCase(@"key1")]//no value
@@ -74,24 +73,8 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"∅")]//null dictionary can only be mapped as null string 
         public void Dict_Parse_NegativeTest(string input)
         {
-            try
-            {
-                var result = ParseDictionary<string, string>(input).ToList();
-                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(kvp => $"[{kvp.Key}] = '{kvp.Value}'"))}");
-            }
-            catch (ArgumentException ae) when (ae.TargetSite?.Name == "ParsePair")
-            {
-                Console.WriteLine($@"Expected exception from implementation: {ae.Message}");
-            }
-            catch (ArgumentException ae)
-            {
-                Console.WriteLine($@"Expected external exception: {ae.Message}");
-            }
-            catch (Exception e)
-            {
-                Assert.Fail($@"Unexpected external exception: {e.Message}");
-            }
-
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            Assert.Throws<ArgumentException>(() => ParseDictionary<string, string>(input).ToList());
         }
 
         [Test]

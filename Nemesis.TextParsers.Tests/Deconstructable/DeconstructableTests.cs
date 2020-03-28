@@ -10,15 +10,16 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
-          
-        
+                  
     with (', null) sequence. 
     with '' empty tuple. 
     with empty text with no border. 
     with no border and trailing/leading spaces
 
-        get rid of Console.WriteLine + Is.EquivalentOf
+        get rid of  Is.EquivalentOf=> EqualsTo
 
+        empty Nullable<> aspect  + tests (person with null marker in name) + tests for null
+        improve AB<T> factory 
 
         
         test all thrown exceptions in DecoTrans

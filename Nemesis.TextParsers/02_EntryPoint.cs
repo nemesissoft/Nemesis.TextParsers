@@ -26,7 +26,6 @@ namespace Nemesis.TextParsers
     }
 
     //TODO CreateTransformer() with context - relation to parent ITransformerStore 
-    //TODO implement ReadOnlyStore:ITransformerStore (with with Dictionary cache) in Test project
     internal sealed class StandardTransformerStore : ITransformerStore
     {
         private readonly IEnumerable<ICanCreateTransformer> _transformerCreators;

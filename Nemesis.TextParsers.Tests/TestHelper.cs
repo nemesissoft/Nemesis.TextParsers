@@ -9,7 +9,7 @@ namespace Nemesis.TextParsers.Tests
 {
     internal class TestHelper
     {
-        public static void AssertException(Exception actual, Type expectedException, string expectedErrorMessagePart, bool logMessage = false)
+        public static string AssertException(Exception actual, Type expectedException, string expectedErrorMessagePart, bool logMessage = false)
         {
             if (actual is TargetInvocationException tie && tie.InnerException is { } inner)
                 actual = inner;
@@ -22,7 +22,7 @@ namespace Nemesis.TextParsers.Tests
                     Does.Contain(IgnoreNewLinesComparer.NormalizeNewLines(expectedErrorMessagePart))
                 );
 
-            if (!logMessage) return;
+            if (!logMessage) return "";
 
             string message = actual switch
             {
@@ -33,7 +33,7 @@ namespace Nemesis.TextParsers.Tests
                 _ => $"Expected other: {actual?.Message}"
             };
 
-            Console.WriteLine(message);
+            return message;
         }
 
         public static void IsMutuallyEquivalent(object o1, object o2, string because = "")

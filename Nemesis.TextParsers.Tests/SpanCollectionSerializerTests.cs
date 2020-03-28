@@ -97,13 +97,13 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(result, Is.EqualTo(data.expectedList));
 
 
-            if (data.expectedList == null)
+            /*if (data.expectedList == null)
                 Console.WriteLine(@"NULL list");
             else if (!data.expectedList.Any())
                 Console.WriteLine(@"Empty list");
             else
                 foreach (string elem in data.expectedList)
-                    Console.WriteLine($@"'{elem ?? "<null>"}'");
+                    Console.WriteLine($@"'{elem ?? "<null>"}'");*/
         }
 
         [TestCaseSource(nameof(ValidListData))]
@@ -119,9 +119,7 @@ namespace Nemesis.TextParsers.Tests
                 var expectedOutput = NormalizeNullMarkers(data.expectedOutput);
                 Assert.That(result, Is.EqualTo(expectedOutput));
             }
-
-            Console.WriteLine($@"'{result ?? "<null>"}'");
-
+            //Console.WriteLine($@"'{result ?? "<null>"}'");
         }
 
         #region Negative tests
@@ -134,24 +132,9 @@ namespace Nemesis.TextParsers.Tests
         #endregion
         public void List_Parse_NegativeTest(string input)
         {
-            try
-            {
-                var result = _sut.ParseCollection<string>(input);
-                //Console.WriteLine(string.Join(Environment.NewLine, result));
-                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(r => $"'{r}'"))}");
-            }
-            catch (ArgumentException ae) when (ae.TargetSite?.Name == nameof(_sut.ParseCollection) || ae.TargetSite?.Name == nameof(_sut.ParseStream))
-            {
-                Console.WriteLine($@"Expected exception from implementation: {ae.Message}");
-            }
-            catch (ArgumentException ae)
-            {
-                Console.WriteLine($@"Expected external exception: {ae.Message}");
-            }
-            catch (Exception e)
-            {
-                Assert.Fail($@"Unexpected external exception: {e.Message}");
-            }
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            Assert.Throws<ArgumentException>(() => _sut.ParseCollection<string>(input));
+            //Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(r => $"'{r}'"))}");
         }
 
 
@@ -663,15 +646,14 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(result, Is.Null);
             else
                 Assert.That(result, Is.EqualTo(data.expectedDict));
-
-
-            if (data.expectedDict == null)
+            
+            /*if (data.expectedDict == null)
                 Console.WriteLine(@"NULL dictionary");
             else if (!data.expectedDict.Any())
                 Console.WriteLine(@"Empty dictionary");
             else
                 foreach (var kvp in data.expectedDict)
-                    Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");
+                    Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");*/
         }
 
         [TestCaseSource(nameof(ValidDictData))]
@@ -689,8 +671,7 @@ namespace Nemesis.TextParsers.Tests
                 expectedOutput = NormalizeNullMarkers(expectedOutput);
                 Assert.That(result, Is.EqualTo(expectedOutput));
             }
-
-            Console.WriteLine($@"'{result ?? "<null>"}'");
+            //Console.WriteLine($@"'{result ?? "<null>"}'");
         }
 
         #region Negative tests
@@ -716,8 +697,8 @@ namespace Nemesis.TextParsers.Tests
             {
                 TestHelper.AssertException(actual, expectedException, expectedErrorMessagePart);
 
-                if (actual.TargetSite?.Name == nameof(_sut.ParseDictionary))
-                    Console.WriteLine($@"Expected exception from implementation: {actual.GetType().Name}=>{actual.Message}");
+                /*if (actual.TargetSite?.Name == nameof(_sut.ParseDictionary))
+                    Console.WriteLine($@"Expected exception from implementation: {actual.GetType().Name}=>{actual.Message}");*/
             }
 
             if (passed)

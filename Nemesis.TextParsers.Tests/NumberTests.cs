@@ -77,7 +77,7 @@ namespace Nemesis.TextParsers.Tests
 
                 passes++;
 
-                Console.WriteLine($"✔ '{text}'");
+                //Console.WriteLine($"✔ '{text}'");
             }
 
             Assert.That(passes, Is.GreaterThanOrEqualTo(120));

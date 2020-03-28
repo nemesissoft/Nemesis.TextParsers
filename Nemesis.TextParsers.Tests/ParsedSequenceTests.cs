@@ -93,13 +93,13 @@ namespace Nemesis.TextParsers.Tests
             else
                 Assert.That(result, Is.EqualTo(data.expectedList));
 
-            if (data.expectedList == null)
+            /*if (data.expectedList == null)
                 Console.WriteLine(@"NULL list");
             else if (!data.expectedList.Any())
                 Console.WriteLine(@"Empty list");
             else
                 foreach (string elem in data.expectedList)
-                    Console.WriteLine($@"'{elem ?? "<null>"}'");
+                    Console.WriteLine($@"'{elem ?? "<null>"}'");*/
         }
 
         //unfinished escaping sequence
@@ -116,24 +116,8 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"\r")]
         public void List_Parse_NegativeTest(string input)
         {
-            try
-            {
-                var result = ParseCollection<string>(input).ToList();
-                //Console.WriteLine(string.Join(Environment.NewLine, result));
-                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(r => $"'{r}'"))}");
-            }
-            catch (ArgumentException ae) when (ae.TargetSite?.Name == "ParseElement")
-            {
-                Console.WriteLine($@"Expected exception from implementation: {ae.Message}");
-            }
-            catch (ArgumentException ae)
-            {
-                Console.WriteLine($@"Expected external exception: {ae.Message}");
-            }
-            catch (Exception e)
-            {
-                Assert.Fail($@"Unexpected external exception: {e.Message}");
-            }
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            Assert.Throws<ArgumentException>(() => ParseCollection<string>(input).ToList());
         }
 
         [TestCaseSource(typeof(SpanCollectionSerializerTests), nameof(SpanCollectionSerializerTests.ListCompoundData))]
@@ -157,13 +141,13 @@ namespace Nemesis.TextParsers.Tests
             var deser = (IEnumerable)parseMethod.Invoke(null, new object[] { data.input });
             CheckEquivalency(deser, data.expectedList);
 
-            if (data.expectedList == null)
+            /*if (data.expectedList == null)
                 Console.WriteLine(@"NULL list");
             else if (!data.expectedList.Cast<object>().Any())
                 Console.WriteLine(@"Empty list");
             else
                 foreach (object elem in data.expectedList)
-                    Console.WriteLine(FormattableString.Invariant($"{elem}"));
+                    Console.WriteLine(FormattableString.Invariant($"{elem}"));*/
         }
 
         #endregion
