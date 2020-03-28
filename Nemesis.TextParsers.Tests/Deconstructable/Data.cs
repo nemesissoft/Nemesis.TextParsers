@@ -1,12 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
-using TCD = NUnit.Framework.TestCaseData;
-using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
@@ -294,4 +293,166 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public static readonly ConstructorInfo Constructor = Ctor
             .Of(() => new ExternallyDeconstructable(default, default));
     }
+
+    #region Recursive
+
+    internal class Human : IEquatable<Human>
+    {
+        public string Name { get; }
+        public Human Child { get; }
+
+        public Human(string name, Human child)
+        {
+            Name = name;
+            Child = child;
+        }
+
+        public Human(string name, IReadOnlyList<string> names)
+        {
+            Name = name;
+
+            Human child = null;
+            if (names != null && names.Count > 0)
+                for (int i = names.Count - 1; i >= 0; i--)
+                    child = child == null ? new Human(names[i], (Human)null) : new Human(names[i], child);
+
+            Child = child;
+        }
+
+        public void Deconstruct(out string name, out IReadOnlyList<string> names)
+        {
+            name = Name;
+
+            var retNames = new List<string>();
+
+            var child = Child;
+            while (child != null)
+            {
+                retNames.Add(child.Name);
+                child = child.Child;
+            }
+
+            names = retNames;
+        }
+
+        public bool Equals(Human other) =>
+            !(other is null) &&
+            (ReferenceEquals(this, other) || Name == other.Name && Equals(Child, other.Child));
+
+        public override bool Equals(object obj) =>
+            !(obj is null) && (ReferenceEquals(this, obj) || obj is Human h && Equals(h));
+
+        public override int GetHashCode() =>
+            unchecked(((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Child != null ? Child.GetHashCode() : 0));
+
+        public override string ToString() => $"{Name}, ({Child})";
+    }
+
+    internal readonly struct Planet
+    {
+        public string Name { get; }
+        public long Population { get; }
+        public Country Country { get; }
+
+        public Planet(string name, long population, Country country)
+        {
+            Name = name;
+            Population = population;
+            Country = country;
+        }
+
+        public void Deconstruct(out string name, out long population, out Country country)
+        {
+            name = Name;
+            population = Population;
+            country = Country;
+        }
+    }
+
+    [Transformer(typeof(CountryTransformer))]
+    internal readonly struct Country
+    {
+        public string Name { get; }
+        public int Population { get; }
+        public Region Region { get; }
+
+        public Country(string name, int population, Region region)
+        {
+            Name = name;
+            Population = population;
+            Region = region;
+        }
+
+        public void Deconstruct(out string name, out int population, out Region region)
+        {
+            name = Name;
+            population = Population;
+            region = Region;
+        }
+    }
+
+    [Transformer(typeof(RegionTransformer))]
+    internal readonly struct Region
+    {
+        public string Name { get; }
+        public int Population { get; }
+        public City City { get; }
+
+        public Region(string name, int population, City city)
+        {
+            Name = name;
+            Population = population;
+            City = city;
+        }
+
+        public void Deconstruct(out string name, out int population, out City city)
+        {
+            name = Name;
+            population = Population;
+            city = City;
+        }
+    }
+
+    internal readonly struct City
+    {
+        public string Name { get; }
+        public int Population { get; }
+
+        public City(string name, int population)
+        {
+            Name = name;
+            Population = population;
+        }
+
+        public void Deconstruct(out string name, out int population)
+        {
+            name = Name;
+            population = Population;
+        }
+    }
+
+    internal class CountryTransformer : CustomDeconstructionTransformer<Country>
+    {
+        public CountryTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
+
+        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
+            => prototype
+                .WithBorders('[', ']')
+                .WithDelimiter(',')
+        ;
+    }
+
+    internal class RegionTransformer : CustomDeconstructionTransformer<Region>
+    {
+        public RegionTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
+
+        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
+            => prototype
+                .WithBorders('{', '}')
+                .WithDelimiter('_')
+        ;
+    }
+
+    #endregion
+
 }

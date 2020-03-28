@@ -576,6 +576,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         {
             if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
             var settings = S.Default;
+            // ReSharper disable once VirtualMemberCallInConstructor
             settings = BuildSettings(settings);
 
             _transformer = settings.ToTransformer<TDeconstructable>(transformerStore);

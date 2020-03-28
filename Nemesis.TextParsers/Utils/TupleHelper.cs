@@ -26,7 +26,13 @@ namespace Nemesis.TextParsers.Utils
                 escapingSequenceStart == tupleStart ||
                 escapingSequenceStart == tupleEnd
             )
-                throw new ArgumentException($"{nameof(TupleHelper)} requires unique characters to be used for parsing/formatting purposes. {tupleStart} and {tupleEnd} can be equal to each other");
+                throw new ArgumentException($@"{nameof(TupleHelper)} requires unique characters to be used for parsing/formatting purposes. Start ('{tupleStart}') and end ('{tupleEnd}') can be equal to each other
+Passed parameters: 
+{nameof(tupleDelimiter)} = '{tupleDelimiter}'
+{nameof(nullElementMarker)} = '{nullElementMarker}'
+{nameof(escapingSequenceStart)} = '{escapingSequenceStart }'
+{nameof(tupleStart)} = '{tupleStart}'
+{nameof(tupleEnd)} = '{tupleEnd}'");
 
             _tupleDelimiter = tupleDelimiter;
             _nullElementMarker = nullElementMarker;

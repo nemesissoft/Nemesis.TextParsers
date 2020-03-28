@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
@@ -9,9 +10,7 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
-    
-recursive tests (,,, (,)) + test for no borders 
-       
+          
         
     with (', null) sequence. 
     with '' empty tuple. 
@@ -161,31 +160,67 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
                 s => s.WithoutBorders().WithStart('/')
             );
         }
-        
+
         [Test]
         public void ParseAndFormat_NonStandardControlCharacters()
         {
             //(\∅;∅;\\t123\\ABC\\\∅DEF\∅GHI\;)
             var data = new ThreeStrings("∅␀", null, @"\t123\ABC\∅DEF∅GHI;/:");
-            
+
             FormatAndParseHelper(data, @"(\∅␀;∅;\\t123\\ABC\\\∅DEF\∅GHI\;/:)");
 
             FormatAndParseHelper(data, @"(∅\␀;␀;\\t123\\ABC\\∅DEF∅GHI\;/:)",
-                s=>s.WithNullElementMarker('␀')
+                s => s.WithNullElementMarker('␀')
                 );
-            
+
             FormatAndParseHelper(data, @"(/∅␀;∅;\t123\ABC\/∅DEF/∅GHI/;//:)",
-                s=>s.WithEscapingSequenceStart('/')
+                s => s.WithEscapingSequenceStart('/')
                 );
 
             FormatAndParseHelper(data, @"(\∅␀:∅:\\t123\\ABC\\\∅DEF\∅GHI;/\:)",
                 s => s.WithDelimiter(':')
             );
-            
+
             FormatAndParseHelper(data, @"(∅/␀:␀:\t123\ABC\∅DEF∅GHI;///:)",
                 s => s.WithDelimiter(':')
                       .WithEscapingSequenceStart('/')
                       .WithNullElementMarker('␀')
+            );
+        }
+
+        [Test]
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
+        public void ParseAndFormat_Recursive()
+        {
+            //currently cyclic dependencies are not supported but have a look at the following deconstructable 
+            FormatAndParseHelper(new Human("Mieszko I", new Human("Bolesław I Chrobry", new Human("Mieszko II Lambert", new Human("Kazimierz I Odnowiciel", new Human("Bolesław II Szczodry", (Human)null))))),
+                @"Mieszko I>Bolesław I Chrobry|Mieszko II Lambert|Kazimierz I Odnowiciel|Bolesław II Szczodry",
+                s => s
+                    .WithoutBorders()
+                    .WithDelimiter('>')
+            );
+
+
+            //it is possible to influence only top type for automatic deconstructable aspect...
+            FormatAndParseHelper(
+                new Person("Mike", 36, new Address("Wrocław", 52200)), 
+                @"Mike,36,(Wrocław;52200)",
+                s => s.WithoutBorders()
+                      .WithDelimiter(',')
+                      .WithEscapingSequenceStart('/')
+            );
+
+            //...but inner type can have own registered transformers or simply use automatic settings - here we have
+            //1. / : \    - set here in test 
+            //2. [ , ]    - from custom transformer
+            //3. { _ }    - from custom transformer
+            //4. ( ; )    - default
+            FormatAndParseHelper(
+                new Planet("Earth", 7_774_001_533, new Country("Poland", 37_857_130, new Region("Dolny Śląsk", 2_907_200, new City("Wrocław", 639_258)))),
+                @"/Earth:7774001533:[Poland,37857130,{Dolny Śląsk_2907200_(Wrocław;639258)}]\",
+                s => s.WithBorders('/', '\\')
+                    .WithDelimiter(':')
+                    .WithEscapingSequenceStart('*')
             );
         }
 
@@ -200,7 +235,7 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_False_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_␀_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), @"{__}"),
-            
+
         };
 
         [TestCaseSource(nameof(CustomDeconstructable_Data))]
@@ -208,12 +243,12 @@ update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
         {
             var sut = _transformerStore.GetTransformer<DataWithCustomDeconstructableTransformer>();
 
-            
+
             var actualParsed1 = sut.Parse(text);
-            
+
             var formattedInstance = sut.Format(instance);
             var formattedActualParsed1 = sut.Format(actualParsed1);
-            
+
             Assert.That(formattedActualParsed1, Is.EqualTo(formattedInstance));
 
             var actualParsed2 = sut.Parse(formattedInstance);
