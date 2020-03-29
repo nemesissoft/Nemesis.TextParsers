@@ -42,10 +42,6 @@ before_build:
     }
 build:
   verbosity: normal
-test:  
-  assemblies:
-    only:      
-      - '**\*.Tests.dll'
 artifacts:
 - path: '**\*.nupkg'
   name: NuGet Packages
