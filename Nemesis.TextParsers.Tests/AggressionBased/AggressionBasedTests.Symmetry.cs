@@ -4,8 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
-using Nemesis.Essentials.Runtime;
 using TCD = NUnit.Framework.TestCaseData;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
@@ -17,8 +15,6 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture(TestOf = typeof(IAggressionBased<>))]
     internal partial class AggressionBasedTests
     {
-        private const BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-
         private static IEnumerable<(int num, string inputText, IEnumerable inputEnumeration, Type expectedAggBasedType, Type elementType)>
             SymmetryData() => new[]
         {
@@ -75,12 +71,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(SymmetryData))]
         public void SymmetryTests((int number, string inputText, IEnumerable inputEnumeration, Type expectedAggBasedType, Type elementType) data)
         {
-            var tester = (
-                GetType().GetMethod(nameof(SymmetryHelper), ALL_FLAGS) ??
-                throw new MissingMethodException(GetType().FullName, nameof(SymmetryHelper))
-            ).MakeGenericMethod(data.elementType);
+            var symmetry = MakeDelegate<Action<string, IEnumerable, Type>>(
+                (p1, p2, p3) => SymmetryHelper<int>(p1, p2, p3), data.elementType
+            );
 
-            tester.Invoke(null, new object[] { data.inputText, data.inputEnumeration, data.expectedAggBasedType });
+            symmetry(data.inputText, data.inputEnumeration, data.expectedAggBasedType);
         }
 
         private static void SymmetryHelper<TElement>(string inputText, IEnumerable inputEnumeration, Type aggBasedType)
@@ -193,10 +188,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(typeof(int))]
         public void Default_SymmetryTest(Type type)
         {
-            var tester = Method.Of<Action>(Default_SymmetryTestHelper<string>)
-                .GetGenericMethodDefinition().MakeGenericMethod(type);
+            var defaultSymmetry = MakeDelegate<Action>(
+                () => Default_SymmetryTestHelper<int>(), type
+            );
 
-            tester.Invoke(null, null);
+            defaultSymmetry();
         }
 
         private static void Default_SymmetryTestHelper<TElement>()
@@ -235,19 +231,19 @@ namespace Nemesis.TextParsers.Tests
         };
 
         [TestCaseSource(nameof(EmptyData))]
-        public void Empty_SymmetryTest(Type type, object emptyValue)
+        public void Empty_SymmetryTest(Type type, IEnumerable emptyValue)
         {
-            var tester = Method.Of<Action<int[]>>(Empty_SymmetryTestHelper)
-                .GetGenericMethodDefinition().MakeGenericMethod(type);
+            var emptySymmetry = MakeDelegate<Action<IEnumerable>>(
+                p1 => Empty_SymmetryTestHelper<IEnumerable>(p1), type
+            );
 
-            tester.Invoke(null, new[] { emptyValue });
+            emptySymmetry(emptyValue);
         }
 
-        private static void Empty_SymmetryTestHelper<TCollection>(TCollection emptyValue)
-            where TCollection : IEnumerable
+        private static void Empty_SymmetryTestHelper<TCollection>(IEnumerable emptyValue)
         {
-            var empty1 = AggressionBasedFactory<TCollection>.FromOneValue(emptyValue);
-            var empty3 = AggressionBasedFactory<TCollection>.FromPassiveNormalAggressiveChecked(emptyValue, emptyValue, emptyValue);
+            var empty1 = AggressionBasedFactory<TCollection>.FromOneValue((TCollection)emptyValue);
+            var empty3 = AggressionBasedFactory<TCollection>.FromPassiveNormalAggressiveChecked((TCollection)emptyValue, (TCollection)emptyValue, (TCollection)emptyValue);
 
             var sut = TextTransformer.Default.GetTransformer<IAggressionBased<TCollection>>();
 
@@ -263,7 +259,7 @@ namespace Nemesis.TextParsers.Tests
             IsMutuallyEquivalent(empty1, parsed1);
             IsMutuallyEquivalent(empty3, parsed3);
 
-            IsMutuallyEquivalent(parsed1, AggressionBasedFactory<TCollection>.FromOneValue(emptyValue));
+            IsMutuallyEquivalent(parsed1, AggressionBasedFactory<TCollection>.FromOneValue((TCollection)emptyValue));
         }
 
     }

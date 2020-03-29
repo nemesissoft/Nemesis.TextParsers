@@ -9,6 +9,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 using Nemesis.TextParsers.Utils;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -511,12 +512,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ListCompoundData))]
         public void List_CompoundTests((Type elementType, IEnumerable expectedOutput, string input) data)
         {
-            var tester = (
-                GetType().GetMethod(nameof(List_CompoundTestsHelper), ALL_FLAGS) ??
-                throw new MissingMethodException(GetType().FullName, nameof(List_CompoundTestsHelper))
-            ).MakeGenericMethod(data.elementType);
-
-            tester.Invoke(null, new object[] { data.expectedOutput, data.input });
+            var listCompound = MakeDelegate<Action<IEnumerable, string>>(
+                (p1, p2) => List_CompoundTestsHelper<int>(p1, p2), data.elementType
+            );
+            
+            listCompound(data.expectedOutput, data.input);
         }
 
         private static void List_CompoundTestsHelper<TElement>(IEnumerable expectedOutput, string input)
@@ -646,7 +646,7 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(result, Is.Null);
             else
                 Assert.That(result, Is.EqualTo(data.expectedDict));
-            
+
             /*if (data.expectedDict == null)
                 Console.WriteLine(@"NULL dictionary");
             else if (!data.expectedDict.Any())

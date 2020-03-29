@@ -44,7 +44,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [TestCaseSource(nameof(CorrectData))]
         public void FormatAndParse(Type type, object instance, string text)
         {
-            var tester = Method.OfExpression<Action<object, string, Func<Sett, Sett>>>(
+            var tester = Method.OfExpression<Action<object, string, S2S>>(
                 (i, t, m) => FormatAndParseHelper(i, t, m)
             ).GetGenericMethodDefinition();
 
@@ -53,7 +53,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             tester.Invoke(null, new[] { instance, text, null });
         }
 
-        private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, Func<Sett, Sett> settingsMutator = null)
+        private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, S2S settingsMutator = null)
         {
             var settings = Sett.Default;
             settings = settingsMutator?.Invoke(settings) ?? settings;
@@ -72,7 +72,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
         }
 
-        private static void ParseHelper<TDeconstructable>(TDeconstructable expected, string input, Func<Sett, Sett> settingsMutator = null)
+        private static void ParseHelper<TDeconstructable>(TDeconstructable expected, string input, S2S settingsMutator = null)
         {
             var settings = Sett.Default;
             settings = settingsMutator?.Invoke(settings) ?? settings;

@@ -4,6 +4,7 @@ using System.IO;
 using NUnit.Framework;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -80,7 +81,7 @@ namespace Nemesis.TextParsers.Tests
 
             ((TimeSpan.Zero, 0, 0f, "", 0m), @"(00:00:00,0,0,,0)"),
             ((TimeSpan.Zero, 0, 0f, (string)null, 0m), @"(00:00:00,0,0,∅,0)"),
-            
+
             ((TimeSpan.Zero, 0, 0f, "", 0m), @""),
             ((TimeSpan.Zero, 0, 0f, (string)null, 0m), (string)null),
 
@@ -121,7 +122,7 @@ namespace Nemesis.TextParsers.Tests
             tester.Invoke(null, new object[] { data.instance, data.input });
         }
 
-        private static void TupleTransformer_CompoundTestHelper<TTuple>(TTuple tuple, string input) where TTuple:struct
+        private static void TupleTransformer_CompoundTestHelper<TTuple>(TTuple tuple, string input) where TTuple : struct
         {
             var sut = GetSut<TTuple>();
 
@@ -149,7 +150,7 @@ namespace Nemesis.TextParsers.Tests
 
         private const string NO_PARENTHESES_ERROR =
             "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
-        internal static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)> 
+        internal static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)>
             Bad_Tuple_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
@@ -160,7 +161,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"2nd element was not found after '15'"),
             (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"2nd element was not found after '∅'"),
             (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"2nd element was not found after ' '"),
-            
+
 
 
 
@@ -206,15 +207,13 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(Bad_Tuple_Data))]
         public void TupleTransformer_NegativeTest((Type tupleType, string input, Type expectedException, string expectedErrorMessagePart) data)
         {
-            var tester = Method.OfExpression<Action<string, Type, string>>(
-                (p1,p2,p3) => TupleTransformer_NegativeTest_Helper<int>(p1, p2, p3)
-            ).GetGenericMethodDefinition();
+            var negative = MakeDelegate<Action<string, Type, string>>(
+                (p1, p2, p3) => TupleTransformer_NegativeTest_Helper<int>(p1, p2, p3), data.tupleType
+            );
 
-            tester = tester.MakeGenericMethod(data.tupleType);
-
-            tester.Invoke(null, new object[] { data.input, data.expectedException, data.expectedErrorMessagePart });
+            negative(data.input, data.expectedException, data.expectedErrorMessagePart);
         }
-        
+
         private static void TupleTransformer_NegativeTest_Helper<TTuple>(string input, Type expectedException, string expectedErrorMessagePart)
         {
             var sut = GetSut<TTuple>();

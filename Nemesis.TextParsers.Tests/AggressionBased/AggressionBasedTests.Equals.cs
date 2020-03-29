@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
@@ -32,12 +33,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidValuesForEquals))]
         public void EqualsTests((Type elementType, string text1, string text2) data)
         {
-            var tester = (
-                            GetType().GetMethod(nameof(EqualsTestsHelper), ALL_FLAGS) ??
-                            throw new MissingMethodException(GetType().FullName, nameof(EqualsTestsHelper))
-                        ).MakeGenericMethod(data.elementType);
-
-            tester.Invoke(null, new object[] { data.text1, data.text2 });
+            var equals = MakeDelegate<Action<string, string>>(
+                (t1, t2) => EqualsTestsHelper<int>(t1, t2), data.elementType
+            );
+            
+            equals(data.text1, data.text2);
         }
 
         private static void EqualsTestsHelper<TElement>(string text1, string text2)

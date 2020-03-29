@@ -4,9 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
 using JetBrains.Annotations;
-using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
@@ -139,7 +137,7 @@ namespace Nemesis.TextParsers.Tests
             //Console.WriteLine($"{ToTick(actual)} as{(pass ? " " : " NOT ")}expected for {type.GetFriendlyName()}");
 
             var expected = GetIsSupportedCases().ToList();
-            
+
             var actual = expected
                 .Select(td => td.type)
                 .Select(type => (
@@ -189,36 +187,36 @@ namespace Nemesis.TextParsers.Tests
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger>(0, 0)),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger>(0, 0))
             ),
-            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>), 
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode>(0)), 
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode>(0)),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode>(0))
             ),
-            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>), 
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>()), 
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>()),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>(null, 0, 0M, null, null, null, null)
             ),
-            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>), 
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, new List<byte>(), new sbyte[0]), 
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, new List<byte>(), new sbyte[0]),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>(null, 0, 0M, null, null, null)
             ),
-            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>>), 
-                new ValueTuple<string, int, decimal, double?, List<byte>>("", 0, 0M, null, new List<byte>()), 
+            new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>>),
+                new ValueTuple<string, int, decimal, double?, List<byte>>("", 0, 0M, null, new List<byte>()),
                 new ValueTuple<string, int, decimal, double?, List<byte>>(null, 0, 0M, null, null)
             ),
-            new TCD(typeof(ValueTuple<string, int, decimal, double?>), 
-                new ValueTuple<string, int, decimal, double?>("", 0, 0M, null), 
+            new TCD(typeof(ValueTuple<string, int, decimal, double?>),
+                new ValueTuple<string, int, decimal, double?>("", 0, 0M, null),
                 new ValueTuple<string, int, decimal, double?>(null, 0, 0M, null)
             ),
-            new TCD(typeof(ValueTuple<string, int, decimal>), 
-                new ValueTuple<string, int, decimal>("", 0, 0M), 
+            new TCD(typeof(ValueTuple<string, int, decimal>),
+                new ValueTuple<string, int, decimal>("", 0, 0M),
                 new ValueTuple<string, int, decimal>(null, 0, 0M)
             ),
-            new TCD(typeof(ValueTuple<string, int>), 
-                new ValueTuple<string, int>("", 0), 
+            new TCD(typeof(ValueTuple<string, int>),
+                new ValueTuple<string, int>("", 0),
                 new ValueTuple<string, int>(null, 0)
             ),
-            new TCD(typeof(ValueTuple<string>), 
-                new ValueTuple<string>(""), 
+            new TCD(typeof(ValueTuple<string>),
+                new ValueTuple<string>(""),
                 new ValueTuple<string>(null)
             ),
 
@@ -287,15 +285,14 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(EmptyNullParsingData))]
         public void EmptyNullParsingTest(Type type, string input, object expectedOutput)
         {
-            MethodInfo tester = Method.OfExpression<Action<string, object>>(
-                (i, eo) => EmptyNullParsingTest_Helper(i, eo)
-            ).GetGenericMethodDefinition();
+            var emptyNull = MakeDelegate<Action<string, object>>(
+                (p1, p2) => EmptyNullParsingTest_Helper<int>(p1, p2), type
+            );
 
-            tester = tester.MakeGenericMethod(type);
-            tester.Invoke(this, new[] { input, expectedOutput });
+            emptyNull(input, expectedOutput);
         }
 
-        private static void EmptyNullParsingTest_Helper<T>(string input, T expectedOutput)
+        private static void EmptyNullParsingTest_Helper<T>(string input, object expectedOutput)
         {
             var sut = TextTransformer.Default.GetTransformer<T>();
 
@@ -388,7 +385,7 @@ namespace Nemesis.TextParsers.Tests
 
         //this is just to conform to FactoryMethod convention - will not be used 
         [UsedImplicitly]
-        public static EmptyFactoryMethodConvention FromText(ReadOnlySpan<char> text) => 
+        public static EmptyFactoryMethodConvention FromText(ReadOnlySpan<char> text) =>
             throw new NotSupportedException("Class should only be used for empty value tests");
 
         #region Equals

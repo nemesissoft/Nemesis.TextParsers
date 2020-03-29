@@ -6,6 +6,7 @@ using FacIntCheck = Nemesis.TextParsers.Tests.AggressionBasedFactoryChecked<int>
 using System.Collections;
 using Nemesis.TextParsers.Utils;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
+using static Nemesis.TextParsers.Tests.TestHelper;
 
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
@@ -45,12 +46,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidValuesFor_FromText_Complex))]
         public void AggressionBasedFactory_FromText_ShouldParseComplexCases((int number, Type elementType, string input, IEnumerable expectedOutput) data)
         {
-            var tester = (
-                            GetType().GetMethod(nameof(AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper), ALL_FLAGS) ??
-                            throw new MissingMethodException(GetType().FullName, nameof(AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper))
-                        ).MakeGenericMethod(data.elementType);
+            var fromText = MakeDelegate<Action<string, IEnumerable>>(
+                (p1, p2) => AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper<int>(p1, p2), data.elementType
+            );
 
-            tester.Invoke(null, new object[] { data.input, data.expectedOutput });
+            fromText(data.input, data.expectedOutput);
         }
 
         private static void AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
@@ -116,7 +116,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedFactory_FromValues_NegativeTests(IEnumerable<int> values) =>
             Assert.Throws<ArgumentException>(() => FacInt.FromValuesCompact(values));
-        
+
         [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values) =>
             Assert.Throws<ArgumentException>(() => FacIntCheck.FromValues(values));
@@ -143,7 +143,7 @@ Whole number from -2147483648 to 2147483647 or null";
             new TestCaseData(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
         };
 
-        
+
 
         [TestCaseSource(nameof(GetSyntaxData))]
         public void AggressionBased_GetSyntax(Type type, string expectedSyntax) =>

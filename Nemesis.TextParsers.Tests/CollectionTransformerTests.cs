@@ -14,7 +14,7 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     class CollectionTransformerTests
     {
-        private static readonly Type[] _collectionTypes = 
+        private static readonly Type[] _collectionTypes =
         {
             typeof(int[]), typeof(int[][]),
             typeof(List<int>), typeof(IList<int>), typeof(ICollection<int>), typeof(IEnumerable<int>),
@@ -103,7 +103,7 @@ namespace Nemesis.TextParsers.Tests
                 (typeof(FloatValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(FloatValuedDictionary<int>)),
                 (typeof(ImmutableDecimalValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(ImmutableDecimalValuedDictionary<int>)),
             }
-            .Concat(_collectionTypes.Select(t => (t, (string) null, -1, (Type) null))) //null values
+            .Concat(_collectionTypes.Select(t => (t, (string)null, -1, (Type)null))) //null values
             .Concat(_collectionTypes.Select(t => (t, "", 0, GetExpectedTypeFor(t)))) //empty
         ;
 
@@ -119,12 +119,12 @@ namespace Nemesis.TextParsers.Tests
                     return typeof(List<>).MakeGenericType(gta);
 
                 else if (definition == typeof(IReadOnlyCollection<>) ||
-                         definition == typeof(IReadOnlyList<>) )
+                         definition == typeof(IReadOnlyList<>))
                     return typeof(ReadOnlyCollection<>).MakeGenericType(gta);
 
-                else if (definition == typeof(ISet<>) )
+                else if (definition == typeof(ISet<>))
                     return typeof(HashSet<>).MakeGenericType(gta);
-                
+
 
 
 
@@ -195,30 +195,27 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest((Type contractType, string input, int cardinality, Type expectedType) data)
         {
-            var tester = (GetType()
-                 .GetMethod(nameof(CollectionType_CompoundTestHelper), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                 ?? throw new MissingMethodException(GetType().FullName, nameof(CollectionType_CompoundTestHelper))
-            ).GetGenericMethodDefinition();
+            var collectionCompound = MakeDelegate<Action<string, int, Type>>(
+                (p1, p2, p3) => CollectionType_CompoundTestHelper<int>(p1, p2, p3), data.contractType
+            );
 
-            tester = tester.MakeGenericMethod(data.contractType);
-
-            tester.Invoke(null, new object[] { data.input, data.cardinality, data.expectedType });
+            collectionCompound(data.input, data.cardinality, data.expectedType);
         }
 
         private static void CollectionType_CompoundTestHelper<T>(string input, int expectedCardinality, Type expectedType)
         {
             var sut = TextTransformer.Default.GetTransformer<T>();
-            
+
             var parsed1 = sut.Parse(input);
 
             CheckTypeAndCardinality(parsed1, expectedCardinality, expectedType);
 
 
             string text = sut.Format(parsed1);
-            
+
             var parsed2 = sut.Parse(text);
-            
-            
+
+
             IsMutuallyEquivalent(parsed1, parsed2);
         }
 
@@ -227,13 +224,13 @@ namespace Nemesis.TextParsers.Tests
         public void CollectionType_CompoundTest_NonGeneric((Type contractType, string input, int cardinality, Type expectedType) data)
         {
             var transformer = TextTransformer.Default.GetTransformer(data.contractType);
-            
+
             var parsed1 = transformer.ParseObject(data.input);
 
             CheckTypeAndCardinality(parsed1, data.cardinality, data.expectedType);
 
             string text = transformer.FormatObject(parsed1);
-            
+
 
             var parsed2 = transformer.ParseObject(text);
 
