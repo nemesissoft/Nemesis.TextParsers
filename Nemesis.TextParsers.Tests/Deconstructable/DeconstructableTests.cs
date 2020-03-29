@@ -15,10 +15,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
      return to ArrayPool - in finally clause 
-    use MakeDelegate<> for all tests
-    empty Nullable<> aspect  + tests (person with null marker in name) + tests for null
-    update to https://www.nuget.org/packages/Microsoft.SourceLink.GitHub/
-        */
+     empty Nullable<> aspect  + tests (person with null marker in name) + tests for null
+       */
     [TestFixture]
     internal class DeconstructableTests
     {
