@@ -143,6 +143,5 @@ Open source software is free but creating it is not. Should you wish to support 
 	- [ ] DictionaryBehaviour
     - [ ] Enum casing+other customizations
     - [ ] empty string meaning (empty, default, null?))
-- [ ] custom TextParser factory/customizations
 - [ ] ability to format to buffer
 - [ ] become DI friendly adding support for cross cutting concerns i.e. logging

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -102,7 +103,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
         [PublicAPI]
-        public S WithCustomDeconstruction([NotNull] MethodInfo deconstruct, [NotNull] ConstructorInfo ctor)
+        public S WithCustomDeconstruction([JetBrains.Annotations.NotNull] MethodInfo deconstruct, [JetBrains.Annotations.NotNull] ConstructorInfo ctor)
         {
             Mode = DeconstructionMethod.ProvidedDeconstructMethod;
             Deconstruct = deconstruct ?? throw new ArgumentNullException(nameof(deconstruct));
@@ -110,10 +111,10 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             return this;
         }
- 
+
         [PublicAPI]
         public S WithDeconstructableEmpty() { UseDeconstructableEmpty = true; return this; }
-        
+
         [PublicAPI]
         public S WithoutDeconstructableEmpty() { UseDeconstructableEmpty = false; return this; }
         #endregion
@@ -198,6 +199,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter, emptyGenerator);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static void CheckCtorAndDeconstruct<TDeconstructable>(ConstructorInfo ctor, MethodInfo deconstruct, ITransformerStore transformerStore)
         {
             if (deconstruct is null || ctor is null)
@@ -205,39 +207,56 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             if (deconstruct.IsStatic)
             {
-                if (deconstruct.GetParameters() is { } dp && ctor.GetParameters() is { } cp && (
-                    dp.Length < 2 ||
-                    dp.Length != cp.Length + 1 ||
+                var dp = deconstruct.GetParameters();
+                var cp = ctor.GetParameters();
+
+                if (cp.Length == 0 || dp.Length != cp.Length + 1 ||
                     !dp[0].ParameterType.IsAssignableFrom(typeof(TDeconstructable)) ||
                     !IsCompatible(dp.Skip(1).ToList(), cp)
-                ))
+                )
                     throw new NotSupportedException(
                         $"Static {DECONSTRUCT} method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance");
 
-                if (deconstruct.GetParameters().Skip(1)
-                    .Any(p => !p.IsOut ||
-                              !transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
-                    )
-                )
+
+                if (dp.Skip(1).Any(p => !p.IsOut))
                     throw new NotSupportedException(
-                        $"Static {DECONSTRUCT} method must have all but first params as out params (IsOut==true). Types should be recognizable by TransformerStore");
+                        $"Static {DECONSTRUCT} method must have all but first params as out params (IsOut==true)");
+
+
+                var notSupportedParams = dp.Skip(1).Select(p =>
+                    (Type: p.ParameterType,
+                     IsSupported: transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
+                    )
+                ).Where(sp => !sp.IsSupported);
+
+                if (notSupportedParams.Any())
+                    throw new NotSupportedException(
+                        $@"Static {DECONSTRUCT} method must have all parameter types be recognizable by TransformerStore. Not supported types:
+{string.Join(", ", notSupportedParams.Select(sp => FlattenRef(sp.Type).GetFriendlyName()))}");
             }
             else
             {
-                if (deconstruct.GetParameters() is { } dp && (
-                    dp.Length == 0 ||
-                    !IsCompatible(dp, ctor.GetParameters())
-                ))
-                    throw new NotSupportedException(
-                        $"Instance {DECONSTRUCT} method has to be compatible with provided constructor and should have same number of parameters");
+                var dp = deconstruct.GetParameters();
 
-                if (deconstruct.GetParameters()
-                    .Any(p => !p.IsOut ||
-                              !transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
-                    )
-                )
+                if (dp.Length == 0 || !IsCompatible(dp, ctor.GetParameters()))
                     throw new NotSupportedException(
-                        $"Instance {DECONSTRUCT} method must have all out params (IsOut==true). Types should be recognizable by TransformerStore");
+                        $"Instance {DECONSTRUCT} method has to be compatible with provided constructor and should have same number and type of parameters");
+
+
+                if (dp.Any(p => !p.IsOut))
+                    throw new NotSupportedException(
+                        $"Instance {DECONSTRUCT} method must have all out params (IsOut==true)");
+
+                var notSupportedParams = dp.Select(p =>
+                        (Type: p.ParameterType,
+                         IsSupported: transformerStore.IsSupportedForTransformation(FlattenRef(p.ParameterType))
+                        )
+                    ).Where(sp => !sp.IsSupported);
+
+                if (notSupportedParams.Any())
+                    throw new NotSupportedException(
+                        $@"Instance {DECONSTRUCT} method must have all parameter types be recognizable by TransformerStore. Not supported types:
+{string.Join(", ", notSupportedParams.Select(sp => FlattenRef(sp.Type).GetFriendlyName()))}");
             }
         }
 
@@ -274,8 +293,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         private readonly FormatterDelegate _formatter;
         private readonly EmptyGenerator _emptyGenerator;
 
-        internal DeconstructionTransformer(TupleHelper helper, [NotNull] ITransformer[] transformers,
-            [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
+        internal DeconstructionTransformer(TupleHelper helper, [JetBrains.Annotations.NotNull] ITransformer[] transformers,
+            [JetBrains.Annotations.NotNull] ParserDelegate parser, [JetBrains.Annotations.NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
         {
             _helper = helper != default
                 ? helper
@@ -572,7 +591,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         /// Create base class that bounds 2 aspects - Deconstructable and Transformable 
         /// </summary>
         /// <param name="transformerStore">When used in standard way - this parameter gets injected by default</param>
-        protected CustomDeconstructionTransformer([NotNull] ITransformerStore transformerStore)
+        protected CustomDeconstructionTransformer([JetBrains.Annotations.NotNull] ITransformerStore transformerStore)
         {
             if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
             var settings = S.Default;
@@ -586,15 +605,15 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
         protected abstract S BuildSettings(S prototype);
 
-        protected sealed override TDeconstructable ParseCore(in ReadOnlySpan<char> input) => 
+        protected sealed override TDeconstructable ParseCore(in ReadOnlySpan<char> input) =>
             _transformer.Parse(input);
 
-        public sealed override string Format(TDeconstructable element) => 
+        public sealed override string Format(TDeconstructable element) =>
             _transformer.Format(element);
 
-        public override TDeconstructable GetEmpty() => 
+        public override TDeconstructable GetEmpty() =>
             _transformer.GetEmpty();
-            
+
         public sealed override string ToString() => _description;
     }
 }

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using FluentAssertions;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -41,6 +44,28 @@ namespace Nemesis.TextParsers.Tests
             o1.Should().BeEquivalentTo(o2, because);
             o2.Should().BeEquivalentTo(o1, because);
         }
+
+        public static TDelegate MakeDelegate<TDelegate>(Expression<TDelegate> expression, params Type[] typeArguments)
+            where TDelegate : Delegate
+        {
+            var method = Method.OfExpression(expression);
+            if (method.IsGenericMethod)
+            {
+                method = method.GetGenericMethodDefinition();
+                method = method.MakeGenericMethod(typeArguments);
+            }
+
+            var parameters = method.GetParameters()
+                .Select(p => Expression.Parameter(p.ParameterType, p.Name))
+                .ToList();
+            var call = method.IsStatic
+                ? Expression.Call(method, parameters)
+                : Expression.Call(parameters[0], method, parameters.Skip(1));
+
+            return Expression.Lambda<TDelegate>(call, parameters).Compile();
+        }
+
+
     }
 
     internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>

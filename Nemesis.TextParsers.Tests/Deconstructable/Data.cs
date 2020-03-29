@@ -296,27 +296,27 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
     #region Recursive
 
-    internal class Human : IEquatable<Human>
+    internal class King : IEquatable<King>
     {
         public string Name { get; }
-        public Human Child { get; }
+        public King Successor { get; }
 
-        public Human(string name, Human child)
+        public King(string name, King successor)
         {
             Name = name;
-            Child = child;
+            Successor = successor;
         }
 
-        public Human(string name, IReadOnlyList<string> names)
+        public King(string name, IReadOnlyList<string> names)
         {
             Name = name;
 
-            Human child = null;
+            King successor = null;
             if (names != null && names.Count > 0)
                 for (int i = names.Count - 1; i >= 0; i--)
-                    child = child == null ? new Human(names[i], (Human)null) : new Human(names[i], child);
+                    successor = successor == null ? new King(names[i], (King)null) : new King(names[i], successor);
 
-            Child = child;
+            Successor = successor;
         }
 
         public void Deconstruct(out string name, out IReadOnlyList<string> names)
@@ -325,27 +325,27 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
             var retNames = new List<string>();
 
-            var child = Child;
+            var child = Successor;
             while (child != null)
             {
                 retNames.Add(child.Name);
-                child = child.Child;
+                child = child.Successor;
             }
 
             names = retNames;
         }
 
-        public bool Equals(Human other) =>
+        public bool Equals(King other) =>
             !(other is null) &&
-            (ReferenceEquals(this, other) || Name == other.Name && Equals(Child, other.Child));
+            (ReferenceEquals(this, other) || Name == other.Name && Equals(Successor, other.Successor));
 
         public override bool Equals(object obj) =>
-            !(obj is null) && (ReferenceEquals(this, obj) || obj is Human h && Equals(h));
+            !(obj is null) && (ReferenceEquals(this, obj) || obj is King h && Equals(h));
 
         public override int GetHashCode() =>
-            unchecked(((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Child != null ? Child.GetHashCode() : 0));
+            unchecked(((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Successor != null ? Successor.GetHashCode() : 0));
 
-        public override string ToString() => $"{Name}, ({Child})";
+        public override string ToString() => $"{Name}, ({Successor})";
     }
 
     internal readonly struct Planet
