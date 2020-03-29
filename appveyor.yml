@@ -42,6 +42,10 @@ before_build:
     }
 build:
   verbosity: normal
+test:
+  assemblies:
+    only:
+    - '*Tests*'
 artifacts:
 - path: '**\*.nupkg'
   name: NuGet Packages
