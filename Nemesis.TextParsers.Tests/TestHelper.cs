@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -135,6 +137,25 @@ namespace Nemesis.TextParsers.Tests
             }
             else
                 return Math.Round((_rand.NextDouble() - 0.5) * 2 * magnitude, 3);
+        }
+
+        public TEnum NextEnum<TEnum, TUnderlying>() 
+            where TEnum : Enum
+            where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
+        {
+            var values = Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().ToList();
+            
+            if (values.Count == 0)
+            {
+                var numberHandler = NumberHandlerCache.GetNumberHandler<TUnderlying>();
+                var value = _rand.NextDouble() < 0.5 ? numberHandler.Zero : numberHandler.One;
+                return Unsafe.As<TUnderlying, TEnum>(ref value);
+            }
+            else
+            {
+                var value = values[_rand.Next(0, values.Count)];
+                return Unsafe.As<TUnderlying, TEnum>(ref value);
+            }
         }
     }
 }

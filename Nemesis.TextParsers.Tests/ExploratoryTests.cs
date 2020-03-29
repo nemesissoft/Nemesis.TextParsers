@@ -72,12 +72,22 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.NextFloatingNumber(1000, false),
                 _randomSource.NextFloatingNumber(1000, false)
             ));
-
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
-            _fixture.Register<Enum1>(() => (Enum1)_randomSource.Next(0, 10));
-            _fixture.Register<Enum2>(() => (Enum2)_randomSource.Next(0, 10));
-
-
+            
+            
+            _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
+            _fixture.Register(() => (Enum1)_randomSource.Next(0, 10));
+            _fixture.Register(() => (Enum2)_randomSource.Next(0, 10));
+            _fixture.Register(() => (Enum3)_randomSource.Next(0, 6));
+            
+            _fixture.Register(() => _randomSource.NextEnum<ByteEnum, byte>());
+            _fixture.Register(() => _randomSource.NextEnum<SByteEnum, sbyte>());
+            _fixture.Register(() => _randomSource.NextEnum<Int64Enum, long>());
+            _fixture.Register(() => _randomSource.NextEnum<UInt64Enum, ulong>());
+            _fixture.Register(() => _randomSource.NextEnum<Fruits, ushort>());
+            _fixture.Register(() => _randomSource.NextEnum<FruitsWeirdAll, short>());
+            _fixture.Register(() => _randomSource.NextEnum<FileMode, int>());
+            
             var structs = _allTestCases
                 .Where(d => d.category == ExploratoryTestCategory.Structs ||
                             d.category == ExploratoryTestCategory.Enums)
@@ -439,13 +449,13 @@ namespace Nemesis.TextParsers.Tests
     {
         public static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> elementTypes)
         {
-            var registerMethod = Method.OfExpression<Action<Fixture>>(fix => RegisterAggressionBased<int>(fix))
-                .GetGenericMethodDefinition();
-
             foreach (var elementType in elementTypes)
             {
-                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                concreteMethod.Invoke(null, new object[] { fixture });
+                var register = MakeDelegate<Action<IFixture>>(
+                    fix => RegisterAggressionBased<int>(fix), elementType
+                );
+
+                register(fixture);
             }
         }
 
