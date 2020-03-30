@@ -8,8 +8,8 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Utils;
 using Nemesis.TextParsers.Runtime;
-#if NETCOREAPP3_0
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
     using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif

@@ -13,8 +13,7 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
-    /*TODO
-     return to ArrayPool - in finally clause 
+    /*TODO     
      check Dispose of ValueSequenceBuilder
      perf test - check TupleHelper allocations current vs every time it's needed 
        */

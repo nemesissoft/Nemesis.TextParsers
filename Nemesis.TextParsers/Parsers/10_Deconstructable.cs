@@ -1,18 +1,22 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 using S = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
+using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+#else
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
+#endif
+
 
 namespace Nemesis.TextParsers.Parsers
 {
-    [UsedImplicitly]
+    [JetBrains.Annotations.UsedImplicitly]
     public sealed class DeconstructionTransformerCreator : ICanCreateTransformer
     {
         private readonly ITransformerStore _transformerStore;
@@ -103,7 +107,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
         [PublicAPI]
-        public S WithCustomDeconstruction([JetBrains.Annotations.NotNull] MethodInfo deconstruct, [JetBrains.Annotations.NotNull] ConstructorInfo ctor)
+        public S WithCustomDeconstruction([NotNull] MethodInfo deconstruct, [NotNull] ConstructorInfo ctor)
         {
             Mode = DeconstructionMethod.ProvidedDeconstructMethod;
             Deconstruct = deconstruct ?? throw new ArgumentNullException(nameof(deconstruct));
@@ -199,7 +203,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter, emptyGenerator);
         }
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static void CheckCtorAndDeconstruct<TDeconstructable>(ConstructorInfo ctor, MethodInfo deconstruct, ITransformerStore transformerStore)
         {
             if (deconstruct is null || ctor is null)
@@ -283,7 +287,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
     internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerBase<TDeconstructable>
     {
         public delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
-        public delegate string FormatterDelegate(TDeconstructable element, TupleHelper helper, ITransformer[] transformers);
+        public delegate string FormatterDelegate(TDeconstructable element, ref ValueSequenceBuilder<char> accumulator, TupleHelper helper, ITransformer[] transformers);
         public delegate TDeconstructable EmptyGenerator();
 
 
@@ -293,8 +297,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         private readonly FormatterDelegate _formatter;
         private readonly EmptyGenerator _emptyGenerator;
 
-        internal DeconstructionTransformer(TupleHelper helper, [JetBrains.Annotations.NotNull] ITransformer[] transformers,
-            [JetBrains.Annotations.NotNull] ParserDelegate parser, [JetBrains.Annotations.NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
+        internal DeconstructionTransformer(TupleHelper helper, [NotNull] ITransformer[] transformers,
+            [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
         {
             _helper = helper != default
                 ? helper
@@ -417,12 +421,11 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
          }*/
         internal static FormatterDelegate CreateFormatter(MethodInfo deconstruct)
         {
-            CreateFormatterData(deconstruct,
-                out int arity, out var element, out var helper,
-                out var transformers, out var accumulator, out var initialBuffer,
-                out var temps, out var rentInitialBuffer, out var returnInitialBuffer,
-                out var accumulatorInit, out var accumulatorDispose, out var accumulatorToString
-            );
+            CreateFormatterData(deconstruct, out int arity,
+                out var element, out var accumulator,
+                out var helper, out var transformers,
+                out var temps,
+                out var accumulatorToString);
 
 
             Expression GetConvertedSource()
@@ -436,8 +439,6 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             var expressions = new List<Expression>(7 + 2 * arity)
             {
-                rentInitialBuffer,
-                accumulatorInit,
                 deconstruct.IsStatic
                     ? Expression.Call(deconstruct, //static method
                                       new[] { GetConvertedSource() } //this T instance
@@ -467,31 +468,19 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             expressions.Add(Expression.Call(helper, nameof(TupleHelper.EndFormat), null, accumulator));
 
-            var text = Expression.Variable(typeof(string), "text");
-            expressions.Add(
-                Expression.Assign(text, accumulatorToString)
-                );
-            expressions.Add(returnInitialBuffer);
-            expressions.Add(text);
+            expressions.Add(accumulatorToString);
 
 
-            var tryBody = Expression.Block(
-                new[] { accumulator, initialBuffer, text }.Concat(temps),
-                expressions);
-
-            var finallyBody = Expression.Block(
-                new[] { accumulator },
-                accumulatorDispose);
-
-            var tryFinally = Expression.TryFinally(tryBody, finallyBody);
+            var body = Expression.Block(temps, expressions);
 
 
-            var λ = Expression.Lambda<FormatterDelegate>(tryFinally, element, helper, transformers);
+            var λ = Expression.Lambda<FormatterDelegate>(body, element, accumulator, helper, transformers);
             return λ.Compile();
         }
 
         internal static EmptyGenerator CreateEmptyGenerator(ConstructorInfo ctor, ITransformerStore transformerStore)
         {
+            //TODO check if empty instances are modified by other instance ?
             var emptyInstances = ctor.GetParameters()
                     .Select(p => p.ParameterType)
                     .Select(type => Expression.Constant(transformerStore.GetEmptyInstance(type), type))
@@ -504,11 +493,11 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
 
-        private static void CreateFormatterData(MethodBase deconstruct,
-            out int arity, out ParameterExpression element, out ParameterExpression helper,
-            out ParameterExpression transformers, out ParameterExpression accumulator, out ParameterExpression initialBuffer,
-            out IReadOnlyList<ParameterExpression> temps, out Expression rentInitialBuffer, out Expression returnInitialBuffer,
-            out Expression accumulatorInit, out Expression accumulatorDispose, out Expression accumulatorToString)
+        private static void CreateFormatterData(MethodBase deconstruct, out int arity,
+            out ParameterExpression element, out ParameterExpression accumulator,
+            out ParameterExpression helper, out ParameterExpression transformers,
+            out IReadOnlyList<ParameterExpression> temps,
+            out Expression accumulatorToString)
         {
             static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
 
@@ -519,33 +508,13 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             arity = @params.Length;
 
             element = Expression.Parameter(typeof(TDeconstructable), "element");
+            accumulator = Expression.Parameter(typeof(ValueSequenceBuilder<char>).MakeByRefType(), "accumulator");
             helper = Expression.Parameter(typeof(TupleHelper), "helper");
             transformers = Expression.Parameter(typeof(ITransformer[]), "transformers");
 
-            accumulator = Expression.Variable(typeof(ValueSequenceBuilder<char>), "accumulator");
-            initialBuffer = Expression.Variable(typeof(char[]), "initialBuffer");
+
             temps = @params.Select((p, i) => Expression.Variable(FlattenRef(p.ParameterType), $"temp{i + 1}")).ToList();
 
-            var rentMethod = Method.OfExpression<Func<ArrayPool<char>, int, char[]>>((ap, i) => ap.Rent(i));
-            var returnMethod = Method.OfExpression<Action<ArrayPool<char>, char[], bool>>((ap, arr, clear) => ap.Return(arr, clear));
-
-            var arrayPoolAccess = Expression.Property(null, Property.Of((ArrayPool<char> ap) => ArrayPool<char>.Shared));
-            rentInitialBuffer = Expression.Assign(initialBuffer,
-               Expression.Call(arrayPoolAccess, rentMethod, Expression.Constant(10))
-            );
-            returnInitialBuffer = Expression.Call(arrayPoolAccess, returnMethod, initialBuffer, Expression.Constant(false));
-
-
-            accumulatorInit = Expression.Assign(accumulator,
-                Expression.New(
-                    typeof(ValueSequenceBuilder<char>).GetConstructor(new[] { typeof(Span<char>) }) ?? throw new MissingMemberException($"No proper ctor in {nameof(ValueSequenceBuilder<char>)}"),
-                    Expression.Convert(initialBuffer, typeof(Span<char>))
-                )
-            );
-
-            var disposeMethod = typeof(ValueSequenceBuilder<char>).GetMethod(nameof(ValueSequenceBuilder<char>.Dispose))
-                ?? throw new MissingMemberException(typeof(ValueSequenceBuilder<char>).Name, nameof(ValueSequenceBuilder<char>.Dispose));
-            accumulatorDispose = Expression.Call(accumulator, disposeMethod);
 
 
             accumulatorToString = Expression.Call(
@@ -558,9 +527,22 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         protected override TDeconstructable ParseCore(in ReadOnlySpan<char> input) =>
             _parser(input, _helper, _transformers);
 
-        public override string Format(TDeconstructable element) =>
-            element is null ? null : _formatter(element, _helper, _transformers);
-
+        public override string Format(TDeconstructable element)
+        {
+            if (element is null) return null;
+            else
+            {
+                Span<char> initialBuffer = stackalloc char[16];
+                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                try
+                {
+                    var text = _formatter(element, ref accumulator, _helper, _transformers);
+                    return text;
+                }
+                finally { accumulator.Dispose(); }
+            }
+        }
+        
         public override TDeconstructable GetEmpty() =>
             _emptyGenerator != null ? _emptyGenerator() : base.GetEmpty();
 
@@ -591,7 +573,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         /// Create base class that bounds 2 aspects - Deconstructable and Transformable 
         /// </summary>
         /// <param name="transformerStore">When used in standard way - this parameter gets injected by default</param>
-        protected CustomDeconstructionTransformer([JetBrains.Annotations.NotNull] ITransformerStore transformerStore)
+        protected CustomDeconstructionTransformer([NotNull] ITransformerStore transformerStore)
         {
             if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
             var settings = S.Default;
