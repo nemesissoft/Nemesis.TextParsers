@@ -6,6 +6,7 @@ using System.Collections;
 using Nemesis.TextParsers.Utils;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 using static Nemesis.TextParsers.Tests.TestHelper;
+using TCD = NUnit.Framework.TestCaseData;
 
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
@@ -101,26 +102,27 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValues));
         }
 
-        private static IEnumerable<IEnumerable<int>> FromValues_Invalid() => new IEnumerable<int>[]
+        private static IEnumerable<TCD> FromValues_Invalid() => new []
         {
-            new []{1,2},
-            new []{1,2,3,4},
-            new []{1,2,3,4,5},
-            new []{1,2,3,4,5,6},
-            new []{1,2,3,4,5,6,7},
-            new []{1,2,3,4,5,6,7,8},
-
-            new []{1,2,3,4,5,6,7,8,9,10},
-            new []{1,2,3,4,5,6,7,8,9,10,11},
+            new TCD("1#2", "0, 1, 3 or 9 elements, but contained 2"),
+            new TCD("1#2#3#4", "0, 1, 3 or 9 elements, but contained 4"),
+            new TCD("1#2#3#4#5", "0, 1, 3 or 9 elements, but contained 5"),
+            new TCD("1#2#3#4#5#6", "0, 1, 3 or 9 elements, but contained 6"),
+            new TCD("1#2#3#4#5#6#7", "0, 1, 3 or 9 elements, but contained 7"),
+            new TCD("1#2#3#4#5#6#7#8", "0, 1, 3 or 9 elements, but contained 8"),
+            new TCD("1#2#3#4#5#6#7#8#9#10", "0, 1, 3 or 9 elements, but contained more than 9"),
+            new TCD("1#2#3#4#5#6#7#8#9#10#11", "0, 1, 3 or 9 elements, but contained more than 9"),
         };
 
         [TestCaseSource(nameof(FromValues_Invalid))]
-        public void AggressionBasedFactory_FromValues_NegativeTests(IEnumerable<int> values) =>
-            Assert.Throws<ArgumentException>(() => FacInt.FromValuesCompact(values));
+        public void AggressionBasedTransformer_Parse_NegativeTests(string input, string expectedMessagePart)
+        {
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
 
-        [TestCaseSource(nameof(FromValues_Invalid))]
-        public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values) => 
-            Assert.Throws<ArgumentException>(() => AggressionBasedFactory<int>.FromValues(values));
+            var ex = Assert.Throws<ArgumentException>(() => transformer.Parse(input.AsSpan()));
+
+            Assert.That(ex.Message, Does.Contain(expectedMessagePart));
+        }
 
         private const string AGG_BASED_STRING_SYNTAX =
             @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
@@ -137,11 +139,11 @@ Elements separated with pipe ('|') i.e.
 Element syntax:
 Whole number from -2147483648 to 2147483647 or null";
 
-        private static IEnumerable<TestCaseData> GetSyntaxData() => new[]
+        private static IEnumerable<TCD> GetSyntaxData() => new[]
         {
-            new TestCaseData(typeof(IAggressionBased<string>), AGG_BASED_STRING_SYNTAX),
-            new TestCaseData(typeof(AggressionBased3<string>), AGG_BASED_STRING_SYNTAX),
-            new TestCaseData(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
+            new TCD(typeof(IAggressionBased<string>), AGG_BASED_STRING_SYNTAX),
+            new TCD(typeof(AggressionBased3<string>), AGG_BASED_STRING_SYNTAX),
+            new TCD(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
         };
 
 
