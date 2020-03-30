@@ -76,7 +76,7 @@ namespace Nemesis.TextParsers.Parsers
 
             protected abstract TCollection GetCollection(in ParsedSequence<TElement> stream);
 
-            public override string Format(TCollection coll) => //coll == null ? null :
+            public override string Format(TCollection coll) => 
                 SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
             public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";

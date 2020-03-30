@@ -10,45 +10,47 @@ using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
-namespace Nemesis.TextParsers.Tests
+namespace Nemesis.TextParsers.Tests.Infrastructure
 {
     [TestFixture]
     public class InfrastructureTests
     {
-        #region IsSupported - Test cases
-        [TestCase(typeof(PointWithConverter), true)]
-        [TestCase(typeof(string), true)]
-        [TestCase(typeof(TimeSpan), true)]
-        [TestCase(typeof(TimeSpan[]), true)]
-        [TestCase(typeof(TimeSpan[][]), true)]
-        [TestCase(typeof(KeyValuePair<string, int>), true)]
-        [TestCase(typeof(KeyValuePair<string, int>[]), true)]
-        [TestCase(typeof(KeyValuePair<KeyValuePair<string, int>[], int>[]), true)]
-        [TestCase(typeof(Dictionary<string[], Dictionary<int?, float[][]>>), true)]
-        [TestCase(typeof(LeanCollection<string>), true)]
-        [TestCase(typeof(string[][][][][][]), true)]
+        internal static IEnumerable<TCD> IsSupportedForTransformation_Data() => new[]
+        {
+            new TCD(typeof(PointWithConverter), true),
+            new TCD(typeof(string), true),
+            new TCD(typeof(TimeSpan), true),
+            new TCD(typeof(TimeSpan[]), true),
+            new TCD(typeof(TimeSpan[][]), true),
+            new TCD(typeof(KeyValuePair<string, int>), true),
+            new TCD(typeof(KeyValuePair<string, int>[]), true),
+            new TCD(typeof(KeyValuePair<KeyValuePair<string, int>[], int>[]), true),
+            new TCD(typeof(Dictionary<string[], Dictionary<int?, float[][]>>), true),
+            new TCD(typeof(LeanCollection<string>), true),
+            new TCD(typeof(string[][][][][][]), true),
 
 
-        [TestCase(typeof(PointWithBadConverter), false)]
-        [TestCase(typeof(PointWithoutConverter), false)]
-        [TestCase(typeof(object), false)]
-        [TestCase(typeof(object[]), false)]
-        [TestCase(typeof(object[][]), false)]
-        [TestCase(typeof(object[,]), false)]
-        [TestCase(typeof(string[,]), false)]
-        [TestCase(typeof(string[][][,][][][]), false)]
-        [TestCase(typeof(ICollection<object>), false)]
-        [TestCase(typeof(LeanCollection<object>), false)]
-        [TestCase(typeof(IDictionary<object, object>), false)]
-        [TestCase(typeof(IReadOnlyList<object>), false)]
-        [TestCase(typeof(List<object>), false)]
-        [TestCase(typeof(PointWithoutConverter?), false)]
-        [TestCase(typeof(PointWithBadConverter?), false)]
-        [TestCase(typeof(ValueTuple<object, object>), false)]
-        [TestCase(typeof(ValueTuple<string, object, object, object, object, object, object>), false)]
-        [TestCase(typeof(KeyValuePair<object, object>), false)]
-        [TestCase(typeof(KeyValuePair<object, object>[]), false)]
-        #endregion
+            new TCD(typeof(PointWithBadConverter), false),
+            new TCD(typeof(PointWithoutConverter), false),
+            new TCD(typeof(object), false),
+            new TCD(typeof(object[]), false),
+            new TCD(typeof(object[][]), false),
+            new TCD(typeof(object[,]), false),
+            new TCD(typeof(string[,]), false),
+            new TCD(typeof(string[][][,][][][]), false),
+            new TCD(typeof(ICollection<object>), false),
+            new TCD(typeof(LeanCollection<object>), false),
+            new TCD(typeof(IDictionary<object, object>), false),
+            new TCD(typeof(IReadOnlyList<object>), false),
+            new TCD(typeof(List<object>), false),
+            new TCD(typeof(PointWithoutConverter?), false),
+            new TCD(typeof(PointWithBadConverter?), false),
+            new TCD(typeof(ValueTuple<object, object>), false),
+            new TCD(typeof(ValueTuple<string, object, object, object, object, object, object>), false),
+            new TCD(typeof(KeyValuePair<object, object>), false),
+            new TCD(typeof(KeyValuePair<object, object>[]), false),
+        };
+        [TestCaseSource(nameof(IsSupportedForTransformation_Data))]
         public void IsSupportedForTransformation(Type type, bool expected) =>
             Assert.That(
                 TextTransformer.Default.IsSupportedForTransformation(type),
@@ -150,7 +152,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
-        //type, empty, null
+        //for type => empty, null
         internal static IEnumerable<TCD> GetEmptyNullInstance_Data() => new[]
         {
             new TCD(typeof(string), "", null),
@@ -233,8 +235,7 @@ namespace Nemesis.TextParsers.Tests
             new TCD(typeof(LotsOfDeconstructableData), LotsOfDeconstructableData.EmptyInstance, null),
             new TCD(typeof(EmptyFactoryMethodConvention), EmptyFactoryMethodConvention.Empty, null),
         };
-
-
+        
         [TestCaseSource(nameof(GetEmptyNullInstance_Data))]
         public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
         {
@@ -263,9 +264,7 @@ namespace Nemesis.TextParsers.Tests
 
             new TCD(typeof(IAggressionBased<int?>), "", new AggressionBased1<int?>(null)),
             new TCD(typeof(IAggressionBased<int?>), null, new AggressionBased1<int?>(null)),
-
-
-
+            
 
             new TCD(typeof(ValueTuple<int, int>), "", (0, 0)),
             new TCD(typeof(ValueTuple<int, int>), null, (0, 0)),
@@ -281,6 +280,9 @@ namespace Nemesis.TextParsers.Tests
             new TCD(typeof(ValueTuple<string, int?>), @"(∅ABC,)", ("∅ABC", (int?) null)),
 
             new TCD(typeof(ValueTuple<int, int?>), "", (0, (int?) null)),
+            
+            //TODO add more empty tests 
+            //new TCD(typeof(ValueTuple<int, int?>[]), "", (0, (int?) null)),
         };
         [TestCaseSource(nameof(EmptyNullParsingData))]
         public void EmptyNullParsingTest(Type type, string input, object expectedOutput)
@@ -303,101 +305,8 @@ namespace Nemesis.TextParsers.Tests
             var text = sut.Format(parsed1);
             var parsed2 = sut.Parse(text);
 
+            Assert.That(parsed2, Is.EqualTo(parsed1));
             Assert.That(parsed2, Is.EqualTo(expectedOutput));
         }
-    }
-
-    internal class LotsOfDeconstructableData
-    {
-        public string D1 { get; }
-        public bool D2 { get; }
-        public int D3 { get; }
-        public uint? D4 { get; }
-        public float D5 { get; }
-        public double? D6 { get; }
-        public FileMode D7 { get; }
-        public List<string> D8 { get; }
-        public IReadOnlyList<int> D9 { get; }
-        public Dictionary<string, float?> D10 { get; }
-        public decimal[] D11 { get; }
-        public BigInteger[][] D12 { get; }
-        public Complex D13 { get; }
-
-        public LotsOfDeconstructableData(string d1, bool d2, int d3, uint? d4, float d5, double? d6, FileMode d7, List<string> d8, IReadOnlyList<int> d9, Dictionary<string, float?> d10, decimal[] d11, BigInteger[][] d12, Complex d13)
-        {
-            D1 = d1;
-            D2 = d2;
-            D3 = d3;
-            D4 = d4;
-            D5 = d5;
-            D6 = d6;
-            D7 = d7;
-            D8 = d8;
-            D9 = d9;
-            D10 = d10;
-            D11 = d11;
-            D12 = d12;
-            D13 = d13;
-        }
-
-        [UsedImplicitly]
-        public void Deconstruct(out string d1, out bool d2, out int d3, out uint? d4, out float d5, out double? d6, out FileMode d7, out List<string> d8, out IReadOnlyList<int> d9, out Dictionary<string, float?> d10, out decimal[] d11, out BigInteger[][] d12, out Complex d13)
-        {
-            d1 = D1;
-            d2 = D2;
-            d3 = D3;
-            d4 = D4;
-            d5 = D5;
-            d6 = D6;
-            d7 = D7;
-            d8 = D8;
-            d9 = D9;
-            d10 = D10;
-            d11 = D11;
-            d12 = D12;
-            d13 = D13;
-        }
-
-        public static readonly LotsOfDeconstructableData EmptyInstance = new LotsOfDeconstructableData("", false, 0, null, 0.0f, null, 0, new List<string>(),
-            new List<int>(), new Dictionary<string, float?>(), new decimal[0], new BigInteger[0][], new Complex(0.0, 0.0)
-        );
-    }
-
-    //this is to demonstrate support of LSP rule 
-    internal abstract class EmptyConventionBase { }
-
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
-    internal sealed class EmptyFactoryMethodConvention : EmptyConventionBase, IEquatable<EmptyFactoryMethodConvention>
-    {
-        public float Number { get; }
-        public DateTime Time { get; }
-
-        public EmptyFactoryMethodConvention(float number, DateTime time)
-        {
-            Number = number;
-            Time = time;
-        }
-
-
-        //it's generally no a good idea for a property not to be deterministic. But this works well for our demo.
-        //And have a look at DateTime.Now ;-)
-        public static EmptyConventionBase Empty => new EmptyFactoryMethodConvention(3.14f, DateTime.Now);
-
-        //this is just to conform to FactoryMethod convention - will not be used 
-        [UsedImplicitly]
-        public static EmptyFactoryMethodConvention FromText(ReadOnlySpan<char> text) =>
-            throw new NotSupportedException("Class should only be used for empty value tests");
-
-        #region Equals
-        public bool Equals(EmptyFactoryMethodConvention other) =>
-                !(other is null) && (ReferenceEquals(this, other) ||
-                    Number.Equals(other.Number) && Math.Abs(Time.Ticks - other.Time.Ticks) < 2 * TimeSpan.TicksPerMinute
-                 );
-
-        public override bool Equals(object obj) =>
-            !(obj is null) && (ReferenceEquals(this, obj) || obj is EmptyFactoryMethodConvention ec && Equals(ec));
-
-        public override int GetHashCode() => unchecked((Number.GetHashCode() * 397) ^ Time.GetHashCode());
-        #endregion
     }
 }

@@ -9,6 +9,7 @@ using System.Reflection;
 using AutoFixture;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Deconstructable;
+using Nemesis.TextParsers.Tests.Infrastructure;
 using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.TestHelper;
 

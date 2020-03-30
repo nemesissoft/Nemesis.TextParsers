@@ -15,7 +15,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO
      return to ArrayPool - in finally clause 
-     empty Nullable<> aspect  + tests (person with null marker in name) + tests for null
+     check Dispose of ValueSequenceBuilder
+     perf test - check TupleHelper allocations current vs every time it's needed 
        */
     [TestFixture]
     internal class DeconstructableTests

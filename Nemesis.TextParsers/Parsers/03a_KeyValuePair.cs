@@ -42,7 +42,7 @@ namespace Nemesis.TextParsers.Parsers
 
             public KeyValuePairTransformer(ITransformerStore transformerStore)
             {
-               _keyTransformer = transformerStore.GetTransformer<TKey>();
+                _keyTransformer = transformerStore.GetTransformer<TKey>();
                 _valueTransformer = transformerStore.GetTransformer<TValue>();
             }
 
@@ -65,17 +65,15 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+                try
+                {
+                    _helper.FormatElement(_keyTransformer, element.Key, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_valueTransformer, element.Value, ref accumulator);
 
-
-                _helper.FormatElement(_keyTransformer, element.Key, ref accumulator);
-                _helper.AddDelimiter(ref accumulator);
-                _helper.FormatElement(_valueTransformer, element.Value, ref accumulator);
-
-
-                _helper.EndFormat(ref accumulator);
-                var text = accumulator.AsSpan().ToString();
-                accumulator.Dispose();
-                return text;
+                    return accumulator.AsSpan().ToString();
+                }
+                finally { accumulator.Dispose(); }
             }
 
             public override string ToString() => $"Transform KeyValuePair<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>";
@@ -84,7 +82,7 @@ namespace Nemesis.TextParsers.Parsers
             public override KeyValuePair<TKey, TValue> GetEmpty() =>
                 new KeyValuePair<TKey, TValue>(
                     _keyTransformer.GetEmpty(),
-                    _valueTransformer.GetEmpty() 
+                    _valueTransformer.GetEmpty()
                 );
         }
 

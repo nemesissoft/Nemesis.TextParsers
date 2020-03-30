@@ -78,7 +78,7 @@ namespace Nemesis.TextParsers.Parsers
 
             protected abstract TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream);
 
-            public override string Format(TDict dict) =>//dict == null ? null :
+            public override string Format(TDict dict) =>
                 SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
 
             public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
