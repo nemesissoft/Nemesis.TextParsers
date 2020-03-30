@@ -146,7 +146,7 @@ namespace Nemesis.TextParsers.Tests
             var text1 = ab1.ToString();
 
 
-            var ab2 = AggressionBasedTransformer<TElement>.FromValues(inputValues);
+            var ab2 = AggressionBasedFactory<TElement>.FromValues(inputValues);
             CheckType(ab2, "2");
             var text2 = ab2.ToString();
 

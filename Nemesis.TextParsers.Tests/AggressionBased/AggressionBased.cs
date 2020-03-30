@@ -247,48 +247,6 @@ namespace Nemesis.TextParsers.Tests
         public override IAggressionBased<TValue> GetNull() => 
             AggressionBasedFactory<TValue>.FromOneValue(default);
 
-        //TODO remove + check tests
-        internal static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
-        {
-            if (values == null) return AggressionBasedFactory<TValue>.Default();
-
-            using var enumerator = values.GetEnumerator();
-
-            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
-            var pass = enumerator.Current;
-
-            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
-            var norm = enumerator.Current;
-
-            if (!enumerator.MoveNext()) throw GetException(2);
-            var aggr = enumerator.Current;
-
-            if (!enumerator.MoveNext())
-                return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
-
-            TValue v1 = pass, v2 = norm, v3 = aggr;
-
-            var v4 = enumerator.Current;
-            if (!enumerator.MoveNext()) throw GetException(4);
-            var v5 = enumerator.Current;
-            if (!enumerator.MoveNext()) throw GetException(5);
-            var v6 = enumerator.Current;
-            if (!enumerator.MoveNext()) throw GetException(6);
-            var v7 = enumerator.Current;
-            if (!enumerator.MoveNext()) throw GetException(7);
-            var v8 = enumerator.Current;
-            if (!enumerator.MoveNext()) throw GetException(8);
-            var v9 = enumerator.Current;
-
-            //end of sequence
-            if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
-
-            return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
-
-            Exception GetException(int numberOfElements) => new ArgumentException(
-                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
-        }
-
         private static IAggressionBased<TValue> FromValues(ParsedSequence<TValue> values)
         {
             var enumerator = values.GetEnumerator();
@@ -345,7 +303,47 @@ namespace Nemesis.TextParsers.Tests
         public static IAggressionBased<TValue> FromPassiveNormalAggressiveChecked(TValue passive, TValue normal, TValue aggressive)
             => new AggressionBased3<TValue>(passive, normal, aggressive);
 
-        //TODO check tests
+        internal static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
+        {
+            if (values == null) return AggressionBasedFactory<TValue>.Default();
+
+            using var enumerator = values.GetEnumerator();
+
+            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
+            var pass = enumerator.Current;
+
+            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
+            var norm = enumerator.Current;
+
+            if (!enumerator.MoveNext()) throw GetException(2);
+            var aggr = enumerator.Current;
+
+            if (!enumerator.MoveNext())
+                return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
+
+            TValue v1 = pass, v2 = norm, v3 = aggr;
+
+            var v4 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(4);
+            var v5 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(5);
+            var v6 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(6);
+            var v7 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(7);
+            var v8 = enumerator.Current;
+            if (!enumerator.MoveNext()) throw GetException(8);
+            var v9 = enumerator.Current;
+
+            //end of sequence
+            if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
+
+            return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
+
+            Exception GetException(int numberOfElements) => new ArgumentException(
+                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
+        }
+
         internal static IAggressionBased<TValue> FromValuesCompact(IEnumerable<TValue> values)
         {
             if (values == null) return Default();

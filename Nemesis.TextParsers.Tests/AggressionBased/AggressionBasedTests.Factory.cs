@@ -119,10 +119,8 @@ namespace Nemesis.TextParsers.Tests
             Assert.Throws<ArgumentException>(() => FacInt.FromValuesCompact(values));
 
         [TestCaseSource(nameof(FromValues_Invalid))]
-        public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values)
-        {
-            Assert.Throws<ArgumentException>(() => AggressionBasedTransformer<int>.FromValues(values));
-        }
+        public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values) => 
+            Assert.Throws<ArgumentException>(() => AggressionBasedFactory<int>.FromValues(values));
 
         private const string AGG_BASED_STRING_SYNTAX =
             @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
