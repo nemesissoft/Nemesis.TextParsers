@@ -139,18 +139,19 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(v1, Is.EqualTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
             }
 
-            var ab1 = AggressionBasedFactoryChecked<TElement>.FromText(inputText.AsSpan());
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+
+            var ab1 = transformer.Parse(inputText.AsSpan());
             CheckType(ab1, "1");
             var text1 = ab1.ToString();
 
 
-            var ab2 = AggressionBasedFactoryChecked<TElement>.FromValues(inputValues);
+            var ab2 = AggressionBasedTransformer<TElement>.FromValues(inputValues);
             CheckType(ab2, "2");
             var text2 = ab2.ToString();
 
 
 
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
             var ab3 = transformer.Parse(inputText);
             CheckType(ab3, "3");
             var text3 = ab3.ToString();
@@ -164,10 +165,10 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(text1, Is.EqualTo(text3), "3");
             Assert.That(text1, Is.EqualTo(text3A), "3A");
 
-            var parsed1 = AggressionBasedFactoryChecked<TElement>.FromText(text1.AsSpan());
-            var parsed2 = AggressionBasedFactoryChecked<TElement>.FromText(text2.AsSpan());
-            var parsed3 = AggressionBasedFactoryChecked<TElement>.FromText(text3.AsSpan());
-            var parsed3A = AggressionBasedFactoryChecked<TElement>.FromText(text3A.AsSpan());
+            var parsed1  = transformer.Parse(text1.AsSpan());
+            var parsed2  = transformer.Parse(text2.AsSpan());
+            var parsed3  = transformer.Parse(text3.AsSpan());
+            var parsed3A = transformer.Parse(text3A.AsSpan());
 
             CheckEquivalenceAb(ab1, parsed1, "1==p1");
             CheckEquivalenceAb(ab1, parsed2, "1==p2");

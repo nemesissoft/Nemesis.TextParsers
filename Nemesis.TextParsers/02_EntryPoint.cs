@@ -25,7 +25,6 @@ namespace Nemesis.TextParsers
         public static ITransformerStore Default { get; } = StandardTransformerStore.GetDefaultTextTransformer();
     }
 
-    //TODO CreateTransformer() with context - relation to parent ITransformerStore 
     internal sealed class StandardTransformerStore : ITransformerStore
     {
         private readonly IEnumerable<ICanCreateTransformer> _transformerCreators;

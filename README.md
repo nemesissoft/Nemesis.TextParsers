@@ -138,6 +138,7 @@ Open source software is free but creating it is not. Should you wish to support 
 * [![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
 
 
+
 ## Todo / road map
 - [ ] context based transformer creation with settings for:
 	- [ ] DictionaryBehaviour

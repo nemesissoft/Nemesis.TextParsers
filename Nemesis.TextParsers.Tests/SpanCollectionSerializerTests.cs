@@ -574,9 +574,11 @@ namespace Nemesis.TextParsers.Tests
                         Enumerable.Range(10, 6).Select(i => i % 2 == 0 ? (float?)null : 10 * i).ToList()
                 );
 
-            string text = input.ToString();
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<List<float?>>>();
+
+            string text = transformer.Format( input);
             Assert.That(text, Is.EqualTo(@"10|\∅|30#∅#\∅|110|\∅|130|\∅|150"));
-            var deser = AggressionBasedFactoryChecked<List<float?>>.FromText(text.AsSpan());
+            var deser = transformer.Parse(text.AsSpan());
             Assert.That(deser, Is.EqualTo(input));
         }
 

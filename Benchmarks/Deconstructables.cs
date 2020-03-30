@@ -9,6 +9,24 @@ using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
 
 namespace Benchmarks
 {
+    /* sample execution
+    |          Method |    N |       Mean | Ratio |   Gen 0 | Allocated |
+    |---------------- |----- |-----------:|------:|--------:|----------:|
+    |        Standard |   10 |   5.827 us |  1.00 |  0.6104 |    3840 B |
+    |       Dedicated |   10 |   5.669 us |  0.97 |  0.5569 |    3520 B |
+    |      Convention |   10 |   3.647 us |  0.63 |       - |         - |
+    | Deconstructable |   10 |   8.511 us |  1.46 |       - |         - |
+    |                 |      |            |       |         |           |
+    |        Standard |  100 |  58.101 us |  1.00 |  6.1035 |   38400 B |
+    |       Dedicated |  100 |  57.365 us |  0.99 |  5.5542 |   35200 B |
+    |      Convention |  100 |  36.086 us |  0.62 |       - |         - |
+    | Deconstructable |  100 |  84.329 us |  1.45 |       - |         - |
+    |                 |      |            |       |         |           |
+    |        Standard | 1000 | 577.773 us |  1.00 | 60.5469 |  384001 B |
+    |       Dedicated | 1000 | 563.523 us |  0.98 | 55.6641 |  352001 B |
+    |      Convention | 1000 | 361.830 us |  0.63 |       - |       1 B |
+    | Deconstructable | 1000 | 846.675 us |  1.47 |       - |       1 B |
+    */
     [MemoryDiagnoser]
     // ReSharper disable once IdentifierTypo
     public class Deconstructables

@@ -42,8 +42,10 @@ namespace Nemesis.TextParsers.Tests
 
         private static void EqualsTestsHelper<TElement>(string text1, string text2)
         {
-            var ab1 = AggressionBasedFactoryChecked<TElement>.FromText(text1.AsSpan());
-            var ab2 = AggressionBasedFactoryChecked<TElement>.FromText(text2.AsSpan());
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+
+            var ab1 = transformer.Parse(text1.AsSpan());
+            var ab2 = transformer.Parse(text2.AsSpan());
 
             Assert.That(ab1, Is.EqualTo(ab2));
         }
@@ -69,7 +71,9 @@ namespace Nemesis.TextParsers.Tests
 
             var text = crazyAggBasedSame.ToString();
 
-            var actual = AggressionBasedFactoryChecked<List<IAggressionBased<int[]>>>.FromText(text.AsSpan());
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<List<IAggressionBased<int[]>>>>();
+
+            var actual = transformer.Parse(text.AsSpan());
 
             Assert.That(actual, Is.EqualTo(crazyAggBasedSame));
 
@@ -90,7 +94,7 @@ namespace Nemesis.TextParsers.Tests
             );
             var text2 = crazyAggBasedNotSame.ToString();
 
-            var actual2 = AggressionBasedFactoryChecked<List<IAggressionBased<int[]>>>.FromText(text2.AsSpan());
+            var actual2 = transformer.Parse(text2.AsSpan());
 
             Assert.That(actual2, Is.EqualTo(crazyAggBasedNotSame));
 
@@ -105,7 +109,7 @@ namespace Nemesis.TextParsers.Tests
 
             var textNotCompacted = crazyAggBasedSameNotCompacted.ToString();
 
-            var actualNotCompacted = AggressionBasedFactoryChecked<List<IAggressionBased<int[]>>>.FromText(textNotCompacted.AsSpan());
+            var actualNotCompacted = transformer.Parse(textNotCompacted.AsSpan());
 
             Assert.That(actualNotCompacted, Is.EqualTo(crazyAggBasedSameNotCompacted));
         }

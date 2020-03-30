@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using FacInt = Nemesis.TextParsers.Tests.AggressionBasedFactory<int>;
-using FacIntCheck = Nemesis.TextParsers.Tests.AggressionBasedFactoryChecked<int>;
 using System.Collections;
 using Nemesis.TextParsers.Utils;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
@@ -47,15 +46,16 @@ namespace Nemesis.TextParsers.Tests
         public void AggressionBasedFactory_FromText_ShouldParseComplexCases((int number, Type elementType, string input, IEnumerable expectedOutput) data)
         {
             var fromText = MakeDelegate<Action<string, IEnumerable>>(
-                (p1, p2) => AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper<int>(p1, p2), data.elementType
+                (p1, p2) => AggressionBasedFactory_ShouldParseComplexCasesHelper<int>(p1, p2), data.elementType
             );
 
             fromText(data.input, data.expectedOutput);
         }
 
-        private static void AggressionBasedFactory_FromText_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
+        private static void AggressionBasedFactory_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
         {
-            var actual = AggressionBasedFactoryChecked<TElement>.FromText(input.AsSpan());
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+            var actual = transformer.Parse(input);
 
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
@@ -91,9 +91,10 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [TestCaseSource(nameof(ValidValuesForFactory))]
-        public void AggressionBasedFactory_FromText_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
+        public void AggressionBasedFactory_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
         {
-            var actual = FacIntCheck.FromText(data.inputText.AsSpan());
+            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            var actual = transformer.Parse(data.inputText);
 
             Assert.That(actual, Is.Not.Null);
 
@@ -118,8 +119,10 @@ namespace Nemesis.TextParsers.Tests
             Assert.Throws<ArgumentException>(() => FacInt.FromValuesCompact(values));
 
         [TestCaseSource(nameof(FromValues_Invalid))]
-        public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values) =>
-            Assert.Throws<ArgumentException>(() => FacIntCheck.FromValues(values));
+        public void AggressionBasedFactoryChecked_FromValues_NegativeTests(IEnumerable<int> values)
+        {
+            Assert.Throws<ArgumentException>(() => AggressionBasedTransformer<int>.FromValues(values));
+        }
 
         private const string AGG_BASED_STRING_SYNTAX =
             @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
