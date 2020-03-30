@@ -235,7 +235,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
             new TCD(typeof(LotsOfDeconstructableData), LotsOfDeconstructableData.EmptyInstance, null),
             new TCD(typeof(EmptyFactoryMethodConvention), EmptyFactoryMethodConvention.Empty, null),
         };
-        
+
         [TestCaseSource(nameof(GetEmptyNullInstance_Data))]
         public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
         {
@@ -264,7 +264,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
 
             new TCD(typeof(IAggressionBased<int?>), "", new AggressionBased1<int?>(null)),
             new TCD(typeof(IAggressionBased<int?>), null, new AggressionBased1<int?>(null)),
-            
+
 
             new TCD(typeof(ValueTuple<int, int>), "", (0, 0)),
             new TCD(typeof(ValueTuple<int, int>), null, (0, 0)),
@@ -275,14 +275,22 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
 
             new TCD(typeof(ValueTuple<string, int?>), @"", ("", (int?) null)),
             new TCD(typeof(ValueTuple<string, int?>), @"(,)", ("", (int?) null)),
-            new TCD(typeof(ValueTuple<string, int?>), @"(∅,)", ((string)null, (int?) null)),
+            new TCD(typeof(ValueTuple<string, int?>), @"(∅,)", ((string) null, (int?) null)),
             new TCD(typeof(ValueTuple<string, int?>), @"(\∅,)", ("∅", (int?) null)),
             new TCD(typeof(ValueTuple<string, int?>), @"(∅ABC,)", ("∅ABC", (int?) null)),
 
             new TCD(typeof(ValueTuple<int, int?>), "", (0, (int?) null)),
-            
-            //TODO add more empty tests 
-            //new TCD(typeof(ValueTuple<int, int?>[]), "", (0, (int?) null)),
+
+
+            new TCD(typeof(List<ValueTuple<int, int?>>), @"(0,\∅)", new List<(int, int?)> {default}),
+            new TCD(typeof(List<ValueTuple<int, int?>>), @"(0,\∅)|(0,\∅)", new List<(int, int?)> {default, default}),
+            new TCD(typeof(List<ValueTuple<int, int?>>), @"(0,\∅)|∅", new List<(int, int?)> {default, default}),
+            new TCD(typeof(List<ValueTuple<int, int?>>), @"(0,\∅)|(0,\∅)|", new List<(int, int?)> {default, default, default}),
+
+
+            new TCD(typeof(List<int?>), @"∅", new List<int?> {default}),
+            new TCD(typeof(List<int?>), @"∅|∅", new List<int?> {default, default}),
+            new TCD(typeof(List<int?>), @"∅|∅|", new List<int?> {default, default, default}),
         };
         [TestCaseSource(nameof(EmptyNullParsingData))]
         public void EmptyNullParsingTest(Type type, string input, object expectedOutput)
