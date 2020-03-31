@@ -41,6 +41,7 @@ Passed parameters:
             _tupleEnd = tupleEnd;
         }
 
+        #region Formatting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StartFormat(ref ValueSequenceBuilder<char> accumulator)
         {
@@ -58,7 +59,26 @@ Passed parameters:
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) => accumulator.Append(_tupleDelimiter);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
+        {
+            string elementText = formatter.Format(element);
+            if (elementText == null)
+                accumulator.Append(_nullElementMarker);
+            else
+            {
+                foreach (char c in elementText)
+                {
+                    if (c == _escapingSequenceStart || c == _nullElementMarker || c == _tupleDelimiter)
+                        accumulator.Append(_escapingSequenceStart);
+                    accumulator.Append(c);
+                }
+            }
+        }
+        #endregion
 
+
+        #region Parsing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TokenSequence<char>.TokenSequenceEnumerator ParseStart(ReadOnlySpan<char> input, byte arity, string typeName = null)
         {
@@ -168,25 +188,10 @@ These requirements were not met in:
             }
         }
 
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
-        {
-            string elementText = formatter.Format(element);
-            if (elementText == null)
-                accumulator.Append(_nullElementMarker);
-            else
-            {
-                foreach (char c in elementText)
-                {
-                    if (c == _escapingSequenceStart || c == _nullElementMarker || c == _tupleDelimiter)
-                        accumulator.Append(_escapingSequenceStart);
-                    accumulator.Append(c);
-                }
-            }
-        }
+        #endregion
 
 
+        #region Object helpers
         public override string ToString() =>
             $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
 
@@ -214,6 +219,7 @@ These requirements were not met in:
 
         public static bool operator ==(TupleHelper left, TupleHelper right) => left.Equals(right);
 
-        public static bool operator !=(TupleHelper left, TupleHelper right) => !left.Equals(right);
+        public static bool operator !=(TupleHelper left, TupleHelper right) => !left.Equals(right); 
+        #endregion
     }
 }
