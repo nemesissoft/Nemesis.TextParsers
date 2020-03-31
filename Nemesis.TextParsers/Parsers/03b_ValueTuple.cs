@@ -47,11 +47,11 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override ValueTuple<T1> ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return new ValueTuple<T1>(t1);
             }
@@ -60,11 +60,11 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -93,15 +93,15 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override (T1, T2) ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2);
             }
@@ -110,15 +110,15 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
 
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -150,17 +150,17 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override (T1, T2, T3) ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
-                Helper.ParseNext(ref enumerator, 3);
-                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+                _helper.ParseNext(ref enumerator, 3);
+                var t3 = _helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3);
             }
@@ -169,18 +169,18 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
 
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -215,20 +215,20 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override (T1, T2, T3, T4) ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
-                Helper.ParseNext(ref enumerator, 3);
-                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+                _helper.ParseNext(ref enumerator, 3);
+                var t3 = _helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseNext(ref enumerator, 4);
-                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+                _helper.ParseNext(ref enumerator, 4);
+                var t4 = _helper.ParseElement(ref enumerator, _transformer4);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4);
             }
@@ -237,21 +237,21 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
 
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -289,23 +289,23 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override (T1, T2, T3, T4, T5) ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
-                Helper.ParseNext(ref enumerator, 3);
-                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+                _helper.ParseNext(ref enumerator, 3);
+                var t3 = _helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseNext(ref enumerator, 4);
-                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+                _helper.ParseNext(ref enumerator, 4);
+                var t4 = _helper.ParseElement(ref enumerator, _transformer4);
 
-                Helper.ParseNext(ref enumerator, 5);
-                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+                _helper.ParseNext(ref enumerator, 5);
+                var t5 = _helper.ParseElement(ref enumerator, _transformer5);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4, t5);
             }
@@ -314,24 +314,24 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
 
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -372,26 +372,26 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override (T1, T2, T3, T4, T5, T6) ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
-                Helper.ParseNext(ref enumerator, 3);
-                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+                _helper.ParseNext(ref enumerator, 3);
+                var t3 = _helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseNext(ref enumerator, 4);
-                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+                _helper.ParseNext(ref enumerator, 4);
+                var t4 = _helper.ParseElement(ref enumerator, _transformer4);
 
-                Helper.ParseNext(ref enumerator, 5);
-                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+                _helper.ParseNext(ref enumerator, 5);
+                var t5 = _helper.ParseElement(ref enumerator, _transformer5);
 
-                Helper.ParseNext(ref enumerator, 6);
-                var t6 = Helper.ParseElement(ref enumerator, _transformer6);
+                _helper.ParseNext(ref enumerator, 6);
+                var t6 = _helper.ParseElement(ref enumerator, _transformer6);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4, t5, t6);
             }
@@ -400,26 +400,26 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -463,29 +463,29 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override (T1, T2, T3, T4, T5, T6, T7) ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
-                Helper.ParseNext(ref enumerator, 3);
-                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+                _helper.ParseNext(ref enumerator, 3);
+                var t3 = _helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseNext(ref enumerator, 4);
-                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+                _helper.ParseNext(ref enumerator, 4);
+                var t4 = _helper.ParseElement(ref enumerator, _transformer4);
 
-                Helper.ParseNext(ref enumerator, 5);
-                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+                _helper.ParseNext(ref enumerator, 5);
+                var t5 = _helper.ParseElement(ref enumerator, _transformer5);
 
-                Helper.ParseNext(ref enumerator, 6);
-                var t6 = Helper.ParseElement(ref enumerator, _transformer6);
+                _helper.ParseNext(ref enumerator, 6);
+                var t6 = _helper.ParseElement(ref enumerator, _transformer6);
 
-                Helper.ParseNext(ref enumerator, 7);
-                var t7 = Helper.ParseElement(ref enumerator, _transformer7);
+                _helper.ParseNext(ref enumerator, 7);
+                var t7 = _helper.ParseElement(ref enumerator, _transformer7);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return (t1, t2, t3, t4, t5, t6, t7);
             }
@@ -494,29 +494,29 @@ namespace Nemesis.TextParsers.Parsers
             {
                 Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                Helper.StartFormat(ref accumulator);
+                _helper.StartFormat(ref accumulator);
 
-                Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer6, element.Item6, ref accumulator);
-                Helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-                Helper.FormatElement(_transformer7, element.Item7, ref accumulator);
+                _helper.FormatElement(_transformer7, element.Item7, ref accumulator);
 
-                Helper.EndFormat(ref accumulator);
+                _helper.EndFormat(ref accumulator);
                 var text = accumulator.AsSpan().ToString();
                 accumulator.Dispose();
                 return text;
@@ -563,32 +563,32 @@ namespace Nemesis.TextParsers.Parsers
 
             protected override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = Helper.ParseStart(input, ARITY);
+                var enumerator = _helper.ParseStart(input, ARITY);
 
-                var t1 = Helper.ParseElement(ref enumerator, _transformer1);
+                var t1 = _helper.ParseElement(ref enumerator, _transformer1);
 
-                Helper.ParseNext(ref enumerator, 2);
-                var t2 = Helper.ParseElement(ref enumerator, _transformer2);
+                _helper.ParseNext(ref enumerator, 2);
+                var t2 = _helper.ParseElement(ref enumerator, _transformer2);
 
-                Helper.ParseNext(ref enumerator, 3);
-                var t3 = Helper.ParseElement(ref enumerator, _transformer3);
+                _helper.ParseNext(ref enumerator, 3);
+                var t3 = _helper.ParseElement(ref enumerator, _transformer3);
 
-                Helper.ParseNext(ref enumerator, 4);
-                var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+                _helper.ParseNext(ref enumerator, 4);
+                var t4 = _helper.ParseElement(ref enumerator, _transformer4);
 
-                Helper.ParseNext(ref enumerator, 5);
-                var t5 = Helper.ParseElement(ref enumerator, _transformer5);
+                _helper.ParseNext(ref enumerator, 5);
+                var t5 = _helper.ParseElement(ref enumerator, _transformer5);
 
-                Helper.ParseNext(ref enumerator, 6);
-                var t6 = Helper.ParseElement(ref enumerator, _transformer6);
+                _helper.ParseNext(ref enumerator, 6);
+                var t6 = _helper.ParseElement(ref enumerator, _transformer6);
 
-                Helper.ParseNext(ref enumerator, 7);
-                var t7 = Helper.ParseElement(ref enumerator, _transformer7);
+                _helper.ParseNext(ref enumerator, 7);
+                var t7 = _helper.ParseElement(ref enumerator, _transformer7);
 
-                Helper.ParseNext(ref enumerator, 8);
-                var tRest = Helper.ParseElement(ref enumerator, _transformerRest);
+                _helper.ParseNext(ref enumerator, 8);
+                var tRest = _helper.ParseElement(ref enumerator, _transformerRest);
 
-                Helper.ParseEnd(ref enumerator, ARITY);
+                _helper.ParseEnd(ref enumerator, ARITY);
 
                 return new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(t1, t2, t3, t4, t5, t6, t7, tRest);
             }
@@ -599,32 +599,32 @@ namespace Nemesis.TextParsers.Parsers
                 try
                 {
                     var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-                    Helper.StartFormat(ref accumulator);
+                    _helper.StartFormat(ref accumulator);
 
-                    Helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformer5, element.Item5, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformer6, element.Item6, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformer7, element.Item7, ref accumulator);
-                    Helper.AddDelimiter(ref accumulator);
+                    _helper.FormatElement(_transformer7, element.Item7, ref accumulator);
+                    _helper.AddDelimiter(ref accumulator);
 
-                    Helper.FormatElement(_transformerRest, element.Rest, ref accumulator);
+                    _helper.FormatElement(_transformerRest, element.Rest, ref accumulator);
 
-                    Helper.EndFormat(ref accumulator);
+                    _helper.EndFormat(ref accumulator);
                     var text = accumulator.AsSpan().ToString();
                     accumulator.Dispose();
                     return text;
@@ -652,7 +652,7 @@ namespace Nemesis.TextParsers.Parsers
 
         [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
         [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
-        public static readonly TupleHelper Helper = new TupleHelper(
+        public static readonly TupleHelper _helper = new TupleHelper(
                 tupleDelimiter: ',', nullElementMarker: '∅', escapingSequenceStart: '\\',
                 tupleStart: '(', tupleEnd: ')');
 
