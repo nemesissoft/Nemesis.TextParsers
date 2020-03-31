@@ -5,6 +5,7 @@ namespace Nemesis.TextParsers.Utils
 {
     public readonly struct TupleHelper : IEquatable<TupleHelper>
     {
+        #region Init
         private readonly char _tupleDelimiter;
         private readonly char _nullElementMarker;
         private readonly char _escapingSequenceStart;
@@ -40,6 +41,8 @@ Passed parameters:
             _tupleStart = tupleStart;
             _tupleEnd = tupleEnd;
         }
+        #endregion
+
 
         #region Formatting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -190,7 +193,7 @@ These requirements were not met in:
 
         #endregion
 
-
+        
         #region Object helpers
         public override string ToString() =>
             $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
@@ -219,7 +222,7 @@ These requirements were not met in:
 
         public static bool operator ==(TupleHelper left, TupleHelper right) => left.Equals(right);
 
-        public static bool operator !=(TupleHelper left, TupleHelper right) => !left.Equals(right); 
+        public static bool operator !=(TupleHelper left, TupleHelper right) => !left.Equals(right);
         #endregion
     }
 }

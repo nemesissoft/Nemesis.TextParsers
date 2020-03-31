@@ -21,14 +21,14 @@ namespace Nemesis.TextParsers.Parsers
 
             var transType = (elementTypes.Length) switch
             {
-                1 => typeof(Tuple1Transformer<>),
-                2 => typeof(Tuple2Transformer<,>),
-                3 => typeof(Tuple3Transformer<,,>),
-                4 => typeof(Tuple4Transformer<,,,>),
-                5 => typeof(Tuple5Transformer<,,,,>),
-                6 => typeof(Tuple6Transformer<,,,,,>),
-                7 => typeof(Tuple7Transformer<,,,,,,>),
-                8 => typeof(TupleRestTransformer<,,,,,,,>),
+                1 => typeof(ValueTuple1Transformer<>),
+                2 => typeof(ValueTuple2Transformer<,>),
+                3 => typeof(ValueTuple3Transformer<,,>),
+                4 => typeof(ValueTuple4Transformer<,,,>),
+                5 => typeof(ValueTuple5Transformer<,,,,>),
+                6 => typeof(ValueTuple6Transformer<,,,,,>),
+                7 => typeof(ValueTuple7Transformer<,,,,,,>),
+                8 => typeof(ValueTupleRestTransformer<,,,,,,,>),
                 _ => throw new NotSupportedException($"Only ValueTuple with arity 1..{MAX_ARITY} are supported"),
             };
             transType = transType.MakeGenericType(elementTypes);
@@ -36,13 +36,13 @@ namespace Nemesis.TextParsers.Parsers
             return (ITransformer<TTuple>)Activator.CreateInstance(transType, _transformerStore);
         }
 
-        private sealed class Tuple1Transformer<T1> : TransformerBase<ValueTuple<T1>>
+        public sealed class ValueTuple1Transformer<T1> : TransformerBase<ValueTuple<T1>>
         {
             private readonly ITransformer<T1> _transformer1;
 
             private const byte ARITY = 1;
 
-            public Tuple1Transformer(ITransformerStore transformerStore) =>
+            public ValueTuple1Transformer(ITransformerStore transformerStore) =>
                 _transformer1 = transformerStore.GetTransformer<T1>();
 
             protected override ValueTuple<T1> ParseCore(in ReadOnlySpan<char> input)
@@ -78,14 +78,14 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class Tuple2Transformer<T1, T2> : TransformerBase<(T1, T2)>
+        public sealed class ValueTuple2Transformer<T1, T2> : TransformerBase<(T1, T2)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
 
             private const byte ARITY = 2;
 
-            public Tuple2Transformer(ITransformerStore transformerStore)
+            public ValueTuple2Transformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
@@ -133,7 +133,7 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class Tuple3Transformer<T1, T2, T3> : TransformerBase<(T1, T2, T3)>
+        public sealed class ValueTuple3Transformer<T1, T2, T3> : TransformerBase<(T1, T2, T3)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -141,7 +141,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 3;
 
-            public Tuple3Transformer(ITransformerStore transformerStore)
+            public ValueTuple3Transformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
@@ -196,7 +196,7 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class Tuple4Transformer<T1, T2, T3, T4> : TransformerBase<(T1, T2, T3, T4)>
+        public sealed class ValueTuple4Transformer<T1, T2, T3, T4> : TransformerBase<(T1, T2, T3, T4)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -205,7 +205,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 4;
 
-            public Tuple4Transformer(ITransformerStore transformerStore)
+            public ValueTuple4Transformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
@@ -268,7 +268,7 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class Tuple5Transformer<T1, T2, T3, T4, T5> : TransformerBase<(T1, T2, T3, T4, T5)>
+        public sealed class ValueTuple5Transformer<T1, T2, T3, T4, T5> : TransformerBase<(T1, T2, T3, T4, T5)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -278,7 +278,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 5;
 
-            public Tuple5Transformer(ITransformerStore transformerStore)
+            public ValueTuple5Transformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
@@ -349,7 +349,7 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class Tuple6Transformer<T1, T2, T3, T4, T5, T6> : TransformerBase<(T1, T2, T3, T4, T5, T6)>
+        public sealed class ValueTuple6Transformer<T1, T2, T3, T4, T5, T6> : TransformerBase<(T1, T2, T3, T4, T5, T6)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -360,7 +360,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 6;
 
-            public Tuple6Transformer(ITransformerStore transformerStore)
+            public ValueTuple6Transformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
@@ -438,7 +438,7 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class Tuple7Transformer<T1, T2, T3, T4, T5, T6, T7> : TransformerBase<(T1, T2, T3, T4, T5, T6, T7)>
+        public sealed class ValueTuple7Transformer<T1, T2, T3, T4, T5, T6, T7> : TransformerBase<(T1, T2, T3, T4, T5, T6, T7)>
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -450,7 +450,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 7;
 
-            public Tuple7Transformer(ITransformerStore transformerStore)
+            public ValueTuple7Transformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
@@ -536,7 +536,7 @@ namespace Nemesis.TextParsers.Parsers
                 );
         }
 
-        private sealed class TupleRestTransformer<T1, T2, T3, T4, T5, T6, T7, TRest> : TransformerBase<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>> where TRest : struct
+        public sealed class ValueTupleRestTransformer<T1, T2, T3, T4, T5, T6, T7, TRest> : TransformerBase<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>> where TRest : struct
         {
             private readonly ITransformer<T1> _transformer1;
             private readonly ITransformer<T2> _transformer2;
@@ -549,7 +549,7 @@ namespace Nemesis.TextParsers.Parsers
 
             private const byte ARITY = 8;
 
-            public TupleRestTransformer(ITransformerStore transformerStore)
+            public ValueTupleRestTransformer(ITransformerStore transformerStore)
             {
                 _transformer1 = transformerStore.GetTransformer<T1>();
                 _transformer2 = transformerStore.GetTransformer<T2>();
