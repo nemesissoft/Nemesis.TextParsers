@@ -42,7 +42,7 @@ namespace Nemesis.TextParsers.Tests
                     typeof(IAggressionBased<int>), typeof(IAggressionBased<string>),
                     typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
                     typeof(IAggressionBased<float?>),
-                    typeof(IAggressionBased<int[]>), 
+                    typeof(IAggressionBased<int[]>),
                     typeof(IAggressionBased<List<string>>), typeof(List<IAggressionBased<string>>),
                     typeof(IAggressionBased<List<float>>), typeof(List<IAggressionBased<float>>),
                     typeof(IAggressionBased<List<TimeSpan>>), typeof(List<IAggressionBased<TimeSpan>>),
@@ -74,13 +74,13 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.NextFloatingNumber(1000, false)
             ));
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
-            
-            
+
+
             _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
             _fixture.Register(() => (Enum1)_randomSource.Next(0, 10));
             _fixture.Register(() => (Enum2)_randomSource.Next(0, 10));
             _fixture.Register(() => (Enum3)_randomSource.Next(0, 6));
-            
+
             _fixture.Register(() => _randomSource.NextEnum<ByteEnum, byte>());
             _fixture.Register(() => _randomSource.NextEnum<SByteEnum, sbyte>());
             _fixture.Register(() => _randomSource.NextEnum<Int64Enum, long>());
@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers.Tests
             _fixture.Register(() => _randomSource.NextEnum<Fruits, ushort>());
             _fixture.Register(() => _randomSource.NextEnum<FruitsWeirdAll, short>());
             _fixture.Register(() => _randomSource.NextEnum<FileMode, int>());
-            
+
             var structs = _allTestCases
                 .Where(d => d.category == ExploratoryTestCategory.Structs ||
                             d.category == ExploratoryTestCategory.Enums)
@@ -178,14 +178,12 @@ namespace Nemesis.TextParsers.Tests
                 Assert.Fail($"Failed cases({failed.Count} cases):{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
         }
 
-        private static readonly MethodInfo _tester = Method.OfExpression<Action<ExploratoryTests>>(
-            test => test.ShouldParseAndFormatHelper<int>()
-        ).GetGenericMethodDefinition();
-
         private void ShouldParseAndFormat(Type testType)
         {
-            var tester = _tester.MakeGenericMethod(testType);
-            tester.Invoke(this, null);
+            var tester = MakeDelegate<Action<ExploratoryTests>>
+                (test => test.ShouldParseAndFormatHelper<int>(), testType);
+
+            tester(this);
         }
 
         private void ShouldParseAndFormatHelper<T>()
@@ -219,12 +217,12 @@ namespace Nemesis.TextParsers.Tests
 
                 reason = "Parsing empty";
                 var parsedEmpty = ParseAndAssert("");
-                
+
                 reason = "Formatting empty";
                 string emptyText1 = transformer.Format(parsedEmpty);
                 string emptyText2 = transformer.Format(emptyInstance);
                 IsMutuallyEquivalent(emptyText1, emptyText2);
-                
+
                 reason = "Parsing empty";
                 var parsedEmpty1 = ParseAndAssert(emptyText1);
                 var parsedEmpty2 = ParseAndAssert(emptyText2);
@@ -373,7 +371,7 @@ namespace Nemesis.TextParsers.Tests
 
             aggressionBased.UnionWith(
                 simpleTypes.Union(valueTuples)
-                    .Select(t => typeof(IAggressionBased<>).MakeGenericType(t) )
+                    .Select(t => typeof(IAggressionBased<>).MakeGenericType(t))
                 );
 
             simpleTypes = simpleTypes.Concat(originalAggressionBased).ToList();

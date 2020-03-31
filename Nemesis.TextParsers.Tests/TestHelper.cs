@@ -60,14 +60,19 @@ namespace Nemesis.TextParsers.Tests
             var parameters = method.GetParameters()
                 .Select(p => Expression.Parameter(p.ParameterType, p.Name))
                 .ToList();
+
+            var @this = Expression.Parameter(
+                method.ReflectedType ?? throw new NotSupportedException("Method type cannot be empty"), "this");
+
             var call = method.IsStatic
                 ? Expression.Call(method, parameters)
-                : Expression.Call(parameters[0], method, parameters.Skip(1));
+                : Expression.Call(@this, method, parameters);
+
+            if (!method.IsStatic)
+                parameters.Insert(0, @this);
 
             return Expression.Lambda<TDelegate>(call, parameters).Compile();
         }
-
-
     }
 
     internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>
@@ -139,12 +144,12 @@ namespace Nemesis.TextParsers.Tests
                 return Math.Round((_rand.NextDouble() - 0.5) * 2 * magnitude, 3);
         }
 
-        public TEnum NextEnum<TEnum, TUnderlying>() 
+        public TEnum NextEnum<TEnum, TUnderlying>()
             where TEnum : Enum
             where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
         {
             var values = Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().ToList();
-            
+
             if (values.Count == 0)
             {
                 var numberHandler = NumberHandlerCache.GetNumberHandler<TUnderlying>();

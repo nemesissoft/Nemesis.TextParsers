@@ -132,10 +132,12 @@ namespace Nemesis.TextParsers.Tests
                 1 => PassiveValue,
                 2 => PassiveValue,
                 3 => PassiveValue,
+                
                 0 => NormalValue,
                 4 => NormalValue,
                 5 => NormalValue,
                 6 => NormalValue,
+                
                 7 => AggressiveValue,
                 8 => AggressiveValue,
                 9 => AggressiveValue,

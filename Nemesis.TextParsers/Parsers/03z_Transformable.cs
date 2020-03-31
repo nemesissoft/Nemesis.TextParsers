@@ -74,8 +74,14 @@ namespace Nemesis.TextParsers.Parsers
                 return false;
             else
             {
-                var prepared = PrepareGenericTransformer(transformable, transformer);
-                return prepared.DerivesOrImplementsGeneric(typeof(ITransformer<>).MakeGenericType(transformable));
+                var preparedTransformer = PrepareGenericTransformer(transformable, transformer);
+
+                return TypeMeta
+                           .TryGetGenericRealization(preparedTransformer, typeof(ITransformer<>), out var realization) &&
+                       realization.GenericTypeArguments is {} genArgs && genArgs.Length == 1 &&
+                       genArgs[0] is { } transformedElement &&
+                       transformable.DerivesOrImplementsGeneric(transformedElement)
+                    ;
             }
         }
 

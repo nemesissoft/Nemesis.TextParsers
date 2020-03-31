@@ -263,5 +263,10 @@ namespace Nemesis.TextParsers.Tests
             IsMutuallyEquivalent(parsed1, AggressionBasedFactory<TCollection>.FromOneValue((TCollection)emptyValue));
         }
 
+        [Test]
+        public void TransformConcreteAggressionBased()
+        {
+            //var transformer = TextTransformer.Default.GetTransformer<AggressionBased1<int>>();
+        }
     }
 }

@@ -10,7 +10,7 @@ using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
 
@@ -197,7 +197,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);
             var formatter = DeconstructionTransformer<TDeconstructable>.CreateFormatter(deconstruct);
             var emptyGenerator = UseDeconstructableEmpty
-                ? DeconstructionTransformer<TDeconstructable>.CreateEmptyGenerator(ctor, transformerStore)
+                ? DeconstructionTransformer<TDeconstructable>.CreateEmptyGenerator(ctor)
                 : null;
 
             return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter, emptyGenerator);
@@ -288,7 +288,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
     {
         public delegate TDeconstructable ParserDelegate(ReadOnlySpan<char> input, TupleHelper helper, ITransformer[] transformers);
         public delegate string FormatterDelegate(TDeconstructable element, ref ValueSequenceBuilder<char> accumulator, TupleHelper helper, ITransformer[] transformers);
-        public delegate TDeconstructable EmptyGenerator();
+        public delegate TDeconstructable EmptyGenerator(ITransformer[] transformers);
 
 
         private readonly TupleHelper _helper;
@@ -478,17 +478,30 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return λ.Compile();
         }
 
-        internal static EmptyGenerator CreateEmptyGenerator(ConstructorInfo ctor, ITransformerStore transformerStore)
+        internal static EmptyGenerator CreateEmptyGenerator(ConstructorInfo ctor)
         {
-            //TODO check if empty instances are modified by other instance ?
+            var transformers = Expression.Parameter(typeof(ITransformer[]), "transformers");
+
+            Expression GetEmptyInstanceExpression(Type parameterType, int index)
+            {
+                var transformerType = typeof(ITransformer<>).MakeGenericType(parameterType);
+
+                var genericTransformer = Expression.Convert(
+                    Expression.ArrayIndex(transformers, Expression.Constant(index)),
+                    transformerType
+                );
+                var getEmptyMethod = transformerType.GetMethod(nameof(ITransformer<int>.GetEmpty)) ??
+                    throw new MissingMethodException(nameof(ITransformer<int>), nameof(ITransformer<int>.GetEmpty));
+                return Expression.Call(genericTransformer, getEmptyMethod);
+            }
+
             var emptyInstances = ctor.GetParameters()
                     .Select(p => p.ParameterType)
-                    .Select(type => Expression.Constant(transformerStore.GetEmptyInstance(type), type))
-                ;
+                    .Select(GetEmptyInstanceExpression);
 
             var @new = Expression.New(ctor, emptyInstances);
 
-            var λ = Expression.Lambda<EmptyGenerator>(@new);
+            var λ = Expression.Lambda<EmptyGenerator>(@new, transformers);
             return λ.Compile();
         }
 
@@ -536,15 +549,14 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
                 try
                 {
-                    var text = _formatter(element, ref accumulator, _helper, _transformers);
-                    return text;
+                    return _formatter(element, ref accumulator, _helper, _transformers);
                 }
                 finally { accumulator.Dispose(); }
             }
         }
-        
+
         public override TDeconstructable GetEmpty() =>
-            _emptyGenerator != null ? _emptyGenerator() : base.GetEmpty();
+            _emptyGenerator != null ? _emptyGenerator(_transformers) : base.GetEmpty();
 
         public override string ToString()
         {
