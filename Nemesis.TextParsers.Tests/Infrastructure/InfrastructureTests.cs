@@ -237,16 +237,6 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         [TestCaseSource(nameof(GetEmptyNullInstance_Data))]
         public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
         {
-            //TODO add tests to check fresh copy for empty objects 
-            /*var trans = TextTransformer.Default.GetTransformer<LotsOfDeconstructableData>();
-
-            var e1= trans.GetEmpty();
-            var e2= trans.GetEmpty();
-            var e3= trans.GetEmpty();
-
-            e3.D10.Add("123", 456);
-            e3.D10.Add("12sd3", 456);*/
-
             IsMutuallyEquivalent(
                 TextTransformer.Default.GetEmptyInstance(type),
                 expectedEmpty, "empty value should be as expected");

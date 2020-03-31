@@ -13,8 +13,9 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
-    /*TODO     
-     check Dispose of ValueSequenceBuilder
+    /*TODO
+     copy ValueTuple methods to tuple helper 
+     check Dispose of ValueSequenceBuilder - check if accumulator is copied
      perf test - check TupleHelper allocations current vs every time it's needed 
        */
     [TestFixture]
@@ -232,20 +233,33 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
                     .WithDelimiter(':')
                     .WithEscapingSequenceStart('*')
             );
+
+            FormatAndParseHelper(
+                new House("My house", 116.2f, new List<Room>
+                {
+                    new Room("Kid/wife room", new Dictionary<string, decimal>{["BRIMNES"]=857,["STRANDMON"]=699}),
+                    new Room("Kitchen", new Dictionary<string, decimal>{["VADHOLMA"]=999,["RISATORP"]=29.99m}),
+                }),
+                @"{My house⸗116.2⸗[Kid//wife room,BRIMNES=857;STRANDMON=699]|[Kitchen,VADHOLMA=999;RISATORP=29.99]}",
+                s => s.WithBorders('{', '}')
+                    .WithDelimiter('⸗')
+                    .WithEscapingSequenceStart('/')
+            );
         }
 
 
         internal static IEnumerable<TCD> CustomDeconstructable_Data() => new[]
         {
-            new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, new decimal[]{10,20,30}), @"{3.14_False_10|20|30}"),
-            new TCD(new DataWithCustomDeconstructableTransformer(666, true, new decimal[]{6,7,8,9 }), null), //overriden by custom transformer 
+            //instance, input
+            new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, new decimal[] {10, 20, 30}),
+                @"{3.14_False_10|20|30}"),
+            new TCD(new DataWithCustomDeconstructableTransformer(666, true, new decimal[] {6, 7, 8, 9}), null), //overriden by custom transformer 
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), ""), //overriden by deconstructable aspect convention
-            
+
             new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, null), @"{3.14_False_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_False_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_␀_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), @"{__}"),
-
         };
 
         [TestCaseSource(nameof(CustomDeconstructable_Data))]
@@ -268,7 +282,40 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
         }
 
+        [Test]
+        public void Empty_CheckNested()
+        {
+            IsMutuallyEquivalent(
+                _transformerStore.GetEmptyInstance<House>(),
+                new House("", 0.0f, new List<Room>())); //not overriden  
 
+            IsMutuallyEquivalent(
+                _transformerStore.GetEmptyInstance<Room>(),
+                RoomTransformer.Empty); //overriden by transformer
+        }
+
+        [Test]
+        public void Empty_CheckStability()
+        {
+            //not overriden 
+            var emptyHouse1 = _transformerStore.GetEmptyInstance<House>();
+            var emptyHouse2 = _transformerStore.GetEmptyInstance<House>();
+
+            Assert.That(emptyHouse1.Rooms, Is.Empty);
+            emptyHouse1.Rooms.Add(new Room("XXX", null));
+            Assert.That(emptyHouse1.Rooms, Is.Not.Empty);
+            Assert.That(emptyHouse2.Rooms, Is.Empty);
+
+
+            //overriden by transformer
+            var emptyRoom1 = _transformerStore.GetEmptyInstance<Room>();
+            var emptyRoom2 = _transformerStore.GetEmptyInstance<Room>();
+
+            Assert.That(emptyRoom1.FurniturePrices, Has.Count.EqualTo(1));
+            emptyRoom1.FurniturePrices.Add("New bed", 10000);
+            Assert.That(emptyRoom1.FurniturePrices, Has.Count.EqualTo(2));
+            Assert.That(emptyRoom2.FurniturePrices, Has.Count.EqualTo(1));
+        }
 
         #region Negative tests
 
@@ -356,187 +403,6 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             catch (Exception e) { return e; }
         }
 
-        [UsedImplicitly]
-        private readonly struct NoDeconstruct
-        {
-            // ReSharper disable once MemberCanBePrivate.Local
-            // ReSharper disable once UnusedAutoPropertyAccessor.Local
-            public string Text { get; }
-            public NoDeconstruct(string text) => Text = text;
-        }
-
-        [UsedImplicitly]
-        private readonly struct DeconstructWithoutMatchingCtor
-        {
-            // ReSharper disable once UnassignedGetOnlyAutoProperty
-            public string Text { get; }
-            // ReSharper disable once UnusedMember.Local
-            public void Deconstruct(out string text) => text = Text;
-        }
-
-        [UsedImplicitly]
-        private readonly struct CtorAndDeCtorOutOfSync
-        {
-            public string Text { get; }
-            // ReSharper disable once UnusedAutoPropertyAccessor.Local
-            // ReSharper disable once MemberCanBePrivate.Local
-            public int Number { get; }
-
-            public CtorAndDeCtorOutOfSync(string text, int number)
-            {
-                Text = text;
-                Number = number;
-            }
-            [UsedImplicitly]
-            public void Deconstruct(out string text) => text = Text;
-        }
-
-        [UsedImplicitly]
-        private readonly struct NotCompatibleCtor
-        {
-            public string Text { get; }
-
-            public NotCompatibleCtor(int text) => Text = text.ToString();
-
-            [UsedImplicitly]
-            public void Deconstruct(out string text) => text = Text;
-
-            public static readonly MethodInfo DeconstructMethod =
-                typeof(NotCompatibleCtor).GetMethod(nameof(Deconstruct));
-
-            public static readonly ConstructorInfo Constructor = Ctor.Of(() => new NotCompatibleCtor(default));
-        }
-
-        [UsedImplicitly]
-        private readonly struct NotOutParam
-        {
-            // ReSharper disable once MemberCanBePrivate.Local
-            public string Text { get; }
-
-            public NotOutParam(string text) => Text = text;
-
-            [UsedImplicitly]
-            // ReSharper disable RedundantAssignment
-            public void Deconstruct(string text) => text = Text;
-            // ReSharper restore RedundantAssignment
-
-            public static readonly MethodInfo DeconstructMethod =
-                typeof(NotOutParam).GetMethod(nameof(Deconstruct));
-
-            public static readonly ConstructorInfo Constructor = Ctor.Of(() => new NotOutParam(default));
-        }
-
-        [UsedImplicitly]
-        private readonly struct NotSupportedParams
-        {
-            public string Text { get; }
-            public object Obj { get; }
-            public object[] ObjArray { get; }
-            public List<object> ObjList { get; }
-            public string[,] StringMultiDimArray { get; }
-
-            public NotSupportedParams(string text, object obj, object[] objArray, List<object> objList, string[,] stringMultiDimArray)
-            {
-                Text = text;
-                Obj = obj;
-                ObjArray = objArray;
-                ObjList = objList;
-                StringMultiDimArray = stringMultiDimArray;
-            }
-
-            public void Deconstruct(out string text, out object obj, out object[] objArray, out List<object> objList, out string[,] stringMultiDimArray)
-            {
-                text = Text;
-                obj = Obj;
-                objArray = ObjArray;
-                objList = ObjList;
-                stringMultiDimArray = StringMultiDimArray;
-            }
-
-            public static readonly MethodInfo DeconstructMethod =
-                typeof(NotSupportedParams).GetMethod(nameof(Deconstruct));
-
-            public static readonly ConstructorInfo Constructor = Ctor.Of(() => new NotSupportedParams(default, default, default, default, default));
-        }
-
-
-        [UsedImplicitly]
-        internal readonly struct StaticNotCompatibleCtor
-        {
-            public string Text { get; }
-
-            public StaticNotCompatibleCtor(int text) => Text = text.ToString();
-
-            private static readonly Type _thisType = typeof(StaticNotCompatibleCtor);
-
-            public static readonly MethodInfo DeconstructMethod = typeof(ExternalDeconstruct).GetMethods()
-                    .Single(m => m.Name == "Deconstruct" && m.GetParameters().FirstOrDefault()?.ParameterType == _thisType);
-
-            public static readonly ConstructorInfo Constructor = _thisType.GetConstructors().Single();
-        }
-
-
-        [UsedImplicitly]
-        internal readonly struct StaticNotOutParam
-        {
-            // ReSharper disable once MemberCanBePrivate.Local
-            public string Text { get; }
-
-            public StaticNotOutParam(string text) => Text = text;
-
-            private static readonly Type _thisType = typeof(StaticNotOutParam);
-
-            public static readonly MethodInfo DeconstructMethod = typeof(ExternalDeconstruct).GetMethods()
-                .Single(m => m.Name == "Deconstruct" && m.GetParameters().FirstOrDefault()?.ParameterType == _thisType);
-
-            public static readonly ConstructorInfo Constructor = _thisType.GetConstructors().Single();
-        }
-
-        [UsedImplicitly]
-        internal readonly struct StaticNotSupportedParams
-        {
-            public string Text { get; }
-            public object Obj { get; }
-            public object[] ObjArray { get; }
-            public List<object> ObjList { get; }
-            public string[,] StringMultiDimArray { get; }
-
-            public StaticNotSupportedParams(string text, object obj, object[] objArray, List<object> objList, string[,] stringMultiDimArray)
-            {
-                Text = text;
-                Obj = obj;
-                ObjArray = objArray;
-                ObjList = objList;
-                StringMultiDimArray = stringMultiDimArray;
-            }
-
-            private static readonly Type _thisType = typeof(StaticNotSupportedParams);
-
-            public static readonly MethodInfo DeconstructMethod = typeof(ExternalDeconstruct).GetMethods()
-                .Single(m => m.Name == "Deconstruct" && m.GetParameters().FirstOrDefault()?.ParameterType == _thisType);
-
-            public static readonly ConstructorInfo Constructor = _thisType.GetConstructors().Single();
-        }
-
         #endregion
-    }
-
-    internal static class ExternalDeconstruct
-    {
-        public static void Deconstruct(this DeconstructableTests.StaticNotCompatibleCtor instance, out string text)
-            => text = instance.Text;
-
-        // ReSharper disable RedundantAssignment
-        public static void Deconstruct(this DeconstructableTests.StaticNotOutParam instance, string text) => text = instance.Text;
-        // ReSharper restore RedundantAssignment
-
-        public static void Deconstruct(this DeconstructableTests.StaticNotSupportedParams instance, out string text, out object obj, out object[] objArray, out List<object> objList, out string[,] stringMultiDimArray)
-        {
-            text = instance.Text;
-            obj = instance.Obj;
-            objArray = instance.ObjArray;
-            objList = instance.ObjList;
-            stringMultiDimArray = instance.StringMultiDimArray;
-        }
     }
 }

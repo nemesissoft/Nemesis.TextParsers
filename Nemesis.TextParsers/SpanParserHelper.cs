@@ -181,7 +181,7 @@ namespace Nemesis.TextParsers
             try
             {
                 using var accumulator = new ValueSequenceBuilder<T>(initialBuffer);
-                //TODO check if accumulator is copied 
+                 
                 accumulator.Append(first);
                 accumulator.Append(second);
                 accumulator.Append(third);
