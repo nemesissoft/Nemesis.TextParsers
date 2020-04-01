@@ -524,6 +524,7 @@ namespace Nemesis.TextParsers.Parsers
         private const string TYPE_NAME = "Complex number";
 
         private static readonly TupleHelper _helper = new TupleHelper(DELIMITER, '∅', ESCAPING_SEQUENCE_START, START, END);
+        
         private static readonly ITransformer<double> _doubleParser = DoubleParser.Instance;
 
 

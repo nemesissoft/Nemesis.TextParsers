@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
+    //TODO perf tests - class vs ValueTuple
     public readonly struct TupleHelper : IEquatable<TupleHelper>
     {
         #region Init
