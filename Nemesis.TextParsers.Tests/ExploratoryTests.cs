@@ -102,7 +102,7 @@ namespace Nemesis.TextParsers.Tests
                 .Where(t => TypeMeta.TryGetGenericRealization(t, typeof(IAggressionBased<>), out _))
                 .Select(t => TypeMeta.GetGenericRealization(t, typeof(IAggressionBased<>)).GenericTypeArguments[0])
                 .ToList();
-            FixtureUtils.RegisterAllAggressionBased(_fixture, aggBasedElements);
+            FixtureUtils.RegisterAllAggressionBased(_fixture, _randomSource, aggBasedElements);
 
 
             var nonNullableStructs = structs
@@ -446,15 +446,15 @@ namespace Nemesis.TextParsers.Tests
 
     static class FixtureUtils
     {
-        public static void RegisterAllAggressionBased(Fixture fixture, IEnumerable<Type> elementTypes)
+        public static void RegisterAllAggressionBased(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
         {
             foreach (var elementType in elementTypes)
             {
-                var register = MakeDelegate<Action<IFixture>>(
-                    fix => RegisterAggressionBased<int>(fix), elementType
+                var register = MakeDelegate<Action<IFixture, RandomSource>>(
+                    (fix, rs) => RegisterAggressionBased<int>(fix, rs), elementType
                 );
 
-                register(fixture);
+                register(fixture, randomSource);
             }
         }
 
@@ -484,7 +484,7 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        private static void RegisterAggressionBased<TElement>(IFixture fixture)
+        private static void RegisterAggressionBased<TElement>(IFixture fixture, RandomSource randomSource)
         {
             AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
 
@@ -511,7 +511,10 @@ namespace Nemesis.TextParsers.Tests
 
             fixture.Register(Creator3);
 
-            fixture.Register<IAggressionBased<TElement>>(Creator3);
+            IAggressionBased<TElement> InterfaceCreator() =>
+                randomSource.NextDouble() < 0.33 ? (IAggressionBased<TElement>)Creator1() : Creator3();
+
+            fixture.Register(InterfaceCreator);
         }
 
         private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource)

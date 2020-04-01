@@ -52,7 +52,7 @@ namespace Nemesis.TextParsers.Parsers
 
                 var key = _helper.ParseElement(ref enumerator, _keyTransformer);
 
-                _helper.ParseNext(ref enumerator, 2);
+                _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
                 var value = _helper.ParseElement(ref enumerator, _valueTransformer);
 
 

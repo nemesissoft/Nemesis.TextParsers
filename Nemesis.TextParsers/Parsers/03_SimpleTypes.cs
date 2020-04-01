@@ -517,25 +517,20 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class ComplexParser : SimpleTransformer<Complex>
     {
-        private const char DELIMITER = ';';
-        private const char ESCAPING_SEQUENCE_START = '\\';
-        private const char START = '(';
-        private const char END = ')';
         private const string TYPE_NAME = "Complex number";
 
-        private static readonly TupleHelper _helper = new TupleHelper(DELIMITER, '∅', ESCAPING_SEQUENCE_START, START, END);
-        
-        private static readonly ITransformer<double> _doubleParser = DoubleParser.Instance;
-
+        private static readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
 
         protected override Complex ParseCore(in ReadOnlySpan<char> input)
         {
+            var doubleParser = DoubleParser.Instance;
+
             var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
-            double real = _helper.ParseElement(ref enumerator, _doubleParser);
+            double real = _helper.ParseElement(ref enumerator, doubleParser);
 
-            _helper.ParseNext(ref enumerator, 2);
-            double imaginary = _helper.ParseElement(ref enumerator, _doubleParser);
+            _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
+            double imaginary = _helper.ParseElement(ref enumerator, doubleParser);
 
 
             _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
@@ -543,9 +538,27 @@ namespace Nemesis.TextParsers.Parsers
             return new Complex(real, imaginary);
         }
 
-        public override string Format(Complex c) =>
-            FormattableString.Invariant($"{START}{c.Real:R}{DELIMITER} {c.Imaginary:R}{END}");
+        public override string Format(Complex c)
+        {
+            var doubleParser = DoubleParser.Instance;
+            Span<char> initialBuffer = stackalloc char[16];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
+                _helper.FormatElement(doubleParser, c.Real, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
+                accumulator.Append(' ');//this is pure cosmetics 
+
+                _helper.FormatElement(doubleParser, c.Imaginary, ref accumulator);
+
+                _helper.EndFormat(ref accumulator);
+
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
 
         public static readonly ITransformer<Complex> Instance = new ComplexParser();
 

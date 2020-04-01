@@ -266,7 +266,8 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void TransformConcreteAggressionBased()
         {
-            //var transformer = TextTransformer.Default.GetTransformer<AggressionBased1<int>>();
+            //var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            //var formatter = (IFormatter<AggressionBased1<int>>) transformer;
         }
     }
 }

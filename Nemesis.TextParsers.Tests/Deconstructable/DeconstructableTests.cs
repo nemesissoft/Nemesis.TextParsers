@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
@@ -15,7 +12,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 {
     /*TODO     
      check Dispose of ValueSequenceBuilder - check if accumulator is copied
-     perf test - check TupleHelper allocations current vs every time it's needed 
+     wrap accumulator.Dispose in try-finally 
        */
     [TestFixture]
     internal class DeconstructableTests

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -11,10 +10,7 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class ValueTupleTransformerCreator : ICanCreateTransformer
     {
-        [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
-        [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
-        private static readonly TupleHelper _helper = new TupleHelper(tupleDelimiter: ',', nullElementMarker: '∅',
-            escapingSequenceStart: '\\', tupleStart: '(', tupleEnd: ')');
+        private static readonly TupleHelper _helper = new TupleHelper(',', '∅', '\\', '(', ')');
 
         private readonly ITransformerStore _transformerStore;
         public ValueTupleTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;

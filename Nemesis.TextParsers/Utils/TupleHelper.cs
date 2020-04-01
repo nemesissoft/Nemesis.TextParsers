@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
-    //TODO perf tests - class vs ValueTuple
     public readonly struct TupleHelper : IEquatable<TupleHelper>
     {
         #region Init
@@ -13,8 +12,7 @@ namespace Nemesis.TextParsers.Utils
         private readonly char? _tupleStart;
         private readonly char? _tupleEnd;
 
-        public TupleHelper(char tupleDelimiter = ',', char nullElementMarker = '∅',
-            char escapingSequenceStart = '\\', char? tupleStart = '(', char? tupleEnd = ')')
+        public TupleHelper(char tupleDelimiter, char nullElementMarker, char escapingSequenceStart, char? tupleStart, char? tupleEnd)
         {
             if (tupleDelimiter == nullElementMarker ||
                 tupleDelimiter == escapingSequenceStart ||
@@ -144,25 +142,22 @@ These requirements were not met in:
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index)
+        public void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index, string typeName = null)
         {
-            static string ToOrdinal(byte number)
-            {
-                int rem = number % 100;
-                if (rem >= 11 && rem <= 13) return $"{number}th";
-
-                return (number % 10) switch
-                {
-                    1 => $"{number}st",
-                    2 => $"{number}nd",
-                    3 => $"{number}rd",
-                    _ => $"{number}th",
-                };
-            }
+            static string ToOrdinal(byte number) =>
+                number % 100 is { } rem && rem >= 11 && rem <= 13
+                    ? $"{number}th"
+                    : (number % 10) switch
+                    {
+                        1 => $"{number}st",
+                        2 => $"{number}nd",
+                        3 => $"{number}rd",
+                        _ => $"{number}th",
+                    };
 
             var current = enumerator.Current;
             if (!enumerator.MoveNext())
-                throw new ArgumentException($"{ToOrdinal(index)} element was not found after '{current.ToString()}'");
+                throw new ArgumentException($"{typeName ?? "Tuple"}: {ToOrdinal(index)} element was not found after '{current.ToString()}'");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,7 +189,7 @@ These requirements were not met in:
 
         #endregion
 
-        
+
         #region Object helpers
         public override string ToString() =>
             $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";

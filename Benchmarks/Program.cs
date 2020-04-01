@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Running;
+﻿using System.Runtime.CompilerServices;
+using BenchmarkDotNet.Running;
 
 // ReSharper disable CommentTypo
 
@@ -21,4 +22,5 @@ namespace Benchmarks
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
+
 }

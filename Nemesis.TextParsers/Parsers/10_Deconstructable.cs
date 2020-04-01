@@ -357,7 +357,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 if (i > 0)
                     expressions.Add(
                         Expression.Call(helper, nameof(TupleHelper.ParseNext), null,
-                            enumerator, Expression.Constant((byte)(i + 1)))
+                            enumerator, Expression.Constant((byte)(i + 1)), Expression.Constant(typeName))
                     );
 
                 var field = fields[i];
@@ -545,7 +545,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             if (element is null) return null;
             else
             {
-                Span<char> initialBuffer = stackalloc char[16];
+                Span<char> initialBuffer = stackalloc char[32];
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
                 try
                 {
