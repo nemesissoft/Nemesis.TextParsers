@@ -10,10 +10,6 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
-    /*TODO     
-     check Dispose of ValueSequenceBuilder - check if accumulator is copied
-     wrap accumulator.Dispose in try-finally 
-       */
     [TestFixture]
     internal class DeconstructableTests
     {

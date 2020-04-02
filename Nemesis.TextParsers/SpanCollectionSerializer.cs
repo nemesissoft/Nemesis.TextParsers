@@ -85,13 +85,15 @@ namespace Nemesis.TextParsers
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
-            var enumerator = coll.GetEnumerator();
-            while (enumerator.MoveNext())
-                FormatElement(formatter, enumerator.Current, ref accumulator);
+            try
+            {
+                var enumerator = coll.GetEnumerator();
+                while (enumerator.MoveNext())
+                    FormatElement(formatter, enumerator.Current, ref accumulator);
 
-            var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
-            accumulator.Dispose();
-            return text;
+                return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -104,14 +106,15 @@ namespace Nemesis.TextParsers
 
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            try
+            {
+                using (var enumerator = coll.GetEnumerator())
+                    while (enumerator.MoveNext())
+                        FormatElement(formatter, enumerator.Current, ref accumulator);
 
-            using (var enumerator = coll.GetEnumerator())
-                while (enumerator.MoveNext())
-                    FormatElement(formatter, enumerator.Current, ref accumulator);
-
-            var text = accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
-            accumulator.Dispose();
-            return text;
+                return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -172,7 +175,7 @@ namespace Nemesis.TextParsers
                 case ICollection<KeyValuePair<TKey, TValue>> coll when coll.Count == 0:
                     return "";
             }
-            
+
             IFormatter<TKey> keyFormatter = TextTransformer.Default.GetTransformer<TKey>();
             IFormatter<TValue> valueFormatter = TextTransformer.Default.GetTransformer<TValue>();
 

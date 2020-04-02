@@ -33,14 +33,17 @@ namespace Nemesis.TextParsers.Parsers
         {
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()})";
@@ -85,18 +88,21 @@ namespace Nemesis.TextParsers.Parsers
         {
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
+
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
 
 
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()})";
@@ -146,21 +152,23 @@ namespace Nemesis.TextParsers.Parsers
         {
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
 
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()})";
@@ -216,24 +224,26 @@ namespace Nemesis.TextParsers.Parsers
         {
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
 
 
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()})";
@@ -293,29 +303,34 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string Format((T1, T2, T3, T4, T5) element)
         {
-            Span<char> initialBuffer = stackalloc char[32];
+            var initialBuffer = ArrayPool<char>.Shared.Rent(32);
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
 
-
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally
+            {
+                accumulator.Dispose();
+                ArrayPool<char>.Shared.Return(initialBuffer);
+            }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()})";
@@ -381,31 +396,37 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string Format((T1, T2, T3, T4, T5, T6) element)
         {
-            Span<char> initialBuffer = stackalloc char[32];
+            var initialBuffer = ArrayPool<char>.Shared.Rent(32);
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
 
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally
+            {
+                accumulator.Dispose();
+                ArrayPool<char>.Shared.Return(initialBuffer);
+            }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()})";
@@ -477,34 +498,40 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string Format((T1, T2, T3, T4, T5, T6, T7) element)
         {
-            Span<char> initialBuffer = stackalloc char[32];
+            var initialBuffer = ArrayPool<char>.Shared.Rent(32);
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            _helper.StartFormat(ref accumulator);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
 
-            _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer2, element.Item2, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer3, element.Item3, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer4, element.Item4, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer5, element.Item5, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
-            _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer6, element.Item6, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
 
-            _helper.FormatElement(_transformer7, element.Item7, ref accumulator);
+                _helper.FormatElement(_transformer7, element.Item7, ref accumulator);
 
-            _helper.EndFormat(ref accumulator);
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally
+            {
+                accumulator.Dispose();
+                ArrayPool<char>.Shared.Return(initialBuffer);
+            }
         }
 
         public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()})";
@@ -583,9 +610,9 @@ namespace Nemesis.TextParsers.Parsers
         public override string Format(ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> element)
         {
             var initialBuffer = ArrayPool<char>.Shared.Rent(32);
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
             try
             {
-                var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
                 _helper.StartFormat(ref accumulator);
 
                 _helper.FormatElement(_transformer1, element.Item1, ref accumulator);
@@ -612,12 +639,11 @@ namespace Nemesis.TextParsers.Parsers
                 _helper.FormatElement(_transformerRest, element.Rest, ref accumulator);
 
                 _helper.EndFormat(ref accumulator);
-                var text = accumulator.AsSpan().ToString();
-                accumulator.Dispose();
-                return text;
+                return accumulator.AsSpan().ToString();
             }
             finally
             {
+                accumulator.Dispose();
                 ArrayPool<char>.Shared.Return(initialBuffer);
             }
         }

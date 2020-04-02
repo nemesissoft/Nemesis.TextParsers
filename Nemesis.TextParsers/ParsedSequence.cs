@@ -9,7 +9,6 @@ namespace Nemesis.TextParsers
         private static readonly ISpanParser<TTo> _parser;
 
         static ParsedSequence() => _parser = TextTransformer.Default.GetTransformer<TTo>();
-        /*var parserType = typeof(ISpanParser<>).MakeGenericType(typeof(TTo)); var type = parserType.Assembly.GetTypes().First(t => parserType.IsAssignableFrom(t));_parser = (ISpanParser<TTo>)Activator.CreateInstance(type);*/
 
         public ParsedSequence(in TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1 = default)
         {

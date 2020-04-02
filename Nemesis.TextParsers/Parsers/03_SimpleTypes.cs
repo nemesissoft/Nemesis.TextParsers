@@ -229,7 +229,6 @@ namespace Nemesis.TextParsers.Parsers
     public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer<TElement>
         where TElement : struct, IFormattable
     {
-        //TODO check if constrained call is generated for generic constraint placed on class level 
         public sealed override string Format(TElement element) =>
             element.ToString(FormatString, Culture.InvCult);
 
