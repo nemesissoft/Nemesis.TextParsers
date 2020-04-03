@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
-    public readonly struct TupleHelper : IEquatable<TupleHelper>
+    public sealed class TupleHelper : IEquatable<TupleHelper>
     {
         #region Init
         private readonly char _tupleDelimiter;
@@ -195,13 +195,13 @@ These requirements were not met in:
             $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
 
         public bool Equals(TupleHelper other) =>
-            _tupleDelimiter == other._tupleDelimiter &&
-            _nullElementMarker == other._nullElementMarker &&
-            _escapingSequenceStart == other._escapingSequenceStart &&
-            _tupleStart == other._tupleStart &&
-            _tupleEnd == other._tupleEnd;
+            !(other is null) && (ReferenceEquals(this, other) || 
+                _tupleDelimiter == other._tupleDelimiter && _nullElementMarker == other._nullElementMarker &&
+                _escapingSequenceStart == other._escapingSequenceStart &&
+                _tupleStart == other._tupleStart && _tupleEnd == other._tupleEnd);
 
-        public override bool Equals(object obj) => obj is TupleHelper other && Equals(other);
+        public override bool Equals(object obj) => 
+            ReferenceEquals(this, obj) || obj is TupleHelper other && Equals(other);
 
         public override int GetHashCode()
         {
@@ -216,9 +216,10 @@ These requirements were not met in:
             }
         }
 
-        public static bool operator ==(TupleHelper left, TupleHelper right) => left.Equals(right);
+        public static bool operator ==(TupleHelper left, TupleHelper right) => Equals(left, right);
 
-        public static bool operator !=(TupleHelper left, TupleHelper right) => !left.Equals(right);
+        public static bool operator !=(TupleHelper left, TupleHelper right) => !Equals(left, right);
+
         #endregion
     }
 }

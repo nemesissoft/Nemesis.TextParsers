@@ -300,12 +300,10 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         private readonly FormatterDelegate _formatter;
         private readonly EmptyGenerator _emptyGenerator;
 
-        internal DeconstructionTransformer(TupleHelper helper, [NotNull] ITransformer[] transformers,
+        internal DeconstructionTransformer([NotNull] TupleHelper helper, [NotNull] ITransformer[] transformers,
             [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
         {
-            _helper = helper != default
-                ? helper
-                : throw new ArgumentException($"Default {nameof(TupleHelper)} instance should not be used for transformations");
+            _helper = helper ?? throw new ArgumentNullException(nameof(helper)) ;
 
             _transformers = transformers ?? throw new ArgumentNullException(nameof(transformers));
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
@@ -10,8 +11,13 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
     {
+        private readonly TupleHelper _helper; 
         private readonly ITransformerStore _transformerStore;
-        public KeyValuePairTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        public KeyValuePairTransformerCreator(ITransformerStore transformerStore, KeyValuePairSettings settings)
+        {
+            _transformerStore = transformerStore;
+            _helper = settings.ToTupleHelper();
+        }
 
 
         public ITransformer<TPair> CreateTransformer<TPair>()
@@ -29,35 +35,38 @@ namespace Nemesis.TextParsers.Parsers
         >(creator => creator.CreateTransformerCore<int, int>()).GetGenericMethodDefinition();
 
         private ITransformer<KeyValuePair<TKey, TValue>> CreateTransformerCore<TKey, TValue>() =>
-            new KeyValuePairTransformer<TKey, TValue>(_transformerStore);
+            new KeyValuePairTransformer<TKey, TValue>(_helper,
+                _transformerStore.GetTransformer<TKey>(),
+                _transformerStore.GetTransformer<TValue>()
+            );
 
-
-        private static readonly TupleHelper _helper = new TupleHelper('=', '∅', '\\', null, null);
 
         private sealed class KeyValuePairTransformer<TKey, TValue> : TransformerBase<KeyValuePair<TKey, TValue>>
         {
-            private static readonly string _typeName = $"{typeof(TKey).GetFriendlyName()}={typeof(TValue).GetFriendlyName()} pair";
+            private const string TYPE_NAME = "Key-value pair";
 
+            private readonly TupleHelper _helper;
             private readonly ITransformer<TKey> _keyTransformer;
             private readonly ITransformer<TValue> _valueTransformer;
 
-            public KeyValuePairTransformer(ITransformerStore transformerStore)
+            public KeyValuePairTransformer(TupleHelper helper, ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer)
             {
-                _keyTransformer = transformerStore.GetTransformer<TKey>();
-                _valueTransformer = transformerStore.GetTransformer<TValue>();
+                _helper = helper;
+                _keyTransformer = keyTransformer;
+                _valueTransformer = valueTransformer;
             }
-            
+
             protected override KeyValuePair<TKey, TValue> ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = _helper.ParseStart(input, 2, _typeName);
+                var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
                 var key = _helper.ParseElement(ref enumerator, _keyTransformer);
 
-                _helper.ParseNext(ref enumerator, 2, _typeName);
+                _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
                 var value = _helper.ParseElement(ref enumerator, _valueTransformer);
 
 
-                _helper.ParseEnd(ref enumerator, 2, _typeName);
+                _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 
                 return new KeyValuePair<TKey, TValue>(key, value);
             }

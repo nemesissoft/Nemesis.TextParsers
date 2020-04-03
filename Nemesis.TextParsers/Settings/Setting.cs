@@ -60,9 +60,7 @@ namespace Nemesis.TextParsers.Settings
         public SettingsStore(IReadOnlyDictionary<Type, ISettings> settings) => _settings = settings;
 
         public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings =>
-            _settings.TryGetValue(typeof(TSettings), out var s)
-                ? (TSettings)s
-                : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
+            (TSettings) GetSettingsFor(typeof(TSettings));
         
         public ISettings GetSettingsFor(Type settingsType) =>
             _settings.TryGetValue(settingsType, out var s)

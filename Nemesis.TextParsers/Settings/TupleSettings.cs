@@ -33,13 +33,16 @@ namespace Nemesis.TextParsers.Settings
 
         public static ValueTupleSettings Default { get; } = new ValueTupleSettings(',', '∅', '\\', '(', ')');
     }
-    //TODO
+
     public sealed class KeyValuePairSettings : TupleSettings
     {
         public KeyValuePairSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
             : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
 
         public static KeyValuePairSettings Default { get; } = new KeyValuePairSettings('=', '∅', '\\', null, null);
+
+        public override string ToString() =>
+            $"{Start}Key{Delimiter}Value{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
     }
     //TODO
     public sealed class DeconstructableSettings : TupleSettings
