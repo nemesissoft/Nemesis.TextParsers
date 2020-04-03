@@ -51,13 +51,13 @@ namespace Nemesis.TextParsers
                 _emptySequenceYieldsEmpty = emptySequenceYieldsEmpty;
             }
 
-            private readonly ReadOnlySpan<T> _sequence; 
+            private readonly ReadOnlySpan<T> _sequence;
             private readonly T _separator1;
             private readonly T _separator2;
             private readonly T _separator3;
             private readonly bool _emptySequenceYieldsEmpty;
 
-            public Enumerator3<T> GetEnumerator() =>new Enumerator3<T>(_sequence, _separator1, _separator2, _separator3, _emptySequenceYieldsEmpty);
+            public Enumerator3<T> GetEnumerator() => new Enumerator3<T>(_sequence, _separator1, _separator2, _separator3, _emptySequenceYieldsEmpty);
         }
 
         public readonly ref struct EnumerableN<T> where T : IEquatable<T>
@@ -92,7 +92,7 @@ namespace Nemesis.TextParsers
             private ReadOnlySpan<T> _sequence;
             private readonly T _separator;
             private bool _trailingEmptyItem;
-            
+
             public bool MoveNext()
             {
                 if (_trailingEmptyItem)
@@ -248,7 +248,7 @@ namespace Nemesis.TextParsers
             private ReadOnlySpan<T> _sequence;
             private readonly ReadOnlySpan<T> _separators;
             private bool _trailingEmptyItem;
-            
+
             public bool MoveNext()
             {
                 if (_trailingEmptyItem)
@@ -287,7 +287,7 @@ namespace Nemesis.TextParsers
 
         #region Extensions
         [PureMethod]
-        public static Enumerable1<T> Split<T>(this ReadOnlySpan<T> span, T separator, bool emptySequenceYieldsEmpty=false)
+        public static Enumerable1<T> Split<T>(this ReadOnlySpan<T> span, T separator, bool emptySequenceYieldsEmpty = false)
             where T : IEquatable<T> => new Enumerable1<T>(span, separator, emptySequenceYieldsEmpty);
 
         [PureMethod]

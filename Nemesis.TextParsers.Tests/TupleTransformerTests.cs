@@ -157,7 +157,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
             (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException), @"Input string was not in a correct format"),
 
-            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"Key=Value pair of arity=2 separated by '=' cannot have more than 2 elements: 'TooMuch'"),
+            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"float?=string pair of arity=2 separated by '=' cannot have more than 2 elements: 'TooMuch'"),
             (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"2nd element was not found after '15'"),
             (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"2nd element was not found after '∅'"),
             (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"2nd element was not found after ' '"),
@@ -227,7 +227,7 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception actual)
             {
-                TestHelper.AssertException(actual, expectedException, expectedErrorMessagePart);
+                AssertException(actual, expectedException, expectedErrorMessagePart);
             }
             if (passed)
                 Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine}\t{parsed}");

@@ -32,11 +32,12 @@ namespace Nemesis.TextParsers.Parsers
             new KeyValuePairTransformer<TKey, TValue>(_transformerStore);
 
 
-        private const string TYPE_NAME = "Key=Value pair";
         private static readonly TupleHelper _helper = new TupleHelper('=', '∅', '\\', null, null);
 
         private sealed class KeyValuePairTransformer<TKey, TValue> : TransformerBase<KeyValuePair<TKey, TValue>>
         {
+            private static readonly string _typeName = $"{typeof(TKey).GetFriendlyName()}={typeof(TValue).GetFriendlyName()} pair";
+
             private readonly ITransformer<TKey> _keyTransformer;
             private readonly ITransformer<TValue> _valueTransformer;
 
@@ -45,18 +46,18 @@ namespace Nemesis.TextParsers.Parsers
                 _keyTransformer = transformerStore.GetTransformer<TKey>();
                 _valueTransformer = transformerStore.GetTransformer<TValue>();
             }
-
+            
             protected override KeyValuePair<TKey, TValue> ParseCore(in ReadOnlySpan<char> input)
             {
-                var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
+                var enumerator = _helper.ParseStart(input, 2, _typeName);
 
                 var key = _helper.ParseElement(ref enumerator, _keyTransformer);
 
-                _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
+                _helper.ParseNext(ref enumerator, 2, _typeName);
                 var value = _helper.ParseElement(ref enumerator, _valueTransformer);
 
 
-                _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
+                _helper.ParseEnd(ref enumerator, 2, _typeName);
 
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
@@ -67,10 +68,13 @@ namespace Nemesis.TextParsers.Parsers
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
                 try
                 {
+                    _helper.StartFormat(ref accumulator);
+
                     _helper.FormatElement(_keyTransformer, element.Key, ref accumulator);
                     _helper.AddDelimiter(ref accumulator);
                     _helper.FormatElement(_valueTransformer, element.Value, ref accumulator);
 
+                    _helper.EndFormat(ref accumulator);
                     return accumulator.AsSpan().ToString();
                 }
                 finally { accumulator.Dispose(); }

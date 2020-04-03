@@ -50,12 +50,15 @@ namespace Nemesis.TextParsers.Parsers
 
     public sealed class DeconstructionTransformerSettings
     {
+        //settings
         public char Delimiter { get; private set; } = ';';
         public char NullElementMarker { get; private set; } = '∅';
         public char EscapingSequenceStart { get; private set; } = '\\';
         public char? Start { get; private set; } = '(';
         public char? End { get; private set; } = ')';
         public bool UseDeconstructableEmpty { get; private set; } = true;
+        //settings
+
 
         public DeconstructionMethod Mode { get; private set; } = DeconstructionMethod.DefaultConstructorDeconstructPair;
         public MethodInfo Deconstruct { get; private set; }
