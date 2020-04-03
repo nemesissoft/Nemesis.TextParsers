@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Reflection;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
     public sealed class ConventionTransformerCreator : FactoryMethodTransformerCreator
     {
+        public ConventionTransformerCreator([NotNull] FactoryMethodSettings settings) 
+            : base(settings) { }
+
         protected override Type GetFactoryMethodContainer(Type type) => type;
 
         protected override MethodInfo PrepareParseMethod(MethodInfo method, Type elementType) => method;
 
         public override sbyte Priority => 20;
 
-        public override string ToString() => $"Generate transformer using this.{FACTORY_METHOD_NAME}(string or ReadOnlySpan<char>)";
+        public override string ToString() =>
+            $"Generate transformer using this.{FactoryMethodName}(string or ReadOnlySpan<char>)";
     }
 }

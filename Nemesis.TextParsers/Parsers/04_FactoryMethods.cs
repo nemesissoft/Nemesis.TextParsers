@@ -4,16 +4,27 @@ using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
     public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
     {
+        private readonly FactoryMethodSettings _settings;
+        protected readonly string FactoryMethodName;
+
+        protected FactoryMethodTransformerCreator([NotNull] FactoryMethodSettings settings)
+        {
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            FactoryMethodName = _settings.FactoryMethodName;
+        }
+
+
         public ITransformer<TElement> CreateTransformer<TElement>() => GetTransformer<TElement>();
 
         public bool CanHandle(Type type) =>
             GetFactoryMethodContainer(type) is { } containerType &&
-            containerType.GetMethods(STATIC_MEMBER_FLAGS).Any(m => FactoryMethodPredicate(m, type));
+            containerType.GetMethods(STATIC_MEMBER_FLAGS).Any(m => FactoryMethodPredicate(m, type, FactoryMethodName));
 
 
         private Func<TElement> GetPropertyValueProvider<TElement>(string propertyName)
@@ -55,8 +66,8 @@ namespace Nemesis.TextParsers.Parsers
             formatterType = formatterType.MakeGenericType(elementType);
             var formatter = (IFormatter<TElement>)Activator.CreateInstance(formatterType);
 
-            Func<TElement> emptyValueProvider = GetPropertyValueProvider<TElement>("Empty");
-            Func<TElement> nullValueProvider = GetPropertyValueProvider<TElement>("Null");
+            Func<TElement> emptyValueProvider = GetPropertyValueProvider<TElement>(_settings.EmptyPropertyName);
+            Func<TElement> nullValueProvider = GetPropertyValueProvider<TElement>(_settings.NullPropertyName);
 
 
 
@@ -64,12 +75,12 @@ namespace Nemesis.TextParsers.Parsers
                  ?? throw new InvalidOperationException($"Missing factory declaration for {elementType.GetFriendlyName()}");
 
             var conversionMethods = factoryMethodContainer.GetMethods(STATIC_MEMBER_FLAGS)
-                .Where(m => FactoryMethodPredicate(m, elementType)).ToList();
+                .Where(m => FactoryMethodPredicate(m, elementType, FactoryMethodName)).ToList();
 
             MethodInfo parseMethod =
                 FindMethodWithParameterType(typeof(ReadOnlySpan<char>)) ??
                 FindMethodWithParameterType(typeof(string)) ??
-                throw new InvalidOperationException($"No proper {FACTORY_METHOD_NAME} method found");
+                throw new InvalidOperationException($"No proper {FactoryMethodName} method found");
 
             parseMethod = PrepareParseMethod(parseMethod, elementType);
 
@@ -94,13 +105,10 @@ namespace Nemesis.TextParsers.Parsers
                     m.GetParameters() is { } @params && @params.Length == 1 &&
                     @params[0].ParameterType == paramType);
         }
+
         
-
-
-        protected const string FACTORY_METHOD_NAME = "FromText";
-
-        private static bool FactoryMethodPredicate(MethodInfo m, Type returnType) =>
-            m.Name == FACTORY_METHOD_NAME &&
+        private static bool FactoryMethodPredicate(MethodInfo m, Type returnType, string factoryMethodName) =>
+            m.Name == factoryMethodName &&
             m.GetParameters() is { } @params && @params.Length == 1 &&
             @params[0].ParameterType is { } firstParamType &&
             (

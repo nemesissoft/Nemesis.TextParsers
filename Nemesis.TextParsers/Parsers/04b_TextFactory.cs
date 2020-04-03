@@ -2,12 +2,16 @@
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
     [UsedImplicitly]
     public sealed class TextFactoryTransformerCreator : FactoryMethodTransformerCreator
     {
+        public TextFactoryTransformerCreator([NotNull] FactoryMethodSettings settings)
+            : base(settings) { }
+
         protected override Type GetFactoryMethodContainer(Type type)
         {
             Type factoryType = type.GetCustomAttribute<TextFactoryAttribute>()?.FactoryType;
@@ -38,7 +42,8 @@ namespace Nemesis.TextParsers.Parsers
 
         public override sbyte Priority => 21;
 
-        public override string ToString() => $"Generate transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FACTORY_METHOD_NAME}(string or ReadOnlySpan<char>)";
+        public override string ToString() =>
+            $"Generate transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(string or ReadOnlySpan<char>)";
     }
 
     // ReSharper disable RedundantAttributeUsageProperty

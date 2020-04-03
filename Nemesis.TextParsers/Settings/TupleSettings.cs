@@ -44,7 +44,7 @@ namespace Nemesis.TextParsers.Settings
         public override string ToString() =>
             $"{Start}Key{Delimiter}Value{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
     }
-    //TODO
+    //TODO use settings
     public sealed class DeconstructableSettings : TupleSettings
     {
         public bool UseDeconstructableEmpty { get; }
