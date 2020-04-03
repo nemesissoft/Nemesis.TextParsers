@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Nemesis.Essentials.Runtime;
-using Nemesis.TextParsers.Parsers;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
@@ -15,16 +14,15 @@ namespace Nemesis.TextParsers.Tests
         {
             Type tupleType = typeof(TTuple);
 
-            var store = TextTransformer.Default;
+            bool isValueTuple = 
+                tupleType.IsValueType && tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition && 
+                tupleType.Namespace == "System" && tupleType.Name.StartsWith("ValueTuple`") ;
+            bool isKvp = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
+                         tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
 
-            var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
-                          tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
-                ? new KeyValuePairTransformerCreator(store)
-                : (ICanCreateTransformer)new ValueTupleTransformerCreator(store);
-
-            Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}");
-
-            var transformer = creator.CreateTransformer<TTuple>();
+            Assert.IsTrue(isValueTuple || isKvp, "isValueTuple || isKvp");
+            
+            var transformer = TextTransformer.Default.GetTransformer<TTuple>();
 
             return transformer;
         }
@@ -166,7 +164,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
-#if NETCOREAPP3_0 
+#if NETCOREAPP3_0
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String ' ' was not recognized as a valid TimeSpan."),
 #else
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
@@ -184,7 +182,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof(ValueTuple<TimeSpan>), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             
-#if NETCOREAPP3_0 
+#if NETCOREAPP3_0
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),
             (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),      
 #else

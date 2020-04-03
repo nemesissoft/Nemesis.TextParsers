@@ -1,5 +1,6 @@
 ﻿namespace Nemesis.TextParsers.Settings
 {
+    //TODO
     public readonly struct CollectionSettings : ISettings
     {
         public char ListDelimiter { get; }
@@ -23,6 +24,7 @@
         public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
     }
 
+    //TODO
     public readonly struct DictionarySettings : ISettings
     {
         public char DictionaryPairsDelimiter { get; }

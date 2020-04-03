@@ -1,5 +1,6 @@
 ﻿namespace Nemesis.TextParsers.Settings
 {
+    //TODO
     public sealed class FactoryMethodSettings : ISettings
     {
         public string FactoryMethodName { get; }

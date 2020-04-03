@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
@@ -10,10 +11,14 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class ValueTupleTransformerCreator : ICanCreateTransformer
     {
-        private static readonly TupleHelper _helper = new TupleHelper(',', '∅', '\\', '(', ')');
+        private readonly TupleHelper _helper;
 
         private readonly ITransformerStore _transformerStore;
-        public ValueTupleTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        public ValueTupleTransformerCreator(ITransformerStore transformerStore, ValueTupleSettings settings)
+        {
+            _transformerStore = transformerStore;
+            _helper = settings.ToTupleHelper();
+        }
 
         public ITransformer<TTuple> CreateTransformer<TTuple>()
         {
@@ -36,7 +41,7 @@ namespace Nemesis.TextParsers.Parsers
             };
             transformerType = transformerType.MakeGenericType(elementTypes);
 
-            var ctor = CheckParameters(transformerType, arity, elementTypes);
+            var ctor = GetConstructor(transformerType, arity, elementTypes);
 
             var elementTransformers = elementTypes.Select(t => _transformerStore.GetTransformer(t));
             var transformerParams = new object[] { _helper }.Concat(elementTransformers).ToArray();
@@ -44,7 +49,7 @@ namespace Nemesis.TextParsers.Parsers
             return (ITransformer<TTuple>)ctor.Invoke(transformerParams);
         }
 
-        private ConstructorInfo CheckParameters(Type transformerType, in int arity, Type[] elementTypes)
+        private ConstructorInfo GetConstructor(Type transformerType, in int arity, Type[] elementTypes)
         {
             var ctors = transformerType.GetConstructors();
             if (ctors.Length != 1)

@@ -1,5 +1,6 @@
 ﻿namespace Nemesis.TextParsers.Settings
 {
+    //TODO
     public readonly struct EnumSettings : ISettings
     {
         public bool CaseInsensitive { get; }

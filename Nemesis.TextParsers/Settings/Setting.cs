@@ -63,5 +63,10 @@ namespace Nemesis.TextParsers.Settings
             _settings.TryGetValue(typeof(TSettings), out var s)
                 ? (TSettings)s
                 : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
+        
+        public ISettings GetSettingsFor(Type settingsType) =>
+            _settings.TryGetValue(settingsType, out var s)
+                ? s
+                : throw new NotSupportedException($"No settings registered for {settingsType.GetFriendlyName()}");
     }
 }

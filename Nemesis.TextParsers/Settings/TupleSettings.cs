@@ -1,4 +1,6 @@
-﻿namespace Nemesis.TextParsers.Settings
+﻿using Nemesis.TextParsers.Utils;
+
+namespace Nemesis.TextParsers.Settings
 {
     public abstract class TupleSettings : ISettings
     {
@@ -19,8 +21,11 @@
 
         public override string ToString() =>
             $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
-    }
 
+        public TupleHelper ToTupleHelper() => 
+            new TupleHelper(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
+    }
+    
     public sealed class ValueTupleSettings : TupleSettings
     {
         public ValueTupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
@@ -28,7 +33,7 @@
 
         public static ValueTupleSettings Default { get; } = new ValueTupleSettings(',', '∅', '\\', '(', ')');
     }
-
+    //TODO
     public sealed class KeyValuePairSettings : TupleSettings
     {
         public KeyValuePairSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
@@ -36,7 +41,7 @@
 
         public static KeyValuePairSettings Default { get; } = new KeyValuePairSettings('=', '∅', '\\', null, null);
     }
-
+    //TODO
     public sealed class DeconstructableSettings : TupleSettings
     {
         public bool UseDeconstructableEmpty { get; }
