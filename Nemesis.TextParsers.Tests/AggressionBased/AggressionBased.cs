@@ -243,8 +243,8 @@ namespace Nemesis.TextParsers.Tests
 
 
         //this should not be cached. Nobody wants to expose globally available i.e. empty collection just for people to be able to add elements to it ;-)
-        public override IAggressionBased<TValue> GetEmpty() => 
-            AggressionBasedFactory<TValue>.FromOneValue(_transformerStore.GetEmptyInstance<TValue>());
+        public override IAggressionBased<TValue> GetEmpty() =>
+            AggressionBasedFactory<TValue>.FromOneValue(_transformerStore.GetTransformer<TValue>().GetEmpty());
 
         //this can be safely cached as long as it wraps null/immutable objects - AB<T> is immutable itself
         public override IAggressionBased<TValue> GetNull() => 

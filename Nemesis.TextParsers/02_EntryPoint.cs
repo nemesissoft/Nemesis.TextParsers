@@ -15,9 +15,6 @@ namespace Nemesis.TextParsers
         ITransformer GetTransformer(Type type);
 
         bool IsSupportedForTransformation(Type type);
-
-        object GetEmptyInstance(Type type);
-        TElement GetEmptyInstance<TElement>();
     }
 
     public static class TextTransformer
@@ -132,17 +129,6 @@ namespace Nemesis.TextParsers
             !type.IsGenericTypeDefinition &&
             _transformerCreators.FirstOrDefault(c => c.CanHandle(type)) is { } creator &&
             !(creator is AnyTransformerCreator);
-
-        #endregion
-
-
-        #region GetEmptyInstance
-
-        public object GetEmptyInstance(Type type) =>
-            GetTransformer(type).GetEmptyObject();
-
-        public TElement GetEmptyInstance<TElement>() =>
-            GetTransformer<TElement>().GetEmpty();
 
         #endregion
     }

@@ -278,11 +278,11 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public void Empty_CheckNested()
         {
             IsMutuallyEquivalent(
-                _transformerStore.GetEmptyInstance<House>(),
+                _transformerStore.GetTransformer<House>().GetEmpty(),
                 new House("", 0.0f, new List<Room>())); //not overriden  
 
             IsMutuallyEquivalent(
-                _transformerStore.GetEmptyInstance<Room>(),
+                _transformerStore.GetTransformer<Room>().GetEmpty(),
                 RoomTransformer.Empty); //overriden by transformer
         }
 
@@ -290,8 +290,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public void Empty_CheckStability()
         {
             //not overriden 
-            var emptyHouse1 = _transformerStore.GetEmptyInstance<House>();
-            var emptyHouse2 = _transformerStore.GetEmptyInstance<House>();
+            var emptyHouse1 = _transformerStore.GetTransformer<House>().GetEmpty();
+            var emptyHouse2 = _transformerStore.GetTransformer<House>().GetEmpty();
 
             Assert.That(emptyHouse1.Rooms, Is.Empty);
             emptyHouse1.Rooms.Add(new Room("XXX", null));
@@ -300,8 +300,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
 
             //overriden by transformer
-            var emptyRoom1 = _transformerStore.GetEmptyInstance<Room>();
-            var emptyRoom2 = _transformerStore.GetEmptyInstance<Room>();
+            var emptyRoom1 = _transformerStore.GetTransformer<Room>().GetEmpty();
+            var emptyRoom2 = _transformerStore.GetTransformer<Room>().GetEmpty();
 
             Assert.That(emptyRoom1.FurniturePrices, Has.Count.EqualTo(1));
             emptyRoom1.FurniturePrices.Add("New bed", 10000);

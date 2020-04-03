@@ -238,7 +238,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
         {
             IsMutuallyEquivalent(
-                TextTransformer.Default.GetEmptyInstance(type),
+                TextTransformer.Default.GetTransformer(type).GetEmptyObject(),
                 expectedEmpty, "empty value should be as expected");
 
 
