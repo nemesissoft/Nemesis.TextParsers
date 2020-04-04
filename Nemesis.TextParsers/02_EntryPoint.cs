@@ -25,6 +25,9 @@ namespace Nemesis.TextParsers
     {
         public static ITransformerStore Default { get; } =
             StandardTransformerStore.GetDefault(SettingsStoreBuilder.GetDefault().Build());
+        
+        public static ITransformerStore GetDefaultStoreWith(SettingsStore settingsStore) =>
+            StandardTransformerStore.GetDefault(settingsStore);
     }
 
     internal sealed class StandardTransformerStore : ITransformerStore

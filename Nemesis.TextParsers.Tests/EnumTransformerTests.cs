@@ -8,6 +8,8 @@ using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {
+    //TODO test with case sensitive + not allow numerics 
+
     #region Stubs
     // ReSharper disable UnusedMember.Global
     // ReSharper disable InconsistentNaming
@@ -74,7 +76,9 @@ namespace Nemesis.TextParsers.Tests
             NumberHandlerCache.GetNumberHandler<TUnderlying>();
 
         private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
-            (EnumTransformer<TEnum, TUnderlying, TNumberHandler>)new EnumTransformerCreator().CreateTransformer<TEnum>();
+            (EnumTransformer<TEnum, TUnderlying, TNumberHandler>)
+            TextTransformer.Default.GetTransformer<TEnum>();
+        
 
         private static TEnum ToEnum(TUnderlying value) => EnumTransformer<TEnum, TUnderlying, TNumberHandler>.ToEnum(value);
 
@@ -206,7 +210,10 @@ namespace Nemesis.TextParsers.Tests
 
                 var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
 
-                bool pass = Equals(actual, native);
+                // ReSharper disable once PossibleInvalidCastException
+                var cast = (TEnum)(object)number;
+
+                bool pass = Equals(actual, native) && Equals(actual, cast);
 
                 string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number}";
 
