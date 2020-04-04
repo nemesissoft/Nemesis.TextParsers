@@ -114,12 +114,12 @@ namespace Nemesis.TextParsers
     }
 
 
-    public readonly ref struct ParsedPairResult
+    public readonly ref struct PairParserInput
     {
-        public ParsedResult Key { get; }
-        public ParsedResult Value { get; }
+        public ParserInput Key { get; }
+        public ParserInput Value { get; }
 
-        public ParsedPairResult(ParsedResult key, ParsedResult value)
+        public PairParserInput(ParserInput key, ParserInput value)
         {
             Key = key;
             Value = value;

@@ -103,19 +103,22 @@ Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are su
         }
     }
 
-    public readonly ref struct ParsedResult
+    public readonly ref struct ParserInput
     {
         public bool IsDefault { get; }
         public ReadOnlySpan<char> Text { get; }
 
-        private ParsedResult(bool isDefault, ReadOnlySpan<char> text)
+        private ParserInput(bool isDefault, ReadOnlySpan<char> text)
         {
             IsDefault = isDefault;
             Text = text;
         }
 
-        public static ParsedResult FromDefault() => new ParsedResult(true, default);
+        public static ParserInput FromDefault() => new ParserInput(true, default);
 
-        public static ParsedResult FromText(ReadOnlySpan<char> text) => new ParsedResult(false, text);
+        public static ParserInput FromText(ReadOnlySpan<char> text) => new ParserInput(false, text);
+
+        public T ParseWith<T>(ITransformer<T> transformer) 
+            => IsDefault ? default : transformer.Parse(Text);
     }
 }

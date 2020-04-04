@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 

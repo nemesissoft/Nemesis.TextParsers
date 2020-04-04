@@ -32,8 +32,9 @@
         public char EscapingSequenceStart { get; }
         public char? Start { get; }
         public char? End { get; }
+        public DictionaryBehaviour Behaviour { get; }
 
-        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour)
         {
             DictionaryPairsDelimiter = dictionaryPairsDelimiter;
             DictionaryKeyValueDelimiter = dictionaryKeyValueDelimiter;
@@ -41,13 +42,21 @@
             EscapingSequenceStart = escapingSequenceStart;
             Start = start;
             End = end;
+            Behaviour = behaviour;
         }
 
         public static DictionarySettings Default { get; } =
-            new DictionarySettings(';', '=', '∅', '\\', null, null);
-
+            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys);
+        
 
         public override string ToString() =>
-            $"{Start}Key1{DictionaryKeyValueDelimiter}Value1{DictionaryPairsDelimiter}…{DictionaryPairsDelimiter}KeyN{DictionaryKeyValueDelimiter}ValueN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
+            $"{Start}Key1{DictionaryKeyValueDelimiter}Value1{DictionaryPairsDelimiter}…{DictionaryPairsDelimiter}KeyN{DictionaryKeyValueDelimiter}ValueN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}', created by {Behaviour}";
+    }
+
+    public enum DictionaryBehaviour : byte
+    {
+        OverrideKeys,
+        DoNotOverrideKeys,
+        ThrowOnDuplicate
     }
 }
