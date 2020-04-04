@@ -4,13 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
-using S = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
+using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
 using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
 #if NETCOREAPP3_0 || NETCOREAPP3_1
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
-using NotNull = JetBrains.Annotations.NotNullAttribute;
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
 
@@ -24,11 +25,11 @@ namespace Nemesis.TextParsers.Parsers
 
 
         public ITransformer<TDeconstructable> CreateTransformer<TDeconstructable>()
-            => S.Default.ToTransformer<TDeconstructable>(_transformerStore);
+            => Builder.GetDefault(_transformerStore).ToTransformer<TDeconstructable>();
 
 
         public bool CanHandle(Type type) =>
-            S.TryGetDefaultDeconstruct(type, out _, out var ctor) &&
+            Builder.TryGetDefaultDeconstruct(type, out _, out var ctor) &&
             ctor.GetParameters() is { } cp && cp.Length > 0 &&
             cp.All(pi => _transformerStore.IsSupportedForTransformation(pi.ParameterType))
         ;
@@ -48,18 +49,19 @@ namespace Nemesis.TextParsers.Parsers
         ProvidedDeconstructMethod = 1,
     }
 
-    public sealed class DeconstructionTransformerSettings
+    public sealed class DeconstructionTransformerBuilder
     {
-        //settings
-        public char Delimiter { get; private set; } = ';';
-        public char NullElementMarker { get; private set; } = '∅';
-        public char EscapingSequenceStart { get; private set; } = '\\';
-        public char? Start { get; private set; } = '(';
-        public char? End { get; private set; } = ')';
-        public bool UseDeconstructableEmpty { get; private set; } = true;
-        //settings
+        private readonly ITransformerStore _transformerStore;
 
-
+        //settings
+        public char Delimiter { get; private set; } 
+        public char NullElementMarker { get; private set; } 
+        public char EscapingSequenceStart { get; private set; } 
+        public char? Start { get; private set; } 
+        public char? End { get; private set; } 
+        public bool UseDeconstructableEmpty { get; private set; } 
+        //settings
+        
         public DeconstructionMethod Mode { get; private set; } = DeconstructionMethod.DefaultConstructorDeconstructPair;
         public MethodInfo Deconstruct { get; private set; }
         public ConstructorInfo Ctor { get; private set; }
@@ -70,37 +72,61 @@ Deconstructed by {(Deconstruct == null ? "<default>" : $"{Deconstruct.DeclaringT
 Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFriendlyName()}({string.Join(", ", Ctor.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})")}. 
 {(UseDeconstructableEmpty ? "With" : "Without")} deconstructable empty generator. ";
 
-        private DeconstructionTransformerSettings() { }
-        /// <summary>
-        /// Get default instance. Always return new instance 
-        /// </summary>
-        public static DeconstructionTransformerSettings Default => new DeconstructionTransformerSettings();
+        #region Ctor and factories
+
+        public static Builder GetDefault(ITransformerStore transformerStore)
+        {
+            var settings = transformerStore.SettingsStore.GetSettingsFor<DeconstructableSettings>();
+            return FromSettings(settings, transformerStore);
+        }
+
+        public static Builder FromSettings(DeconstructableSettings settings, ITransformerStore transformerStore) =>
+            new Builder(transformerStore,
+                settings.Delimiter,
+                settings.NullElementMarker,
+                settings.EscapingSequenceStart,
+                settings.Start,
+                settings.End,
+                settings.UseDeconstructableEmpty
+            );
+
+        private DeconstructionTransformerBuilder([NotNull] ITransformerStore transformerStore, char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, bool useDeconstructableEmpty)
+        {
+            _transformerStore = transformerStore ?? throw new ArgumentNullException(nameof(transformerStore));
+            Delimiter = delimiter;
+            NullElementMarker = nullElementMarker;
+            EscapingSequenceStart = escapingSequenceStart;
+            Start = start;
+            End = end;
+            UseDeconstructableEmpty = useDeconstructableEmpty;
+        }
+        #endregion
 
 
         #region With
         [PublicAPI]
-        public S WithDelimiter(char delimiter) { Delimiter = delimiter; return this; }
+        public Builder WithDelimiter(char delimiter) { Delimiter = delimiter; return this; }
 
         [PublicAPI]
-        public S WithNullElementMarker(char nullElementMarker) { NullElementMarker = nullElementMarker; return this; }
+        public Builder WithNullElementMarker(char nullElementMarker) { NullElementMarker = nullElementMarker; return this; }
 
         [PublicAPI]
-        public S WithEscapingSequenceStart(char escapingSequenceStart) { EscapingSequenceStart = escapingSequenceStart; return this; }
+        public Builder WithEscapingSequenceStart(char escapingSequenceStart) { EscapingSequenceStart = escapingSequenceStart; return this; }
 
         [PublicAPI]
-        public S WithStart(char start) { Start = start; return this; }
+        public Builder WithStart(char start) { Start = start; return this; }
 
         [PublicAPI]
-        public S WithEnd(char end) { End = end; return this; }
+        public Builder WithEnd(char end) { End = end; return this; }
 
         [PublicAPI]
-        public S WithBorders(char start, char end) { (Start, End) = (start, end); return this; }
+        public Builder WithBorders(char start, char end) { (Start, End) = (start, end); return this; }
 
         [PublicAPI]
-        public S WithoutBorders() { (Start, End) = (null, null); return this; }
+        public Builder WithoutBorders() { (Start, End) = (null, null); return this; }
 
         [PublicAPI]
-        public S WithDefaultDeconstruction()
+        public Builder WithDefaultDeconstruction()
         {
             Mode = DeconstructionMethod.DefaultConstructorDeconstructPair;
             Deconstruct = null;
@@ -110,7 +136,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
         [PublicAPI]
-        public S WithCustomDeconstruction([NotNull] MethodInfo deconstruct, [NotNull] ConstructorInfo ctor)
+        public Builder WithCustomDeconstruction([NotNull] MethodInfo deconstruct, [NotNull] ConstructorInfo ctor)
         {
             Mode = DeconstructionMethod.ProvidedDeconstructMethod;
             Deconstruct = deconstruct ?? throw new ArgumentNullException(nameof(deconstruct));
@@ -120,10 +146,10 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
         [PublicAPI]
-        public S WithDeconstructableEmpty() { UseDeconstructableEmpty = true; return this; }
+        public Builder WithDeconstructableEmpty() { UseDeconstructableEmpty = true; return this; }
 
         [PublicAPI]
-        public S WithoutDeconstructableEmpty() { UseDeconstructableEmpty = false; return this; }
+        public Builder WithoutDeconstructableEmpty() { UseDeconstructableEmpty = false; return this; }
         #endregion
 
 
@@ -162,7 +188,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return false;
         }
 
-        public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>(ITransformerStore transformerStore)
+        public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>()
         {
             // ReSharper disable ArgumentsStyleNamedExpression
             var helper = new TupleHelper(tupleDelimiter: Delimiter, nullElementMarker: NullElementMarker,
@@ -190,11 +216,11 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                     throw new NotSupportedException($"{nameof(Mode)} = {Mode} is not supported");
             }
 
-            CheckCtorAndDeconstruct<TDeconstructable>(ctor, deconstruct, transformerStore);
+            CheckCtorAndDeconstruct<TDeconstructable>(ctor, deconstruct, _transformerStore);
 
 
             var transformers = ctor.GetParameters()
-                     .Select(p => transformerStore.GetTransformer(p.ParameterType))
+                     .Select(p => _transformerStore.GetTransformer(p.ParameterType))
                      .ToArray();
 
             var parser = DeconstructionTransformer<TDeconstructable>.CreateParser(ctor);
@@ -589,16 +615,16 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         protected CustomDeconstructionTransformer([NotNull] ITransformerStore transformerStore)
         {
             if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
-            var settings = S.Default;
+            var builder = Builder.GetDefault(transformerStore);
             // ReSharper disable once VirtualMemberCallInConstructor
-            settings = BuildSettings(settings);
+            builder = BuildSettings(builder);
 
-            _transformer = settings.ToTransformer<TDeconstructable>(transformerStore);
+            _transformer = builder.ToTransformer<TDeconstructable>();
 
-            _description = $"{_transformer} Based on:{Environment.NewLine}{settings}";
+            _description = $"{_transformer} Based on:{Environment.NewLine}{builder}";
         }
 
-        protected abstract S BuildSettings(S prototype);
+        protected abstract Builder BuildSettings(Builder prototype);
 
         protected sealed override TDeconstructable ParseCore(in ReadOnlySpan<char> input) =>
             _transformer.Parse(input);

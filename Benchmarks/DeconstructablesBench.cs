@@ -1,11 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Utils;
-using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
+using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
 
 namespace Benchmarks
 {
@@ -29,7 +30,7 @@ namespace Benchmarks
     */
     [MemoryDiagnoser]
     // ReSharper disable once IdentifierTypo
-    public class Deconstructables
+    public class DeconstructablesBench
     {
         private TypeConverter _standard;
 
@@ -48,8 +49,8 @@ namespace Benchmarks
 
             _convention = TextTransformer.Default.GetTransformer<CarrotAndOnionFactorsConvention>();
 
-            _deconstructable = Sett.Default
-               .WithoutBorders().ToTransformer<CarrotAndOnionFactorsConventionDeconstructable>(TextTransformer.Default);
+            _deconstructable = Builder.GetDefault(TextTransformer.Default)
+               .WithoutBorders().ToTransformer<CarrotAndOnionFactorsConventionDeconstructable>();
         }
 
         [Params(10, 100, 1000)]
@@ -143,6 +144,7 @@ namespace Benchmarks
                 );
         }
 
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
         struct CarrotAndOnionFactorsConvention
         {
             public float Carrot { get; }

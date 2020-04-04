@@ -17,7 +17,7 @@ namespace Nemesis.TextParsers
 
         bool IsSupportedForTransformation(Type type);
 
-        //TODO is that needed to be exposed down the chain ?
+        //TODO can that be done better ?
         SettingsStore SettingsStore { get; }
     }
 
