@@ -24,7 +24,6 @@
         public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
     }
 
-    //TODO use settings
     public readonly struct DictionarySettings : ISettings
     {
         public char DictionaryPairsDelimiter { get; }

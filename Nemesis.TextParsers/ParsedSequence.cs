@@ -102,4 +102,20 @@ Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are su
             public TTo Current { get; private set; }
         }
     }
+
+    public readonly ref struct ParsedResult
+    {
+        public bool IsDefault { get; }
+        public ReadOnlySpan<char> Text { get; }
+
+        private ParsedResult(bool isDefault, ReadOnlySpan<char> text)
+        {
+            IsDefault = isDefault;
+            Text = text;
+        }
+
+        public static ParsedResult FromDefault() => new ParsedResult(true, default);
+
+        public static ParsedResult FromText(ReadOnlySpan<char> text) => new ParsedResult(false, text);
+    }
 }

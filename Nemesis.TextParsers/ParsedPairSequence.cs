@@ -112,4 +112,17 @@ namespace Nemesis.TextParsers
             public KeyValuePair<TKey, TValue> Current { get; private set; }
         }
     }
+
+
+    public readonly ref struct ParsedPairResult
+    {
+        public ParsedResult Key { get; }
+        public ParsedResult Value { get; }
+
+        public ParsedPairResult(ParsedResult key, ParsedResult value)
+        {
+            Key = key;
+            Value = value;
+        }
+    }
 }

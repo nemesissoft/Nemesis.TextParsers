@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -13,8 +14,13 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
     {
         private readonly ITransformerStore _transformerStore;
-        public CustomDictionaryTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly DictionarySettings _settings;
 
+        public CustomDictionaryTransformerCreator(ITransformerStore transformerStore, DictionarySettings settings)
+        {
+            _transformerStore = transformerStore;
+            _settings = settings;
+        }
 
 
         public ITransformer<TDictionary> CreateTransformer<TDictionary>()

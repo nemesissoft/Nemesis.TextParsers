@@ -168,6 +168,7 @@ namespace Nemesis.TextParsers
 
         public string FormatDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dict)
         {
+            //TODO use start/end format settings
             switch (dict)
             {
                 case null: return null;
