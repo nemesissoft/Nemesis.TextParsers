@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -88,7 +87,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         {
             _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
             _settings = settings;
-            _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>(_settings.CaseInsensitive);
+            _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>(_settings);
         }
 
         //check performance comparison in Benchmark project - ToEnumBench
@@ -141,30 +140,28 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
     internal static class EnumTransformerHelper
     {
         internal delegate TUnderlying ParserDelegate<out TUnderlying>(ReadOnlySpan<char> input);
-        
-        internal static ParserDelegate<TUnderlying> GetElementParser<TEnum, TUnderlying>(in bool caseInsensitive)
+
+        internal static ParserDelegate<TUnderlying> GetElementParser<TEnum, TUnderlying>(EnumSettings settings)
         {
             var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
 
             var inputParam = Expression.Parameter(typeof(ReadOnlySpan<char>), "input");
+            //HACK this can potentially be subject to property in EnumSettings
             if (enumValues.Count == 0)
                 return Expression.Lambda<ParserDelegate<TUnderlying>>(Expression.Default(typeof(TUnderlying)), inputParam).Compile();
 
             var formatException = Expression.Throw(Expression.Constant(new FormatException(
-                $"Enum of type '{typeof(TEnum).Name}' cannot be parsed. " +
-                $"Valid values are: {string.Join(" or ", enumValues.Select(ev => ev.Name))} or number within {typeof(TUnderlying).Name} range."
+                  $"Enum of type '{typeof(TEnum).Name}' cannot be parsed. " +
+                  $"Valid values are: {string.Join(" or ", enumValues.Select(ev => ev.Name))}" +
+                  (settings.AllowParsingNumerics ? $" or number within {typeof(TUnderlying).Name} range. " : ". ") +
+                  (settings.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.") 
                 )));
 
             var conditionToValue = new List<(Expression Condition, TUnderlying value)>();
 
-            var charEqMethodName = caseInsensitive ? nameof(CharEqCaseInsensitive) : nameof(CharEqCaseSensitive);
-            var charEqMethod = typeof(EnumTransformerHelper)
-                .GetMethod(charEqMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-                ?? throw new MissingMethodException(nameof(EnumTransformerHelper), charEqMethodName);
-
-            //int->char
-            //typeof(ReadOnlySpan<char>).GetProperties().First(p => p.GetIndexParameters().Length > 0))
+            var caseInsensitiveMethod = GetCharEqMethod(nameof(CharEqCaseInsensitive));
+            var caseSensitiveMethod = GetCharEqMethod(nameof(CharEqCaseSensitive));
 
             foreach (var (name, value) in enumValues)
             {
@@ -176,21 +173,20 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
                 for (int i = name.Length - 1; i >= 0; i--)
                 {
+                    char expectedChar = name[i],
+                        upper = char.ToUpper(expectedChar),
+                        lower = char.ToLower(expectedChar)
+                        ;
+                    var index = Expression.Constant(i);
 
-                    //Expression.MakeIndex(inputParam)
-
-                    char expectedChar = name[i];
-
-                    var charCheck = caseInsensitive
-                        ? Expression.Call(charEqMethod,
-                            inputParam,
-                            Expression.Constant(i),
-                            Expression.Constant(char.ToUpper(expectedChar)),
-                            Expression.Constant(char.ToLower(expectedChar))
+                    var charCheck = settings.CaseInsensitive && (lower != upper)
+                        ? Expression.Call(caseInsensitiveMethod,
+                            inputParam, index,
+                            Expression.Constant(upper),
+                            Expression.Constant(lower)
                         )
-                        : Expression.Call(charEqMethod,
-                            inputParam,
-                            Expression.Constant(i),
+                        : Expression.Call(caseSensitiveMethod,
+                            inputParam, index,
                             Expression.Constant(expectedChar)
                         );
 
@@ -212,6 +208,10 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
             var λ = Expression.Lambda<ParserDelegate<TUnderlying>>(body, inputParam);
             return λ.Compile();
         }
+
+        private static MethodInfo GetCharEqMethod(string charEqMethodName) =>
+            typeof(EnumTransformerHelper).GetMethod(charEqMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new MissingMethodException(nameof(EnumTransformerHelper), charEqMethodName);
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static Expression AndAlsoJoin(IEnumerable<Expression> expressionList) => expressionList != null && expressionList.Any() ?
@@ -241,10 +241,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool CharEqCaseInsensitive(ReadOnlySpan<char> input, int index, char expectedUpperChar, char expectedLowerChar)
-        {
-
-            return input[index] == expectedUpperChar || input[index] == expectedLowerChar;
-        }
+            => input[index] == expectedUpperChar || input[index] == expectedLowerChar;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool CharEqCaseSensitive(ReadOnlySpan<char> input, int index, char expectedExactChar)

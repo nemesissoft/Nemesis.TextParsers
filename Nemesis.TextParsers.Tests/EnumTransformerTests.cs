@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {
-    //TODO test with case sensitive + not allow numerics 
-
     #region Stubs
     // ReSharper disable UnusedMember.Global
     // ReSharper disable InconsistentNaming
@@ -28,6 +28,8 @@ namespace Nemesis.TextParsers.Tests
     internal enum Int64Enum : long { L1 = -50, L2 = 0, L3 = 1, L4 = 50 }
 
     internal enum UInt64Enum : ulong { Ul_1 = 0, Ul_2 = 1, Ul_3 = 50 }
+
+    internal enum Casing { A, a, B, b, C, c }
 
     [Flags]
     internal enum Fruits : ushort
@@ -72,16 +74,20 @@ namespace Nemesis.TextParsers.Tests
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
         where TNumberHandler : class, INumber<TUnderlying>
     {
-        private static readonly INumber<TUnderlying> _numberHandler =
-            NumberHandlerCache.GetNumberHandler<TUnderlying>();
+        private static readonly TNumberHandler _numberHandler =
+            (TNumberHandler)NumberHandlerCache.GetNumberHandler<TUnderlying>();
 
         private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
-            (EnumTransformer<TEnum, TUnderlying, TNumberHandler>)
-            TextTransformer.Default.GetTransformer<TEnum>();
-        
+            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default);
+
+        private static readonly ITransformer<TEnum> _sutCaseSensitive =
+            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.CaseInsensitive, false));
+
+        private static readonly ITransformer<TEnum> _sutOnlyEnumNames =
+            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.AllowParsingNumerics, false));
+
 
         private static TEnum ToEnum(TUnderlying value) => EnumTransformer<TEnum, TUnderlying, TNumberHandler>.ToEnum(value);
-
 
         private static IReadOnlyList<TUnderlying> GetEnumValues()
         {
@@ -269,6 +275,114 @@ namespace Nemesis.TextParsers.Tests
             }
 
             Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
+        }
+
+
+        [Test]
+        public void DoNotAllowParsingNumerics_Exploratory()
+        {
+            var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
+            if (enumValues.Count == 0)
+                Assert.Pass("Test is not designed for empty enums");
+
+            foreach (var (enumValue, text) in GetEnumToText())
+            {
+                Assert.DoesNotThrow(() => _sut.Parse(text));
+
+                bool isNumber = _numberHandler.TryParse(text.AsSpan(), out _);
+                if (isNumber)
+                {
+                    var assertMessage = $"Parsing '{text}'";
+
+                    var ex = Assert.Throws<FormatException>(() => _sutOnlyEnumNames.Parse(text), assertMessage);
+
+                    Assert.That(ex.Message, Does.Contain("cannot be parsed. Valid values are:"), assertMessage);
+                    Assert.That(ex.Message, Does.Not.Contain("or number within"), assertMessage);
+                }
+                else
+                {
+                    var actual = _sutOnlyEnumNames.Parse(text);
+                    Assert.That(actual, Is.EqualTo(enumValue));
+                }
+            }
+        }
+
+        [Test]
+        public void CaseSensitive_PositiveExploratory()
+        {
+            var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
+
+            foreach (var (name, value) in enumValues)
+            {
+                var init = _sut.Parse(name);
+                Assert.That((TUnderlying)(object)init, Is.EqualTo(value));
+
+                var actual = _sutCaseSensitive.Parse(name.AsSpan());
+                var actualNative = (TEnum)Enum.Parse(typeof(TEnum), name, false);
+
+                Assert.That(actual, Is.EqualTo(actualNative));
+                Assert.That((TUnderlying)(object)actual, Is.EqualTo(value));
+            }
+        }
+
+        [Test]
+        public void CaseSensitive_NegativeExploratory()
+        {
+            var rand = new Random();
+            string ShuffleText(in string text)
+            {
+                if (text == null) throw new ArgumentNullException(nameof(text));
+
+                int i = 0;
+                string newText;
+                do
+                {
+                    var chars = text.ToUpperInvariant().ToCharArray();
+                    var index = rand.Next(chars.Length);
+                    chars[index] = char.ToLower(chars[index]);
+
+                    newText = new string(chars);
+                    if (i++ > 200)
+                        Assert.Fail($"Cannot construct different casing for '{text}'");
+                } while (newText == text);
+
+                return newText;
+            }
+
+            var shuffledNames = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(enumField => ShuffleText(enumField.Name)).ToList();
+
+            foreach (var name in shuffledNames)
+            {
+                Assert.DoesNotThrow(() => _sut.Parse(name));
+
+                var assertMessage = $"Parsing '{name }'";
+
+                var ex = Assert.Throws<FormatException>(() => _sutCaseSensitive.Parse(name), assertMessage);
+
+                Assert.That(ex.Message, Does.Contain("cannot be parsed. Valid values are:"), assertMessage);
+                Assert.That(ex.Message, Does.Contain("Case sensitive option on"), assertMessage);
+            }
+        }
+
+        [Test]
+        public static void CaseSensitive_Weird()
+        {
+            var sut = new EnumTransformer<Casing, int, Int32Number>(new Int32Number(), EnumSettings.Default.With(s => s.CaseInsensitive, false));
+
+            var enumValues = typeof(Casing).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(enumField => (enumField.Name, Value: (Casing)(int)enumField.GetValue(null))).ToList();
+
+            foreach (var (name, value) in enumValues)
+            {
+                var actual = sut.Parse(name.AsSpan());
+                var actualNative = (Casing)Enum.Parse(typeof(Casing), name, false);
+
+                Assert.That(actual, Is.EqualTo(actualNative));
+                Assert.That(actual, Is.EqualTo(value));
+            }
         }
     }
 
