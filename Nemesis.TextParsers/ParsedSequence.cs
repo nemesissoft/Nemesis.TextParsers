@@ -114,11 +114,19 @@ Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are su
             Text = text;
         }
 
+        public void Deconstruct(out bool isDefault, out ReadOnlySpan<char> text)
+        {
+            isDefault = IsDefault;
+            text = Text;
+        }
+
         public static ParserInput FromDefault() => new ParserInput(true, default);
 
         public static ParserInput FromText(ReadOnlySpan<char> text) => new ParserInput(false, text);
 
         public T ParseWith<T>(ITransformer<T> transformer) 
             => IsDefault ? default : transformer.Parse(Text);
+
+        public override string ToString() => IsDefault ? "<DEFAULT>" : Text.ToString();
     }
 }

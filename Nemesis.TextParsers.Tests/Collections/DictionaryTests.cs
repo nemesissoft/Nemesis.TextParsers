@@ -106,5 +106,63 @@ namespace Nemesis.TextParsers.Tests.Collections
             var deser = sut.Parse(text);
             Assert.That(deser, Is.EqualTo(dict));
         }
+
+
+
+
+        [TestCaseSource(nameof(ValidDictData))]
+        public void Dict_Parse_Test((string input, Dss expectedDict) data)
+        {
+            var sut = _transformerStore.GetTransformer<Dss>();
+
+            IDictionary<string, string> result = sut.Parse(data.input);
+
+            if (data.expectedDict == null)
+                Assert.That(result, Is.Null);
+            else
+                Assert.That(result, Is.EqualTo(data.expectedDict));
+
+            /*if (data.expectedDict == null)
+                Console.WriteLine(@"NULL dictionary");
+            else if (!data.expectedDict.Any())
+                Console.WriteLine(@"Empty dictionary");
+            else
+                foreach (var kvp in data.expectedDict)
+                    Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");*/
+        }
+
+
+
+        #region Negative tests
+        [TestCase(@"key1", typeof(ArgumentException), "'key1' has no matching value")]//no value
+        [TestCase(@";", typeof(ArgumentException), "Key=Value part was not found")]//no pairs
+        [TestCase(@"key1 ; key2", typeof(ArgumentException), "'key1 ' has no matching value")]//no values
+        [TestCase(@"key1=value1;", typeof(ArgumentException), "Key=Value part was not found")]//non terminated sequence
+        [TestCase(@"ke=y1=value1", typeof(ArgumentException), "ke=y1 pair cannot have more than 2 elements: 'value1'")]//too many separators
+        [TestCase(@"SameKey=value1;SameKey=value2", typeof(ArgumentException), "The key 'SameKey' has already been added")] //An item with the same key has already been added. (DictionaryBehaviour.ThrowOnDuplicate)
+        [TestCase(@"∅=value", typeof(ArgumentException), "Key equal to NULL is not supported")]//Key element in dictionary cannot be null
+        [TestCase(@"∅", typeof(ArgumentException), "'<DEFAULT>' has no matching value")]//null dictionary can only be mapped as null string  
+        #endregion
+        public void Dict_Parse_NegativeTest(string input, Type expectedException, string expectedErrorMessagePart)
+        {
+            var throwOnDuplicateSettings = DictionarySettings.Default
+                .With(s => s.Behaviour, DictionaryBehaviour.ThrowOnDuplicate);
+
+            var settingsStore = SettingsStoreBuilder.GetDefault()
+                .AddOrUpdate(throwOnDuplicateSettings).Build();
+
+            var sut = TextTransformer.GetDefaultStoreWith(settingsStore).GetTransformer<IDictionary<string, string>>();
+            IDictionary<string, string> result = null;
+            bool passed = false;
+            try
+            {
+                result = sut.Parse(input);
+                passed = true;
+            }
+            catch (Exception actual) { AssertException(actual, expectedException, expectedErrorMessagePart); }
+
+            if (passed)
+                Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(kvp => $"[{kvp.Key}] = '{kvp.Value}'"))}");
+        }
     }
 }

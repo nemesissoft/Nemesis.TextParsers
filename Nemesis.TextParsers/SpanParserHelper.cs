@@ -118,48 +118,7 @@ namespace Nemesis.TextParsers
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
             }
         }
-
-        [PureMethod]
-        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this in ParsedPairSequence<TKey, TValue> parsedPairs,
-            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort capacity = 8)
-        {
-            IDictionary<TKey, TValue> result = kind switch
-                {
-                    DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
-                    DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
-                    DictionaryKind.SortedList => new SortedList<TKey, TValue>(capacity),
-                    _ => new Dictionary<TKey, TValue>(capacity)
-                };
-
-            foreach (var pair in parsedPairs)
-            {
-                var key = pair.Key;
-                var value = pair.Value;
-                switch (behaviour)
-                {
-                    case DictionaryBehaviour.OverrideKeys:
-                        result[key] = value; break;
-                    case DictionaryBehaviour.DoNotOverrideKeys:
-                        if (!result.ContainsKey(key))
-                            result.Add(key, value);
-                        break;
-                    case DictionaryBehaviour.ThrowOnDuplicate:
-                        if (!result.ContainsKey(key))
-                            result.Add(key, value);
-                        else
-                            throw new ArgumentException($"The key '{key}' has already been added");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(behaviour), behaviour, null);
-                }
-            }
-
-            return kind == DictionaryKind.ReadOnlyDictionary
-                ? new ReadOnlyDictionary<TKey, TValue>(result)
-                : result;
-        }
-
+        
 
         [PureMethod]
         public static LeanCollection<T> ToLeanCollection<T>(this in ParsedSequence<T> parsedSequence)
@@ -284,22 +243,6 @@ namespace Nemesis.TextParsers
                 return accumulator.AsSpan().ToArray();
             }
             else return input;
-        }
-
-        internal static TDest ConvertElement<TDest>(object element)
-        {
-            try
-            {
-                return element switch
-                {
-                    TDest dest => dest,
-                    null => default,
-                    IFormattable formattable when typeof(TDest) == typeof(string) =>
-                        (TDest) (object) formattable.ToString(null, CultureInfo.InvariantCulture),
-                    _ => (TDest) TypeMeta.GetDefault(typeof(TDest))
-                };
-            }
-            catch (Exception) { return default; }
         }
     }
 }

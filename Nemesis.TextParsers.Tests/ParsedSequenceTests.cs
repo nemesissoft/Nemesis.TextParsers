@@ -114,11 +114,9 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"AAA|BB\\\B")]
         [TestCase(@"\AAA|BB\\\B")]
         [TestCase(@"\r")]
-        public void List_Parse_NegativeTest(string input)
-        {
+        public void List_Parse_NegativeTest(string input) => 
             // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
             Assert.Throws<ArgumentException>(() => ParseCollection<string>(input).ToList());
-        }
 
         [TestCaseSource(typeof(SpanCollectionSerializerTests), nameof(SpanCollectionSerializerTests.ListCompoundData))]
         public void List_Parse_CompoundTests((Type elementType, IEnumerable expectedList, string input) data)

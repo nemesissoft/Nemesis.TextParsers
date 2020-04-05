@@ -11,13 +11,19 @@ namespace Nemesis.TextParsers.Tests
     {
         private static IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text)
         {
+            var keyTransformer = TextTransformer.Default.GetTransformer<TKey>();
+            var valTransformer = TextTransformer.Default.GetTransformer<TValue>();
+
             var tokens = text.AsSpan().Tokenize(';', '\\', true);
-            var parsed = new ParsedPairSequence<TKey, TValue>(tokens, '\\', '∅', ';', '=');
+            var parsed = new ParsedPairSequence(tokens, '\\', '∅', ';', '=');
 
             var result = new Dictionary<TKey, TValue>();
 
-            foreach (var pair in parsed)
-                result.Add(pair.Key, pair.Value);
+            foreach (var (key, val) in parsed)
+                result.Add(
+                    (key.IsDefault ? default : keyTransformer.Parse(key.Text)) ?? throw new ArgumentException("Key cannot be null"),
+                     val.IsDefault ? default : valTransformer.Parse(val.Text)
+                );
 
             return result;
         }
@@ -63,19 +69,19 @@ namespace Nemesis.TextParsers.Tests
                     Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");*/
         }
 
-        [TestCase(@"key1")]//no value
-        [TestCase(@";")]//no values
-        [TestCase(@"key1 ; key2")]
-        [TestCase(@"key1=value1;")]//non terminated sequence
-        [TestCase(@"ke=y1=value1")]//too many separators
-        [TestCase(@"key1=value1;key1=value2")] //An item with the same key has already been added.
-        [TestCase(@"∅=value")]//Key element in dictionary cannot be null
-        [TestCase(@"∅")]//null dictionary can only be mapped as null string 
-        public void Dict_Parse_NegativeTest(string input)
-        {
-            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-            Assert.Throws<ArgumentException>(() => ParseDictionary<string, string>(input).ToList());
-        }
+        [TestCase(01, @"key1", "'key1' has no matching value")]//no value
+        [TestCase(02, @";", "Key=Value part was not found")]//no values
+        [TestCase(03, @"key1 ; key2", "'key1 ' has no matching value")]
+        [TestCase(04, @"key1=value1;", "Key=Value part was not found")]//non terminated sequence
+        [TestCase(05, @"ke=y1=value1", "ke=y1 pair cannot have more than 2 elements: 'value1'")]//too many separators
+        [TestCase(06, @"key1=value1;key1=value2", "An item with the same key has already been added.")] //An item with the same key has already been added.
+        [TestCase(07, @"∅=value", "Key cannot be null")]//Key element in dictionary cannot be null
+        [TestCase(08, @"∅", "'<DEFAULT>' has no matching value")]//null dictionary can only be mapped as null string 
+        public void Dict_Parse_NegativeTest(int _, string input, string expectedMessage) =>
+            Assert.That(() => ParseDictionary<string, string>(input), 
+                Throws.ArgumentException.And
+                    .Message.Contains(expectedMessage)
+                );
 
         [Test]
         public void Dict_CompoundTests()

@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers
 {
-    public readonly ref struct ParsedPairSequence<TKey, TValue>
+    public readonly ref struct ParsedPairSequence
     {
         #region Fields and properties
         private readonly TokenSequence<char> _tokenSource;
@@ -13,8 +12,6 @@ namespace Nemesis.TextParsers
         private readonly char _dictionaryPairsDelimiter;
         private readonly char _dictionaryKeyValueDelimiter;
 
-        private static readonly ISpanParser<TKey> _keyParser = TextTransformer.Default.GetTransformer<TKey>();
-        private static readonly ISpanParser<TValue> _valueParser = TextTransformer.Default.GetTransformer<TValue>();
         #endregion
 
         #region Ctors/factories
@@ -62,7 +59,7 @@ namespace Nemesis.TextParsers
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private KeyValuePair<TKey, TValue> ParsePair(in ReadOnlySpan<char> input)
+            private PairParserInput ParsePair(in ReadOnlySpan<char> input)
             {
                 var delimiter = _dictionaryKeyValueDelimiter;
                 var unescapedKvp = input.UnescapeCharacter(_escapingSequenceStart, _dictionaryPairsDelimiter);
@@ -73,43 +70,40 @@ namespace Nemesis.TextParsers
 
                 if (!enumerator.MoveNext())
                     throw new ArgumentException($@"Key{delimiter}Value part was not found");
-                var key = ParseElement(enumerator.Current, _keyParser, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
+                var key = ProcessElement(enumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
                 if (!enumerator.MoveNext())
-                    throw new ArgumentException($"'{key}' has no matching value");
-                var value = ParseElement(enumerator.Current, _valueParser, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
+                    throw new ArgumentException($"'{key.ToString()}' has no matching value");
+                var value = ProcessElement(enumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
                 if (enumerator.MoveNext())
                 {
                     var remaining = enumerator.Current.ToString();
-                    throw new ArgumentException($@"{key}{delimiter}{value} pair cannot have more than 2 elements: '{remaining}'");
+                    throw new ArgumentException($@"{key.ToString()}{delimiter}{value.ToString()} pair cannot have more than 2 elements: '{remaining}'");
                 }
+                //if (key == null) throw new ArgumentException("Key equal to NULL is not supported");
 
-                if (key == null) throw new ArgumentException("Key equal to NULL is not supported");
-
-                return new KeyValuePair<TKey, TValue>(key, value);
-
-                //Exception GetArgumentException(byte? count) => new ArgumentException($@"Key to value pair expects '{delimiter}' delimited collection to be of length 2 (with first part not being null), but was {count?.ToString() ?? "NULL"}");
+                return new PairParserInput(key, value);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static TElement ParseElement<TElement>(in ReadOnlySpan<char> input, ISpanParser<TElement> parser,
+            private static ParserInput ProcessElement(in ReadOnlySpan<char> input, 
                 char escapingSequenceStart, char dictionaryKeyValueDelimiter, char nullElementMarker)
             {
                 var unescapedInput = input.UnescapeCharacter(escapingSequenceStart, dictionaryKeyValueDelimiter);
 
                 if (unescapedInput.Length == 1 && unescapedInput[0].Equals(nullElementMarker))
-                    return default;
+                    return ParserInput.FromDefault();
                 else
                 {
                     unescapedInput = unescapedInput
                         .UnescapeCharacter(escapingSequenceStart, nullElementMarker, escapingSequenceStart);
 
-                    return parser.Parse(unescapedInput);
+                    return ParserInput.FromText(unescapedInput);
                 }
             }
 
-            public KeyValuePair<TKey, TValue> Current { get; private set; }
+            public PairParserInput Current { get; private set; }
         }
     }
 
@@ -124,5 +118,13 @@ namespace Nemesis.TextParsers
             Key = key;
             Value = value;
         }
+
+        public void Deconstruct(out ParserInput key, out ParserInput value)
+        {
+            key = Key;
+            value = Value;
+        }
+
+        public override string ToString() => $"{Key.ToString()}={Value.ToString()}";
     }
 }

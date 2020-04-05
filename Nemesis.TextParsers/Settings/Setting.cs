@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Settings
@@ -48,8 +47,11 @@ namespace Nemesis.TextParsers.Settings
                 ? (TSettings)s
                 : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
 
-        public void AddOrUpdate<TSettings>(TSettings settings) where TSettings : ISettings =>
+        public SettingsStoreBuilder AddOrUpdate<TSettings>(TSettings settings) where TSettings : ISettings
+        {
             _settings[typeof(TSettings)] = settings;
+            return this;
+        }
 
         public SettingsStore Build() =>
             new SettingsStore(new ReadOnlyDictionary<Type, ISettings>(_settings));
@@ -74,7 +76,7 @@ namespace Nemesis.TextParsers.Settings
     {
         public static TSettings With<TSettings, TProp>(this TSettings settings, Expression<Func<TSettings, TProp>> propertyExpression, TProp newValue)
         {
-            bool EqualNames(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
+            static bool EqualNames(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
 
             var property = Property.Of(propertyExpression);
             var ctor = typeof(TSettings).GetConstructors().Select(c => (Ctor: c, Params: c.GetParameters()))

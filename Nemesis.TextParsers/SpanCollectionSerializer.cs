@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
@@ -138,35 +137,7 @@ namespace Nemesis.TextParsers
         }
 
         #endregion
-
-        #region Dictionary
-
-        public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text,
-            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys)
-            => text == null ? null :
-                ParseDictionary<TKey, TValue>(text.AsSpan(), kind, behaviour);
-
-
-        public IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(ReadOnlySpan<char> text,
-            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys)
-        {
-            var parsedPairs = ParsePairsStream<TKey, TValue>(text, out ushort capacity);
-            return parsedPairs.ToDictionary(kind, behaviour, capacity);
-        }
-
-        public ParsedPairSequence<TKey, TValue> ParsePairsStream<TKey, TValue>(ReadOnlySpan<char> text, out ushort capacity)
-        {
-            capacity = (ushort)(CountCharacters(text, DictionaryPairsDelimiter) + 1);
-
-            var potentialKvp = text.Tokenize(DictionaryPairsDelimiter, EscapingSequenceStart, true);
-
-            var parsedPairs = new ParsedPairSequence<TKey, TValue>(potentialKvp, EscapingSequenceStart,
-                NullElementMarker, DictionaryPairsDelimiter, DictionaryKeyValueDelimiter);
-
-            return parsedPairs;
-        }
-
-        #endregion
+        
 
         #region Helpers
 

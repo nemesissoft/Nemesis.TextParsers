@@ -175,20 +175,19 @@ namespace Benchmarks
                     let unescapedNullMarker = _escaper.UnescapeNullMarker(keyOrValueOrNull)
                     select _escaper.UnescapeEscapeSequenceStart(unescapedNullMarker);
 
-                using (var enumerator = potentialKeyAndValue.GetEnumerator())
-                {
-                    if (!enumerator.MoveNext()) throw GetArgumentException();
-                    var key = enumerator.Current;
+                using var enumerator = potentialKeyAndValue.GetEnumerator();
 
-                    if (!enumerator.MoveNext()) throw GetArgumentException();
-                    var value = enumerator.Current;
+                if (!enumerator.MoveNext()) throw GetArgumentException();
+                var key = enumerator.Current;
 
-                    if (enumerator.MoveNext()) throw GetArgumentException();
+                if (!enumerator.MoveNext()) throw GetArgumentException();
+                var value = enumerator.Current;
 
-                    if (key == null) throw GetArgumentException();
+                if (enumerator.MoveNext()) throw GetArgumentException();
 
-                    dict.Add(key, value);
-                }
+                if (key == null) throw GetArgumentException();
+
+                dict.Add(key, value);
             }
             return dict;
 

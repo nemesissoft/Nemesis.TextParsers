@@ -71,37 +71,71 @@ namespace Nemesis.TextParsers.Parsers
     public abstract class DictionaryTransformerBase<TKey, TValue, TDict> : TransformerBase<TDict>
         where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        protected readonly ITransformer<TKey> KeyTransformer;
-        protected readonly ITransformer<TValue> ValueTransformer;
+        private readonly ITransformer<TKey> _keyTransformer;
+        private readonly ITransformer<TValue> _valueTransformer;
 
-        protected char DictionaryPairsDelimiter { get; }
-        protected char DictionaryKeyValueDelimiter { get; }
-        protected char NullElementMarker { get; }
-        protected char EscapingSequenceStart { get; }
-        protected char? Start { get; }
-        protected char? End { get; }
-        protected DictionaryBehaviour Behaviour { get; }
+        private readonly char _dictionaryPairsDelimiter;
+        private readonly char _dictionaryKeyValueDelimiter;
+        private readonly char _nullElementMarker;
+        private readonly char _escapingSequenceStart;
+        private readonly char? _start;
+        private readonly char? _end;
+        private readonly DictionaryBehaviour _behaviour;
 
         protected DictionaryTransformerBase(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings)
         {
-            KeyTransformer = keyTransformer;
-            ValueTransformer = valueTransformer;
+            _keyTransformer = keyTransformer;
+            _valueTransformer = valueTransformer;
             (
-                DictionaryPairsDelimiter, DictionaryKeyValueDelimiter, NullElementMarker,
-                EscapingSequenceStart, Start, End, Behaviour
+                _dictionaryPairsDelimiter, _dictionaryKeyValueDelimiter, _nullElementMarker,
+                _escapingSequenceStart, _start, _end, _behaviour
             ) = settings;
         }
 
-        //TODO: add ParsePairsStream here
-        /*         * TODO
-         * remove parsers from parsed pair
-         * move methods from spanParserHelper, SpanCollSer ...
-         */
+        
+        protected ParsedPairSequence ParsePairsStream(ReadOnlySpan<char> text)
+        {//TODO unparenthesize ParsePairsStream with Start, End 
+            var potentialKvp = text.Tokenize(_dictionaryPairsDelimiter, _escapingSequenceStart, true);
+
+            var parsedPairs = new ParsedPairSequence(potentialKvp, _escapingSequenceStart,
+                _nullElementMarker, _dictionaryPairsDelimiter, _dictionaryKeyValueDelimiter);
+
+            return parsedPairs;
+        }
+
+        protected void PopulateDictionary(in ParsedPairSequence parsedPairs, IDictionary<TKey, TValue> result)
+        {
+            foreach (var (keyResult, valResult) in parsedPairs)
+            {
+                var key = keyResult.IsDefault ? default : _keyTransformer.Parse(keyResult.Text);
+                var val = valResult.IsDefault ? default : _valueTransformer.Parse(valResult.Text);
+
+                if (key is null) throw new ArgumentException("Key equal to NULL is not supported");
+
+                switch (_behaviour)
+                {
+                    case DictionaryBehaviour.OverrideKeys:
+                        result[key] = val; break;
+                    case DictionaryBehaviour.DoNotOverrideKeys:
+                        if (!result.ContainsKey(key))
+                            result.Add(key, val);
+                        break;
+                    case DictionaryBehaviour.ThrowOnDuplicate:
+                        if (!result.ContainsKey(key))
+                            result.Add(key, val);
+                        else
+                            throw new ArgumentException($"The key '{key}' has already been added");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(_behaviour), _behaviour, null);
+                }
+            }
+        }
 
         public sealed override string Format(TDict dict)
         {
             if (dict == null) return null;
-            
+
             using var enumerator = dict.GetEnumerator();
             if (!enumerator.MoveNext())
                 return "";
@@ -111,8 +145,8 @@ namespace Nemesis.TextParsers.Parsers
 
             try
             {
-                if (Start.HasValue)
-                    accumulator.Append(Start.Value);
+                if (_start.HasValue)
+                    accumulator.Append(_start.Value);
 
                 do
                 {
@@ -120,19 +154,19 @@ namespace Nemesis.TextParsers.Parsers
                     var key = pair.Key;
                     var value = pair.Value;
 
-                    if (key == null) accumulator.Append(NullElementMarker);
-                    else Append(ref accumulator, KeyTransformer.Format(key));
-                    
-                    accumulator.Append(DictionaryKeyValueDelimiter); //=
+                    if (key == null) accumulator.Append(_nullElementMarker);
+                    else Append(ref accumulator, _keyTransformer.Format(key));
 
-                    if (value == null) accumulator.Append(NullElementMarker);
-                    else Append(ref accumulator, ValueTransformer.Format(value));
+                    accumulator.Append(_dictionaryKeyValueDelimiter); //=
 
-                    accumulator.Append(DictionaryPairsDelimiter); //;
+                    if (value == null) accumulator.Append(_nullElementMarker);
+                    else Append(ref accumulator, _valueTransformer.Format(value));
+
+                    accumulator.Append(_dictionaryPairsDelimiter); //;
                 } while (enumerator.MoveNext());
 
-                if (End.HasValue)
-                    accumulator.Append(End.Value);
+                if (_end.HasValue)
+                    accumulator.Append(_end.Value);
 
                 return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
             }
@@ -144,10 +178,10 @@ namespace Nemesis.TextParsers.Parsers
         {
             foreach (char c in text)
             {
-                if (c == EscapingSequenceStart || c == NullElementMarker ||
-                    c == DictionaryPairsDelimiter || c == DictionaryKeyValueDelimiter
+                if (c == _escapingSequenceStart || c == _nullElementMarker ||
+                    c == _dictionaryPairsDelimiter || c == _dictionaryKeyValueDelimiter
                 )
-                    accumulator.Append(EscapingSequenceStart);
+                    accumulator.Append(_escapingSequenceStart);
                 accumulator.Append(c);
             }
         }
@@ -158,13 +192,29 @@ namespace Nemesis.TextParsers.Parsers
     {
         private readonly DictionaryKind _kind;
 
-        public DictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, DictionaryKind kind) 
+        public DictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, DictionaryKind kind)
             : base(keyTransformer, valueTransformer, settings) =>
             _kind = kind;
 
 
-        protected override TDict ParseCore(in ReadOnlySpan<char> input) =>
-            (TDict)SpanCollectionSerializer.DefaultInstance.ParseDictionary<TKey, TValue>(input, _kind);
+        protected override TDict ParseCore(in ReadOnlySpan<char> input)
+        {
+            var parsedPairs = ParsePairsStream(input);
+
+            IDictionary<TKey, TValue> result = _kind switch
+            {
+                DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(_kind), _kind, $"{nameof(_kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
+                DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
+                DictionaryKind.SortedList => new SortedList<TKey, TValue>(8),
+                _ => new Dictionary<TKey, TValue>(8)
+            };
+
+            PopulateDictionary(parsedPairs, result);
+
+            return (TDict)(_kind == DictionaryKind.ReadOnlyDictionary
+                ? new ReadOnlyDictionary<TKey, TValue>(result)
+                : result);
+        }
 
         public override TDict GetEmpty() =>
             (TDict)(_kind switch

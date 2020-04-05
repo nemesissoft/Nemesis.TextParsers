@@ -180,7 +180,7 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override TDict ParseCore(in ReadOnlySpan<char> input)
         {
-            var stream = SpanCollectionSerializer.DefaultInstance.ParsePairsStream<TKey, TValue>(input, out _);
+            var stream = ParsePairsStream(input);
             TDict result = GetDictionary(stream);
 
             if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
@@ -189,7 +189,7 @@ namespace Nemesis.TextParsers.Parsers
             return result;
         }
 
-        protected abstract TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream);
+        protected abstract TDict GetDictionary(in ParsedPairSequence stream);
 
         public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
     }
@@ -200,13 +200,10 @@ namespace Nemesis.TextParsers.Parsers
         public CustomDictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, bool supportsDeserializationLogic)
             : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic) { }
 
-        protected override TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream)
+        protected override TDict GetDictionary(in ParsedPairSequence stream)
         {
             var result = new TDict();
-
-            foreach (var pair in stream)
-                result[pair.Key] = pair.Value;
-
+            PopulateDictionary(stream, result);
             return result;
         }
 
@@ -222,13 +219,12 @@ namespace Nemesis.TextParsers.Parsers
             : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic)
             => _dictConversion = dictConversion;
 
-        protected override TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream)
+        protected override TDict GetDictionary(in ParsedPairSequence stream)
         {
             var innerDict = new Dictionary<TKey, TValue>();
 
-            foreach (var pair in stream)
-                innerDict[pair.Key] = pair.Value;
-
+            PopulateDictionary(stream, innerDict);
+            
             var result = _dictConversion(innerDict);
             return result;
         }
