@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using Nemesis.TextParsers.Settings;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 using Nemesis.TextParsers.Utils;
@@ -131,12 +132,9 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(@"\AAA|BB\\\B")]//illegal escape sequence
         [TestCase(@"\")]//not finished escape sequence
         #endregion
-        public void List_Parse_NegativeTest(string input)
-        {
+        public void List_Parse_NegativeTest(string input) =>
             // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
             Assert.Throws<ArgumentException>(() => _sut.ParseCollection<string>(input));
-            //Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(r => $"'{r}'"))}");
-        }
 
 
         internal static IEnumerable<(Type elementType, string input, Type expectedException)> Bad_ListParseData() => new[]
@@ -697,7 +695,7 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception actual)
             {
-                TestHelper.AssertException(actual, expectedException, expectedErrorMessagePart);
+                AssertException(actual, expectedException, expectedErrorMessagePart);
 
                 /*if (actual.TargetSite?.Name == nameof(_sut.ParseDictionary))
                     Console.WriteLine($@"Expected exception from implementation: {actual.GetType().Name}=>{actual.Message}");*/

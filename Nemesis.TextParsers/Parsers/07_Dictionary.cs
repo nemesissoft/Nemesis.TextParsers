@@ -90,6 +90,14 @@ namespace Nemesis.TextParsers.Parsers
         public override string Format(TDict dict) =>
             SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
 
+        /*
+         * TODO:fix Format tests - remove dependency 
+         * move Format method, remember about settings
+         * 
+         * remove parsers from parsed pair
+         * move methods from spanParserHelper, SpanCollSer ...
+         */
+
         public override TDict GetEmpty() =>
             (TDict)(_kind switch
             {

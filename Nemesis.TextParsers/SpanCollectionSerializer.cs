@@ -14,8 +14,7 @@ namespace Nemesis.TextParsers
     public sealed class SpanCollectionSerializer
     {
         #region Fields and properties
-        //for performance reasons, all delimiters and escaped characters are single chars
-        //this makes a parsing grammar to conform LL1 rules and is very beneficial to overall parsing performance 
+        
         public char ListDelimiter { get; }
         public char DictionaryPairsDelimiter { get; }
         public char DictionaryKeyValueDelimiter { get; }
@@ -169,7 +168,7 @@ namespace Nemesis.TextParsers
 
         public string FormatDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dict)
         {
-            //TODO use start/end format settings
+            //TODO use start/end format + other settings
             switch (dict)
             {
                 case null: return null;

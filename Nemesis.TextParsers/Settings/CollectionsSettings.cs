@@ -1,8 +1,10 @@
 ﻿namespace Nemesis.TextParsers.Settings
 {
     //TODO use settings
-    public readonly struct CollectionSettings : ISettings
+    public class CollectionSettings : ISettings
     {
+        //for performance reasons, all delimiters and escaped characters are single chars.
+        //this makes a parsing grammar to conform LL1 rules and is very beneficial to overall parsing performance 
         public char ListDelimiter { get; }
         public char NullElementMarker { get; }
         public char EscapingSequenceStart { get; }
@@ -24,7 +26,7 @@
         public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
     }
 
-    public readonly struct DictionarySettings : ISettings
+    public class DictionarySettings : ISettings
     {
         public char DictionaryPairsDelimiter { get; }
         public char DictionaryKeyValueDelimiter { get; }
