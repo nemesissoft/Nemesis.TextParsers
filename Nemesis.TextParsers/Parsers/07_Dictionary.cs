@@ -92,9 +92,12 @@ namespace Nemesis.TextParsers.Parsers
             ) = settings;
         }
 
-        
+
         protected ParsedPairSequence ParsePairsStream(ReadOnlySpan<char> text)
-        {//TODO unparenthesize ParsePairsStream with Start, End 
+        {
+            if (_start.HasValue || _end.HasValue)
+                text = text.UnParenthesize(_start, _end, "Dictionary");
+
             var potentialKvp = text.Tokenize(_dictionaryPairsDelimiter, _escapingSequenceStart, true);
 
             var parsedPairs = new ParsedPairSequence(potentialKvp, _escapingSequenceStart,

@@ -252,6 +252,8 @@ namespace Nemesis.TextParsers.Tests.Collections
                 var cardinality = cardinalityProp.GetValue(parsed);
                 Assert.That(cardinality, Is.EqualTo(expectedCardinality));
             }
+            else if (expectedCardinality != -1)
+                throw new NotSupportedException("Bad data");
         }
     }
 }
