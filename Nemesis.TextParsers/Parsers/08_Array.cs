@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -8,7 +9,12 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class ArrayTransformerCreator : ICanCreateTransformer
     {
         private readonly ITransformerStore _transformerStore;
-        public ArrayTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly CollectionSettings _settings;
+        public ArrayTransformerCreator(ITransformerStore transformerStore, CollectionSettings settings)
+        {
+            _transformerStore = transformerStore;
+            _settings = settings;
+        }
 
 
         public ITransformer<TArray> CreateTransformer<TArray>()
@@ -16,24 +22,11 @@ namespace Nemesis.TextParsers.Parsers
             if (!TryGetElements(typeof(TArray), out var elementType) || elementType == null)
                 throw new NotSupportedException($"Type {typeof(TArray).GetFriendlyName()} is not supported by {GetType().Name}");
 
-            var transType = typeof(InnerArrayTransformer<>).MakeGenericType(elementType);
+            var transType = typeof(ArrayTransformer<>).MakeGenericType(elementType);
 
             return (ITransformer<TArray>)Activator.CreateInstance(transType);
         }
-
-        private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>
-        {
-            protected override TElement[] ParseCore(in ReadOnlySpan<char> input) =>
-                    SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
-
-            public override string Format(TElement[] array) =>
-                SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
-
-            public override TElement[] GetEmpty() => Array.Empty<TElement>();
-
-            public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}[]";
-        }
-
+        
         public bool CanHandle(Type type) =>
             TryGetElements(type, out var elementType) &&
             _transformerStore.IsSupportedForTransformation(elementType)
@@ -56,5 +49,18 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 60;
+    }
+
+    public sealed class ArrayTransformer<TElement> : TransformerBase<TElement[]>
+    {
+        protected override TElement[] ParseCore(in ReadOnlySpan<char> input) =>
+            SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
+
+        public override string Format(TElement[] array) =>
+            SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
+
+        public override TElement[] GetEmpty() => Array.Empty<TElement>();
+
+        public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}[]";
     }
 }

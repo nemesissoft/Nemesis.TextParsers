@@ -1,6 +1,5 @@
 ﻿namespace Nemesis.TextParsers.Settings
 {
-    //TODO use settings
     public class CollectionSettings : ISettings
     {
         //for performance reasons, all delimiters and escaped characters are single chars.

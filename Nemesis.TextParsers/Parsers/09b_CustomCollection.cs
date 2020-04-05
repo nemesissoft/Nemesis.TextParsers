@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -13,7 +14,12 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
     {
         private readonly ITransformerStore _transformerStore;
-        public CustomCollectionTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly CollectionSettings _settings;
+        public CustomCollectionTransformerCreator(ITransformerStore transformerStore, CollectionSettings settings)
+        {
+            _transformerStore = transformerStore;
+            _settings = settings;
+        }
 
 
         public ITransformer<TCollection> CreateTransformer<TCollection>()
@@ -55,73 +61,7 @@ namespace Nemesis.TextParsers.Parsers
             var λ = Expression.Lambda<Func<IList<TElement>, TCollection>>(ctor, param);
             return λ.Compile();
         }
-
-        private abstract class CollectionTransformer<TElement, TCollection> : TransformerBase<TCollection>
-            where TCollection : IEnumerable<TElement>
-        {
-            private readonly bool _supportsDeserializationLogic;
-            protected CollectionTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
-
-
-            protected override TCollection ParseCore(in ReadOnlySpan<char> input) 
-            {
-                var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
-                var result = GetCollection(stream);
-
-                if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
-                    callback.OnDeserialization(this);
-
-                return result;
-            }
-
-            protected abstract TCollection GetCollection(in ParsedSequence<TElement> stream);
-
-            public override string Format(TCollection coll) => 
-                SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
-
-            public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";
-        }
-
-        private sealed class CustomCollectionTransformer<TElement, TCollection> : CollectionTransformer<TElement, TCollection>
-            where TCollection : ICollection<TElement>, new()
-        {
-            public CustomCollectionTransformer(bool supportsDeserializationLogic) : base(supportsDeserializationLogic) { }
-
-            protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
-            {
-                var result = new TCollection();
-
-                foreach (var element in stream)
-                    result.Add(element);
-
-                return result;
-            }
-
-            public override TCollection GetEmpty() => new TCollection();
-        }
-
-        private sealed class ReadOnlyCollectionTransformer<TElement, TCollection> : CollectionTransformer<TElement, TCollection>
-            where TCollection : IReadOnlyCollection<TElement>
-        {
-            private readonly Func<IList<TElement>, TCollection> _listConversion;
-
-            public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic)
-                => _listConversion = listConversion;
-
-            protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
-            {
-                var innerList = new List<TElement>();
-
-                foreach (var element in stream)
-                    innerList.Add(element);
-
-                var result = _listConversion(innerList);
-                return result;
-            }
-
-            public override TCollection GetEmpty() => _listConversion(new List<TElement>());
-        }
-
+        
         private static bool IsCustomCollection(Type collectionType, out Type elementType)
         {
             Type iCollection = typeof(ICollection<>);
@@ -187,5 +127,71 @@ namespace Nemesis.TextParsers.Parsers
         ;
 
         public sbyte Priority => 72;
+    }
+
+    public abstract class CustomCollectionTransformerBase<TElement, TCollection> : TransformerBase<TCollection>
+            where TCollection : IEnumerable<TElement>
+    {
+        private readonly bool _supportsDeserializationLogic;
+        protected CustomCollectionTransformerBase(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
+
+
+        protected override TCollection ParseCore(in ReadOnlySpan<char> input)
+        {
+            var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
+            var result = GetCollection(stream);
+
+            if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
+                callback.OnDeserialization(this);
+
+            return result;
+        }
+
+        protected abstract TCollection GetCollection(in ParsedSequence<TElement> stream);
+
+        public override string Format(TCollection coll) =>
+            SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
+
+        public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";
+    }
+
+    public sealed class CustomCollectionTransformer<TElement, TCollection> : CustomCollectionTransformerBase<TElement, TCollection>
+        where TCollection : ICollection<TElement>, new()
+    {
+        public CustomCollectionTransformer(bool supportsDeserializationLogic) : base(supportsDeserializationLogic) { }
+
+        protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
+        {
+            var result = new TCollection();
+
+            foreach (var element in stream)
+                result.Add(element);
+
+            return result;
+        }
+
+        public override TCollection GetEmpty() => new TCollection();
+    }
+
+    public sealed class ReadOnlyCollectionTransformer<TElement, TCollection> : CustomCollectionTransformerBase<TElement, TCollection>
+        where TCollection : IReadOnlyCollection<TElement>
+    {
+        private readonly Func<IList<TElement>, TCollection> _listConversion;
+
+        public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic)
+            => _listConversion = listConversion;
+
+        protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
+        {
+            var innerList = new List<TElement>();
+
+            foreach (var element in stream)
+                innerList.Add(element);
+
+            var result = _listConversion(innerList);
+            return result;
+        }
+
+        public override TCollection GetEmpty() => _listConversion(new List<TElement>());
     }
 }
