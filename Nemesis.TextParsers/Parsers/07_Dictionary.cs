@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
@@ -41,8 +42,8 @@ namespace Nemesis.TextParsers.Parsers
             new DictionaryTransformer<TKey, TValue, TDict>(
                 _transformerStore.GetTransformer<TKey>(),
                 _transformerStore.GetTransformer<TValue>(),
-                kind,
-                _settings
+                _settings,
+                kind
             );
 
         public bool CanHandle(Type type) =>
@@ -67,36 +68,103 @@ namespace Nemesis.TextParsers.Parsers
         public sbyte Priority => 50;
     }
 
-    public sealed class DictionaryTransformer<TKey, TValue, TDict> : TransformerBase<TDict>
+    public abstract class DictionaryTransformerBase<TKey, TValue, TDict> : TransformerBase<TDict>
         where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly ITransformer<TKey> _keyParser;
-        private readonly ITransformer<TValue> _valueParser;
-        private readonly DictionaryKind _kind;
-        private readonly DictionarySettings _settings;
+        protected readonly ITransformer<TKey> KeyTransformer;
+        protected readonly ITransformer<TValue> ValueTransformer;
 
-        public DictionaryTransformer(ITransformer<TKey> keyParser, ITransformer<TValue> valueParser, DictionaryKind kind, DictionarySettings settings)
+        protected char DictionaryPairsDelimiter { get; }
+        protected char DictionaryKeyValueDelimiter { get; }
+        protected char NullElementMarker { get; }
+        protected char EscapingSequenceStart { get; }
+        protected char? Start { get; }
+        protected char? End { get; }
+        protected DictionaryBehaviour Behaviour { get; }
+
+        protected DictionaryTransformerBase(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings)
         {
-            _keyParser = keyParser;
-            _valueParser = valueParser;
-            _kind = kind;
-            _settings = settings;
+            KeyTransformer = keyTransformer;
+            ValueTransformer = valueTransformer;
+            (
+                DictionaryPairsDelimiter, DictionaryKeyValueDelimiter, NullElementMarker,
+                EscapingSequenceStart, Start, End, Behaviour
+            ) = settings;
         }
+
+        //TODO: add ParsePairsStream here
+        /*         * TODO
+         * remove parsers from parsed pair
+         * move methods from spanParserHelper, SpanCollSer ...
+         */
+
+        public sealed override string Format(TDict dict)
+        {
+            if (dict == null) return null;
+            
+            using var enumerator = dict.GetEnumerator();
+            if (!enumerator.MoveNext())
+                return "";
+
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            try
+            {
+                if (Start.HasValue)
+                    accumulator.Append(Start.Value);
+
+                do
+                {
+                    var pair = enumerator.Current;
+                    var key = pair.Key;
+                    var value = pair.Value;
+
+                    if (key == null) accumulator.Append(NullElementMarker);
+                    else Append(ref accumulator, KeyTransformer.Format(key));
+                    
+                    accumulator.Append(DictionaryKeyValueDelimiter); //=
+
+                    if (value == null) accumulator.Append(NullElementMarker);
+                    else Append(ref accumulator, ValueTransformer.Format(value));
+
+                    accumulator.Append(DictionaryPairsDelimiter); //;
+                } while (enumerator.MoveNext());
+
+                if (End.HasValue)
+                    accumulator.Append(End.Value);
+
+                return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Append(ref ValueSequenceBuilder<char> accumulator, string text)
+        {
+            foreach (char c in text)
+            {
+                if (c == EscapingSequenceStart || c == NullElementMarker ||
+                    c == DictionaryPairsDelimiter || c == DictionaryKeyValueDelimiter
+                )
+                    accumulator.Append(EscapingSequenceStart);
+                accumulator.Append(c);
+            }
+        }
+    }
+
+    public sealed class DictionaryTransformer<TKey, TValue, TDict> : DictionaryTransformerBase<TKey, TValue, TDict>
+        where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
+    {
+        private readonly DictionaryKind _kind;
+
+        public DictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, DictionaryKind kind) 
+            : base(keyTransformer, valueTransformer, settings) =>
+            _kind = kind;
 
 
         protected override TDict ParseCore(in ReadOnlySpan<char> input) =>
             (TDict)SpanCollectionSerializer.DefaultInstance.ParseDictionary<TKey, TValue>(input, _kind);
-
-        public override string Format(TDict dict) =>
-            SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
-
-        /*
-         * TODO:fix Format tests - remove dependency 
-         * move Format method, remember about settings
-         * 
-         * remove parsers from parsed pair
-         * move methods from spanParserHelper, SpanCollSer ...
-         */
 
         public override TDict GetEmpty() =>
             (TDict)(_kind switch

@@ -20,6 +20,15 @@
             End = end;
         }
 
+        public void Deconstruct(out char listDelimiter, out char nullElementMarker, out char escapingSequenceStart, out char? start, out char? end)
+        {
+            listDelimiter = ListDelimiter;
+            nullElementMarker = NullElementMarker;
+            escapingSequenceStart = EscapingSequenceStart;
+            start = Start;
+            end = End;
+        }
+
         public static CollectionSettings Default { get; } =
             new CollectionSettings('|', '∅', '\\', null, null);
 
@@ -45,6 +54,17 @@
             Start = start;
             End = end;
             Behaviour = behaviour;
+        }
+
+        public void Deconstruct(out char dictionaryPairsDelimiter, out char dictionaryKeyValueDelimiter, out char nullElementMarker, out char escapingSequenceStart, out char? start, out char? end, out DictionaryBehaviour behaviour)
+        {
+            dictionaryPairsDelimiter = DictionaryPairsDelimiter;
+            dictionaryKeyValueDelimiter = DictionaryKeyValueDelimiter;
+            nullElementMarker = NullElementMarker;
+            escapingSequenceStart = EscapingSequenceStart;
+            start = Start;
+            end = End;
+            behaviour = Behaviour;
         }
 
         public static DictionarySettings Default { get; } =

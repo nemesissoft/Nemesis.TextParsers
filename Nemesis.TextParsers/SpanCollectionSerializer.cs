@@ -166,59 +166,6 @@ namespace Nemesis.TextParsers
             return parsedPairs;
         }
 
-        public string FormatDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dict)
-        {
-            //TODO use start/end format + other settings
-            switch (dict)
-            {
-                case null: return null;
-                case IReadOnlyCollection<KeyValuePair<TKey, TValue>> roColl when roColl.Count == 0:
-                case ICollection<KeyValuePair<TKey, TValue>> coll when coll.Count == 0:
-                    return "";
-            }
-
-            IFormatter<TKey> keyFormatter = TextTransformer.Default.GetTransformer<TKey>();
-            IFormatter<TValue> valueFormatter = TextTransformer.Default.GetTransformer<TValue>();
-
-            Span<char> initialBuffer = stackalloc char[32];
-            using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-            foreach (var pair in dict)
-            {
-                var key = pair.Key;
-                var value = pair.Value;
-
-                string keyText = keyFormatter.Format(key);
-                foreach (char c in keyText)
-                {
-                    if (c == EscapingSequenceStart || c == NullElementMarker ||
-                        c == DictionaryPairsDelimiter || c == DictionaryKeyValueDelimiter
-                       )
-                        accumulator.Append(EscapingSequenceStart);
-                    accumulator.Append(c);
-                }
-                accumulator.Append(DictionaryKeyValueDelimiter);
-
-                if (value == null)
-                    accumulator.Append(NullElementMarker);
-                else
-                {
-                    string valueText = valueFormatter.Format(value);
-                    foreach (char c in valueText)
-                    {
-                        if (c == EscapingSequenceStart || c == NullElementMarker ||
-                            c == DictionaryPairsDelimiter || c == DictionaryKeyValueDelimiter
-                        )
-                            accumulator.Append(EscapingSequenceStart);
-                        accumulator.Append(c);
-                    }
-                }
-
-                accumulator.Append(DictionaryPairsDelimiter);
-            }
-            return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
-        }
-
         #endregion
 
         #region Helpers

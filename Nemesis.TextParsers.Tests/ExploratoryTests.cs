@@ -63,8 +63,26 @@ namespace Nemesis.TextParsers.Tests
             Console.WriteLine($"{GetType().Name} initial seed = {seed}");
             GetTestCases(_randomSource);
 
+            string GetRandomString()
+            {
+                Span<char> special = stackalloc char[] { '\\', '|', ';', '=', '∅', ',' };
+                return
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextString('A', 'z', 15)
+                    + _randomSource.NextFrom(special)
+                    + _randomSource.NextFrom(special);
+            }
+            Uri GetRandomUri()
+            {
+                var address = _randomSource.NextString('A', 'Z');
+                return new Uri(
+                    _randomSource.NextDouble() < 0.5 ? $"mailto:{address}@google.com" : $"https://{address}.google.com"
+                );
+            }
 
-            _fixture.Register<string>(() => _randomSource.NextString('A', 'Z'));
+            _fixture.Register<string>(GetRandomString);
+            _fixture.Register<Uri>(GetRandomUri);
 
             _fixture.Register<double>(() => _randomSource.NextFloatingNumber());
             _fixture.Register<float>(() => (float)_randomSource.NextFloatingNumber());
@@ -74,6 +92,7 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.NextFloatingNumber(1000, false)
             ));
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
+
 
 
             _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));

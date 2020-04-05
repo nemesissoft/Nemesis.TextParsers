@@ -131,6 +131,8 @@ namespace Nemesis.TextParsers.Tests
                 chars[i] = (char)_rand.Next(start, end + 1);
             return new string(chars);
         }
+        
+        public T NextFrom<T>(Span<T> span) => span[Next(span.Length)];
 
         public double NextFloatingNumber(int magnitude = 1000, bool generateSpecialValues = true)
         {

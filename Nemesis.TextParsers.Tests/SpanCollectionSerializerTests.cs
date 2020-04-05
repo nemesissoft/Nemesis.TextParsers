@@ -656,23 +656,7 @@ namespace Nemesis.TextParsers.Tests
                     Console.WriteLine($@"[{kvp.Key}] = '{kvp.Value ?? "<null>"}'");*/
         }
 
-        [TestCaseSource(nameof(ValidDictData))]
-        public void Dict_Format_SymmetryTests((string expectedOutput, Dss inputDict) data)
-        {
-            var result = _sut.FormatDictionary(data.inputDict);
-
-            if (data.expectedOutput == null)
-                Assert.That(result, Is.Null);
-            else
-            {
-                string expectedOutput = data.expectedOutput;
-
-                result = NormalizeNullMarkers(result);
-                expectedOutput = NormalizeNullMarkers(expectedOutput);
-                Assert.That(result, Is.EqualTo(expectedOutput));
-            }
-            //Console.WriteLine($@"'{result ?? "<null>"}'");
-        }
+        
 
         #region Negative tests
         [TestCase(@"key1", typeof(ArgumentException), "'key1' has no matching value")]//no value
@@ -703,34 +687,6 @@ namespace Nemesis.TextParsers.Tests
 
             if (passed)
                 Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, result.Select(kvp => $"[{kvp.Key}] = '{kvp.Value}'"))}");
-        }
-
-        [Test]
-        public void Dict_CompoundTests()
-        {
-            var dict = Enumerable.Range(1, 5).ToDictionary(i => i, i => new TimeSpan(i, i + 1, i + 2, i + 3));
-
-            var text = _sut.FormatDictionary(dict);
-            var dict2 = _sut.ParseDictionary<int, TimeSpan>(text);
-
-            Assert.That(text, Is.EqualTo("1=1.02:03:04;2=2.03:04:05;3=3.04:05:06;4=4.05:06:07;5=5.06:07:08"));
-            Assert.That(dict2, Is.EqualTo(dict));
-        }
-
-        [Test]
-        public void Dict_CompoundTestsAggBasedAndList()
-        {
-            var dict = Enumerable.Range(0, 4).ToDictionary(
-                i => AggressionBasedFactory<float>.FromPassiveNormalAggressive(10 * i, 10 * i + 1, 10 * i + 2),
-                i => new List<TimeSpan> { new TimeSpan(i, i + 1, i + 2, i + 3), new TimeSpan(10 * i, 10 * i + 1, 10 * i + 2, 10 * i + 3) });
-
-            var text = _sut.FormatDictionary(dict);
-            Assert.That(text, Is.EqualTo("0#1#2=01:02:03|01:02:03;10#11#12=1.02:03:04|10.11:12:13;20#21#22=2.03:04:05|20.21:22:23;30#31#32=3.04:05:06|31.07:32:33"));
-
-            //dict.Remove(dict.First().Key);
-
-            var deser = _sut.ParseDictionary<IAggressionBased<float>, List<TimeSpan>>(text);
-            Assert.That(deser, Is.EqualTo(dict));
         }
 
         #endregion
