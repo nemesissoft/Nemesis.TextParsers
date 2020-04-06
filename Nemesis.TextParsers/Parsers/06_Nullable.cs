@@ -34,8 +34,6 @@ namespace Nemesis.TextParsers.Parsers
 
             public override string Format(TElement? element) =>
                 element.HasValue ? _elementParser.Format(element.Value) : null;
-
-            public override string ToString() => $"Transform {typeof(TElement?).GetFriendlyName()}";
         }
 
         public bool CanHandle(Type type) =>

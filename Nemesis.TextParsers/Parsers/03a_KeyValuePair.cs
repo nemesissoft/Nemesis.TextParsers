@@ -89,9 +89,6 @@ namespace Nemesis.TextParsers.Parsers
                 finally { accumulator.Dispose(); }
             }
 
-            public override string ToString() => $"Transform KeyValuePair<{typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}>";
-
-
             public override KeyValuePair<TKey, TValue> GetEmpty() =>
                 new KeyValuePair<TKey, TValue>(
                     _keyTransformer.GetEmpty(),

@@ -56,7 +56,5 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string Format(LeanCollection<TElement> coll) =>
             SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
-
-        public override string ToString() => $"Transform LeanCollection<{typeof(TElement).GetFriendlyName()}>";
     }
 }

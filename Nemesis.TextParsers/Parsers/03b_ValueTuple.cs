@@ -75,27 +75,11 @@ namespace Nemesis.TextParsers.Parsers
         public bool CanHandle(Type type) => IsSupported(type, out _);
 
         private bool IsSupported(Type type, out Type[] elementTypes) =>
-            TryGetTupleElements(type, out elementTypes) &&
+            TypeMeta.TryGetValueTupleElements(type, out elementTypes) &&
             elementTypes != null &&
             elementTypes.Length is { } arity && arity <= MAX_ARITY && arity >= 1 &&
             elementTypes.All(t => _transformerStore.IsSupportedForTransformation(t));
-
-        private static bool TryGetTupleElements(Type type, out Type[] elementTypes)
-        {
-            bool isValueTuple = type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
-#if NETSTANDARD2_0 || NETFRAMEWORK
-            type.Namespace == "System" &&
-            type.Name.StartsWith("ValueTuple`") &&
-            typeof(ValueType).IsAssignableFrom(type);
-#else
-            typeof(System.Runtime.CompilerServices.ITuple).IsAssignableFrom(type);
-#endif
-
-            elementTypes = isValueTuple ? type.GenericTypeArguments : null;
-
-            return isValueTuple;
-        }
-
+        
         public sbyte Priority => 12;
     }
 }

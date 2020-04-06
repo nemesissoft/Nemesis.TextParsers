@@ -134,7 +134,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
         public override string Format(TEnum element) => element.ToString("G");
 
-        public override string ToString() => $"Transform {typeof(TEnum).Name}";
+        public override string ToString() => $"Transform {typeof(TEnum).Name} based on {typeof(TUnderlying).GetFriendlyName()}";
     }
 
     internal static class EnumTransformerHelper

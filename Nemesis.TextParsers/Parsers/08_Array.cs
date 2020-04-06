@@ -71,7 +71,5 @@ Add CollectionHelper like TupleHelper
             SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
 
         public override TElement[] GetEmpty() => Array.Empty<TElement>();
-
-        public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}[]";
     }
 }

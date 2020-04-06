@@ -46,8 +46,6 @@ namespace Nemesis.TextParsers.Parsers
             finally { accumulator.Dispose(); }
         }
 
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()})";
-
         public override ValueTuple<T1> GetEmpty() =>
             new ValueTuple<T1>(
                 _transformer1.GetEmpty()
@@ -104,8 +102,6 @@ namespace Nemesis.TextParsers.Parsers
             }
             finally { accumulator.Dispose(); }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2> GetEmpty() =>
             new ValueTuple<T1, T2>(
@@ -170,8 +166,6 @@ namespace Nemesis.TextParsers.Parsers
             }
             finally { accumulator.Dispose(); }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2, T3> GetEmpty() =>
             new ValueTuple<T1, T2, T3>(
@@ -245,8 +239,6 @@ namespace Nemesis.TextParsers.Parsers
             }
             finally { accumulator.Dispose(); }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2, T3, T4> GetEmpty() =>
             new ValueTuple<T1, T2, T3, T4>(
@@ -332,8 +324,6 @@ namespace Nemesis.TextParsers.Parsers
                 ArrayPool<char>.Shared.Return(initialBuffer);
             }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2, T3, T4, T5> GetEmpty() =>
             new ValueTuple<T1, T2, T3, T4, T5>(
@@ -428,8 +418,6 @@ namespace Nemesis.TextParsers.Parsers
                 ArrayPool<char>.Shared.Return(initialBuffer);
             }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2, T3, T4, T5, T6> GetEmpty() =>
             new ValueTuple<T1, T2, T3, T4, T5, T6>(
@@ -533,8 +521,6 @@ namespace Nemesis.TextParsers.Parsers
                 ArrayPool<char>.Shared.Return(initialBuffer);
             }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2, T3, T4, T5, T6, T7> GetEmpty() =>
             new ValueTuple<T1, T2, T3, T4, T5, T6, T7>(
@@ -647,8 +633,6 @@ namespace Nemesis.TextParsers.Parsers
                 ArrayPool<char>.Shared.Return(initialBuffer);
             }
         }
-
-        public override string ToString() => $"Transform ({typeof(T1).GetFriendlyName()},{typeof(T2).GetFriendlyName()},{typeof(T3).GetFriendlyName()},{typeof(T4).GetFriendlyName()},{typeof(T5).GetFriendlyName()},{typeof(T6).GetFriendlyName()},{typeof(T7).GetFriendlyName()},{typeof(TRest).GetFriendlyName()})";
 
         public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> GetEmpty() =>
             new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(

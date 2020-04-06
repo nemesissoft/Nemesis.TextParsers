@@ -9,6 +9,7 @@ using System.Reflection;
 using AutoFixture;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Deconstructable;
+using Nemesis.TextParsers.Tests.Entities;
 using Nemesis.TextParsers.Tests.Infrastructure;
 using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.TestHelper;
@@ -33,7 +34,7 @@ namespace Nemesis.TextParsers.Tests
 
                     typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum),
                     typeof(Int64Enum), typeof(UInt64Enum),
-                    typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+                    typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors), typeof(BasisPoint),
 
                     typeof(Fruits[]), typeof(Dictionary<Fruits, double>),
                     typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
@@ -92,6 +93,10 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.NextFloatingNumber(1000, false)
             ));
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
+
+            _fixture.Register<BasisPoint>(() => BasisPoint.FromBps(
+                ((_randomSource.NextDouble()-0.5)*2 + 0.1) * (_randomSource.NextDouble() < 0.5 ? 100 : 10)
+            ));
 
 
 
