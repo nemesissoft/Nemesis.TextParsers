@@ -5,6 +5,17 @@ using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
+/*TODO
+ LeanColl - format
+ other - format 
+
+        tests 
+Add CollectionHelper like TupleHelper 
+        Format - add []
+ Parse - remove []
+ 
+        */
+
     [UsedImplicitly]
     public sealed class ArrayTransformerCreator : ICanCreateTransformer
     {
