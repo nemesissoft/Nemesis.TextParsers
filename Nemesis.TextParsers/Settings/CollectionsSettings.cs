@@ -65,18 +65,7 @@
             End = end;
             Behaviour = behaviour;
         }
-
-        public void Deconstruct(out char dictionaryPairsDelimiter, out char dictionaryKeyValueDelimiter, out char nullElementMarker, out char escapingSequenceStart, out char? start, out char? end, out DictionaryBehaviour behaviour)
-        {
-            dictionaryPairsDelimiter = DictionaryPairsDelimiter;
-            dictionaryKeyValueDelimiter = DictionaryKeyValueDelimiter;
-            nullElementMarker = NullElementMarker;
-            escapingSequenceStart = EscapingSequenceStart;
-            start = Start;
-            end = End;
-            behaviour = Behaviour;
-        }
-
+        
         public static DictionarySettings Default { get; } =
             new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys);
 

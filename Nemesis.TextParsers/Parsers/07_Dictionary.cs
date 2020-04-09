@@ -74,35 +74,29 @@ namespace Nemesis.TextParsers.Parsers
         private readonly ITransformer<TKey> _keyTransformer;
         private readonly ITransformer<TValue> _valueTransformer;
 
-        private readonly char _dictionaryPairsDelimiter;
-        private readonly char _dictionaryKeyValueDelimiter;
-        private readonly char _nullElementMarker;
-        private readonly char _escapingSequenceStart;
-        private readonly char? _start;
-        private readonly char? _end;
-        private readonly DictionaryBehaviour _behaviour;
+        private readonly DictionarySettings _settings;
 
         protected DictionaryTransformerBase(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings)
         {
             _keyTransformer = keyTransformer;
             _valueTransformer = valueTransformer;
-            //TODO do not deconstruct
-            (
-                _dictionaryPairsDelimiter, _dictionaryKeyValueDelimiter, _nullElementMarker,
-                _escapingSequenceStart, _start, _end, _behaviour
-            ) = settings;
+            _settings = settings;
         }
 
 
         protected ParsedPairSequence ParsePairsStream(ReadOnlySpan<char> text)
         {
-            if (_start.HasValue || _end.HasValue)
-                text = text.UnParenthesize(_start, _end, "Dictionary");
+            if (_settings.Start.HasValue || _settings.End.HasValue)
+                text = text.UnParenthesize(_settings.Start, _settings.End, "Dictionary");
 
-            var potentialKvp = text.Tokenize(_dictionaryPairsDelimiter, _escapingSequenceStart, true);
+            var potentialKvp = text.Tokenize(_settings.DictionaryPairsDelimiter,
+                _settings.EscapingSequenceStart, true);
 
-            var parsedPairs = new ParsedPairSequence(potentialKvp, _escapingSequenceStart,
-                _nullElementMarker, _dictionaryPairsDelimiter, _dictionaryKeyValueDelimiter);
+            var parsedPairs = new ParsedPairSequence(potentialKvp,
+                _settings.EscapingSequenceStart,
+                _settings.NullElementMarker,
+                _settings.DictionaryPairsDelimiter,
+                _settings.DictionaryKeyValueDelimiter);
 
             return parsedPairs;
         }
@@ -116,7 +110,7 @@ namespace Nemesis.TextParsers.Parsers
 
                 if (key is null) throw new ArgumentException("Key equal to NULL is not supported");
 
-                switch (_behaviour)
+                switch (_settings.Behaviour)
                 {
                     case DictionaryBehaviour.OverrideKeys:
                         result[key] = val; break;
@@ -131,7 +125,7 @@ namespace Nemesis.TextParsers.Parsers
                             throw new ArgumentException($"The key '{key}' has already been added");
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(_behaviour), _behaviour, null);
+                        throw new ArgumentOutOfRangeException(nameof(_settings.Behaviour), _settings.Behaviour, null);
                 }
             }
         }
@@ -149,8 +143,8 @@ namespace Nemesis.TextParsers.Parsers
 
             try
             {
-                if (_start.HasValue)
-                    accumulator.Append(_start.Value);
+                if (_settings.Start.HasValue)
+                    accumulator.Append(_settings.Start.Value);
 
                 do
                 {
@@ -158,21 +152,21 @@ namespace Nemesis.TextParsers.Parsers
                     var key = pair.Key;
                     var value = pair.Value;
 
-                    if (key == null) accumulator.Append(_nullElementMarker);
+                    if (key == null) accumulator.Append(_settings.NullElementMarker);
                     else Append(ref accumulator, _keyTransformer.Format(key));
 
-                    accumulator.Append(_dictionaryKeyValueDelimiter); //=
+                    accumulator.Append(_settings.DictionaryKeyValueDelimiter); //=
 
-                    if (value == null) accumulator.Append(_nullElementMarker);
+                    if (value == null) accumulator.Append(_settings.NullElementMarker);
                     else Append(ref accumulator, _valueTransformer.Format(value));
 
-                    accumulator.Append(_dictionaryPairsDelimiter); //;
+                    accumulator.Append(_settings.DictionaryPairsDelimiter); //;
                 } while (enumerator.MoveNext());
-                
+
                 accumulator.Shrink();
 
-                if (_end.HasValue)
-                    accumulator.Append(_end.Value);
+                if (_settings.End.HasValue)
+                    accumulator.Append(_settings.End.Value);
 
                 return accumulator.ToString();
             }
@@ -184,10 +178,12 @@ namespace Nemesis.TextParsers.Parsers
         {
             foreach (char c in text)
             {
-                if (c == _escapingSequenceStart || c == _nullElementMarker ||
-                    c == _dictionaryPairsDelimiter || c == _dictionaryKeyValueDelimiter
+                if (c == _settings.EscapingSequenceStart ||
+                    c == _settings.NullElementMarker ||
+                    c == _settings.DictionaryPairsDelimiter ||
+                    c == _settings.DictionaryKeyValueDelimiter
                 )
-                    accumulator.Append(_escapingSequenceStart);
+                    accumulator.Append(_settings.EscapingSequenceStart);
                 accumulator.Append(c);
             }
         }
