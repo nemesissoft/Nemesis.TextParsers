@@ -59,9 +59,9 @@ namespace Nemesis.TextParsers.Tests
             var actual = transformer.Parse(input);
 
             Assert.That(actual, Is.Not.Null);
-            Assert.That(actual, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
+            Assert.That(actual, Is.AssignableTo<IAggressionBased<TElement>>());
 
-            var values = ((IAggressionValuesProvider<TElement>)actual).Values;
+            var values = actual.GetValues().ToList();
             Assert.That(values, Is.EqualTo(expectedOutput));
         }
 
@@ -86,9 +86,12 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual, Is.Not.Null);
 
-            Assert.That(actual.ToString(), Is.EqualTo(data.expectedOutput));
+            var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValuesCompacted));
+            Assert.That(trans.Format(actual), Is.EqualTo(data.expectedOutput));
+
+            Assert.That(actual.GetValues().ToList(),
+                Is.EqualTo(data.expectedValuesCompacted));
         }
 
         [TestCaseSource(nameof(ValidValuesForFactory))]
@@ -99,10 +102,11 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual, Is.Not.Null);
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValues));
+            Assert.That(actual.GetValues().ToList(),
+                Is.EqualTo(data.expectedValues));
         }
 
-        private static IEnumerable<TCD> FromValues_Invalid() => new []
+        private static IEnumerable<TCD> FromValues_Invalid() => new[]
         {
             new TCD("1#2", "0, 1, 3 or 9 elements, but contained 2"),
             new TCD("1#2#3#4", "0, 1, 3 or 9 elements, but contained 4"),

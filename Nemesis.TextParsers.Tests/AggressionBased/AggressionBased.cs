@@ -15,21 +15,10 @@ using NotNull = JetBrains.Annotations.NotNullAttribute;
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
-    [PublicAPI]
-    public interface IAggressionValuesProvider<out TValue>
-    {
-        /// <summary>
-        /// For introspection and test purposes. This might allocate a new list
-        /// </summary>
-        IReadOnlyList<TValue> Values { get; }
-
-        string ToString();
-    }
-
     [Transformer(typeof(AggressionBasedTransformer<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
-    public interface IAggressionBased<out TValue>
+    public interface IAggressionBased<TValue>
     {
         TValue PassiveValue { get; }
         TValue NormalValue { get; }
@@ -37,19 +26,14 @@ namespace Nemesis.TextParsers.Tests
 
         TValue GetValueFor(StrategyAggression aggression);
         TValue GetValueFor(byte aggression);
-    }
 
-    internal static class AggressionBasedSerializer
-    {
-        public static readonly SpanCollectionSerializer Instance = new SpanCollectionSerializer('#', ';', '=', '∅', '\\');
+        LeanCollection<TValue> GetValues();
     }
 
     [Transformer(typeof(AggressionBasedTransformer<>))]
-    internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
+    internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>
     {
-        IReadOnlyList<TValue> IAggressionValuesProvider<TValue>.Values => GetValues().ToList();
-
-        protected abstract LeanCollection<TValue> GetValues();
+        public abstract LeanCollection<TValue> GetValues();
 
         protected static bool IsStructurallyEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
@@ -80,14 +64,17 @@ namespace Nemesis.TextParsers.Tests
         public sealed override int GetHashCode() => GetHashCodeCore();
         protected abstract int GetHashCodeCore();
 
-        public sealed override string ToString() => AggressionBasedSerializer.Instance.FormatCollection(GetValues());
+        /// <summary>
+        /// Text representation. For debugging purposes only
+        /// </summary>
+        public sealed override string ToString() => string.Join(" # ", GetValues().ToList());
     }
 
     internal sealed class AggressionBased1<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
         public TValue One { get; }
 
-        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
+        public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
 
         public TValue PassiveValue => One;
         public TValue NormalValue => One;
@@ -114,7 +101,7 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased3<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
-        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
+        public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
 
         public TValue PassiveValue { get; }
         public TValue NormalValue { get; }
@@ -176,7 +163,7 @@ namespace Nemesis.TextParsers.Tests
     {
         private readonly TValue[] _values;
 
-        protected override LeanCollection<TValue> GetValues() => LeanCollectionFactory.FromArrayChecked(_values);
+        public override LeanCollection<TValue> GetValues() => LeanCollectionFactory.FromArrayChecked(_values);
 
         public TValue PassiveValue => GetValueFor(StrategyAggression.Passive);
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
@@ -229,17 +216,63 @@ namespace Nemesis.TextParsers.Tests
         protected override int GetHashCodeCore() => _values?.GetHashCode() ?? 0;
     }
 
+
     [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
-    public class AggressionBasedTransformer<TValue>: TransformerBase<IAggressionBased<TValue>>
+    public sealed class AggressionBasedTransformer<TValue>: TransformerBase<IAggressionBased<TValue>>
     {
+        private const char LIST_DELIMITER = '#';
+        private const char NULL_ELEMENT_MARKER = '∅';
+        private const char ESCAPING_SEQUENCE_START = '\\';
+
         private readonly ITransformerStore _transformerStore;
-        public AggressionBasedTransformer(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly ITransformer<TValue> _elementTransformer;
+        public AggressionBasedTransformer(ITransformerStore transformerStore)
+        {
+            _transformerStore = transformerStore;
+            _elementTransformer = _transformerStore.GetTransformer<TValue>();
+        }
 
-        protected override IAggressionBased<TValue> ParseCore(in ReadOnlySpan<char> input) => 
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(input, out _));
+        protected override IAggressionBased<TValue> ParseCore(in ReadOnlySpan<char> input)
+        {
+            var tokens = input.Tokenize(LIST_DELIMITER, ESCAPING_SEQUENCE_START, true);
+            var parsed = tokens.Parse<TValue>(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, LIST_DELIMITER);
 
-        public override string Format(IAggressionBased<TValue> element) => 
-            element?.ToString();
+            return FromValues(parsed);
+        }
+
+        public override string Format(IAggressionBased<TValue> ab)
+        {
+            if (ab == null) return null;
+            
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            
+            try
+            {
+                var enumerator = ab.GetValues().GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    string elementText = _elementTransformer.Format(enumerator.Current);
+                    if (elementText == null)
+                        accumulator.Append(NULL_ELEMENT_MARKER);
+                    else
+                    {
+                        foreach (char c in elementText)
+                        {
+                            if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == LIST_DELIMITER)
+                                accumulator.Append(ESCAPING_SEQUENCE_START);
+                            accumulator.Append(c);
+                        }
+                    }
+                    accumulator.Append(LIST_DELIMITER);
+                }
+                accumulator.Shrink();
+
+                return accumulator.ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+        
 
 
         //this should not be cached. Nobody wants to expose globally available i.e. empty collection just for people to be able to add elements to it ;-)

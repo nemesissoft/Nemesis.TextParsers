@@ -85,10 +85,10 @@ namespace Nemesis.TextParsers.Tests
             void CheckType(IAggressionBased<TElement> ab, string stage)
             {
                 Assert.That(ab, Is.Not.Null);
-                Assert.That(ab, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
+                Assert.That(ab, Is.AssignableTo<IAggressionBased<TElement>>());
                 Assert.That(ab, Is.TypeOf(aggBasedType), $"CheckType_{stage}");
 
-                var actualValues = ((IAggressionValuesProvider<TElement>)ab).Values;
+                var actualValues = ab.GetValues().ToList();
 
                 CheckEquivalence(actualValues, inputValues);
             }
@@ -133,8 +133,8 @@ namespace Nemesis.TextParsers.Tests
 
             static void CheckEquivalenceAb(IAggressionBased<TElement> ab1, IAggressionBased<TElement> ab2, string stage)
             {
-                var v1 = ((IAggressionValuesProvider<TElement>)ab1).Values;
-                var v2 = ((IAggressionValuesProvider<TElement>)ab2).Values;
+                var v1 = ab1.GetValues().ToList();
+                var v2 = ab2.GetValues().ToList();
 
                 Assert.That(v1, Is.EqualTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
             }
@@ -143,19 +143,18 @@ namespace Nemesis.TextParsers.Tests
 
             var ab1 = transformer.Parse(inputText.AsSpan());
             CheckType(ab1, "1");
-            var text1 = ab1.ToString();
+            var text1 = transformer.Format(ab1);
 
 
             var ab2 = AggressionBasedFactory<TElement>.FromValues(inputValues);
             CheckType(ab2, "2");
-            var text2 = ab2.ToString();
+            var text2 = transformer.Format(ab2);
 
 
 
             var ab3 = transformer.Parse(inputText);
             CheckType(ab3, "3");
-            var text3 = ab3.ToString();
-            var text3A = transformer.Format(ab3);
+            var text3 = transformer.Format(ab3);
 
 
             CheckEquivalenceAb(ab1, ab2, "1==2");
@@ -163,17 +162,14 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(text1, Is.EqualTo(text2), "2");
             Assert.That(text1, Is.EqualTo(text3), "3");
-            Assert.That(text1, Is.EqualTo(text3A), "3A");
 
             var parsed1  = transformer.Parse(text1.AsSpan());
             var parsed2  = transformer.Parse(text2.AsSpan());
             var parsed3  = transformer.Parse(text3.AsSpan());
-            var parsed3A = transformer.Parse(text3A.AsSpan());
 
             CheckEquivalenceAb(ab1, parsed1, "1==p1");
             CheckEquivalenceAb(ab1, parsed2, "1==p2");
             CheckEquivalenceAb(ab1, parsed3, "1==p3");
-            CheckEquivalenceAb(ab1, parsed3A, "1==p3A");
             CheckEquivalenceAb(parsed1, parsed2, "p1==p1");
         }
 

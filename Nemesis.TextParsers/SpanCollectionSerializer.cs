@@ -74,27 +74,7 @@ namespace Nemesis.TextParsers
 
             return parsed;
         }
-
-        public string FormatCollection<TElement>(in LeanCollection<TElement> coll)
-        {
-            if (coll.Size == 0) return "";
-
-            IFormatter<TElement> formatter = TextTransformer.Default.GetTransformer<TElement>();
-
-            Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-            try
-            {
-                var enumerator = coll.GetEnumerator();
-                while (enumerator.MoveNext())
-                    FormatElement(formatter, enumerator.Current, ref accumulator);
-
-                return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
-            }
-            finally { accumulator.Dispose(); }
-        }
-
+        
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public string FormatCollection<TElement>(IEnumerable<TElement> coll)
         {

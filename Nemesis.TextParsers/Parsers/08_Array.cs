@@ -5,16 +5,16 @@ using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
-/*TODO
- LeanColl - format
- other - format 
+    /*TODO
+      AB<T> - TODO changes + format 
+     other - format 
 
-        tests 
-Add CollectionHelper like TupleHelper 
-        Format - add []
- Parse - remove []
- 
-        */
+            tests 
+    Add CollectionHelper like TupleHelper 
+            Format - add [] start + end
+     Parse - remove []
+
+            */
 
     [UsedImplicitly]
     public sealed class ArrayTransformerCreator : ICanCreateTransformer

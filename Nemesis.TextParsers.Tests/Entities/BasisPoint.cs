@@ -104,22 +104,8 @@ namespace Nemesis.TextParsers.Tests.Entities
         };
 
         [TestCaseSource(nameof(CorrectData))]
-        public void ParseAndFormat(string _, BasisPoint instance, string text)
-        {
-            var sut = TextTransformer.Default.GetTransformer<BasisPoint>();
-
-            var actualParsed1 = sut.Parse(text);
-
-            string formattedInstance = sut.Format(instance);
-            string formattedActualParsed = sut.Format(actualParsed1);
-            Assert.That(formattedInstance, Is.EqualTo(formattedActualParsed));
-
-            var actualParsed2 = sut.Parse(formattedInstance);
-
-            IsMutuallyEquivalent(actualParsed1, instance);
-            IsMutuallyEquivalent(actualParsed2, instance);
-            IsMutuallyEquivalent(actualParsed1, actualParsed2);
-        }
+        public void BasisPoint_ParseAndFormat(string _, BasisPoint instance, string text) 
+            => ParseAndFormat(instance, text);
 
         [Test]
         public void PrecisionTests()

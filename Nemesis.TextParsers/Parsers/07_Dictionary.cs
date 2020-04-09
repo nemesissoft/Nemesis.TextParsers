@@ -167,11 +167,13 @@ namespace Nemesis.TextParsers.Parsers
 
                     accumulator.Append(_dictionaryPairsDelimiter); //;
                 } while (enumerator.MoveNext());
+                
+                accumulator.Shrink();
 
                 if (_end.HasValue)
                     accumulator.Append(_end.Value);
 
-                return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
+                return accumulator.ToString();
             }
             finally { accumulator.Dispose(); }
         }

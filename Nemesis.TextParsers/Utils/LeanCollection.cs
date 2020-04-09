@@ -208,7 +208,10 @@ namespace Nemesis.TextParsers.Utils
         public static bool operator !=(LeanCollection<T> left, LeanCollection<T> right) => !left.Equals(right);
         #endregion
 
-        public override string ToString() => SpanCollectionSerializer.DefaultInstance.FormatCollection(this);
+        /// <summary>
+        /// Text representation. For debugging purposes only
+        /// </summary>
+        public override string ToString() => string.Join(" | ", ToList());
 
         [Pure]
         public LeanCollection<T> Sort(IComparer<T> comparer = null)

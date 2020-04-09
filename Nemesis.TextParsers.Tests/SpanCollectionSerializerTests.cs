@@ -6,10 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Nemesis.TextParsers.Settings;
 using NUnit.Framework;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
-using Nemesis.TextParsers.Utils;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
@@ -599,7 +597,7 @@ namespace Nemesis.TextParsers.Tests
             var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int?[]>>();
             var parsed3 = trans.Parse(@"3000|\∅|\∅|4000");
             Assert.That(
-                ((IAggressionValuesProvider<int?[]>)parsed3).Values.SingleOrDefault(),
+                parsed3.GetValues().ToList().SingleOrDefault(),
                 Is.EqualTo(new int?[] { 3000, null, null, 4000 }));
         }
 

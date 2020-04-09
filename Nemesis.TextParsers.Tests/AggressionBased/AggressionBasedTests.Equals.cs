@@ -69,10 +69,10 @@ namespace Nemesis.TextParsers.Tests
             );
             Assert.That(crazyAggBasedSame, Is.TypeOf<AggressionBased1<List<IAggressionBased<int[]>>>>());
 
-            var text = crazyAggBasedSame.ToString();
-
             var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<List<IAggressionBased<int[]>>>>();
 
+            var text = transformer.Format(crazyAggBasedSame);
+            
             var actual = transformer.Parse(text.AsSpan());
 
             Assert.That(actual, Is.EqualTo(crazyAggBasedSame));
@@ -92,7 +92,7 @@ namespace Nemesis.TextParsers.Tests
                     FromPna(new[] {4000, 41}, new[] {5000, 51}, new[] {6000, 61}),
                 }
             );
-            var text2 = crazyAggBasedNotSame.ToString();
+            var text2 = transformer.Format(crazyAggBasedNotSame);
 
             var actual2 = transformer.Parse(text2.AsSpan());
 
@@ -107,7 +107,7 @@ namespace Nemesis.TextParsers.Tests
             );
             Assert.That(crazyAggBasedSameNotCompacted, Is.TypeOf<AggressionBased3<List<IAggressionBased<int[]>>>>());
 
-            var textNotCompacted = crazyAggBasedSameNotCompacted.ToString();
+            var textNotCompacted = transformer.Format(crazyAggBasedSameNotCompacted);
 
             var actualNotCompacted = transformer.Parse(textNotCompacted.AsSpan());
 

@@ -12,7 +12,7 @@ using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {
-    internal class TestHelper
+    internal static class TestHelper
     {
         public static string AssertException(Exception actual, Type expectedException, string expectedErrorMessagePart, bool logMessage = false)
         {
@@ -72,6 +72,41 @@ namespace Nemesis.TextParsers.Tests
                 parameters.Insert(0, @this);
 
             return Expression.Lambda<TDelegate>(call, parameters).Compile();
+        }
+
+        public static void ParseAndFormat<T>(T instance, string text)
+        {
+            var sut = TextTransformer.Default.GetTransformer<T>();
+
+            var actualParsed1 = sut.Parse(text);
+
+            string formattedInstance = sut.Format(instance);
+            string formattedActualParsed = sut.Format(actualParsed1);
+            Assert.That(formattedInstance, Is.EqualTo(formattedActualParsed));
+
+            var actualParsed2 = sut.Parse(formattedInstance);
+
+            IsMutuallyEquivalent(actualParsed1, instance);
+            IsMutuallyEquivalent(actualParsed2, instance);
+            IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        }
+        
+        public static void ParseAndFormatObject([NotNull] object instance, string text)
+        {
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            var sut = TextTransformer.Default.GetTransformer(instance.GetType());
+
+            var actualParsed1 = sut.ParseObject(text);
+
+            string formattedInstance = sut.FormatObject(instance);
+            string formattedActualParsed = sut.FormatObject(actualParsed1);
+            Assert.That(formattedInstance, Is.EqualTo(formattedActualParsed));
+
+            var actualParsed2 = sut.ParseObject(formattedInstance);
+
+            IsMutuallyEquivalent(actualParsed1, instance);
+            IsMutuallyEquivalent(actualParsed2, instance);
+            IsMutuallyEquivalent(actualParsed1, actualParsed2);
         }
     }
 
