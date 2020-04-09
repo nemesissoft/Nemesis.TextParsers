@@ -74,29 +74,29 @@ namespace Nemesis.TextParsers.Parsers
         private readonly ITransformer<TKey> _keyTransformer;
         private readonly ITransformer<TValue> _valueTransformer;
 
-        private readonly DictionarySettings _settings;
+        protected readonly DictionarySettings Settings;
 
         protected DictionaryTransformerBase(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings)
         {
             _keyTransformer = keyTransformer;
             _valueTransformer = valueTransformer;
-            _settings = settings;
+            Settings = settings;
         }
 
 
         protected ParsedPairSequence ParsePairsStream(ReadOnlySpan<char> text)
         {
-            if (_settings.Start.HasValue || _settings.End.HasValue)
-                text = text.UnParenthesize(_settings.Start, _settings.End, "Dictionary");
+            if (Settings.Start.HasValue || Settings.End.HasValue)
+                text = text.UnParenthesize(Settings.Start, Settings.End, "Dictionary");
 
-            var potentialKvp = text.Tokenize(_settings.DictionaryPairsDelimiter,
-                _settings.EscapingSequenceStart, true);
+            var potentialKvp = text.Tokenize(Settings.DictionaryPairsDelimiter,
+                Settings.EscapingSequenceStart, true);
 
             var parsedPairs = new ParsedPairSequence(potentialKvp,
-                _settings.EscapingSequenceStart,
-                _settings.NullElementMarker,
-                _settings.DictionaryPairsDelimiter,
-                _settings.DictionaryKeyValueDelimiter);
+                Settings.EscapingSequenceStart,
+                Settings.NullElementMarker,
+                Settings.DictionaryPairsDelimiter,
+                Settings.DictionaryKeyValueDelimiter);
 
             return parsedPairs;
         }
@@ -110,7 +110,7 @@ namespace Nemesis.TextParsers.Parsers
 
                 if (key is null) throw new ArgumentException("Key equal to NULL is not supported");
 
-                switch (_settings.Behaviour)
+                switch (Settings.Behaviour)
                 {
                     case DictionaryBehaviour.OverrideKeys:
                         result[key] = val; break;
@@ -125,7 +125,7 @@ namespace Nemesis.TextParsers.Parsers
                             throw new ArgumentException($"The key '{key}' has already been added");
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(_settings.Behaviour), _settings.Behaviour, null);
+                        throw new ArgumentOutOfRangeException(nameof(Settings.Behaviour), Settings.Behaviour, null);
                 }
             }
         }
@@ -143,8 +143,8 @@ namespace Nemesis.TextParsers.Parsers
 
             try
             {
-                if (_settings.Start.HasValue)
-                    accumulator.Append(_settings.Start.Value);
+                if (Settings.Start.HasValue)
+                    accumulator.Append(Settings.Start.Value);
 
                 do
                 {
@@ -152,21 +152,21 @@ namespace Nemesis.TextParsers.Parsers
                     var key = pair.Key;
                     var value = pair.Value;
 
-                    if (key == null) accumulator.Append(_settings.NullElementMarker);
+                    if (key == null) accumulator.Append(Settings.NullElementMarker);
                     else Append(ref accumulator, _keyTransformer.Format(key));
 
-                    accumulator.Append(_settings.DictionaryKeyValueDelimiter); //=
+                    accumulator.Append(Settings.DictionaryKeyValueDelimiter); //=
 
-                    if (value == null) accumulator.Append(_settings.NullElementMarker);
+                    if (value == null) accumulator.Append(Settings.NullElementMarker);
                     else Append(ref accumulator, _valueTransformer.Format(value));
 
-                    accumulator.Append(_settings.DictionaryPairsDelimiter); //;
+                    accumulator.Append(Settings.DictionaryPairsDelimiter); //;
                 } while (enumerator.MoveNext());
 
                 accumulator.Shrink();
 
-                if (_settings.End.HasValue)
-                    accumulator.Append(_settings.End.Value);
+                if (Settings.End.HasValue)
+                    accumulator.Append(Settings.End.Value);
 
                 return accumulator.ToString();
             }
@@ -178,12 +178,12 @@ namespace Nemesis.TextParsers.Parsers
         {
             foreach (char c in text)
             {
-                if (c == _settings.EscapingSequenceStart ||
-                    c == _settings.NullElementMarker ||
-                    c == _settings.DictionaryPairsDelimiter ||
-                    c == _settings.DictionaryKeyValueDelimiter
+                if (c == Settings.EscapingSequenceStart ||
+                    c == Settings.NullElementMarker ||
+                    c == Settings.DictionaryPairsDelimiter ||
+                    c == Settings.DictionaryKeyValueDelimiter
                 )
-                    accumulator.Append(_settings.EscapingSequenceStart);
+                    accumulator.Append(Settings.EscapingSequenceStart);
                 accumulator.Append(c);
             }
         }
@@ -207,8 +207,8 @@ namespace Nemesis.TextParsers.Parsers
             {
                 DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(_kind), _kind, $"{nameof(_kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
                 DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
-                DictionaryKind.SortedList => new SortedList<TKey, TValue>(8),
-                _ => new Dictionary<TKey, TValue>(8)
+                DictionaryKind.SortedList => new SortedList<TKey, TValue>(Settings.DefaultCapacity),
+                _ => new Dictionary<TKey, TValue>(Settings.DefaultCapacity)
             };
 
             PopulateDictionary(parsedPairs, result);

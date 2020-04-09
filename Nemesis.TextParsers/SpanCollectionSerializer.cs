@@ -46,7 +46,7 @@ namespace Nemesis.TextParsers
 
         [PureMethod]
         public TTo[] ParseArray<TTo>(ReadOnlySpan<char> text) =>
-            text.IsEmpty ? Array.Empty<TTo>() : ParseStream<TTo>(text, out var capacity).ToArray(capacity);
+            text.IsEmpty ? Array.Empty<TTo>() : ParseStream<TTo>(text).ToArray();
 
 
         [PureMethod]
@@ -55,20 +55,18 @@ namespace Nemesis.TextParsers
 
         [PureMethod]
         public IReadOnlyCollection<TTo> ParseCollection<TTo>(ReadOnlySpan<char> text, CollectionKind kind = CollectionKind.List) =>
-            ParseStream<TTo>(text, out ushort capacity).ToCollection(kind, capacity);
+            ParseStream<TTo>(text).ToCollection(kind);
 
 
         public LeanCollection<T> ParseLeanCollection<T>(string text) =>
             text == null ? new LeanCollection<T>() : ParseLeanCollection<T>(text.AsSpan());
 
         public LeanCollection<T> ParseLeanCollection<T>(ReadOnlySpan<char> text) =>
-            ParseStream<T>(text, out _).ToLeanCollection();
+            ParseStream<T>(text).ToLeanCollection();
 
         [PureMethod]
-        public ParsedSequence<TTo> ParseStream<TTo>(in ReadOnlySpan<char> text, out ushort capacity)
+        public ParsedSequence<TTo> ParseStream<TTo>(in ReadOnlySpan<char> text)
         {
-            capacity = (ushort)(CountCharacters(text, ListDelimiter) + 1);
-
             var tokens = text.Tokenize(ListDelimiter, EscapingSequenceStart, true);
             var parsed = tokens.Parse<TTo>(EscapingSequenceStart, NullElementMarker, ListDelimiter);
 
@@ -76,24 +74,5 @@ namespace Nemesis.TextParsers
         }
         
         #endregion
-        
-
-        #region Helpers
-
-        private static ushort CountCharacters(in ReadOnlySpan<char> input, char character)
-        {
-            ushort count = 0;
-            for (int i = input.Length - 1; i >= 0; i--)
-                if (input[i] == character)
-                    count++;
-
-            return count;
-        }
-
-        #endregion
-
-        public override string ToString() => $@"Collection: Item1{ListDelimiter}Item2
-Dictionary: key1{DictionaryKeyValueDelimiter}value1{DictionaryPairsDelimiter}key2{DictionaryKeyValueDelimiter}value2
-Null marker: {NullElementMarker}";
     }
 }

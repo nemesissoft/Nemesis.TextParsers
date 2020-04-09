@@ -7,12 +7,15 @@ namespace Nemesis.TextParsers.Parsers
 {
     /*TODO
 
-       tests 
-    Add CollectionHelper like TupleHelper 
+    ParsedSequence - remove static transformer 
+
             Format - add [] start + end
      Parse - remove []
      Parse - Lean, array, coll, custcoll  
      Hunt for TT.Default + SpanCollectionSerializer.DefaultInstance
+
+        use settings.DefaultCapacity for colls/arrays
+        tests - remove SpanCollSer tests
         */
 
     [UsedImplicitly]

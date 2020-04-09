@@ -9,14 +9,16 @@
         public char EscapingSequenceStart { get; }
         public char? Start { get; }
         public char? End { get; }
+        public ushort DefaultCapacity { get; }
 
-        protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+        protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, ushort defaultCapacity)
         {
             ListDelimiter = listDelimiter;
             NullElementMarker = nullElementMarker;
             EscapingSequenceStart = escapingSequenceStart;
             Start = start;
             End = end;
+            DefaultCapacity = defaultCapacity;
         }
 
         public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
@@ -25,21 +27,21 @@
     public class CollectionSettings : CollectionSettingsBase
     {
         public static CollectionSettings Default { get; } =
-                    new CollectionSettings('|', '∅', '\\', null, null);
+            new CollectionSettings('|', '∅', '\\', null, null, 8);
 
-        public CollectionSettings(char listDelimiter, char nullElementMarker,
-            char escapingSequenceStart, char? start, char? end)
-            : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end) { }
+        public CollectionSettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
+            char? start, char? end, ushort defaultCapacity) 
+            : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
     }
 
     public class ArraySettings : CollectionSettingsBase
     {
         public static ArraySettings Default { get; } =
-            new ArraySettings('|', '∅', '\\', null, null);
+            new ArraySettings('|', '∅', '\\', null, null, 8);
 
-        public ArraySettings(char listDelimiter, char nullElementMarker,
-            char escapingSequenceStart, char? start, char? end)
-            : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end) { }
+        public ArraySettings(char listDelimiter, char nullElementMarker, 
+            char escapingSequenceStart, char? start, char? end, ushort defaultCapacity) 
+            : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
     }
 
 
@@ -54,8 +56,9 @@
         public char? Start { get; }
         public char? End { get; }
         public DictionaryBehaviour Behaviour { get; }
+        public ushort DefaultCapacity { get; }
 
-        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour)
+        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour, ushort defaultCapacity)
         {
             DictionaryPairsDelimiter = dictionaryPairsDelimiter;
             DictionaryKeyValueDelimiter = dictionaryKeyValueDelimiter;
@@ -64,10 +67,11 @@
             Start = start;
             End = end;
             Behaviour = behaviour;
+            DefaultCapacity = defaultCapacity;
         }
         
         public static DictionarySettings Default { get; } =
-            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys);
+            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, 8);
 
 
         public override string ToString() =>

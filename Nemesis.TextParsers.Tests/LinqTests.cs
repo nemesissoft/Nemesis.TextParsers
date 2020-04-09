@@ -10,7 +10,7 @@ namespace Nemesis.TextParsers.Tests
     class LinqTests
     {
         private static ParsedSequence<double> GetSequence(string text) => 
-            SpanCollectionSerializer.DefaultInstance.ParseStream<double>(text.AsSpan(), out _);
+            SpanCollectionSerializer.DefaultInstance.ParseStream<double>(text.AsSpan());
 
         [TestCase(@"", false, 0)]
         [TestCase(@"1", true, 1)]

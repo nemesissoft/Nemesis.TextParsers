@@ -219,7 +219,7 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override TDict GetDictionary(in ParsedPairSequence stream)
         {
-            var innerDict = new Dictionary<TKey, TValue>();
+            var innerDict = new Dictionary<TKey, TValue>(Settings.DefaultCapacity);
 
             PopulateDictionary(stream, innerDict);
 

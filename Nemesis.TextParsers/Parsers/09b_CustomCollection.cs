@@ -157,7 +157,7 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override TCollection ParseCore(in ReadOnlySpan<char> input)
         {
-            var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input, out _);
+            var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input);
             var result = GetCollection(stream);
 
             if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
