@@ -109,7 +109,9 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidListData))]
         public void List_Format_SymmetryTests((string expectedOutput, string[] inputList) data)
         {
-            var result = _sut.FormatCollection(data.inputList);
+            var trans = TextTransformer.Default.GetTransformer<string[]>();
+
+            var result = trans.Format(data.inputList);
 
             if (data.expectedOutput == null)
                 Assert.That(result, Is.Null);
@@ -529,13 +531,15 @@ namespace Nemesis.TextParsers.Tests
 
             var expectedList = expectedOutput?.Cast<TElement>().ToList();
 
-            string textExpected = sut.FormatCollection(expectedList);
+            var trans = TextTransformer.Default.GetTransformer<IReadOnlyCollection<TElement>>();
+
+            string textExpected = trans.Format(expectedList);
 
             var parsed1 = sut.ParseCollection<TElement>(input);
             CheckEquivalency(parsed1, expectedList);
 
 
-            string text = sut.FormatCollection(parsed1);
+            string text = trans.Format(parsed1);
             //Console.WriteLine($"EXP:{textExpected}");
             //Console.WriteLine($"INP:{input}");
             //Console.WriteLine($"TEX:{text}");
@@ -581,9 +585,11 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void Complex_List_Roundtrip_Test()
         {
+            var arrayTrans = TextTransformer.Default.GetTransformer<int?[]>();
+
             var array = new int?[] { 30, null, null, 40 };
             // (@"B|∅|A|∅", new []{"B",null,"A",null}),
-            var text = _sut.FormatCollection(array);
+            var text = arrayTrans.Format(array);
 
             Assert.That(text, Is.EqualTo("30|∅|∅|40"));
 

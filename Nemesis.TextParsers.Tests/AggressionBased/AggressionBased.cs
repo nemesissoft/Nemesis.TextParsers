@@ -341,21 +341,21 @@ namespace Nemesis.TextParsers.Tests
 
         internal static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
         {
-            if (values == null) return AggressionBasedFactory<TValue>.Default();
+            if (values == null) return Default();
 
             using var enumerator = values.GetEnumerator();
 
-            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
+            if (!enumerator.MoveNext()) return Default();
             var pass = enumerator.Current;
 
-            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
+            if (!enumerator.MoveNext()) return FromOneValue(pass);
             var norm = enumerator.Current;
 
             if (!enumerator.MoveNext()) throw GetException(2);
             var aggr = enumerator.Current;
 
             if (!enumerator.MoveNext())
-                return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
+                return FromPassiveNormalAggressiveChecked(pass, norm, aggr);
 
             TValue v1 = pass, v2 = norm, v3 = aggr;
 

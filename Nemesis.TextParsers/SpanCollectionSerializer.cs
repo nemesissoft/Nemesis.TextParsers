@@ -75,47 +75,6 @@ namespace Nemesis.TextParsers
             return parsed;
         }
         
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        public string FormatCollection<TElement>(IEnumerable<TElement> coll)
-        {
-            if (coll == null) return null;
-            if (!coll.Any()) return "";
-
-            IFormatter<TElement> formatter = TextTransformer.Default.GetTransformer<TElement>();
-
-            Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            try
-            {
-                using (var enumerator = coll.GetEnumerator())
-                    while (enumerator.MoveNext())
-                        FormatElement(formatter, enumerator.Current, ref accumulator);
-
-                return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
-            }
-            finally { accumulator.Dispose(); }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
-        {
-            string elementText = formatter.Format(element);
-            if (elementText == null)
-                accumulator.Append(NullElementMarker);
-            else
-            {
-                foreach (char c in elementText)
-                {
-                    if (c == EscapingSequenceStart || c == NullElementMarker || c == ListDelimiter)
-                        accumulator.Append(EscapingSequenceStart);
-
-                    accumulator.Append(c);
-                }
-            }
-
-            accumulator.Append(ListDelimiter);
-        }
-
         #endregion
         
 

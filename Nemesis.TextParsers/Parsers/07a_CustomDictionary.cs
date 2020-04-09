@@ -50,14 +50,8 @@ namespace Nemesis.TextParsers.Parsers
 
                 createMethod = createMethod.MakeGenericMethod(meta2.keyType, meta2.valueType, dictType);
 
-                var getDictConverterMethod =
-                    (GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                         .SingleOrDefault(mi => mi.Name == nameof(GetDictConverter))
-                     ?? throw new MissingMethodException($"Method {nameof(GetDictConverter)} does not exist"))
-                    .MakeGenericMethod(meta2.keyType, meta2.valueType, dictType);
-                var funcConverter = getDictConverterMethod.Invoke(null, new object[] { meta2.ctor });
-
-                return (ITransformer<TDictionary>)createMethod.Invoke(this, new[] { supportsDeserializationLogic, funcConverter });
+                return (ITransformer<TDictionary>)createMethod.Invoke(this,
+                    new object[] { supportsDeserializationLogic, meta2.ctor });
             }
             else
                 throw new NotSupportedException(
@@ -73,27 +67,19 @@ namespace Nemesis.TextParsers.Parsers
                 supportsDeserializationLogic
             );
 
-        private ITransformer<TDict> CreateReadOnlyDictionaryTransformer<TKey, TValue, TDict>(bool supportsDeserializationLogic, Func<IDictionary<TKey, TValue>, TDict> dictConversion)
-            where TDict : IReadOnlyDictionary<TKey, TValue> =>
-            new ReadOnlyDictionaryTransformer<TKey, TValue, TDict>(
+        private ITransformer<TDict> CreateReadOnlyDictionaryTransformer<TKey, TValue, TDict>
+            (bool supportsDeserializationLogic, ConstructorInfo ctor)
+            where TDict : IReadOnlyDictionary<TKey, TValue>
+        {
+            var dictConversion = ReadOnlyDictionaryTransformer<TKey, TValue, TDict>.GetDictConverter(ctor);
+
+            return new ReadOnlyDictionaryTransformer<TKey, TValue, TDict>(
                 _transformerStore.GetTransformer<TKey>(),
                 _transformerStore.GetTransformer<TValue>(),
                 _settings,
                 supportsDeserializationLogic,
                 dictConversion
             );
-
-        private static Func<IDictionary<TKey, TValue>, TDict> GetDictConverter<TKey, TValue, TDict>(ConstructorInfo ctorInfo)
-            where TDict : IReadOnlyDictionary<TKey, TValue>
-        {
-            Type keyType = typeof(TKey), valueType = typeof(TValue),
-                 iDictType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
-
-            var param = Expression.Parameter(iDictType, "dict");
-            var ctor = Expression.New(ctorInfo, param);
-
-            var λ = Expression.Lambda<Func<IDictionary<TKey, TValue>, TDict>>(ctor, param);
-            return λ.Compile();
         }
 
         private static bool IsCustomDictionary(Type dictType, out (Type keyType, Type valueType) meta)
@@ -219,12 +205,24 @@ namespace Nemesis.TextParsers.Parsers
             : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic)
             => _dictConversion = dictConversion;
 
+        internal static Func<IDictionary<TKey, TValue>, TDict> GetDictConverter(ConstructorInfo ctorInfo)
+        {
+            Type keyType = typeof(TKey), valueType = typeof(TValue),
+                iDictType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
+
+            var param = Expression.Parameter(iDictType, "dict");
+            var ctor = Expression.New(ctorInfo, param);
+
+            var λ = Expression.Lambda<Func<IDictionary<TKey, TValue>, TDict>>(ctor, param);
+            return λ.Compile();
+        }
+
         protected override TDict GetDictionary(in ParsedPairSequence stream)
         {
             var innerDict = new Dictionary<TKey, TValue>();
 
             PopulateDictionary(stream, innerDict);
-            
+
             var result = _dictConversion(innerDict);
             return result;
         }

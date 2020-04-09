@@ -29,39 +29,53 @@ namespace Nemesis.TextParsers.Parsers
 
             if (IsCustomCollection(collectionType, out var elementType))
             {
-                var transType = typeof(CustomCollectionTransformer<,>).MakeGenericType(elementType, collectionType);
-                return (ITransformer<TCollection>)Activator.CreateInstance(transType, new object[] { supportsDeserializationLogic });
+                var createMethod = Method.OfExpression<
+                    Func<CustomCollectionTransformerCreator, bool, ITransformer<List<int>>>
+                >((@this, supp) => @this.CreateCustomsCollectionTransformer<int, List<int>>(supp)
+                ).GetGenericMethodDefinition();
+
+                createMethod = createMethod.MakeGenericMethod(elementType, collectionType);
+
+                return (ITransformer<TCollection>)createMethod.Invoke(this, new object[] { supportsDeserializationLogic });
             }
             else if (IsReadOnlyCollection(collectionType, out var meta))
             {
-                var transType = typeof(ReadOnlyCollectionTransformer<,>).MakeGenericType(meta.elementType, collectionType);
-                var getListConverterMethod =
-                        (GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                            .SingleOrDefault(mi => mi.Name == nameof(GetListConverter))
-                        ?? throw new MissingMethodException($"Method {nameof(GetListConverter)} does not exist"))
-                    .MakeGenericMethod(meta.elementType, collectionType);
+                var createMethod = Method.OfExpression<
+                    Func<CustomCollectionTransformerCreator, bool, ConstructorInfo, ITransformer<List<int>>>
+                >((@this, supp, ci) => @this.CreateReadOnlyCollectionTransformer<int, List<int>>(supp, ci)
+                ).GetGenericMethodDefinition();
 
-                var funcConverter = getListConverterMethod.Invoke(null, new object[] { meta.ctor });
+                createMethod = createMethod.MakeGenericMethod(meta.elementType, collectionType);
 
-                return (ITransformer<TCollection>)Activator.CreateInstance(transType, supportsDeserializationLogic, funcConverter);
+                return (ITransformer<TCollection>)createMethod.Invoke(this,
+                    new object[] { supportsDeserializationLogic, meta.ctor }
+                );
             }
             else
-                throw new NotSupportedException(
-                    "Only concrete types based on ICollection or IReadOnlyCollection are supported");
+                throw new NotSupportedException("Only concrete types based on ICollection or IReadOnlyCollection are supported");
         }
 
-        private static Func<IList<TElement>, TCollection> GetListConverter<TElement, TCollection>(ConstructorInfo ctorInfo) where TCollection : IReadOnlyCollection<TElement>
+        private ITransformer<TCollection> CreateCustomsCollectionTransformer<TElement, TCollection>
+            (bool supportsDeserializationLogic)
+                where TCollection : ICollection<TElement>, new()
+            => new CustomCollectionTransformer<TElement, TCollection>(
+                _transformerStore.GetTransformer<TElement>(),
+                _settings, supportsDeserializationLogic
+            );
+
+        private ITransformer<TCollection> CreateReadOnlyCollectionTransformer<TElement, TCollection>
+            (bool supportsDeserializationLogic, ConstructorInfo ctor)
+                where TCollection : IReadOnlyCollection<TElement>
         {
-            Type elementType = typeof(TElement),
-                 iListType = typeof(IList<>).MakeGenericType(elementType);
+            var listConversion = ReadOnlyCollectionTransformer<TElement, TCollection>
+                .GetListConverter(ctor);
 
-            var param = Expression.Parameter(iListType, "list");
-            var ctor = Expression.New(ctorInfo, param);
-
-            var λ = Expression.Lambda<Func<IList<TElement>, TCollection>>(ctor, param);
-            return λ.Compile();
+            return new ReadOnlyCollectionTransformer<TElement, TCollection>(
+                _transformerStore.GetTransformer<TElement>(),
+                _settings, supportsDeserializationLogic, listConversion
+            );
         }
-        
+
         private static bool IsCustomCollection(Type collectionType, out Type elementType)
         {
             Type iCollection = typeof(ICollection<>);
@@ -129,11 +143,16 @@ namespace Nemesis.TextParsers.Parsers
         public sbyte Priority => 72;
     }
 
-    public abstract class CustomCollectionTransformerBase<TElement, TCollection> : TransformerBase<TCollection>
+
+
+    public abstract class CustomCollectionTransformerBase<TElement, TCollection> : EnumerableTransformerBase<TElement, TCollection>
             where TCollection : IEnumerable<TElement>
     {
         private readonly bool _supportsDeserializationLogic;
-        protected CustomCollectionTransformerBase(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
+        protected CustomCollectionTransformerBase(ITransformer<TElement> elementTransformer,
+            CollectionSettings settings, bool supportsDeserializationLogic)
+            : base(elementTransformer, settings)
+            => _supportsDeserializationLogic = supportsDeserializationLogic;
 
 
         protected override TCollection ParseCore(in ReadOnlySpan<char> input)
@@ -149,8 +168,6 @@ namespace Nemesis.TextParsers.Parsers
 
         protected abstract TCollection GetCollection(in ParsedSequence<TElement> stream);
 
-        public override string Format(TCollection coll) =>
-            SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
         public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";
     }
@@ -158,7 +175,8 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class CustomCollectionTransformer<TElement, TCollection> : CustomCollectionTransformerBase<TElement, TCollection>
         where TCollection : ICollection<TElement>, new()
     {
-        public CustomCollectionTransformer(bool supportsDeserializationLogic) : base(supportsDeserializationLogic) { }
+        public CustomCollectionTransformer(ITransformer<TElement> elementTransformer, CollectionSettings settings,
+            bool supportsDeserializationLogic) : base(elementTransformer, settings, supportsDeserializationLogic) { }
 
         protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
         {
@@ -178,8 +196,22 @@ namespace Nemesis.TextParsers.Parsers
     {
         private readonly Func<IList<TElement>, TCollection> _listConversion;
 
-        public ReadOnlyCollectionTransformer(bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion) : base(supportsDeserializationLogic)
+        public ReadOnlyCollectionTransformer(ITransformer<TElement> elementTransformer, CollectionSettings settings,
+            bool supportsDeserializationLogic, Func<IList<TElement>, TCollection> listConversion)
+            : base(elementTransformer, settings, supportsDeserializationLogic)
             => _listConversion = listConversion;
+
+        internal static Func<IList<TElement>, TCollection> GetListConverter(ConstructorInfo ctorInfo)
+        {
+            Type elementType = typeof(TElement),
+                iListType = typeof(IList<>).MakeGenericType(elementType);
+
+            var param = Expression.Parameter(iListType, "list");
+            var ctor = Expression.New(ctorInfo, param);
+
+            var λ = Expression.Lambda<Func<IList<TElement>, TCollection>>(ctor, param);
+            return λ.Compile();
+        }
 
         protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
         {

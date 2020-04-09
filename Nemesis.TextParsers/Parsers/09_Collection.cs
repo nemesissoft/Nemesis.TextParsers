@@ -27,11 +27,24 @@ namespace Nemesis.TextParsers.Parsers
             if (!TryGetElements(collectionType, out _, out var kind, out var elementType) || elementType == null)
                 throw new NotSupportedException($"Type {collectionType.GetFriendlyName()} is not supported by {GetType().Name}");
 
-            var transType = typeof(CollectionTransformer<,>).MakeGenericType(elementType, collectionType);
 
-            return (ITransformer<TCollection>)Activator.CreateInstance(transType, kind);
+            var createMethod = Method.OfExpression<
+                Func<CollectionTransformerCreator, CollectionKind, ITransformer<List<int>>>
+            >((@this, k) => @this.CreateCollectionTransformer<int, List<int>>(k)
+            ).GetGenericMethodDefinition();
+
+            createMethod = createMethod.MakeGenericMethod(elementType, collectionType);
+
+            return (ITransformer<TCollection>)createMethod.Invoke(this, new object[] { kind });
         }
-        
+
+        private ITransformer<TCollection> CreateCollectionTransformer<TElement, TCollection>(CollectionKind kind)
+            where TCollection : IEnumerable<TElement>
+            => new CollectionTransformer<TElement, TCollection>(
+                _transformerStore.GetTransformer<TElement>(),
+                _settings, kind
+            );
+
         public bool CanHandle(Type type) =>
             TryGetElements(type, out bool isArray, out var kind, out var elementType) &&
             !isArray &&
@@ -55,18 +68,18 @@ namespace Nemesis.TextParsers.Parsers
         public sbyte Priority => 70;
     }
 
-    public sealed class CollectionTransformer<TElement, TCollection> : TransformerBase<TCollection>
+    public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTransformerBase<TElement, TCollection>
         where TCollection : IEnumerable<TElement>
     {
         private readonly CollectionKind _kind;
-        public CollectionTransformer(CollectionKind kind) => _kind = kind;
+        public CollectionTransformer(ITransformer<TElement> elementTransformer,
+            CollectionSettings settings, CollectionKind kind) : base(elementTransformer, settings)
+            => _kind = kind;
 
 
         protected override TCollection ParseCore(in ReadOnlySpan<char> input) =>
             (TCollection)SpanCollectionSerializer.DefaultInstance.ParseCollection<TElement>(input, _kind);
 
-        public override string Format(TCollection coll) =>
-            SpanCollectionSerializer.DefaultInstance.FormatCollection(coll);
 
         public override TCollection GetEmpty() =>
             (TCollection)(_kind switch

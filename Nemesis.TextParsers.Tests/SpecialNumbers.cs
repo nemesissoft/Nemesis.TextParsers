@@ -164,7 +164,9 @@ namespace Nemesis.TextParsers.Tests
                 new CarrotAndOnionFactors(10.1f, new[]{20.1f, 30.1f, 40.1f}),
             };
 
-            var formatted = SpanCollectionSerializer.DefaultInstance.FormatCollection(list);
+            var trans = TextTransformer.Default.GetTransformer<List<CarrotAndOnionFactors>>();
+
+            var formatted = trans.Format(list);
             Assert.That(formatted, Is.EqualTo("1.10000002;2.0999999,3.0999999,4.0999999|10.1000004;20.1000004,30.1000004,40.0999985"));
 
             var parsed = SpanCollectionSerializer.DefaultInstance.ParseCollection<CarrotAndOnionFactors>(formatted);

@@ -86,6 +86,7 @@ namespace Nemesis.TextParsers.Parsers
         {
             _keyTransformer = keyTransformer;
             _valueTransformer = valueTransformer;
+            //TODO do not deconstruct
             (
                 _dictionaryPairsDelimiter, _dictionaryKeyValueDelimiter, _nullElementMarker,
                 _escapingSequenceStart, _start, _end, _behaviour

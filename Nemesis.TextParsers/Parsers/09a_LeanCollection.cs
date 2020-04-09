@@ -24,7 +24,7 @@ namespace Nemesis.TextParsers.Parsers
 
             var createMethod = Method.OfExpression<
                 Func<LeanCollectionTransformerCreator, ITransformer<LeanCollection<int>>>
-            >((@this) => @this.CreateLeanCollectionTransformer<int>()
+            >(@this => @this.CreateLeanCollectionTransformer<int>()
             ).GetGenericMethodDefinition();
 
             createMethod = createMethod.MakeGenericMethod(elementType);
@@ -73,7 +73,6 @@ namespace Nemesis.TextParsers.Parsers
             return SpanCollectionSerializer.DefaultInstance.ParseLeanCollection<TElement>(input);
         }
 
-        //TODO add in modifier for argument
         public override string Format(LeanCollection<TElement> coll)
         {
             if (coll.Size == 0) return "";
