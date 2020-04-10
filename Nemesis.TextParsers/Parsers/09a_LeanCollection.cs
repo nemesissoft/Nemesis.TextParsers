@@ -97,8 +97,9 @@ namespace Nemesis.TextParsers.Parsers
 
             if (!enumerator.MoveNext()) return new LeanCollection<TElement>(first, second, third);
 
+            int capacity = _settings.GetCapacity(input);
 
-            var initialBuffer = ArrayPool<TElement>.Shared.Rent(_settings.DefaultCapacity);
+            var initialBuffer = ArrayPool<TElement>.Shared.Rent(capacity);
             var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
             try
             {

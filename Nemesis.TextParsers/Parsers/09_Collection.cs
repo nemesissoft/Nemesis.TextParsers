@@ -80,8 +80,8 @@ namespace Nemesis.TextParsers.Parsers
         protected override TCollection ParseCore(in ReadOnlySpan<char> input)
         {
             var stream = ParseStream(input);
-            var capacity = Settings.DefaultCapacity;
-            
+            var capacity = Settings.GetCapacity(input);
+
             switch (_kind)
             {
                 case CollectionKind.List:

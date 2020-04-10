@@ -8,9 +8,8 @@ using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Settings
 {
-    public interface ISettings
-    {
-    }
+    //marker interface
+    public interface ISettings { }
 
     public sealed class SettingsStoreBuilder
     {
@@ -75,6 +74,7 @@ namespace Nemesis.TextParsers.Settings
     public static class SettingsHelper
     {
         public static TSettings With<TSettings, TProp>(this TSettings settings, Expression<Func<TSettings, TProp>> propertyExpression, TProp newValue)
+            where TSettings : ISettings
         {
             static bool EqualNames(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
 
@@ -104,7 +104,7 @@ namespace Nemesis.TextParsers.Settings
             }
 
             var arguments = ctor.GetParameters()
-                .Select(p=> GetArg(p.Name)).ToArray();
+                .Select(p => GetArg(p.Name)).ToArray();
 
             return (TSettings)ctor.Invoke(arguments);
         }

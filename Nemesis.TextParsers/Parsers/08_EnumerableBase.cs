@@ -27,7 +27,7 @@ namespace Nemesis.TextParsers.Parsers
 
             return parsed;
         }
-
+        
         public sealed override string Format(TCollection coll)
         {
             if (coll == null) return null;

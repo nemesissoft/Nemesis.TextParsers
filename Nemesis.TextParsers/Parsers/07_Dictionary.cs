@@ -209,8 +209,8 @@ namespace Nemesis.TextParsers.Parsers
             {
                 DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(_kind), _kind, $"{nameof(_kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
                 DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
-                DictionaryKind.SortedList => new SortedList<TKey, TValue>(Settings.DefaultCapacity),
-                _ => new Dictionary<TKey, TValue>(Settings.DefaultCapacity)
+                DictionaryKind.SortedList => new SortedList<TKey, TValue>(Settings.GetCapacity(input)),
+                _ => new Dictionary<TKey, TValue>(Settings.GetCapacity(input))
             };
 
             PopulateDictionary(parsedPairs, result);

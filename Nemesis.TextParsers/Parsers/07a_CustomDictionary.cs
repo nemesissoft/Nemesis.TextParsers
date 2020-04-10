@@ -167,7 +167,9 @@ namespace Nemesis.TextParsers.Parsers
         protected override TDict ParseCore(in ReadOnlySpan<char> input)
         {
             var stream = ParsePairsStream(input);
-            TDict result = GetDictionary(stream);
+            int capacity = Settings.GetCapacity(input);
+
+            TDict result = GetDictionary(stream, capacity);
 
             if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
                 callback.OnDeserialization(this);
@@ -175,7 +177,7 @@ namespace Nemesis.TextParsers.Parsers
             return result;
         }
 
-        protected abstract TDict GetDictionary(in ParsedPairSequence stream);
+        protected abstract TDict GetDictionary(in ParsedPairSequence stream, int capacity);
 
         public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
     }
@@ -186,7 +188,7 @@ namespace Nemesis.TextParsers.Parsers
         public CustomDictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, bool supportsDeserializationLogic)
             : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic) { }
 
-        protected override TDict GetDictionary(in ParsedPairSequence stream)
+        protected override TDict GetDictionary(in ParsedPairSequence stream, int capacity)
         {
             var result = new TDict();
             PopulateDictionary(stream, result);
@@ -217,15 +219,17 @@ namespace Nemesis.TextParsers.Parsers
             return λ.Compile();
         }
 
-        protected override TDict GetDictionary(in ParsedPairSequence stream)
+        protected override TDict GetDictionary(in ParsedPairSequence stream, int capacity)
         {
-            var innerDict = new Dictionary<TKey, TValue>(Settings.DefaultCapacity);
+            var innerDict = new Dictionary<TKey, TValue>(capacity);
 
             PopulateDictionary(stream, innerDict);
 
             var result = _dictConversion(innerDict);
             return result;
         }
+
+
 
         public override TDict GetEmpty() => _dictConversion(new Dictionary<TKey, TValue>());
     }

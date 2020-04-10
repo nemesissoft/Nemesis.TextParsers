@@ -1,4 +1,6 @@
-﻿namespace Nemesis.TextParsers.Settings
+﻿using System;
+
+namespace Nemesis.TextParsers.Settings
 {
     /* TODO check if coll/dict special chars are distinct
       TODO check also start/end char 
@@ -17,10 +19,9 @@
         public char EscapingSequenceStart { get; }
         public char? Start { get; }
         public char? End { get; }
-        //TODO calculate capacity up front 
-        public ushort DefaultCapacity { get; }
+        public byte? DefaultCapacity { get; }
 
-        protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, ushort defaultCapacity)
+        protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, byte? defaultCapacity)
         {
             ListDelimiter = listDelimiter;
             NullElementMarker = nullElementMarker;
@@ -31,25 +32,37 @@
         }
 
         public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
+
+        
+        public int GetCapacity(in ReadOnlySpan<char> input)
+            => DefaultCapacity ?? CountCharacters(input, ListDelimiter);
+
+        private static int CountCharacters(in ReadOnlySpan<char> input, char character)
+        {
+            var count = 0;
+            for (int i = input.Length - 1; i >= 0; i--)
+                if (input[i] == character) count++;
+            return count;
+        }
     }
 
     public class CollectionSettings : CollectionSettingsBase
     {
         public static CollectionSettings Default { get; } =
-            new CollectionSettings('|', '∅', '\\', null, null, 8);
+            new CollectionSettings('|', '∅', '\\', null, null, null);
 
         public CollectionSettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
-            char? start, char? end, ushort defaultCapacity) 
+            char? start, char? end, byte? defaultCapacity) 
             : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
     }
 
     public class ArraySettings : CollectionSettingsBase
     {
         public static ArraySettings Default { get; } =
-            new ArraySettings('|', '∅', '\\', null, null, 8);
+            new ArraySettings('|', '∅', '\\', null, null, null);
 
-        public ArraySettings(char listDelimiter, char nullElementMarker, 
-            char escapingSequenceStart, char? start, char? end, ushort defaultCapacity) 
+        public ArraySettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart, 
+            char? start, char? end, byte? defaultCapacity) 
             : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
     }
 
@@ -65,9 +78,9 @@
         public char? Start { get; }
         public char? End { get; }
         public DictionaryBehaviour Behaviour { get; }
-        public ushort DefaultCapacity { get; }
+        public byte? DefaultCapacity { get; }
 
-        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour, ushort defaultCapacity)
+        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour, byte? defaultCapacity)
         {
             DictionaryPairsDelimiter = dictionaryPairsDelimiter;
             DictionaryKeyValueDelimiter = dictionaryKeyValueDelimiter;
@@ -80,11 +93,23 @@
         }
         
         public static DictionarySettings Default { get; } =
-            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, 8);
+            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, null);
 
 
         public override string ToString() =>
             $"{Start}Key1{DictionaryKeyValueDelimiter}Value1{DictionaryPairsDelimiter}…{DictionaryPairsDelimiter}KeyN{DictionaryKeyValueDelimiter}ValueN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}', created by {Behaviour}";
+
+
+        public int GetCapacity(in ReadOnlySpan<char> input)
+            => DefaultCapacity ?? CountCharacters(input, DictionaryPairsDelimiter);
+
+        private static int CountCharacters(in ReadOnlySpan<char> input, char character)
+        {
+            var count = 0;
+            for (int i = input.Length - 1; i >= 0; i--)
+                if (input[i] == character) count++;
+            return count;
+        }
     }
 
     public enum DictionaryBehaviour : byte

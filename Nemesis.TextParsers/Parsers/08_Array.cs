@@ -9,9 +9,6 @@ namespace Nemesis.TextParsers.Parsers
 {
     /*TODO               
      Parse - remove []
-        
-        use settings.DefaultCapacity for colls/arrays
-        
         Format - add [] start + end - tests
         */
 
@@ -87,7 +84,9 @@ namespace Nemesis.TextParsers.Parsers
 
             var stream = ParseStream(input);
 
-            var initialBuffer = ArrayPool<TElement>.Shared.Rent(Settings.DefaultCapacity);
+            int capacity = Settings.GetCapacity(input);
+
+            var initialBuffer = ArrayPool<TElement>.Shared.Rent(capacity);
             var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
             try
             {
