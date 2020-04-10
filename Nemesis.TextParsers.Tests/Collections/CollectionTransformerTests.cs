@@ -204,7 +204,7 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         private static void CollectionType_CompoundTestHelper<T>(string input, int expectedCardinality, Type expectedType)
         {
-            var sut = TextTransformer.Default.GetTransformer<T>();
+            var sut = Sut.GetTransformer<T>();
 
             var parsed1 = sut.Parse(input);
 
@@ -223,7 +223,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         [TestCaseSource(nameof(Correct_Data))]
         public void CollectionType_CompoundTest_NonGeneric((Type contractType, string input, int cardinality, Type expectedType) data)
         {
-            var transformer = TextTransformer.Default.GetTransformer(data.contractType);
+            var transformer = Sut.GetTransformer(data.contractType);
 
             var parsed1 = transformer.ParseObject(data.input);
 

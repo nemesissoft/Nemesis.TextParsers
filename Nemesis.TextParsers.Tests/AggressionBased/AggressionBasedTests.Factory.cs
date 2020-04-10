@@ -55,7 +55,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static void AggressionBasedFactory_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<TElement>>();
             var actual = transformer.Parse(input);
 
             Assert.That(actual, Is.Not.Null);
@@ -86,7 +86,7 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual, Is.Not.Null);
 
-            var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            var trans = Sut.GetTransformer<IAggressionBased<int>>();
 
             Assert.That(trans.Format(actual), Is.EqualTo(data.expectedOutput));
 
@@ -97,7 +97,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidValuesForFactory))]
         public void AggressionBasedFactory_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<int>>();
             var actual = transformer.Parse(data.inputText);
 
             Assert.That(actual, Is.Not.Null);
@@ -121,7 +121,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedTransformer_Parse_NegativeTests(string input, string expectedMessagePart)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<int>>();
 
             var ex = Assert.Throws<ArgumentException>(() => transformer.Parse(input.AsSpan()));
 

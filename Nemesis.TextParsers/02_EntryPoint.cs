@@ -23,7 +23,6 @@ namespace Nemesis.TextParsers
 
     public static class TextTransformer
     {
-        //TODO provide mock object for tests + mock object with different settings 
         public static ITransformerStore Default { get; } =
             StandardTransformerStore.GetDefault(SettingsStoreBuilder.GetDefault().Build());
         

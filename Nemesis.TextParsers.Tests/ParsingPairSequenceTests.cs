@@ -11,8 +11,8 @@ namespace Nemesis.TextParsers.Tests
     {
         private static IDictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text)
         {
-            var keyTransformer = TextTransformer.Default.GetTransformer<TKey>();
-            var valTransformer = TextTransformer.Default.GetTransformer<TValue>();
+            var keyTransformer = Sut.GetTransformer<TKey>();
+            var valTransformer = Sut.GetTransformer<TValue>();
 
             var tokens = text.AsSpan().Tokenize(';', '\\', true);
             var parsed = new ParsingPairSequence(tokens, '\\', '∅', ';', '=');

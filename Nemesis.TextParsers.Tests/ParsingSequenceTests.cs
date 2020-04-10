@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers.Tests
             var parsed = new ParsingSequence(tokens, '\\', '∅', '|');
 
             var result = new List<T>();
-            var elementTransformer = TextTransformer.Default.GetTransformer<T>();
+            var elementTransformer = Sut.GetTransformer<T>();
             foreach (var part in parsed)
                 result.Add(part.ParseWith(elementTransformer));
 

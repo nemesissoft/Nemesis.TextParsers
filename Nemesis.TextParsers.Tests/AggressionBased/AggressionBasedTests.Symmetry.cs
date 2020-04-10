@@ -139,7 +139,7 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(v1, Is.EqualTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
             }
 
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<TElement>>();
 
             var ab1 = transformer.Parse(inputText.AsSpan());
             CheckType(ab1, "1");
@@ -198,7 +198,7 @@ namespace Nemesis.TextParsers.Tests
             var null3 = AggressionBasedFactory<TElement>.FromPassiveNormalAggressiveChecked(default, default, default);
             IAggressionBased<TElement> @null = null;
 
-            var sut = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+            var sut = Sut.GetTransformer<IAggressionBased<TElement>>();
 
 
             var text1 = sut.Format(null1);
@@ -242,7 +242,7 @@ namespace Nemesis.TextParsers.Tests
             var empty1 = AggressionBasedFactory<TCollection>.FromOneValue((TCollection)emptyValue);
             var empty3 = AggressionBasedFactory<TCollection>.FromPassiveNormalAggressiveChecked((TCollection)emptyValue, (TCollection)emptyValue, (TCollection)emptyValue);
 
-            var sut = TextTransformer.Default.GetTransformer<IAggressionBased<TCollection>>();
+            var sut = Sut.GetTransformer<IAggressionBased<TCollection>>();
 
 
             string text1 = sut.Format(empty1);

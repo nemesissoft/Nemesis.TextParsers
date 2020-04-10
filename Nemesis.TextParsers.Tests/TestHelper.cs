@@ -76,7 +76,7 @@ namespace Nemesis.TextParsers.Tests
 
         public static void ParseAndFormat<T>(T instance, string text)
         {
-            var sut = TextTransformer.Default.GetTransformer<T>();
+            var sut = Sut.GetTransformer<T>();
 
             var actualParsed1 = sut.Parse(text);
 
@@ -94,7 +94,7 @@ namespace Nemesis.TextParsers.Tests
         public static void ParseAndFormatObject([NotNull] object instance, string text)
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
-            var sut = TextTransformer.Default.GetTransformer(instance.GetType());
+            var sut = Sut.GetTransformer(instance.GetType());
 
             var actualParsed1 = sut.ParseObject(text);
 

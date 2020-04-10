@@ -12,7 +12,7 @@ namespace Nemesis.TextParsers.Tests
     public sealed class UniversalTextTypeConverter<TValue> : TextTypeConverter
     {
         private static readonly ITransformer<TValue> _transformer =
-            TextTransformer.Default.GetTransformer<TValue>();
+            Sut.GetTransformer<TValue>();
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
             _transformer.Parse(value as string);

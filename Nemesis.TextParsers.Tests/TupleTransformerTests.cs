@@ -22,7 +22,7 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.IsTrue(isValueTuple || isKvp, "isValueTuple || isKvp");
             
-            var transformer = TextTransformer.Default.GetTransformer<TTuple>();
+            var transformer = Sut.GetTransformer<TTuple>();
 
             return transformer;
         }

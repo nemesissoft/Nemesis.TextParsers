@@ -215,7 +215,7 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static ThreeElements<TElement> FromText(ReadOnlySpan<char> text)
         {
-            var trans = TextTransformer.Default.GetTransformer<TElement>();
+            var trans = Sut.GetTransformer<TElement>();
 
             var tokens = text.Tokenize(',', '\\', true);
             var parsed = tokens.PreParse('\\', '∅', ',');
@@ -249,7 +249,7 @@ namespace Nemesis.TextParsers.Tests
         private const char ESCAPING_SEQUENCE_START = '\\';
         private const char NULL_ELEMENT_MARKER = '∅';
 
-        private static readonly IFormatter<TElement> _formatter = TextTransformer.Default.GetTransformer<TElement>();
+        private static readonly IFormatter<TElement> _formatter = Sut.GetTransformer<TElement>();
 
         public TElement From { get; }
         public TElement To { get; }
@@ -294,7 +294,7 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static Range<TElement> FromText(ReadOnlySpan<char> text)
         {
-            var trans = TextTransformer.Default.GetTransformer<TElement>();
+            var trans = Sut.GetTransformer<TElement>();
 
             var tokens = text.Tokenize(SEPARATOR, ESCAPING_SEQUENCE_START, true);
             var parsed = tokens.PreParse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
@@ -355,7 +355,7 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static PairWithFactory<TElement> FromText(ReadOnlySpan<char> text)
         {
-            var trans = TextTransformer.Default.GetTransformer<TElement>();
+            var trans = Sut.GetTransformer<TElement>();
 
             var tokens = text.Tokenize(',', '\\', true);
             var parsed = tokens.PreParse('\\', '∅', ',');

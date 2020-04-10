@@ -19,8 +19,6 @@ namespace Nemesis.TextParsers.Tests.Collections
     [TestFixture]
     public class DictionaryTests
     {
-        private readonly ITransformerStore _transformerStore = TextTransformer.Default;
-
         const string NULL_PLACEHOLDER = "维基百科";
         private static string NormalizeNullMarkers(string text) =>
             text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
@@ -58,7 +56,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         [TestCaseSource(nameof(ValidDictData))]
         public void Dict_Format_SymmetryTests((string expectedOutput, Dss inputDict) data)
         {
-            var sut = _transformerStore.GetTransformer<Dss>();
+            var sut = Sut.GetTransformer<Dss>();
 
             var result = sut.Format(data.inputDict);
 
@@ -78,7 +76,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         [Test]
         public void Dict_CompoundTests()
         {
-            var sut = _transformerStore.GetTransformer<Dictionary<int, TimeSpan>>();
+            var sut = Sut.GetTransformer<Dictionary<int, TimeSpan>>();
 
             var dict = Enumerable.Range(1, 5).ToDictionary(i => i, i => new TimeSpan(i, i + 1, i + 2, i + 3));
 
@@ -92,7 +90,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         [Test]
         public void Dict_CompoundTestsAggBasedAndList()
         {
-            var sut = _transformerStore.GetTransformer<Dictionary<IAggressionBased<float>, List<TimeSpan>>>();
+            var sut = Sut.GetTransformer<Dictionary<IAggressionBased<float>, List<TimeSpan>>>();
 
             var dict = Enumerable.Range(0, 4).ToDictionary(
                 i => AggressionBasedFactory<float>.FromPassiveNormalAggressive(10 * i, 10 * i + 1, 10 * i + 2),
@@ -113,7 +111,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         [TestCaseSource(nameof(ValidDictData))]
         public void Dict_Parse_Test((string input, Dss expectedDict) data)
         {
-            var sut = _transformerStore.GetTransformer<Dss>();
+            var sut = Sut.GetTransformer<Dss>();
 
             IDictionary<string, string> result = sut.Parse(data.input);
 
@@ -145,18 +143,12 @@ namespace Nemesis.TextParsers.Tests.Collections
         #endregion
         public void Dict_Parse_NegativeTest(string input, Type expectedException, string expectedErrorMessagePart)
         {
-            var throwOnDuplicateSettings = DictionarySettings.Default
-                .With(s => s.Behaviour, DictionaryBehaviour.ThrowOnDuplicate);
-
-            var settingsStore = SettingsStoreBuilder.GetDefault()
-                .AddOrUpdate(throwOnDuplicateSettings).Build();
-
-            var sut = TextTransformer.GetDefaultStoreWith(settingsStore).GetTransformer<IDictionary<string, string>>();
+            var trans = Sut.ThrowOnDuplicateStore.GetTransformer<IDictionary<string, string>>();
             IDictionary<string, string> result = null;
             bool passed = false;
             try
             {
-                result = sut.Parse(input);
+                result = trans.Parse(input);
                 passed = true;
             }
             catch (Exception actual) { AssertException(actual, expectedException, expectedErrorMessagePart); }

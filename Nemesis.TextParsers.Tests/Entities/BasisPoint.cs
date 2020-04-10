@@ -122,7 +122,7 @@ namespace Nemesis.TextParsers.Tests.Entities
             );
 
 
-            var sut = TextTransformer.Default.GetTransformer<BasisPoint>();
+            var sut = Sut.GetTransformer<BasisPoint>();
 
             var bps2 = BasisPoint.FromBps(123.455);
             var text2 = sut.Format(bps2);

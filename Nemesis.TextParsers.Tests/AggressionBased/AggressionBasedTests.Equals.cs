@@ -42,7 +42,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static void EqualsTestsHelper<TElement>(string text1, string text2)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<TElement>>();
 
             var ab1 = transformer.Parse(text1.AsSpan());
             var ab2 = transformer.Parse(text2.AsSpan());
@@ -69,7 +69,7 @@ namespace Nemesis.TextParsers.Tests
             );
             Assert.That(crazyAggBasedSame, Is.TypeOf<AggressionBased1<List<IAggressionBased<int[]>>>>());
 
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<List<IAggressionBased<int[]>>>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<List<IAggressionBased<int[]>>>>();
 
             var text = transformer.Format(crazyAggBasedSame);
             

@@ -13,8 +13,6 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     [TestFixture]
     internal class DeconstructableTests
     {
-        private static readonly ITransformerStore _transformerStore = TextTransformer.Default;
-
         internal static IEnumerable<TCD> CorrectData() => new[]
         {
             new TCD(typeof(CarrotAndOnionFactors),
@@ -46,7 +44,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
         private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, B2B settingsMutator = null)
         {
-            var settings = Builder.GetDefault(_transformerStore);
+            var settings = Builder.GetDefault(Sut.DefaultStore);
             settings = settingsMutator?.Invoke(settings) ?? settings;
 
             var sut = settings.ToTransformer<TDeconstructable>();
@@ -65,7 +63,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
         private static void ParseHelper<TDeconstructable>(TDeconstructable expected, string input, B2B settingsMutator = null)
         {
-            var settings = Builder.GetDefault(_transformerStore);
+            var settings = Builder.GetDefault(Sut.DefaultStore);
             settings = settingsMutator?.Invoke(settings) ?? settings;
 
             var sut = settings.ToTransformer<TDeconstructable>();
@@ -257,7 +255,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [TestCaseSource(nameof(CustomDeconstructable_Data))]
         public void Custom_ConventionTransformer_BasedOnDeconstructable(DataWithCustomDeconstructableTransformer instance, string text)
         {
-            var sut = _transformerStore.GetTransformer<DataWithCustomDeconstructableTransformer>();
+            var sut = Sut.GetTransformer<DataWithCustomDeconstructableTransformer>();
 
 
             var actualParsed1 = sut.Parse(text);
@@ -278,11 +276,11 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public void Empty_CheckNested()
         {
             IsMutuallyEquivalent(
-                _transformerStore.GetTransformer<House>().GetEmpty(),
+                Sut.GetTransformer<House>().GetEmpty(),
                 new House("", 0.0f, new List<Room>())); //not overriden  
 
             IsMutuallyEquivalent(
-                _transformerStore.GetTransformer<Room>().GetEmpty(),
+                Sut.GetTransformer<Room>().GetEmpty(),
                 RoomTransformer.Empty); //overriden by transformer
         }
 
@@ -290,8 +288,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public void Empty_CheckStability()
         {
             //not overriden 
-            var emptyHouse1 = _transformerStore.GetTransformer<House>().GetEmpty();
-            var emptyHouse2 = _transformerStore.GetTransformer<House>().GetEmpty();
+            var emptyHouse1 = Sut.GetTransformer<House>().GetEmpty();
+            var emptyHouse2 = Sut.GetTransformer<House>().GetEmpty();
 
             Assert.That(emptyHouse1.Rooms, Is.Empty);
             emptyHouse1.Rooms.Add(new Room("XXX", null));
@@ -300,8 +298,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
 
             //overriden by transformer
-            var emptyRoom1 = _transformerStore.GetTransformer<Room>().GetEmpty();
-            var emptyRoom2 = _transformerStore.GetTransformer<Room>().GetEmpty();
+            var emptyRoom1 = Sut.GetTransformer<Room>().GetEmpty();
+            var emptyRoom2 = Sut.GetTransformer<Room>().GetEmpty();
 
             Assert.That(emptyRoom1.FurniturePrices, Has.Count.EqualTo(1));
             emptyRoom1.FurniturePrices.Add("New bed", 10000);
@@ -316,7 +314,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [TestCase(@"(Mike;36;(Wrocław\;52200);123))", typeof(ArgumentException), "cannot have more than 3 elements: '123)'")]
         public void Parse_NegativeTest(string wrongInput, Type expectedException, string expectedMessagePart)
         {
-            var sut = Builder.GetDefault(_transformerStore)
+            var sut = Builder.GetDefault(Sut.DefaultStore)
                 .ToTransformer<Person>();
 
             bool passed = false;
@@ -383,7 +381,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
         private static Exception ToTransformer_NegativeTest_Helper<TDeconstructable>(B2B settingsBuilder)
         {
-            var settings = Builder.GetDefault(_transformerStore);
+            var settings = Builder.GetDefault(Sut.DefaultStore);
 
             if (settingsBuilder != null)
                 settings = settingsBuilder(settings);

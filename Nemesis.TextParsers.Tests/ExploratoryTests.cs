@@ -236,7 +236,7 @@ namespace Nemesis.TextParsers.Tests
             try
             {
                 reason = "Transformer retrieval";
-                var transformer = TextTransformer.Default.GetTransformer<T>();
+                var transformer = Sut.GetTransformer<T>();
                 Assert.That(transformer, Is.Not.Null);
 
                 //nulls
