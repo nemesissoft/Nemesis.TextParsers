@@ -73,7 +73,7 @@ namespace Nemesis.TextParsers.Tests.Entities
                 text = text.Slice(0, length - 2);
 
 
-            var bps = DoubleParser.Instance.Parse(text);
+            var bps = DoubleTransformer.Instance.Parse(text);
             return BasisPoint.FromBps(bps);
         }
 

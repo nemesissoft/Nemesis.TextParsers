@@ -44,7 +44,7 @@ namespace Nemesis.TextParsers.Tests.Transformable
         protected override ParsleyAndLeekFactors ParseCore(in ReadOnlySpan<char> text)
         {
             var stream = text.Split(';').GetEnumerator();
-            var floatParser = SingleParser.Instance;
+            var floatParser = SingleTransformer.Instance;
 
             if (!stream.MoveNext())
                 throw new FormatException($"At least one element is expected to parse {nameof(ParsleyAndLeekFactors)}");

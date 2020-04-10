@@ -57,10 +57,10 @@ namespace Nemesis.TextParsers.Tests
             var enumerator = text.Split(';').GetEnumerator();
 
             if (!enumerator.MoveNext()) return default;
-            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
 
             if (!enumerator.MoveNext()) return default;
-            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
 
             return new Point(x, y);
         }
@@ -117,16 +117,16 @@ namespace Nemesis.TextParsers.Tests
             var enumerator = text.Split(';').GetEnumerator();
 
             if (!enumerator.MoveNext()) return default;
-            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
             
             if (!enumerator.MoveNext()) return default;
-            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
 
             if (!enumerator.MoveNext()) return default;
-            int width = Int32Parser.Instance.Parse(enumerator.Current);
+            int width = Int32Transformer.Instance.Parse(enumerator.Current);
             
             if (!enumerator.MoveNext()) return default;
-            int height = Int32Parser.Instance.Parse(enumerator.Current);
+            int height = Int32Transformer.Instance.Parse(enumerator.Current);
 
 
             return new Rect(x, y, width, height);
@@ -498,10 +498,10 @@ namespace Nemesis.TextParsers.Tests
             var enumerator = text.Split(';').GetEnumerator();
 
             if (!enumerator.MoveNext()) return default;
-            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
 
             if (!enumerator.MoveNext()) return default;
-            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
             
             return new PointWithConverter(x, y);
         }

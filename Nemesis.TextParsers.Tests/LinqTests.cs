@@ -10,7 +10,7 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     class LinqTests
     {
-        private static readonly ITransformer<double> _doubleTransformer = DoubleParser.Instance;
+        private static readonly ITransformer<double> _doubleTransformer = DoubleTransformer.Instance;
         private static ParsedSequence GetSequence(string text)
         {
             var tokens = text.AsSpan().Tokenize('|', '\\', true);
