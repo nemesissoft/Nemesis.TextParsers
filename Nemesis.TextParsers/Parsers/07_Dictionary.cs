@@ -84,7 +84,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
 
-        protected ParsedPairSequence ParsePairsStream(in ReadOnlySpan<char> text)
+        protected ParsingPairSequence ParsePairsStream(in ReadOnlySpan<char> text)
         {
             var toParse = text;
 
@@ -94,7 +94,7 @@ namespace Nemesis.TextParsers.Parsers
             var potentialKvp = toParse.Tokenize(Settings.DictionaryPairsDelimiter,
                 Settings.EscapingSequenceStart, true);
 
-            var parsedPairs = new ParsedPairSequence(potentialKvp,
+            var parsedPairs = new ParsingPairSequence(potentialKvp,
                 Settings.EscapingSequenceStart,
                 Settings.NullElementMarker,
                 Settings.DictionaryPairsDelimiter,
@@ -103,9 +103,9 @@ namespace Nemesis.TextParsers.Parsers
             return parsedPairs;
         }
 
-        protected void PopulateDictionary(in ParsedPairSequence parsedPairs, IDictionary<TKey, TValue> result)
+        protected void PopulateDictionary(in ParsingPairSequence parsingPairs, IDictionary<TKey, TValue> result)
         {
-            foreach (var (keyInput, valInput) in parsedPairs)
+            foreach (var (keyInput, valInput) in parsingPairs)
             {
                 var key = keyInput.ParseWith(_keyTransformer);
                 var val = valInput.ParseWith(_valueTransformer);

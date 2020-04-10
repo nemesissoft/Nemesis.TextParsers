@@ -234,7 +234,7 @@ namespace Nemesis.TextParsers.Tests
         protected override IAggressionBased<TValue> ParseCore(in ReadOnlySpan<char> input)
         {
             var tokens = input.Tokenize(LIST_DELIMITER, ESCAPING_SEQUENCE_START, true);
-            var parsed = tokens.Parse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, LIST_DELIMITER);
+            var parsed = tokens.PreParse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, LIST_DELIMITER);
 
             return FromValues(parsed);
         }
@@ -282,7 +282,7 @@ namespace Nemesis.TextParsers.Tests
         public override IAggressionBased<TValue> GetNull() =>
             AggressionBasedFactory<TValue>.FromOneValue(default);
 
-        private IAggressionBased<TValue> FromValues(ParsedSequence values)
+        private IAggressionBased<TValue> FromValues(ParsingSequence values)
         {
             var enumerator = values.GetEnumerator();
 
@@ -432,7 +432,7 @@ namespace Nemesis.TextParsers.Tests
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
         }
 
-        /*internal static IAggressionBased<TValue> FromValuesCompact(ParsedSequence<TValue> values)
+        /*internal static IAggressionBased<TValue> FromValuesCompact(ParsingSequence<TValue> values)
         {
             var enumerator = values.GetEnumerator();
 

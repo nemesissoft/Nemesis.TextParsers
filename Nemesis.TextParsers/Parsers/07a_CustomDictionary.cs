@@ -177,7 +177,7 @@ namespace Nemesis.TextParsers.Parsers
             return result;
         }
 
-        protected abstract TDict GetDictionary(in ParsedPairSequence stream, int capacity);
+        protected abstract TDict GetDictionary(in ParsingPairSequence stream, int capacity);
 
         public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
     }
@@ -188,7 +188,7 @@ namespace Nemesis.TextParsers.Parsers
         public CustomDictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, bool supportsDeserializationLogic)
             : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic) { }
 
-        protected override TDict GetDictionary(in ParsedPairSequence stream, int capacity)
+        protected override TDict GetDictionary(in ParsingPairSequence stream, int capacity)
         {
             var result = new TDict();
             PopulateDictionary(stream, result);
@@ -219,7 +219,7 @@ namespace Nemesis.TextParsers.Parsers
             return λ.Compile();
         }
 
-        protected override TDict GetDictionary(in ParsedPairSequence stream, int capacity)
+        protected override TDict GetDictionary(in ParsingPairSequence stream, int capacity)
         {
             var innerDict = new Dictionary<TKey, TValue>(capacity);
 

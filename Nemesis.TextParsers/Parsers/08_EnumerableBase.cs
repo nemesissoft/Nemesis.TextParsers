@@ -16,14 +16,14 @@ namespace Nemesis.TextParsers.Parsers
             Settings = settings;
         }
         
-        protected ParsedSequence ParseStream(in ReadOnlySpan<char> text)
+        protected ParsingSequence ParseStream(in ReadOnlySpan<char> text)
         {
             var toParse = text;
             if (Settings.Start.HasValue || Settings.End.HasValue)
                 toParse = toParse.UnParenthesize(Settings.Start, Settings.End, "Collection");
             
             var tokens = toParse.Tokenize(Settings.ListDelimiter, Settings.EscapingSequenceStart, true);
-            var parsed = tokens.Parse(Settings.EscapingSequenceStart, Settings.NullElementMarker, Settings.ListDelimiter);
+            var parsed = tokens.PreParse(Settings.EscapingSequenceStart, Settings.NullElementMarker, Settings.ListDelimiter);
 
             return parsed;
         }

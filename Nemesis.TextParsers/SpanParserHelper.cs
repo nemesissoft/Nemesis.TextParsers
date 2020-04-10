@@ -12,11 +12,10 @@ namespace Nemesis.TextParsers
             where T : IEquatable<T> =>
             new TokenSequence<T>(sequence, separator, escapingElement, emptySequenceYieldsEmpty);
 
-        //TODO rename to "prepare" or remove all together  
         [PureMethod]
-        public static ParsedSequence Parse(this in TokenSequence<char> tokenSource, char escapingElement,
+        public static ParsingSequence PreParse(this in TokenSequence<char> tokenSource, char escapingElement,
             char nullElement, char sequenceDelimiter) =>
-            new ParsedSequence(tokenSource, escapingElement, nullElement, sequenceDelimiter);
+            new ParsingSequence(tokenSource, escapingElement, nullElement, sequenceDelimiter);
 
         
 

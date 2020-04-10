@@ -11,10 +11,10 @@ namespace Nemesis.TextParsers.Tests
     class LinqTests
     {
         private static readonly ITransformer<double> _doubleTransformer = DoubleTransformer.Instance;
-        private static ParsedSequence GetSequence(string text)
+        private static ParsingSequence GetSequence(string text)
         {
             var tokens = text.AsSpan().Tokenize('|', '\\', true);
-            return tokens.Parse('\\', '∅', '|');
+            return tokens.PreParse('\\', '∅', '|');
         }
         
         [TestCase(@"", false, 0)]

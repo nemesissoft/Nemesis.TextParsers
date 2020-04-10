@@ -60,7 +60,7 @@ namespace Benchmarks
             if (Data.Capacity > 128)
                 throw new NotSupportedException("Not supported");
 
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse('\\', '∅', '|');
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
 
             Span<int> parsed = stackalloc int[Data.Capacity];
             int i = 0;
@@ -88,7 +88,7 @@ namespace Benchmarks
             if (Data.Capacity > 128)
                 throw new NotSupportedException("Not supported");
 
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse('\\', '∅', '|');
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
 
             Span<int> parsed = stackalloc int[Data.Capacity];
             int i = 0;
@@ -105,7 +105,7 @@ namespace Benchmarks
         [Benchmark]
         public int Mul_Optimized()
         {
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse('\\', '∅', '|');
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
 
             int result = 0;
             foreach (var num in stream)

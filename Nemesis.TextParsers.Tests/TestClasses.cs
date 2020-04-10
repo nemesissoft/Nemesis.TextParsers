@@ -218,7 +218,7 @@ namespace Nemesis.TextParsers.Tests
             var trans = TextTransformer.Default.GetTransformer<TElement>();
 
             var tokens = text.Tokenize(',', '\\', true);
-            var parsed = tokens.Parse('\\', '∅', ',');
+            var parsed = tokens.PreParse('\\', '∅', ',');
 
             var enumerator = parsed.GetEnumerator();
             {
@@ -297,7 +297,7 @@ namespace Nemesis.TextParsers.Tests
             var trans = TextTransformer.Default.GetTransformer<TElement>();
 
             var tokens = text.Tokenize(SEPARATOR, ESCAPING_SEQUENCE_START, true);
-            var parsed = tokens.Parse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
+            var parsed = tokens.PreParse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
 
             var enumerator = parsed.GetEnumerator();
             {
@@ -358,7 +358,7 @@ namespace Nemesis.TextParsers.Tests
             var trans = TextTransformer.Default.GetTransformer<TElement>();
 
             var tokens = text.Tokenize(',', '\\', true);
-            var parsed = tokens.Parse('\\', '∅', ',');
+            var parsed = tokens.PreParse('\\', '∅', ',');
 
             var enumerator = parsed.GetEnumerator();
             {

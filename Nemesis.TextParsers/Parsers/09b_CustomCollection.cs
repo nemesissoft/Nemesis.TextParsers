@@ -166,7 +166,7 @@ namespace Nemesis.TextParsers.Parsers
             return result;
         }
 
-        protected abstract TCollection GetCollection(in ParsedSequence stream);
+        protected abstract TCollection GetCollection(in ParsingSequence stream);
 
 
         public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";
@@ -178,7 +178,7 @@ namespace Nemesis.TextParsers.Parsers
         public CustomCollectionTransformer(ITransformer<TElement> elementTransformer, CollectionSettings settings,
             bool supportsDeserializationLogic) : base(elementTransformer, settings, supportsDeserializationLogic) { }
 
-        protected override TCollection GetCollection(in ParsedSequence stream)
+        protected override TCollection GetCollection(in ParsingSequence stream)
         {
             var result = new TCollection();
 
@@ -213,7 +213,7 @@ namespace Nemesis.TextParsers.Parsers
             return λ.Compile();
         }
 
-        protected override TCollection GetCollection(in ParsedSequence stream)
+        protected override TCollection GetCollection(in ParsingSequence stream)
         {
             var innerList = new List<TElement>();
 

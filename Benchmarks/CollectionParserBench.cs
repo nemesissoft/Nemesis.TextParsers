@@ -153,7 +153,7 @@ namespace Benchmarks
         [Benchmark]
         public int SpanParse_Alloc()
         {
-            var stream = Numbers.AsSpan().Tokenize('|', '\\', true).Parse('\\', '∅', '|');
+            var stream = Numbers.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
             var array = new int[1000];
             int index = 0;
 
@@ -172,7 +172,7 @@ namespace Benchmarks
         [Benchmark]
         public int SpanTransform_Alloc()
         {
-            var stream = Numbers.AsSpan().Tokenize('|', '\\', true).Parse('\\', '∅', '|');
+            var stream = Numbers.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
             var array = new int[1000];
             int index = 0;
 

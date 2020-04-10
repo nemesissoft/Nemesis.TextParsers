@@ -6,7 +6,7 @@ namespace Nemesis.TextParsers.Utils
     [PublicAPI]
     public static class LightLinq
     {
-        public static (bool success, double result) Sum(this ParsedSequence values, ITransformer<double> transformer)
+        public static (bool success, double result) Sum(this ParsingSequence values, ITransformer<double> transformer)
         {
             var enumerator = values.GetEnumerator();
             if (!enumerator.MoveNext()) return (false, 0);
@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers.Utils
             return (true, sum);
         }
 
-        public static (bool success, double result) Average(this ParsedSequence values, ITransformer<double> transformer)
+        public static (bool success, double result) Average(this ParsingSequence values, ITransformer<double> transformer)
         {
             var enumerator = values.GetEnumerator();
             if (!enumerator.MoveNext()) return (false, 0);
@@ -34,7 +34,7 @@ namespace Nemesis.TextParsers.Utils
             return (true, avg);
         }
 
-        public static (bool success, double result) Variance(this ParsedSequence values, ITransformer<double> transformer)
+        public static (bool success, double result) Variance(this ParsingSequence values, ITransformer<double> transformer)
         {
             var enumerator = values.GetEnumerator();
             if (!enumerator.MoveNext()) return (false, 0);
@@ -63,7 +63,7 @@ namespace Nemesis.TextParsers.Utils
                 );
         }
 
-        public static (bool success, double result) StdDev(this ParsedSequence values, ITransformer<double> transformer)
+        public static (bool success, double result) StdDev(this ParsingSequence values, ITransformer<double> transformer)
         {
             var (success, result) = Variance(values, transformer);
 
@@ -71,7 +71,7 @@ namespace Nemesis.TextParsers.Utils
         }
 
 
-        public static (bool success, double result) Max(this ParsedSequence values, ITransformer<double> transformer)
+        public static (bool success, double result) Max(this ParsingSequence values, ITransformer<double> transformer)
         {
             var e = values.GetEnumerator();
             if (!e.MoveNext()) return (false, 0);
@@ -95,7 +95,7 @@ namespace Nemesis.TextParsers.Utils
             return (true, max);
         }
 
-        public static (bool success, double result) Min(this ParsedSequence values, ITransformer<double> transformer)
+        public static (bool success, double result) Min(this ParsingSequence values, ITransformer<double> transformer)
         {
             var e = values.GetEnumerator();
             if (!e.MoveNext()) return (false, 0);
@@ -113,7 +113,7 @@ namespace Nemesis.TextParsers.Utils
             return (true, min);
         }
 
-        public static (bool success, TSource result) Aggregate<TSource>(this ParsedSequence source, ITransformer<TSource> transformer, [NotNull] Func<TSource, TSource, TSource> func)
+        public static (bool success, TSource result) Aggregate<TSource>(this ParsingSequence source, ITransformer<TSource> transformer, [NotNull] Func<TSource, TSource, TSource> func)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -129,7 +129,7 @@ namespace Nemesis.TextParsers.Utils
             return (true, result);
         }
 
-        public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsedSequence source, ITransformer<TSource> transformer, TAccumulate seed, [NotNull] Func<TAccumulate, TSource, TAccumulate> func)
+        public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsingSequence source, ITransformer<TSource> transformer, TAccumulate seed, [NotNull] Func<TAccumulate, TSource, TAccumulate> func)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -143,7 +143,7 @@ namespace Nemesis.TextParsers.Utils
             return result;
         }
 
-        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ParsedSequence source,
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ParsingSequence source,
             ITransformer<TSource> transformer, TAccumulate seed,
             [NotNull] Func<TAccumulate, TSource, TAccumulate> func, [NotNull] Func<TAccumulate, TResult> resultSelector)
         {
