@@ -1,5 +1,13 @@
 ﻿namespace Nemesis.TextParsers.Settings
 {
+    /* TODO check if coll/dict special chars are distinct
+      TODO check also start/end char 
+        var specialCharacters = new[] { listDelimiter, dictionaryPairsDelimiter, dictionaryKeyValueDelimiter, nullElementMarker, escapingSequenceStart };
+                if (specialCharacters.Length != specialCharacters.Distinct().Count())
+                    throw new ArgumentException($"All special characters have to be distinct. Actual special characters:{string.Join(", ", specialCharacters.Select(c => $"'{c}'"))}");
+                    
+        */
+
     public abstract class CollectionSettingsBase : ISettings
     {
         //for performance reasons, all delimiters and escaped characters are single chars.
@@ -9,6 +17,7 @@
         public char EscapingSequenceStart { get; }
         public char? Start { get; }
         public char? End { get; }
+        //TODO calculate capacity up front 
         public ushort DefaultCapacity { get; }
 
         protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, ushort defaultCapacity)

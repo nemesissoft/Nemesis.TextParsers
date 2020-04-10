@@ -126,8 +126,8 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     public class SpecialNumbersTests
     {
-        private readonly ITransformer<LowPrecisionFloat> _sut = TextTransformer.Default.GetTransformer<LowPrecisionFloat>();
-
+        private static readonly ITransformerStore _store = TextTransformer.Default;
+        
         private static IEnumerable<(string, float)> ValidValuesForFactory()
             => new[]
             {
@@ -139,7 +139,8 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidValuesForFactory))]
         public void LowPrecisionFloat_FromText_ShouldParse((string inputText, float expected) data)
         {
-            LowPrecisionFloat actual = _sut.Parse(data.inputText.AsSpan());
+            LowPrecisionFloat actual = _store.GetTransformer<LowPrecisionFloat>()
+                .Parse(data.inputText.AsSpan());
 
             Assert.That(actual.Value, Is.EqualTo(data.expected).Within(3).Ulps);
             Assert.That(actual, Is.EqualTo(new LowPrecisionFloat(data.expected)));
@@ -148,7 +149,8 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void LowPrecisionFloat_ParseList()
         {
-            var actual = SpanCollectionSerializer.DefaultInstance.ParseCollection<LowPrecisionFloat>("3.14|1|2|3.0005");
+            var actual = _store.GetTransformer<List<LowPrecisionFloat>>()
+                .Parse("3.14|1|2|3.0005");
 
             Assert.That(actual, Has.Count.EqualTo(4));
             Assert.That(actual.Select(lpf => lpf.Value), Is.EqualTo(new[] { 3.14f, 1f, 2f, 3.0005f }));
@@ -169,7 +171,8 @@ namespace Nemesis.TextParsers.Tests
             var formatted = trans.Format(list);
             Assert.That(formatted, Is.EqualTo("1.10000002;2.0999999,3.0999999,4.0999999|10.1000004;20.1000004,30.1000004,40.0999985"));
 
-            var parsed = SpanCollectionSerializer.DefaultInstance.ParseCollection<CarrotAndOnionFactors>(formatted);
+            var parsed = _store.GetTransformer<List<CarrotAndOnionFactors>>()
+                .Parse(formatted);
 
             Assert.That(parsed, Has.Count.EqualTo(2));
             Assert.That(parsed, Is.EqualTo(list));

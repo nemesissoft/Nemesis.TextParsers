@@ -66,19 +66,19 @@ namespace Nemesis.TextParsers
 
                 var kvpTokens = unescapedKvp.Tokenize(_dictionaryKeyValueDelimiter, _escapingSequenceStart, true);
 
-                var enumerator = kvpTokens.GetEnumerator();
+                var kvpEnumerator = kvpTokens.GetEnumerator();
 
-                if (!enumerator.MoveNext())
+                if (!kvpEnumerator.MoveNext())
                     throw new ArgumentException($@"Key{delimiter}Value part was not found");
-                var key = ProcessElement(enumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
+                var key = ProcessElement(kvpEnumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
-                if (!enumerator.MoveNext())
+                if (!kvpEnumerator.MoveNext())
                     throw new ArgumentException($"'{key.ToString()}' has no matching value");
-                var value = ProcessElement(enumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
+                var value = ProcessElement(kvpEnumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
-                if (enumerator.MoveNext())
+                if (kvpEnumerator.MoveNext())
                 {
-                    var remaining = enumerator.Current.ToString();
+                    var remaining = kvpEnumerator.Current.ToString();
                     throw new ArgumentException($@"{key.ToString()}{delimiter}{value.ToString()} pair cannot have more than 2 elements: '{remaining}'");
                 }
                 //if (key == null) throw new ArgumentException("Key equal to NULL is not supported");

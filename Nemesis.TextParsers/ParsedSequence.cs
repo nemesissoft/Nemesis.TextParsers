@@ -4,43 +4,45 @@ using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers
 {
-    public readonly ref struct ParsedSequence<TTo>
+    public readonly ref struct ParsedSequence
     {
-        private static readonly ISpanParser<TTo> _parser;
+        #region Fields and properties
+        private readonly TokenSequence<char> _tokenSource;
+        private readonly char _escapingSequenceStart;
+        private readonly char _nullElementMarker;
+        private readonly char _sequenceDelimiter;
+        #endregion
 
-        static ParsedSequence() => _parser = TextTransformer.Default.GetTransformer<TTo>();
-
-        public ParsedSequence(in TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1 = default)
+        public ParsedSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart, 
+            char nullElementMarker, char sequenceDelimiter)
         {
             _tokenSource = tokenSource;
-            _escapingElement = escapingElement;
-            _nullElement = nullElement;
-            _allowedEscapeCharacter1 = allowedEscapeCharacter1;
+            _escapingSequenceStart = escapingSequenceStart;
+            _nullElementMarker = nullElementMarker;
+            _sequenceDelimiter = sequenceDelimiter;
         }
-
-        private readonly TokenSequence<char> _tokenSource;
-        private readonly char _escapingElement;
-        private readonly char _nullElement;
-        private readonly char _allowedEscapeCharacter1;
-
-        public ParsedSequenceEnumerator GetEnumerator() => new ParsedSequenceEnumerator(_tokenSource, _escapingElement, _nullElement, _allowedEscapeCharacter1);
+        
+        public ParsedSequenceEnumerator GetEnumerator() => new ParsedSequenceEnumerator(_tokenSource, _escapingSequenceStart, _nullElementMarker, _sequenceDelimiter);
 
         public ref struct ParsedSequenceEnumerator
         {
-            public ParsedSequenceEnumerator(in TokenSequence<char> tokenSource, char escapingElement, char nullElement, char allowedEscapeCharacter1)
+            #region Fields
+            private TokenSequence<char>.TokenSequenceEnumerator _tokenSequenceEnumerator;
+            private readonly char _escapingSequenceStart;
+            private readonly char _nullElementMarker;
+            private readonly char _sequenceDelimiter;
+            #endregion
+
+            public ParsedSequenceEnumerator(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char sequenceDelimiter)
             {
                 _tokenSequenceEnumerator = tokenSource.GetEnumerator();
-                _escapingElement = escapingElement;
-                _nullElement = nullElement;
-                _allowedEscapeCharacter1 = allowedEscapeCharacter1;
+                _escapingSequenceStart = escapingSequenceStart;
+                _nullElementMarker = nullElementMarker;
+                _sequenceDelimiter = sequenceDelimiter;
 
                 Current = default;
             }
-
-            private TokenSequence<char>.TokenSequenceEnumerator _tokenSequenceEnumerator;
-            private readonly char _escapingElement;
-            private readonly char _nullElement;
-            private readonly char _allowedEscapeCharacter1;
+            
 
             public bool MoveNext()
             {
@@ -50,12 +52,12 @@ namespace Nemesis.TextParsers
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private TTo ParseElement(in ReadOnlySpan<char> input)
+            private ParserInput ParseElement(in ReadOnlySpan<char> input)
             {
-                if (input.Length == 1 && input[0].Equals(_nullElement))
-                    return default;
+                if (input.Length == 1 && input[0].Equals(_nullElementMarker))
+                    return ParserInput.FromDefault();
 
-                int idx = input.IndexOf(_escapingElement);
+                int idx = input.IndexOf(_escapingSequenceStart);
                 if (idx >= 0)
                 {
                     var bufferLength = Math.Min(Math.Max(input.Length * 13 / 10, 16), 256);
@@ -69,18 +71,19 @@ namespace Nemesis.TextParsers
                         char current = input[i];
                         if (escaped)
                         {
-                            if (current == _escapingElement || current == _nullElement ||
-                                current == _allowedEscapeCharacter1)
+                            if (current == _escapingSequenceStart || 
+                                current == _nullElementMarker ||
+                                current == _sequenceDelimiter)
                                 accumulator.Append(current);
                             else
                                 throw new ArgumentException($@"Illegal escape sequence found in input: '{current}'.
-Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are supported as escaping sequence characters.", nameof(input));
+Only ['{_escapingSequenceStart}','{_nullElementMarker}','{_sequenceDelimiter}'] are supported as escaping sequence characters.", nameof(input));
 
                             escaped = false;
                         }
                         else
                         {
-                            bool isEscape = current.Equals(_escapingElement);
+                            bool isEscape = current.Equals(_escapingSequenceStart);
                             if (isEscape)
                                 escaped = true;
                             else
@@ -92,14 +95,12 @@ Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are su
                         throw new ArgumentException("Unfinished escaping sequence detected at the end of input", nameof(input));
 
                     var toParse = accumulator.AsSpan();
-                    return Parse(in toParse);
+                    return ParserInput.FromText(toParse.ToArray());
                 }
-                return Parse(input);
+                return ParserInput.FromText(input);
             }
 
-            private static TTo Parse(in ReadOnlySpan<char> input) => _parser.Parse(input);
-
-            public TTo Current { get; private set; }
+            public ParserInput Current { get; private set; }
         }
     }
 
@@ -124,7 +125,7 @@ Only ['{_escapingElement}','{_nullElement}','{_allowedEscapeCharacter1}'] are su
 
         public static ParserInput FromText(ReadOnlySpan<char> text) => new ParserInput(false, text);
 
-        public T ParseWith<T>(ITransformer<T> transformer) 
+        public T ParseWith<T>(ITransformer<T> transformer)
             => IsDefault ? default : transformer.Parse(Text);
 
         public override string ToString() => IsDefault ? "<DEFAULT>" : Text.ToString();

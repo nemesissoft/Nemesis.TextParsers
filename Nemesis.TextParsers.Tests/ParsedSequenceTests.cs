@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
-
+using Nemesis.TextParsers.Tests.Collections;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -16,12 +16,12 @@ namespace Nemesis.TextParsers.Tests
             if (text == null) return null;
 
             var tokens = text.AsSpan().Tokenize('|', '\\', false);
-            var parsed = tokens.Parse<T>('\\', '∅', '|');
+            var parsed = new ParsedSequence(tokens, '\\', '∅', '|');
 
             var result = new List<T>();
-
+            var elementTransformer = TextTransformer.Default.GetTransformer<T>();
             foreach (var part in parsed)
-                result.Add(part);
+                result.Add(part.ParseWith(elementTransformer));
 
             return result;
         }
@@ -103,30 +103,31 @@ namespace Nemesis.TextParsers.Tests
         }
 
         //unfinished escaping sequence
-        [TestCase(@"\")]
-        [TestCase(@"\\\")]
-        [TestCase(@"\\\\\")]
-        [TestCase(@"\|\|\|\|\")]
-        [TestCase(@"AAA|BBB\")]
+        [TestCase("01", @"\", "Unfinished escaping sequence detected at the end of input")]
+        [TestCase("02", @"\\\", "Unfinished escaping sequence detected at the end of input")]
+        [TestCase("03", @"\\\\\", "Unfinished escaping sequence detected at the end of input")]
+        [TestCase("04", @"\|\|\|\|\", "Unfinished escaping sequence detected at the end of input")]
+        [TestCase("05", @"AAA|BBB\", "Unfinished escaping sequence detected at the end of input")]
         //illegal escaping sequence
-        [TestCase(@"AAA|BBB\n")]
-        [TestCase(@"\aAAA|BBB\n")]
-        [TestCase(@"AAA|BB\\\B")]
-        [TestCase(@"\AAA|BB\\\B")]
-        [TestCase(@"\r")]
-        public void List_Parse_NegativeTest(string input) => 
+        [TestCase("06", @"AAA|BBB\n", "Illegal escape sequence found in input: 'n'")]
+        [TestCase("07", @"\aAAA|BBB\r", "Illegal escape sequence found in input: 'a'")]
+        [TestCase("08", @"AAA|BB\\\B", "Illegal escape sequence found in input: 'B'")]
+        [TestCase("09", @"\AAA|BB\\\B", "Illegal escape sequence found in input: 'A'")]
+        [TestCase("10", @"\r", "Illegal escape sequence found in input: 'r'")]
+        public void List_Parse_NegativeTest(string _, string input, string expectedMessagePart)
+        {
             // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-            Assert.Throws<ArgumentException>(() => ParseCollection<string>(input).ToList());
+            var ex = Assert.Throws<ArgumentException>(() => ParseCollection<string>(input).ToList());
+            Assert.That(ex.Message, Does.Contain(expectedMessagePart));
+        }
 
-        [TestCaseSource(typeof(SpanCollectionSerializerTests), nameof(SpanCollectionSerializerTests.ListCompoundData))]
+        [TestCaseSource(typeof(CollectionsTests), nameof(CollectionsTests.ListCompoundData))]
         public void List_Parse_CompoundTests((Type elementType, IEnumerable expectedList, string input) data)
         {
             static void CheckEquivalency(IEnumerable left, IEnumerable right)
             {
-                if (left is null)
-                    Assert.That(right, Is.Null);
-                else
-                    Assert.That(left, Is.EqualTo(right));
+                if (left is null) Assert.That(right, Is.Null);
+                else Assert.That(left, Is.EqualTo(right));
             }
 
             const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;

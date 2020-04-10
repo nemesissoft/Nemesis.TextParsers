@@ -1,21 +1,18 @@
 ﻿using System;
+using System.Buffers;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
 {
-    /*TODO
-
-    ParsedSequence - remove static transformer 
-
-            Format - add [] start + end
+    /*TODO               
      Parse - remove []
-     Parse - Lean, array, coll, custcoll  
-     Hunt for TT.Default + SpanCollectionSerializer.DefaultInstance
-
+        
         use settings.DefaultCapacity for colls/arrays
-        tests - remove SpanCollSer tests
+        
+        Format - add [] start + end - tests
         */
 
     [UsedImplicitly]
@@ -48,7 +45,7 @@ namespace Nemesis.TextParsers.Parsers
 
         private ITransformer<TElement[]> CreateArrayTransformer<TElement>() =>
             new ArrayTransformer<TElement>(
-                _transformerStore.GetTransformer<TElement>(), 
+                _transformerStore.GetTransformer<TElement>(),
                 _settings
         );
 
@@ -80,12 +77,32 @@ namespace Nemesis.TextParsers.Parsers
 
     public sealed class ArrayTransformer<TElement> : EnumerableTransformerBase<TElement, TElement[]>
     {
-        public ArrayTransformer(ITransformer<TElement> elementTransformer, ArraySettings settings) 
+        public ArrayTransformer(ITransformer<TElement> elementTransformer, ArraySettings settings)
             : base(elementTransformer, settings) { }
 
-        protected override TElement[] ParseCore(in ReadOnlySpan<char> input) =>
-            SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
-        
+        protected override TElement[] ParseCore(in ReadOnlySpan<char> input)
+        {
+            if (input.IsEmpty)
+                return Array.Empty<TElement>();
+
+            var stream = ParseStream(input);
+
+            var initialBuffer = ArrayPool<TElement>.Shared.Rent(Settings.DefaultCapacity);
+            var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
+            try
+            {
+                foreach (var part in stream)
+                    accumulator.Append(part.ParseWith(ElementTransformer));
+
+                return accumulator.AsSpan().ToArray();
+            }
+            finally
+            {
+                accumulator.Dispose();
+                ArrayPool<TElement>.Shared.Return(initialBuffer);
+            }
+        }
+
 
         public override TElement[] GetEmpty() => Array.Empty<TElement>();
     }

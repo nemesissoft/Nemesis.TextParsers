@@ -8,12 +8,24 @@ namespace Nemesis.TextParsers.Parsers
     public abstract class EnumerableTransformerBase<TElement, TCollection> : TransformerBase<TCollection>
         where TCollection : IEnumerable<TElement>
     {
-        private readonly ITransformer<TElement> _elementTransformer;
-        private readonly CollectionSettingsBase _settings;
+        protected readonly ITransformer<TElement> ElementTransformer;
+        protected readonly CollectionSettingsBase Settings;
         protected EnumerableTransformerBase(ITransformer<TElement> elementTransformer, CollectionSettingsBase settings)
         {
-            _elementTransformer = elementTransformer;
-            _settings = settings;
+            ElementTransformer = elementTransformer;
+            Settings = settings;
+        }
+        
+        protected ParsedSequence ParseStream(in ReadOnlySpan<char> text)
+        {
+            var toParse = text;
+            if (Settings.Start.HasValue || Settings.End.HasValue)
+                toParse = toParse.UnParenthesize(Settings.Start, Settings.End, "Collection");
+            
+            var tokens = toParse.Tokenize(Settings.ListDelimiter, Settings.EscapingSequenceStart, true);
+            var parsed = tokens.Parse(Settings.EscapingSequenceStart, Settings.NullElementMarker, Settings.ListDelimiter);
+
+            return parsed;
         }
 
         public sealed override string Format(TCollection coll)
@@ -29,34 +41,34 @@ namespace Nemesis.TextParsers.Parsers
 
             try
             {
-                if (_settings.Start.HasValue)
-                    accumulator.Append(_settings.Start.Value);
+                if (Settings.Start.HasValue)
+                    accumulator.Append(Settings.Start.Value);
                 
                 do
                 {
                     var element = enumerator.Current;
 
-                    string elementText = _elementTransformer.Format(element);
+                    string elementText = ElementTransformer.Format(element);
                     if (elementText == null)
-                        accumulator.Append(_settings.NullElementMarker);
+                        accumulator.Append(Settings.NullElementMarker);
                     else
                     {
                         foreach (char c in elementText)
                         {
-                            if (c == _settings.EscapingSequenceStart || c == _settings.NullElementMarker ||
-                                c == _settings.ListDelimiter)
-                                accumulator.Append(_settings.EscapingSequenceStart);
+                            if (c == Settings.EscapingSequenceStart || c == Settings.NullElementMarker ||
+                                c == Settings.ListDelimiter)
+                                accumulator.Append(Settings.EscapingSequenceStart);
 
                             accumulator.Append(c);
                         }
                     }
-                    accumulator.Append(_settings.ListDelimiter);
+                    accumulator.Append(Settings.ListDelimiter);
                 } while (enumerator.MoveNext());
 
                 accumulator.Shrink();
 
-                if (_settings.End.HasValue)
-                    accumulator.Append(_settings.End.Value);
+                if (Settings.End.HasValue)
+                    accumulator.Append(Settings.End.Value);
 
                 return accumulator.ToString();
             }

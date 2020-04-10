@@ -48,7 +48,7 @@ namespace Nemesis.TextParsers.Tests
                 case AggressionBased3<TValue> o3: return Equals3(o3);
                 case AggressionBased9<TValue> o9: return Equals9(o9);
                 default: throw new ArgumentException(
-                        $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
+                   $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
             }
         }
 
@@ -122,12 +122,11 @@ namespace Nemesis.TextParsers.Tests
             switch (aggression)
             {
                 case 1: case 2: case 3: return PassiveValue;
-                
-                case 0: 
-                case 4: case 5: case 6: return NormalValue;
-                
+
+                case 0: case 4: case 5: case 6: return NormalValue;
+
                 case 7: case 8: case 9: return AggressiveValue;
-                
+
                 default: throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
             }
         }
@@ -218,7 +217,7 @@ namespace Nemesis.TextParsers.Tests
 
 
     [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
-    public sealed class AggressionBasedTransformer<TValue>: TransformerBase<IAggressionBased<TValue>>
+    public sealed class AggressionBasedTransformer<TValue> : TransformerBase<IAggressionBased<TValue>>
     {
         private const char LIST_DELIMITER = '#';
         private const char NULL_ELEMENT_MARKER = '∅';
@@ -235,7 +234,7 @@ namespace Nemesis.TextParsers.Tests
         protected override IAggressionBased<TValue> ParseCore(in ReadOnlySpan<char> input)
         {
             var tokens = input.Tokenize(LIST_DELIMITER, ESCAPING_SEQUENCE_START, true);
-            var parsed = tokens.Parse<TValue>(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, LIST_DELIMITER);
+            var parsed = tokens.Parse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, LIST_DELIMITER);
 
             return FromValues(parsed);
         }
@@ -243,10 +242,10 @@ namespace Nemesis.TextParsers.Tests
         public override string Format(IAggressionBased<TValue> ab)
         {
             if (ab == null) return null;
-            
+
             Span<char> initialBuffer = stackalloc char[32];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            
+
             try
             {
                 var enumerator = ab.GetValues().GetEnumerator();
@@ -272,7 +271,7 @@ namespace Nemesis.TextParsers.Tests
             }
             finally { accumulator.Dispose(); }
         }
-        
+
 
 
         //this should not be cached. Nobody wants to expose globally available i.e. empty collection just for people to be able to add elements to it ;-)
@@ -280,21 +279,21 @@ namespace Nemesis.TextParsers.Tests
             AggressionBasedFactory<TValue>.FromOneValue(_transformerStore.GetTransformer<TValue>().GetEmpty());
 
         //this can be safely cached as long as it wraps null/immutable objects - AB<T> is immutable itself
-        public override IAggressionBased<TValue> GetNull() => 
+        public override IAggressionBased<TValue> GetNull() =>
             AggressionBasedFactory<TValue>.FromOneValue(default);
 
-        private static IAggressionBased<TValue> FromValues(ParsedSequence<TValue> values)
+        private IAggressionBased<TValue> FromValues(ParsedSequence values)
         {
             var enumerator = values.GetEnumerator();
 
             if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
-            var pass = enumerator.Current;
+            var pass = enumerator.Current.ParseWith(_elementTransformer);
 
             if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
-            var norm = enumerator.Current;
+            var norm = enumerator.Current.ParseWith(_elementTransformer);
 
             if (!enumerator.MoveNext()) throw GetException(2);
-            var aggr = enumerator.Current;
+            var aggr = enumerator.Current.ParseWith(_elementTransformer);
 
             if (!enumerator.MoveNext())
                 return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
@@ -316,7 +315,12 @@ namespace Nemesis.TextParsers.Tests
             //end of sequence
             if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
 
-            return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
+            return new AggressionBased9<TValue>(new[]
+            {
+                v1, v2, v3,
+                v4.ParseWith(_elementTransformer), v5.ParseWith(_elementTransformer), v6.ParseWith(_elementTransformer),
+                v7.ParseWith(_elementTransformer), v8.ParseWith(_elementTransformer), v9.ParseWith(_elementTransformer)
+            });
 
             Exception GetException(int numberOfElements) => new ArgumentException(
                 // ReSharper disable once UseNameofExpression

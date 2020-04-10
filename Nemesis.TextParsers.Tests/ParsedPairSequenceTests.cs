@@ -21,8 +21,8 @@ namespace Nemesis.TextParsers.Tests
 
             foreach (var (key, val) in parsed)
                 result.Add(
-                    (key.IsDefault ? default : keyTransformer.Parse(key.Text)) ?? throw new ArgumentException("Key cannot be null"),
-                     val.IsDefault ? default : valTransformer.Parse(val.Text)
+                    (key.ParseWith(keyTransformer)) ?? throw new ArgumentException("Key cannot be null"),
+                     val.ParseWith(valTransformer)
                 );
 
             return result;

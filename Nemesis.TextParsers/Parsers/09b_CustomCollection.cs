@@ -157,7 +157,7 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override TCollection ParseCore(in ReadOnlySpan<char> input)
         {
-            var stream = SpanCollectionSerializer.DefaultInstance.ParseStream<TElement>(input);
+            var stream = ParseStream(input);
             var result = GetCollection(stream);
 
             if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
@@ -166,7 +166,7 @@ namespace Nemesis.TextParsers.Parsers
             return result;
         }
 
-        protected abstract TCollection GetCollection(in ParsedSequence<TElement> stream);
+        protected abstract TCollection GetCollection(in ParsedSequence stream);
 
 
         public sealed override string ToString() => $"Transform custom {typeof(TCollection).GetFriendlyName()} with {typeof(TElement).GetFriendlyName()} elements";
@@ -178,12 +178,12 @@ namespace Nemesis.TextParsers.Parsers
         public CustomCollectionTransformer(ITransformer<TElement> elementTransformer, CollectionSettings settings,
             bool supportsDeserializationLogic) : base(elementTransformer, settings, supportsDeserializationLogic) { }
 
-        protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
+        protected override TCollection GetCollection(in ParsedSequence stream)
         {
             var result = new TCollection();
 
             foreach (var element in stream)
-                result.Add(element);
+                result.Add(element.ParseWith(ElementTransformer));
 
             return result;
         }
@@ -213,12 +213,12 @@ namespace Nemesis.TextParsers.Parsers
             return λ.Compile();
         }
 
-        protected override TCollection GetCollection(in ParsedSequence<TElement> stream)
+        protected override TCollection GetCollection(in ParsedSequence stream)
         {
             var innerList = new List<TElement>();
 
             foreach (var element in stream)
-                innerList.Add(element);
+                innerList.Add(element.ParseWith(ElementTransformer));
 
             var result = _listConversion(innerList);
             return result;

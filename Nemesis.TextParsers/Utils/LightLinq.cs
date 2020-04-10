@@ -6,7 +6,7 @@ namespace Nemesis.TextParsers.Utils
     [PublicAPI]
     public static class LightLinq
     {
-        public static (bool success, double result) Sum(this ParsedSequence<double> values)
+        public static (bool success, double result) Sum(this ParsedSequence values, ITransformer<double> transformer)
         {
             var enumerator = values.GetEnumerator();
             if (!enumerator.MoveNext()) return (false, 0);
@@ -14,27 +14,27 @@ namespace Nemesis.TextParsers.Utils
             double sum = 0;
 
             do
-                sum += enumerator.Current;
+                sum += enumerator.Current.ParseWith(transformer);
             while (enumerator.MoveNext());
 
 
             return (true, sum);
         }
 
-        public static (bool success, double result) Average(this ParsedSequence<double> values)
+        public static (bool success, double result) Average(this ParsedSequence values, ITransformer<double> transformer)
         {
             var enumerator = values.GetEnumerator();
             if (!enumerator.MoveNext()) return (false, 0);
 
-            double avg = enumerator.Current;
+            double avg = enumerator.Current.ParseWith(transformer);
             int count = 1;
 
             while (enumerator.MoveNext())
-                avg += (enumerator.Current - avg) / ++count;
+                avg += (enumerator.Current.ParseWith(transformer) - avg) / ++count;
             return (true, avg);
         }
 
-        public static (bool success, double result) Variance(this ParsedSequence<double> values)
+        public static (bool success, double result) Variance(this ParsedSequence values, ITransformer<double> transformer)
         {
             var enumerator = values.GetEnumerator();
             if (!enumerator.MoveNext()) return (false, 0);
@@ -47,7 +47,7 @@ namespace Nemesis.TextParsers.Utils
             double current;
             do
             {
-                current = enumerator.Current;
+                current = enumerator.Current.ParseWith(transformer);
                 i++;
 
                 var δ = current - mean;
@@ -62,32 +62,32 @@ namespace Nemesis.TextParsers.Utils
                     Σ / (i - 1)
                 );
         }
-        
-        public static (bool success, double result) StdDev(this ParsedSequence<double> values)
+
+        public static (bool success, double result) StdDev(this ParsedSequence values, ITransformer<double> transformer)
         {
-            var (success, result) = Variance(values);
+            var (success, result) = Variance(values, transformer);
 
             return (success, success ? Math.Sqrt(result) : 0);
         }
 
 
-        public static (bool success, double result) Max(this ParsedSequence<double> values)
+        public static (bool success, double result) Max(this ParsedSequence values, ITransformer<double> transformer)
         {
             var e = values.GetEnumerator();
             if (!e.MoveNext()) return (false, 0);
 
-            double max = e.Current;
+            double max = e.Current.ParseWith(transformer);
 
             while (double.IsNaN(max))
             {
                 if (!e.MoveNext())
                     return (true, max);
-                max = e.Current;
+                max = e.Current.ParseWith(transformer);
             }
 
             while (e.MoveNext())
             {
-                double current = e.Current;
+                double current = e.Current.ParseWith(transformer);
                 if (max < current)
                     max = current;
             }
@@ -95,15 +95,15 @@ namespace Nemesis.TextParsers.Utils
             return (true, max);
         }
 
-        public static (bool success, double result) Min(this ParsedSequence<double> values)
+        public static (bool success, double result) Min(this ParsedSequence values, ITransformer<double> transformer)
         {
             var e = values.GetEnumerator();
             if (!e.MoveNext()) return (false, 0);
 
-            double min = e.Current;
+            double min = e.Current.ParseWith(transformer);
             while (e.MoveNext())
             {
-                double current = e.Current;
+                double current = e.Current.ParseWith(transformer);
                 if (min > current)
                     min = current;
                 else if (double.IsNaN(current))
@@ -113,7 +113,7 @@ namespace Nemesis.TextParsers.Utils
             return (true, min);
         }
 
-        public static (bool success, TSource result)  Aggregate<TSource>(this ParsedSequence<TSource> source, [NotNull] Func<TSource, TSource, TSource> func)
+        public static (bool success, TSource result) Aggregate<TSource>(this ParsedSequence source, ITransformer<TSource> transformer, [NotNull] Func<TSource, TSource, TSource> func)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -122,33 +122,40 @@ namespace Nemesis.TextParsers.Utils
             if (!e.MoveNext())
                 return (false, default);
 
-            TSource result = e.Current;
+            TSource result = e.Current.ParseWith(transformer);
             while (e.MoveNext())
-                result = func(result, e.Current);
+                result = func(result, e.Current.ParseWith(transformer));
 
             return (true, result);
         }
 
-        public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsedSequence<TSource> source, TAccumulate seed, [NotNull] Func<TAccumulate, TSource, TAccumulate> func)
+        public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsedSequence source, ITransformer<TSource> transformer, TAccumulate seed, [NotNull] Func<TAccumulate, TSource, TAccumulate> func)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
 
             TAccumulate result = seed;
-            foreach (TSource element in source)
-                result = func(result, element);
+            foreach (var element in source)
+            {
+                var parsed = element.ParseWith(transformer);
+                result = func(result, parsed);
+            }
 
             return result;
         }
 
-        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ParsedSequence<TSource> source, TAccumulate seed,
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ParsedSequence source,
+            ITransformer<TSource> transformer, TAccumulate seed,
             [NotNull] Func<TAccumulate, TSource, TAccumulate> func, [NotNull] Func<TAccumulate, TResult> resultSelector)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
             if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
             TAccumulate result = seed;
-            foreach (TSource element in source)
-                result = func(result, element);
+            foreach (var element in source)
+            {
+                var parsed = element.ParseWith(transformer);
+                result = func(result, parsed);
+            }
 
             return resultSelector(result);
         }

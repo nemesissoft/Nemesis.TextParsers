@@ -84,12 +84,14 @@ namespace Nemesis.TextParsers.Parsers
         }
 
 
-        protected ParsedPairSequence ParsePairsStream(ReadOnlySpan<char> text)
+        protected ParsedPairSequence ParsePairsStream(in ReadOnlySpan<char> text)
         {
-            if (Settings.Start.HasValue || Settings.End.HasValue)
-                text = text.UnParenthesize(Settings.Start, Settings.End, "Dictionary");
+            var toParse = text;
 
-            var potentialKvp = text.Tokenize(Settings.DictionaryPairsDelimiter,
+            if (Settings.Start.HasValue || Settings.End.HasValue)
+                toParse = toParse.UnParenthesize(Settings.Start, Settings.End, "Dictionary");
+
+            var potentialKvp = toParse.Tokenize(Settings.DictionaryPairsDelimiter,
                 Settings.EscapingSequenceStart, true);
 
             var parsedPairs = new ParsedPairSequence(potentialKvp,
@@ -103,10 +105,10 @@ namespace Nemesis.TextParsers.Parsers
 
         protected void PopulateDictionary(in ParsedPairSequence parsedPairs, IDictionary<TKey, TValue> result)
         {
-            foreach (var (keyResult, valResult) in parsedPairs)
+            foreach (var (keyInput, valInput) in parsedPairs)
             {
-                var key = keyResult.IsDefault ? default : _keyTransformer.Parse(keyResult.Text);
-                var val = valResult.IsDefault ? default : _valueTransformer.Parse(valResult.Text);
+                var key = keyInput.ParseWith(_keyTransformer);
+                var val = valInput.ParseWith(_valueTransformer);
 
                 if (key is null) throw new ArgumentException("Key equal to NULL is not supported");
 

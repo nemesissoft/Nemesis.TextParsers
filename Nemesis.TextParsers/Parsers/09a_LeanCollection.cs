@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
@@ -67,10 +68,55 @@ namespace Nemesis.TextParsers.Parsers
             _settings = settings;
         }
 
+        private ParsedSequence ParseStream(in ReadOnlySpan<char> text)
+        {
+            var toParse = text;
+            if (_settings.Start.HasValue || _settings.End.HasValue)
+                toParse = toParse.UnParenthesize(_settings.Start, _settings.End, "LeanCollection");
+
+            var tokens = toParse.Tokenize(_settings.ListDelimiter, _settings.EscapingSequenceStart, true);
+            var parsed = tokens.Parse(_settings.EscapingSequenceStart, _settings.NullElementMarker, _settings.ListDelimiter);
+
+            return parsed;
+        }
+
         protected override LeanCollection<TElement> ParseCore(in ReadOnlySpan<char> input)
         {
-            /* if (_start.HasValue || _end.HasValue) text = text.UnParenthesize(_start, _end, "Dictionary");*/
-            return SpanCollectionSerializer.DefaultInstance.ParseLeanCollection<TElement>(input);
+            var parsedSequence = ParseStream(input);
+
+            var enumerator = parsedSequence.GetEnumerator();
+
+            if (!enumerator.MoveNext()) return new LeanCollection<TElement>();
+            var first = enumerator.Current.ParseWith(_elementTransformer);
+
+            if (!enumerator.MoveNext()) return new LeanCollection<TElement>(first);
+            var second = enumerator.Current.ParseWith(_elementTransformer);
+
+            if (!enumerator.MoveNext()) return new LeanCollection<TElement>(first, second);
+            var third = enumerator.Current.ParseWith(_elementTransformer);
+
+            if (!enumerator.MoveNext()) return new LeanCollection<TElement>(first, second, third);
+
+
+            var initialBuffer = ArrayPool<TElement>.Shared.Rent(_settings.DefaultCapacity);
+            var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
+            try
+            {
+                accumulator.Append(first);
+                accumulator.Append(second);
+                accumulator.Append(third);
+                accumulator.Append(enumerator.Current.ParseWith(_elementTransformer)); //fourth
+
+                if (enumerator.MoveNext())
+                    accumulator.Append(enumerator.Current.ParseWith(_elementTransformer));
+
+                return LeanCollectionFactory.FromArrayChecked(accumulator.AsSpan().ToArray());
+            }
+            finally
+            {
+                accumulator.Dispose();
+                ArrayPool<TElement>.Shared.Return(initialBuffer);
+            }
         }
 
         public override string Format(LeanCollection<TElement> coll)

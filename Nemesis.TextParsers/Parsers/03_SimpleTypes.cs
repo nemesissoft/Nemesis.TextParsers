@@ -101,6 +101,7 @@ namespace Nemesis.TextParsers.Parsers
 
     #region Structs
 
+    //TODO rename parser -> Transformer 
     [UsedImplicitly]
     public sealed class BooleanParser : SimpleTransformer<bool>
     {

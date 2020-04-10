@@ -11,18 +11,6 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests.Collections
 {
-    /*TODO use this for LeanCollection tests
-     [TestCase(null, "")]
-            [TestCase(new float[0], "")]
-            [TestCase(new[] { 15.5f }, "15.5")]
-            [TestCase(new[] { 15.5f, 25.6f }, "15.5|25.6")]
-            [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, "15.5|25.6|35.99|50|999")]
-            public void ToStringTest(float[] elements, string expectedText)
-            {
-                var coll = LeanCollectionFactory.FromArray(elements);
-                Assert.That(coll.ToString(), Is.EqualTo(expectedText));
-            }*/
-
     [TestFixture]
     class CollectionTransformerTests
     {
@@ -267,5 +255,14 @@ namespace Nemesis.TextParsers.Tests.Collections
             else if (expectedCardinality != -1)
                 throw new NotSupportedException("Bad data");
         }
+
+
+        [TestCase(null, "")]
+        [TestCase(new float[0], "")]
+        [TestCase(new[] { 15.6f }, "15.6")]
+        [TestCase(new[] { 15.5f, 25.6f }, "15.5|25.6")]
+        [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, "15.5|25.6|35.99|50|999")]
+        public void LeanCollectionTest(float[] elements, string expectedText) =>
+            ParseAndFormat(LeanCollectionFactory.FromArray(elements), expectedText);
     }
 }

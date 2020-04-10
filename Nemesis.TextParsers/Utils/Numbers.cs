@@ -30,6 +30,7 @@ namespace Nemesis.TextParsers.Utils
             _cache.TryGetValue(numberType, out var numOp) ? numOp : null;
     }
 
+    [PublicAPI]
     public interface INumber<TNumber> where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
     {
         bool SupportsNegative { get; }

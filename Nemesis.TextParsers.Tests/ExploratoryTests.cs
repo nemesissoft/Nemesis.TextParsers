@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using AutoFixture;
+using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
@@ -44,6 +45,7 @@ namespace Nemesis.TextParsers.Tests
                     typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
                     typeof(IAggressionBased<float?>),
                     typeof(IAggressionBased<int[]>),
+                    typeof(IAggressionBased<ValueTuple<bool, bool>>),
                     typeof(IAggressionBased<List<string>>), typeof(List<IAggressionBased<string>>),
                     typeof(IAggressionBased<List<float>>), typeof(List<IAggressionBased<float>>),
                     typeof(IAggressionBased<List<TimeSpan>>), typeof(List<IAggressionBased<TimeSpan>>),
@@ -85,6 +87,7 @@ namespace Nemesis.TextParsers.Tests
             _fixture.Register<string>(GetRandomString);
             _fixture.Register<Uri>(GetRandomUri);
 
+            _fixture.Register<bool>(() => _randomSource.NextDouble() < 0.5);
             _fixture.Register<double>(() => _randomSource.NextFloatingNumber());
             _fixture.Register<float>(() => (float)_randomSource.NextFloatingNumber());
             _fixture.Register<decimal>(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
@@ -95,7 +98,7 @@ namespace Nemesis.TextParsers.Tests
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
 
             _fixture.Register<BasisPoint>(() => BasisPoint.FromBps(
-                ((_randomSource.NextDouble()-0.5)*2 + 0.1) * (_randomSource.NextDouble() < 0.5 ? 100 : 10)
+                ((_randomSource.NextDouble() - 0.5) * 2 + 0.1) * (_randomSource.NextDouble() < 0.5 ? 100 : 10)
             ));
 
 
@@ -119,6 +122,19 @@ namespace Nemesis.TextParsers.Tests
                 .Select(d => d.type)
                 .ToList();
 
+
+            var valueTuples = _allTestCases.Select(t => t.type)
+                .Where(TypeMeta.IsValueTuple).Distinct().ToList();
+
+            var valueTupleElementTypes =
+                _allTestCases.Select(t => t.type).Where(t => t.IsGenericType && !t.IsGenericTypeDefinition)
+                .SelectMany(t => t.GenericTypeArguments)
+                .Where(TypeMeta.IsValueTuple)
+                .Distinct().ToList();
+
+            valueTuples.AddRange(valueTupleElementTypes);
+
+            FixtureUtils.RegisterAllValueTuples(_fixture, valueTuples);
 
             var aggBasedElements = _allTestCases
                 .Where(d => d.category == ExploratoryTestCategory.AggressionBased)
@@ -482,32 +498,6 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        public static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
-        {
-            var registerMethod = Method
-                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
-                .GetGenericMethodDefinition();
-
-            foreach (var elementType in structs)
-            {
-                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
-            }
-        }
-
-        public static void RegisterAllCollections(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
-        {
-            var registerMethod = Method
-                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterCollections<int>(fix, rs))
-                .GetGenericMethodDefinition();
-
-            foreach (var elementType in elementTypes)
-            {
-                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
-            }
-        }
-
         private static void RegisterAggressionBased<TElement>(IFixture fixture, RandomSource randomSource)
         {
             AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
@@ -541,6 +531,20 @@ namespace Nemesis.TextParsers.Tests
             fixture.Register(InterfaceCreator);
         }
 
+
+        public static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
+        {
+            var registerMethod = Method
+                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in structs)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            }
+        }
+
         private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource)
             where TUnderlyingType : struct
         {
@@ -549,6 +553,20 @@ namespace Nemesis.TextParsers.Tests
                 : fixture.Create<TUnderlyingType>();
 
             fixture.Register(Creator);
+        }
+
+
+        public static void RegisterAllCollections(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
+        {
+            var registerMethod = Method
+                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterCollections<int>(fix, rs))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in elementTypes)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            }
         }
 
         private static void RegisterCollections<TElement>(Fixture fixture, RandomSource randomSource)
@@ -575,6 +593,116 @@ namespace Nemesis.TextParsers.Tests
 
             fixture.Register(ArrayCreator);
             fixture.Register(ListCreator);
+        }
+
+
+
+        public static void RegisterAllValueTuples(Fixture fixture, IEnumerable<Type> tupleTypes)
+        {
+            foreach (var tupleType in tupleTypes)
+            {
+                if (!TypeMeta.TryGetValueTupleElements(tupleType, out var elementTypes))
+                    throw new NotSupportedException($"{tupleType.GetFriendlyName()} is not supported for value tuple fixture registration");
+
+                var arity = elementTypes.Length;
+
+                var method = typeof(FixtureUtils).GetMethod($"RegisterValueTuple{arity}",
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                    ?? throw new MissingMethodException(nameof(FixtureUtils), $"RegisterValueTuple{arity}");
+
+                method = method.MakeGenericMethod(elementTypes);
+
+                method.Invoke(null, new object[] { fixture });
+            }
+        }
+
+        [UsedImplicitly]
+        private static void RegisterValueTuple1<T1>(IFixture fixture)
+        {
+            ValueTuple<T1> TupleCreator() => new ValueTuple<T1>(fixture.Create<T1>());
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple2<T1, T2>(IFixture fixture)
+        {
+            (T1, T2) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple3<T1, T2, T3>(IFixture fixture)
+        {
+            (T1, T2, T3) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple4<T1, T2, T3, T4>(IFixture fixture)
+        {
+            (T1, T2, T3, T4) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple5<T1, T2, T3, T4, T5>(IFixture fixture)
+        {
+            (T1, T2, T3, T4, T5) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>(),
+                fixture.Create<T5>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple6<T1, T2, T3, T4, T5, T6>(IFixture fixture)
+        {
+            (T1, T2, T3, T4, T5, T6) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>(),
+                fixture.Create<T5>(),
+                fixture.Create<T6>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple7<T1, T2, T3, T4, T5, T6, T7>(IFixture fixture)
+        {
+            (T1, T2, T3, T4, T5, T6, T7) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>(),
+                fixture.Create<T5>(),
+                fixture.Create<T6>(),
+                fixture.Create<T7>()
+            );
+
+            fixture.Register(TupleCreator);
         }
     }
 }

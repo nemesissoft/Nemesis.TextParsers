@@ -215,19 +215,21 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static ThreeElements<TElement> FromText(ReadOnlySpan<char> text)
         {
+            var trans = TextTransformer.Default.GetTransformer<TElement>();
+
             var tokens = text.Tokenize(',', '\\', true);
-            var parsed = tokens.Parse<TElement>('\\', '∅', ',');
+            var parsed = tokens.Parse('\\', '∅', ',');
 
             var enumerator = parsed.GetEnumerator();
             {
                 if (!enumerator.MoveNext()) throw GetException(0);
-                var first = enumerator.Current;
+                var first = enumerator.Current.ParseWith(trans);
 
                 if (!enumerator.MoveNext()) throw GetException(1);
-                var second = enumerator.Current;
+                var second = enumerator.Current.ParseWith(trans);
 
                 if (!enumerator.MoveNext()) throw GetException(2);
-                var third = enumerator.Current;
+                var third = enumerator.Current.ParseWith(trans);
 
                 //end of sequence
                 if (enumerator.MoveNext()) throw GetException(4);
@@ -292,8 +294,10 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static Range<TElement> FromText(ReadOnlySpan<char> text)
         {
+            var trans = TextTransformer.Default.GetTransformer<TElement>();
+
             var tokens = text.Tokenize(SEPARATOR, ESCAPING_SEQUENCE_START, true);
-            var parsed = tokens.Parse<TElement>(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
+            var parsed = tokens.Parse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
 
             var enumerator = parsed.GetEnumerator();
             {
@@ -305,7 +309,7 @@ namespace Nemesis.TextParsers.Tests
 
                 if (enumerator.MoveNext()) throw GetException(3);//end of sequence
 
-                return new Range<TElement>(from, to);
+                return new Range<TElement>(from.ParseWith(trans), to.ParseWith(trans));
             }
 
             static Exception GetException(int numberOfElements) => new ArgumentException(
@@ -351,8 +355,10 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static PairWithFactory<TElement> FromText(ReadOnlySpan<char> text)
         {
+            var trans = TextTransformer.Default.GetTransformer<TElement>();
+
             var tokens = text.Tokenize(',', '\\', true);
-            var parsed = tokens.Parse<TElement>('\\', '∅', ',');
+            var parsed = tokens.Parse('\\', '∅', ',');
 
             var enumerator = parsed.GetEnumerator();
             {
@@ -365,7 +371,7 @@ namespace Nemesis.TextParsers.Tests
                 //end of sequence
                 if (enumerator.MoveNext()) throw GetException(3);
 
-                return new PairWithFactory<TElement>(left, right);
+                return new PairWithFactory<TElement>(left.ParseWith(trans), right.ParseWith(trans));
             }
 
             static Exception GetException(int numberOfElements) => new ArgumentException(
