@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Settings
@@ -46,9 +47,10 @@ namespace Nemesis.TextParsers.Settings
                 ? (TSettings)s
                 : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
 
-        public SettingsStoreBuilder AddOrUpdate<TSettings>(TSettings settings) where TSettings : ISettings
+        public SettingsStoreBuilder AddOrUpdate<TSettings>([NotNull] TSettings settings) where TSettings : ISettings
         {
-            _settings[typeof(TSettings)] = settings;
+            _settings[settings.GetType()] =
+                settings ?? throw new ArgumentNullException(nameof(settings));
             return this;
         }
 

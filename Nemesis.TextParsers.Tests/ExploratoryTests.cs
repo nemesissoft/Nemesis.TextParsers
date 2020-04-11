@@ -19,6 +19,7 @@ namespace Nemesis.TextParsers.Tests
 {
     [TestFixture(typeof(Sut), nameof(Sut.DefaultStore))]
     [TestFixture(typeof(Sut), nameof(Sut.BorderedStore))]
+    [TestFixture(typeof(Sut), nameof(Sut.RandomStore))]
     public sealed class ExploratoryTests
     {
         private readonly ITransformerStore _transformerStore;
