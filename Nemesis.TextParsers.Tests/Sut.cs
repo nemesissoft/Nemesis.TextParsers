@@ -34,10 +34,17 @@ namespace Nemesis.TextParsers.Tests
                 .With(s => s.Start, '|')
                 .With(s => s.End, '|')
                 ;
+            var weirdTuple = ValueTupleSettings.Default
+                    .With(s => s.NullElementMarker, '␀')
+                    .With(s => s.Delimiter, '⮿')
+                    .With(s => s.Start, '/')
+                    .With(s => s.End, '/')
+                ;
             var borderedStore = SettingsStoreBuilder.GetDefault()
                 .AddOrUpdate(borderedArray)
                 .AddOrUpdate(borderedCollection)
                 .AddOrUpdate(borderedDictionary)
+                .AddOrUpdate(weirdTuple)
                 .Build();
             BorderedStore = TextTransformer.GetDefaultStoreWith(borderedStore);
         }
