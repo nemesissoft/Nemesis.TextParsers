@@ -17,9 +17,20 @@ using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
-    [TestFixture]
+    [TestFixture(typeof(Sut), nameof(Sut.DefaultStore))]
+    [TestFixture(typeof(Sut), nameof(Sut.BorderedStore))]
     public sealed class ExploratoryTests
     {
+        private readonly ITransformerStore _transformerStore;
+
+        public ExploratoryTests(Type containerType, string propertyName)
+        {
+            var prop = containerType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new MissingMemberException(containerType.FullName, propertyName);
+            _transformerStore = (ITransformerStore) prop.GetValue(null)
+                ?? throw new InvalidOperationException("TransformerStore cannot be null");
+        }
+
         private readonly Fixture _fixture = new Fixture();
         private readonly RandomSource _randomSource = new RandomSource();
 
@@ -68,13 +79,18 @@ namespace Nemesis.TextParsers.Tests
 
             string GetRandomString()
             {
-                Span<char> special = stackalloc char[] { '\\', '|', ';', '=', '∅', ',' };
+                Span<char> special = stackalloc char[]
+                    {'\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')'};
                 return
+                    ""+
                     _randomSource.NextFrom(special) +
                     _randomSource.NextFrom(special) +
-                    _randomSource.NextString('A', 'z', 15)
-                    + _randomSource.NextFrom(special)
-                    + _randomSource.NextFrom(special);
+                    _randomSource.NextString('A', 'Z', 8) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextString('a', 'z', 8) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextFrom(special);
             }
             Uri GetRandomUri()
             {
@@ -220,14 +236,13 @@ namespace Nemesis.TextParsers.Tests
 
         private void ShouldParseAndFormat(Type testType)
         {
-            var tester = MakeDelegate<Action<ExploratoryTests, ITransformer, string>>
-                ((test, trans,s) => test.ShouldParseAndFormatHelper<int>(trans,s), testType);
+            var tester = MakeDelegate<Action<ExploratoryTests, ITransformer>>
+                ((test, trans) => test.ShouldParseAndFormatHelper<int>(trans), testType);
 
-            tester(this, Sut.DefaultStore.GetTransformer(testType), "Default");
-            tester(this, Sut.BorderedStore.GetTransformer(testType), "Bordered");
+            tester(this, _transformerStore.GetTransformer(testType));
         }
 
-        private void ShouldParseAndFormatHelper<T>(ITransformer ngTransformer, string mode)
+        private void ShouldParseAndFormatHelper<T>(ITransformer ngTransformer)
         {
             var transformer = ngTransformer as ITransformer<T>;
             Assert.That(transformer, Is.Not.Null, "Cast failed");
@@ -240,9 +255,9 @@ namespace Nemesis.TextParsers.Tests
             try
             {
                 //nulls
-                reason = $"Parsing null with {transformer} @{mode}";
+                reason = $"Parsing null with {transformer}";
                 var parsedNull1 = ParseAndAssert(null);
-                reason = $"Formatting null @{mode}";
+                reason = "Formatting null";
                 var nullText = transformer.Format(parsedNull1);
 
                 reason = $"NULL:{nullText ?? "<NULL>"}";
@@ -252,18 +267,18 @@ namespace Nemesis.TextParsers.Tests
 
 
                 //empty
-                reason = $"Retrieving empty with {transformer} @{mode}";
+                reason = $"Retrieving empty with {transformer}";
                 var emptyInstance = transformer.GetEmpty();
 
-                reason = $"Parsing empty @{mode}";
+                reason = "Parsing empty";
                 var parsedEmpty = ParseAndAssert("");
 
-                reason = $"Formatting empty @{mode}";
+                reason = "Formatting empty";
                 string emptyText1 = transformer.Format(parsedEmpty);
                 string emptyText2 = transformer.Format(emptyInstance);
                 IsMutuallyEquivalent(emptyText1, emptyText2);
 
-                reason = $"Parsing empty @{mode}";
+                reason = "Parsing empty";
                 var parsedEmpty1 = ParseAndAssert(emptyText1);
                 var parsedEmpty2 = ParseAndAssert(emptyText2);
 
@@ -274,14 +289,14 @@ namespace Nemesis.TextParsers.Tests
 
 
                 //instances
-                reason = $"Creating fixtures @{mode}";
+                reason = "Creating fixtures";
                 var instances = _fixture.CreateMany<T>(8);
                 int i = 1;
                 foreach (var instance in instances)
                 {
-                    reason = $"Transforming {i} @{mode}";
+                    reason = $"Transforming {i}";
                     string text = transformer.Format(instance);
-                    reason = $"{i++:00}. {text} @{mode}";
+                    reason = $"{i++:00}. {text}";
 
                     var parsed1 = ParseAndAssert(text);
                     var parsed2 = ParseAndAssert(text);
