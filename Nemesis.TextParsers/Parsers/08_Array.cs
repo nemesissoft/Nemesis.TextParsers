@@ -7,11 +7,6 @@ using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
 {
-    /*TODO               
-     Parse - remove []
-        Format - add [] start + end - tests
-        */
-
     [UsedImplicitly]
     public sealed class ArrayTransformerCreator : ICanCreateTransformer
     {

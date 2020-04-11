@@ -220,14 +220,18 @@ namespace Nemesis.TextParsers.Tests
 
         private void ShouldParseAndFormat(Type testType)
         {
-            var tester = MakeDelegate<Action<ExploratoryTests>>
-                (test => test.ShouldParseAndFormatHelper<int>(), testType);
+            var tester = MakeDelegate<Action<ExploratoryTests, ITransformer, string>>
+                ((test, trans,s) => test.ShouldParseAndFormatHelper<int>(trans,s), testType);
 
-            tester(this);
+            tester(this, Sut.DefaultStore.GetTransformer(testType), "Default");
+            tester(this, Sut.BorderedStore.GetTransformer(testType), "Bordered");
         }
 
-        private void ShouldParseAndFormatHelper<T>()
+        private void ShouldParseAndFormatHelper<T>(ITransformer ngTransformer, string mode)
         {
+            var transformer = ngTransformer as ITransformer<T>;
+            Assert.That(transformer, Is.Not.Null, "Cast failed");
+
             Type testType = typeof(T);
             string friendlyName = testType.GetFriendlyName();
             string reason = "<none>";
@@ -235,14 +239,10 @@ namespace Nemesis.TextParsers.Tests
 
             try
             {
-                reason = "Transformer retrieval";
-                var transformer = Sut.GetTransformer<T>();
-                Assert.That(transformer, Is.Not.Null);
-
                 //nulls
-                reason = $"Parsing null with {transformer}";
+                reason = $"Parsing null with {transformer} @{mode}";
                 var parsedNull1 = ParseAndAssert(null);
-                reason = "Formatting null";
+                reason = $"Formatting null @{mode}";
                 var nullText = transformer.Format(parsedNull1);
 
                 reason = $"NULL:{nullText ?? "<NULL>"}";
@@ -252,18 +252,18 @@ namespace Nemesis.TextParsers.Tests
 
 
                 //empty
-                reason = $"Retrieving empty with {transformer}";
+                reason = $"Retrieving empty with {transformer} @{mode}";
                 var emptyInstance = transformer.GetEmpty();
 
-                reason = "Parsing empty";
+                reason = $"Parsing empty @{mode}";
                 var parsedEmpty = ParseAndAssert("");
 
-                reason = "Formatting empty";
+                reason = $"Formatting empty @{mode}";
                 string emptyText1 = transformer.Format(parsedEmpty);
                 string emptyText2 = transformer.Format(emptyInstance);
                 IsMutuallyEquivalent(emptyText1, emptyText2);
 
-                reason = "Parsing empty";
+                reason = $"Parsing empty @{mode}";
                 var parsedEmpty1 = ParseAndAssert(emptyText1);
                 var parsedEmpty2 = ParseAndAssert(emptyText2);
 
@@ -274,14 +274,14 @@ namespace Nemesis.TextParsers.Tests
 
 
                 //instances
-                reason = "Creating fixtures";
+                reason = $"Creating fixtures @{mode}";
                 var instances = _fixture.CreateMany<T>(8);
                 int i = 1;
                 foreach (var instance in instances)
                 {
-                    reason = $"Transforming {i}";
+                    reason = $"Transforming {i} @{mode}";
                     string text = transformer.Format(instance);
-                    reason = $"{i++:00}. {text}";
+                    reason = $"{i++:00}. {text} @{mode}";
 
                     var parsed1 = ParseAndAssert(text);
                     var parsed2 = ParseAndAssert(text);

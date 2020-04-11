@@ -7,14 +7,39 @@ namespace Nemesis.TextParsers.Tests
     {
         public static ITransformerStore DefaultStore { get; } = TextTransformer.Default;
         public static ITransformerStore ThrowOnDuplicateStore { get; }
+        public static ITransformerStore BorderedStore { get; }
 
         static Sut()
         {
-            var throwOnDuplicateSettings = DictionarySettings.Default
-                .With(s => s.Behaviour, DictionaryBehaviour.ThrowOnDuplicate);
-            var settingsStore = SettingsStoreBuilder.GetDefault()
-                .AddOrUpdate(throwOnDuplicateSettings).Build();
-            ThrowOnDuplicateStore = TextTransformer.GetDefaultStoreWith(settingsStore);
+            ThrowOnDuplicateStore = TextTransformer.GetDefaultStoreWith(
+                SettingsStoreBuilder.GetDefault()
+                .AddOrUpdate(
+                    DictionarySettings.Default
+                        .With(s => s.Behaviour, DictionaryBehaviour.ThrowOnDuplicate)
+                ).Build());
+
+            //F# influenced settings 
+            var borderedDictionary = DictionarySettings.Default
+                .With(s => s.Start, '{')
+                .With(s => s.End, '}')
+                .With(s => s.DictionaryKeyValueDelimiter, ',')
+                ;
+            var borderedCollection = CollectionSettings.Default
+                .With(s => s.Start, '[')
+                .With(s => s.End, ']')
+                .With(s => s.ListDelimiter, ';')
+                ;
+            var borderedArray = ArraySettings.Default
+                .With(s => s.ListDelimiter, ',')
+                .With(s => s.Start, '|')
+                .With(s => s.End, '|')
+                ;
+            var borderedStore = SettingsStoreBuilder.GetDefault()
+                .AddOrUpdate(borderedArray)
+                .AddOrUpdate(borderedCollection)
+                .AddOrUpdate(borderedDictionary)
+                .Build();
+            BorderedStore = TextTransformer.GetDefaultStoreWith(borderedStore);
         }
 
         public static ITransformer<TElement> GetTransformer<TElement>()
