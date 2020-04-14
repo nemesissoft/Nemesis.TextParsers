@@ -12,8 +12,8 @@ When it's not marked otherwise, library follows Postel's Law (formatting is done
 
 ## Serialization format 
 General rules
-1.	Default value can always be enforced using '∅' character. Where it's not relevant - whitespaces are trimmed upon parsing, 
-2.	Escaping sequences are supported – each parser/formatter might use different set of escaping sequences and it escapes/unescapes only characters of its interest.  As a rule of thumb, special characters are escaped with backslash ('\\') and backslash itself is escaped with double backslash.
+1.	Default value can always be enforced using '∅' character. Where it's not relevant - whitespace are trimmed upon parsing, 
+2.	Escaping sequences are supported – each parser/formatter might use different set of escaping sequences and it escapes/unescape only characters of its interest.  As a rule of thumb, special characters are escaped with backslash ('\\') and backslash itself is escaped with double backslash.
 3. recognized types can be arbitrarily embedded/mixed i.e. it's possible to parse/format ```SortedDictionary<char?, IList<float[][]>>``` with no hiccups
 
 ###	Simple types 
@@ -169,7 +169,7 @@ readonly struct DataWithCustomDeconstructableTransformer
     public float Number { get; }
     public bool IsEnabled { get; }
     public decimal[] Prices { get; }
-    /*constructor, Deconstruct and boilerplating ommited for brevity*/
+    /*constructor, Deconstruct and boilerplating omitted for brevity*/
 }
 
 class DeconstructableTransformer : CustomDeconstructionTransformer<DataWithCustomDeconstructableTransformer>
@@ -182,9 +182,40 @@ class DeconstructableTransformer : CustomDeconstructionTransformer<DataWithCusto
             .WithDelimiter('_')
             .WithNullElementMarker('␀')
             .WithDeconstructableEmpty();//default value but just to be clear 
-    //7. for deconstructables empty string parses to "empty" instance of given type but that can be overriden
+    //7. for deconstructables empty string parses to "empty" instance of given type but that can be overridden
     public override DataWithCustomDeconstructableTransformer GetEmpty() =>
         new DataWithCustomDeconstructableTransformer(666, true, new decimal[] { 6, 7, 8, 9 });
 }
 
+```
+
+## Settings
+User can use default parsing/formatting settings or opt-in with own settings instances or overridden ones. Settings need to extend ```ISettings``` marker interface. Entry point is ```SettingsStore``` class that can be constructed easily using ```SettingsStoreBuilder```:
+
+```csharp 
+var customStore = SettingsStoreBuilder.GetDefault()
+    .AddOrUpdate(ownSettings)
+    .Build();
+```
+
+Settings class instances can be instantiated using normal constructors or, especially if changing only couple of settings from default ones is desired - user can choose to use .With pattern (example for DictionarySettings):
+```csharp 
+var borderedDictionary = DictionarySettings.Default
+    .With(s => s.Start, '{')
+    .With(s => s.End, '}')
+    .With(s => s.DictionaryKeyValueDelimiter, ',')
+    .With(s => s.NullElementMarker, '␀') //'␀' is special Unicode character. Difficult to insert from normal keyboard, but unlikely to be part of normal message - so no need to use escaping sequences in most cases 
+    ;
+```
+
+"With" extension method is analogous to With-pattern known from functional languages:
+[Copy and Update Record Expressions](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/copy-and-update-record-expressions)
+
+Here however a With is merely an extension method that works due to convention - new instance is created using types largest (number of parameter-wise) constructor. A property that user wishes to change will be used from method's second parameter, while all remaining parameters will be taken from already existing instance. Immutability of settings is not hindered this way. Property and constructor parameter names need to be equal in name using case insensitive comparison. See an example:
+```csharp 
+var tupleSettings = new ValueTupleSettings(',', '∅', '\\', '(', ')');
+var newSettings = tupleSettings.With(s => s.Delimiter, '_');
+
+Assert.That(tupleSettings.Delimiter, Is.EqualTo(',')); //not modified, Delimiter property is get-only by the way 
+Assert.That(newSettings.Delimiter, Is.EqualTo('_'));
 ```
