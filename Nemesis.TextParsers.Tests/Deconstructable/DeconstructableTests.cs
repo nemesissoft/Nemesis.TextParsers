@@ -4,8 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using Nemesis.Essentials.Runtime;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
-using Sett = Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings;
-using S2S = System.Func<Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings, Nemesis.TextParsers.Parsers.DeconstructionTransformerSettings>;
+using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
+using B2B = System.Func<Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder, Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder>;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
@@ -13,8 +13,6 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     [TestFixture]
     internal class DeconstructableTests
     {
-        private static readonly ITransformerStore _transformerStore = TextTransformer.Default;
-
         internal static IEnumerable<TCD> CorrectData() => new[]
         {
             new TCD(typeof(CarrotAndOnionFactors),
@@ -35,7 +33,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [TestCaseSource(nameof(CorrectData))]
         public void FormatAndParse(Type type, object instance, string text)
         {
-            var tester = Method.OfExpression<Action<object, string, S2S>>(
+            var tester = Method.OfExpression<Action<object, string, B2B>>(
                 (i, t, m) => FormatAndParseHelper(i, t, m)
             ).GetGenericMethodDefinition();
 
@@ -44,12 +42,12 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             tester.Invoke(null, new[] { instance, text, null });
         }
 
-        private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, S2S settingsMutator = null)
+        private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, B2B settingsMutator = null)
         {
-            var settings = Sett.Default;
+            var settings = Builder.GetDefault(Sut.DefaultStore);
             settings = settingsMutator?.Invoke(settings) ?? settings;
 
-            var sut = settings.ToTransformer<TDeconstructable>(_transformerStore);
+            var sut = settings.ToTransformer<TDeconstructable>();
 
 
             var actualFormatted = sut.Format(instance);
@@ -63,12 +61,12 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
         }
 
-        private static void ParseHelper<TDeconstructable>(TDeconstructable expected, string input, S2S settingsMutator = null)
+        private static void ParseHelper<TDeconstructable>(TDeconstructable expected, string input, B2B settingsMutator = null)
         {
-            var settings = Sett.Default;
+            var settings = Builder.GetDefault(Sut.DefaultStore);
             settings = settingsMutator?.Invoke(settings) ?? settings;
 
-            var sut = settings.ToTransformer<TDeconstructable>(_transformerStore);
+            var sut = settings.ToTransformer<TDeconstructable>();
 
 
             var actualParsed1 = sut.Parse(input);
@@ -257,7 +255,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [TestCaseSource(nameof(CustomDeconstructable_Data))]
         public void Custom_ConventionTransformer_BasedOnDeconstructable(DataWithCustomDeconstructableTransformer instance, string text)
         {
-            var sut = _transformerStore.GetTransformer<DataWithCustomDeconstructableTransformer>();
+            var sut = Sut.GetTransformer<DataWithCustomDeconstructableTransformer>();
 
 
             var actualParsed1 = sut.Parse(text);
@@ -278,11 +276,11 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public void Empty_CheckNested()
         {
             IsMutuallyEquivalent(
-                _transformerStore.GetEmptyInstance<House>(),
+                Sut.GetTransformer<House>().GetEmpty(),
                 new House("", 0.0f, new List<Room>())); //not overriden  
 
             IsMutuallyEquivalent(
-                _transformerStore.GetEmptyInstance<Room>(),
+                Sut.GetTransformer<Room>().GetEmpty(),
                 RoomTransformer.Empty); //overriden by transformer
         }
 
@@ -290,8 +288,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         public void Empty_CheckStability()
         {
             //not overriden 
-            var emptyHouse1 = _transformerStore.GetEmptyInstance<House>();
-            var emptyHouse2 = _transformerStore.GetEmptyInstance<House>();
+            var emptyHouse1 = Sut.GetTransformer<House>().GetEmpty();
+            var emptyHouse2 = Sut.GetTransformer<House>().GetEmpty();
 
             Assert.That(emptyHouse1.Rooms, Is.Empty);
             emptyHouse1.Rooms.Add(new Room("XXX", null));
@@ -300,8 +298,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
 
             //overriden by transformer
-            var emptyRoom1 = _transformerStore.GetEmptyInstance<Room>();
-            var emptyRoom2 = _transformerStore.GetEmptyInstance<Room>();
+            var emptyRoom1 = Sut.GetTransformer<Room>().GetEmpty();
+            var emptyRoom2 = Sut.GetTransformer<Room>().GetEmpty();
 
             Assert.That(emptyRoom1.FurniturePrices, Has.Count.EqualTo(1));
             emptyRoom1.FurniturePrices.Add("New bed", 10000);
@@ -316,8 +314,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [TestCase(@"(Mike;36;(Wrocław\;52200);123))", typeof(ArgumentException), "cannot have more than 3 elements: '123)'")]
         public void Parse_NegativeTest(string wrongInput, Type expectedException, string expectedMessagePart)
         {
-            var sut = Sett.Default
-                .ToTransformer<Person>(_transformerStore);
+            var sut = Builder.GetDefault(Sut.DefaultStore)
+                .ToTransformer<Person>();
 
             bool passed = false;
             Person parsed = default;
@@ -334,7 +332,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
                 Assert.Fail($"'{wrongInput}' should not be parseable to:{Environment.NewLine}\t{parsed}");
         }
 
-        internal static IEnumerable<(Type type, Type exceptionType, Func<Sett, Sett> settingsBuilder, string expectedMessagePart)> ToTransformer_NegativeTest_Data() => new[]
+        internal static IEnumerable<(Type type, Type exceptionType, Func<Builder, Builder> settingsBuilder, string expectedMessagePart)> ToTransformer_NegativeTest_Data() => new[]
         {
             (typeof(NoDeconstruct), typeof(NotSupportedException), null, "Deconstructable for NoDeconstruct cannot be created. Default deconstruction method supports cases with at lease one non-nullary Deconstruct method with matching constructor"),
             (typeof(DeconstructWithoutMatchingCtor), typeof(NotSupportedException), null, "Deconstructable for DeconstructWithoutMatchingCtor cannot be created. Default deconstruction method supports cases with at lease one non-nullary Deconstruct method with matching constructor"),
@@ -342,31 +340,31 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
 
             (typeof(NotCompatibleCtor), typeof(NotSupportedException),
-                (S2S)(s=> s.WithCustomDeconstruction(NotCompatibleCtor.DeconstructMethod, NotCompatibleCtor.Constructor)), "Instance Deconstruct method has to be compatible with provided constructor and should have same number and type of parameters"),
+                (B2B)(s=> s.WithCustomDeconstruction(NotCompatibleCtor.DeconstructMethod, NotCompatibleCtor.Constructor)), "Instance Deconstruct method has to be compatible with provided constructor and should have same number and type of parameters"),
 
             (typeof(NotOutParam), typeof(NotSupportedException),
-                (S2S)(s=> s.WithCustomDeconstruction(NotOutParam.DeconstructMethod, NotOutParam.Constructor)), "Instance Deconstruct method must have all out params (IsOut==true)"),
+                (B2B)(s=> s.WithCustomDeconstruction(NotOutParam.DeconstructMethod, NotOutParam.Constructor)), "Instance Deconstruct method must have all out params (IsOut==true)"),
 
             (typeof(NotSupportedParams), typeof(NotSupportedException),
-                (S2S)(s=> s.WithCustomDeconstruction(NotSupportedParams.DeconstructMethod, NotSupportedParams.Constructor)), @"Instance Deconstruct method must have all parameter types be recognizable by TransformerStore. Not supported types:object, object[], List<object>, string[,]"),
+                (B2B)(s=> s.WithCustomDeconstruction(NotSupportedParams.DeconstructMethod, NotSupportedParams.Constructor)), @"Instance Deconstruct method must have all parameter types be recognizable by TransformerStore. Not supported types:object, object[], List<object>, string[,]"),
 
 
 
             (typeof(StaticNotCompatibleCtor), typeof(NotSupportedException),
-                (S2S)(s=> s.WithCustomDeconstruction(StaticNotCompatibleCtor.DeconstructMethod, StaticNotCompatibleCtor.Constructor)), @"Static Deconstruct method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance"),
+                (B2B)(s=> s.WithCustomDeconstruction(StaticNotCompatibleCtor.DeconstructMethod, StaticNotCompatibleCtor.Constructor)), @"Static Deconstruct method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance"),
 
             (typeof(StaticNotOutParam), typeof(NotSupportedException),
-                (S2S)(s=> s.WithCustomDeconstruction(StaticNotOutParam.DeconstructMethod, StaticNotOutParam.Constructor)), @"Static Deconstruct method must have all but first params as out params (IsOut==true)"),
+                (B2B)(s=> s.WithCustomDeconstruction(StaticNotOutParam.DeconstructMethod, StaticNotOutParam.Constructor)), @"Static Deconstruct method must have all but first params as out params (IsOut==true)"),
 
 
             (typeof(StaticNotSupportedParams), typeof(NotSupportedException),
-                (S2S)(s=> s.WithCustomDeconstruction(StaticNotSupportedParams.DeconstructMethod, StaticNotSupportedParams.Constructor)), @"Static Deconstruct method must have all parameter types be recognizable by TransformerStore. Not supported types:object, object[], List<object>, string[,]"),
+                (B2B)(s=> s.WithCustomDeconstruction(StaticNotSupportedParams.DeconstructMethod, StaticNotSupportedParams.Constructor)), @"Static Deconstruct method must have all parameter types be recognizable by TransformerStore. Not supported types:object, object[], List<object>, string[,]"),
         };
 
         [TestCaseSource(nameof(ToTransformer_NegativeTest_Data))]
-        public void ToTransformer_NegativeTest((Type type, Type exceptionType, S2S settingsBuilder, string expectedMessagePart) data)
+        public void ToTransformer_NegativeTest((Type type, Type exceptionType, B2B settingsBuilder, string expectedMessagePart) data)
         {
-            var negativeTest = MakeDelegate<Func<S2S, Exception>>(
+            var negativeTest = MakeDelegate<Func<B2B, Exception>>(
                 func => ToTransformer_NegativeTest_Helper<int>(func), data.type
             );
 
@@ -381,15 +379,16 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             );
         }
 
-        private static Exception ToTransformer_NegativeTest_Helper<TDeconstructable>(S2S settingsBuilder)
+        private static Exception ToTransformer_NegativeTest_Helper<TDeconstructable>(B2B settingsBuilder)
         {
-            var settings = Sett.Default;
+            var settings = Builder.GetDefault(Sut.DefaultStore);
+
             if (settingsBuilder != null)
                 settings = settingsBuilder(settings);
 
             try
             {
-                settings.ToTransformer<TDeconstructable>(_transformerStore);
+                settings.ToTransformer<TDeconstructable>();
                 return null;
             }
             catch (Exception e) { return e; }

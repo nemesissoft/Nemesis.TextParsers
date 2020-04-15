@@ -8,10 +8,11 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Utils;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 #if NETCOREAPP3_0 || NETCOREAPP3_1
-    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #else
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #endif
 
 
@@ -20,6 +21,9 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class EnumTransformerCreator : ICanCreateTransformer
     {
+        private readonly EnumSettings _settings;
+        public EnumTransformerCreator(EnumSettings settings) => _settings = settings;
+
         public ITransformer<TEnum> CreateTransformer<TEnum>()
         {
             var enumType = typeof(TEnum);
@@ -33,7 +37,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
             var transType = typeof(EnumTransformer<,,>).MakeGenericType(enumType, underlyingType, numberHandler.GetType());
 
-            return (ITransformer<TEnum>)Activator.CreateInstance(transType, numberHandler);
+            return (ITransformer<TEnum>)Activator.CreateInstance(transType, numberHandler, _settings);
         }
 
         public bool CanHandle(Type type) => TryGetUnderlyingType(type, out _);
@@ -72,14 +76,19 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         where TNumberHandler : class, INumber<TUnderlying> //PERF: making number handler a concrete specification can win additional up to 3% in speed
     {
         private readonly TNumberHandler _numberHandler;
+        private readonly EnumSettings _settings;
 
         public bool IsFlagEnum { get; } = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
 
-        private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>();
+        private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser;
 
         // ReSharper disable once RedundantVerbatimPrefix
-        public EnumTransformer([@NotNull]TNumberHandler numberHandler) =>
-                _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
+        public EnumTransformer([@NotNull]TNumberHandler numberHandler, EnumSettings settings)
+        {
+            _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
+            _settings = settings;
+            _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>(_settings);
+        }
 
         //check performance comparison in Benchmark project - ToEnumBench
         internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
@@ -110,42 +119,49 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
             if (input.IsEmpty || input.IsWhiteSpace()) return default;
             input = input.Trim();
 
-            char first;
-            bool isNumeric = input.Length > 0 && (char.IsDigit(first = input[0]) || first == '-' || first == '+');
+            if (_settings.AllowParsingNumerics)
+            {
+                bool isNumeric = input.Length > 0 && input[0] is { } first &&
+                                 (char.IsDigit(first) || first == '-' || first == '+');
 
-            return isNumeric && _numberHandler.TryParse(in input, out var number) ?
-                number :
-                _elementParser(input);
+                return isNumeric && _numberHandler.TryParse(in input, out var number)
+                    ? number
+                    : _elementParser(input);
+            }
+            else
+                return _elementParser(input);
         }
 
         public override string Format(TEnum element) => element.ToString("G");
 
-        public override string ToString() => $"Transform {typeof(TEnum).Name}";
+        public override string ToString() => $"Transform {typeof(TEnum).Name} based on {typeof(TUnderlying).GetFriendlyName()}";
     }
 
     internal static class EnumTransformerHelper
     {
         internal delegate TUnderlying ParserDelegate<out TUnderlying>(ReadOnlySpan<char> input);
 
-        internal static ParserDelegate<TUnderlying> GetElementParser<TEnum, TUnderlying>()
+        internal static ParserDelegate<TUnderlying> GetElementParser<TEnum, TUnderlying>(EnumSettings settings)
         {
             var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
 
             var inputParam = Expression.Parameter(typeof(ReadOnlySpan<char>), "input");
+            //HACK this can potentially be subject to property in EnumSettings
             if (enumValues.Count == 0)
                 return Expression.Lambda<ParserDelegate<TUnderlying>>(Expression.Default(typeof(TUnderlying)), inputParam).Compile();
 
             var formatException = Expression.Throw(Expression.Constant(new FormatException(
-                $"Enum of type '{typeof(TEnum).Name}' cannot be parsed. " +
-                $"Valid values are: {string.Join(" or ", enumValues.Select(ev => ev.Name))} or number within {typeof(TUnderlying).Name} range."
+                  $"Enum of type '{typeof(TEnum).Name}' cannot be parsed. " +
+                  $"Valid values are: {string.Join(" or ", enumValues.Select(ev => ev.Name))}" +
+                  (settings.AllowParsingNumerics ? $" or number within {typeof(TUnderlying).Name} range. " : ". ") +
+                  (settings.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.") 
                 )));
 
             var conditionToValue = new List<(Expression Condition, TUnderlying value)>();
 
-            var charEqMethod = typeof(EnumTransformerHelper)
-                .GetMethod(nameof(CharEq), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-                ?? throw new MissingMethodException(nameof(EnumTransformerHelper), nameof(CharEq));
+            var caseInsensitiveMethod = GetCharEqMethod(nameof(CharEqCaseInsensitive));
+            var caseSensitiveMethod = GetCharEqMethod(nameof(CharEqCaseSensitive));
 
             foreach (var (name, value) in enumValues)
             {
@@ -157,13 +173,21 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
                 for (int i = name.Length - 1; i >= 0; i--)
                 {
-                    //char expectedCharacter = ;
+                    char expectedChar = name[i],
+                        upper = char.ToUpper(expectedChar),
+                        lower = char.ToLower(expectedChar)
+                        ;
+                    var index = Expression.Constant(i);
 
-                    var charCheck = Expression.Call(charEqMethod,
-                        inputParam,
-                        Expression.Constant(i),
-                        Expression.Constant(char.ToUpper(name[i])),
-                        Expression.Constant(char.ToLower(name[i]))
+                    var charCheck = settings.CaseInsensitive && (lower != upper)
+                        ? Expression.Call(caseInsensitiveMethod,
+                            inputParam, index,
+                            Expression.Constant(upper),
+                            Expression.Constant(lower)
+                        )
+                        : Expression.Call(caseSensitiveMethod,
+                            inputParam, index,
+                            Expression.Constant(expectedChar)
                         );
 
                     conditionElements.Add(charCheck);
@@ -184,6 +208,10 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
             var λ = Expression.Lambda<ParserDelegate<TUnderlying>>(body, inputParam);
             return λ.Compile();
         }
+
+        private static MethodInfo GetCharEqMethod(string charEqMethodName) =>
+            typeof(EnumTransformerHelper).GetMethod(charEqMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new MissingMethodException(nameof(EnumTransformerHelper), charEqMethodName);
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static Expression AndAlsoJoin(IEnumerable<Expression> expressionList) => expressionList != null && expressionList.Any() ?
@@ -212,8 +240,11 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool CharEq(ReadOnlySpan<char> input, int index, char expectedUpperChar, char expectedLowerChar) =>
-            input[index] == expectedUpperChar || input[index] == expectedLowerChar;
-        //char.ToUpper(input[index]).Equals(expectedUpperChar);
+        private static bool CharEqCaseInsensitive(ReadOnlySpan<char> input, int index, char expectedUpperChar, char expectedLowerChar)
+            => input[index] == expectedUpperChar || input[index] == expectedLowerChar;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool CharEqCaseSensitive(ReadOnlySpan<char> input, int index, char expectedExactChar)
+            => input[index] == expectedExactChar;
     }
 }

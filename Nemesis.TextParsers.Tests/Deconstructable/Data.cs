@@ -248,13 +248,12 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     {
         public DeconstructableTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
 
-        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
-            => prototype
+        protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype) =>
+            prototype
                 .WithBorders('{', '}')
                 .WithDelimiter('_')
                 .WithNullElementMarker('␀')
-                .WithDeconstructableEmpty() //default value but just to be clear 
-        ;
+                .WithDeconstructableEmpty();//default value but just to be clear 
 
         public override DataWithCustomDeconstructableTransformer GetNull() =>
             new DataWithCustomDeconstructableTransformer(666, true, new decimal[] { 6, 7, 8, 9 });
@@ -343,13 +342,14 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     {
         public RoomTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
 
-        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
+        protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype)
             => prototype
                 .WithBorders('[', ']')
                 .WithDelimiter(',')
         ;
 
         public static Room Empty => new Room("Empty room", new Dictionary<string, decimal> { ["Null"] = 0.0m });
+        
 
         public override Room GetEmpty() => Empty;
     }
@@ -494,8 +494,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     internal class CountryTransformer : CustomDeconstructionTransformer<Country>
     {
         public CountryTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
-
-        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
+        
+        protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype)
             => prototype
                 .WithBorders('[', ']')
                 .WithDelimiter(',')
@@ -506,7 +506,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     {
         public RegionTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
 
-        protected override DeconstructionTransformerSettings BuildSettings(DeconstructionTransformerSettings prototype)
+        protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype)
             => prototype
                 .WithBorders('{', '}')
                 .WithDelimiter('_')

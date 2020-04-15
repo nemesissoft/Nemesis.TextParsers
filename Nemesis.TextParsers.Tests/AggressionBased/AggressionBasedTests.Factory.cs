@@ -55,13 +55,13 @@ namespace Nemesis.TextParsers.Tests
 
         private static void AggressionBasedFactory_ShouldParseComplexCasesHelper<TElement>(string input, IEnumerable expectedOutput)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<TElement>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<TElement>>();
             var actual = transformer.Parse(input);
 
             Assert.That(actual, Is.Not.Null);
-            Assert.That(actual, Is.AssignableTo<IAggressionValuesProvider<TElement>>());
+            Assert.That(actual, Is.AssignableTo<IAggressionBased<TElement>>());
 
-            var values = ((IAggressionValuesProvider<TElement>)actual).Values;
+            var values = actual.GetValues().ToList();
             Assert.That(values, Is.EqualTo(expectedOutput));
         }
 
@@ -86,23 +86,27 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual, Is.Not.Null);
 
-            Assert.That(actual.ToString(), Is.EqualTo(data.expectedOutput));
+            var trans = Sut.GetTransformer<IAggressionBased<int>>();
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValuesCompacted));
+            Assert.That(trans.Format(actual), Is.EqualTo(data.expectedOutput));
+
+            Assert.That(actual.GetValues().ToList(),
+                Is.EqualTo(data.expectedValuesCompacted));
         }
 
         [TestCaseSource(nameof(ValidValuesForFactory))]
         public void AggressionBasedFactory_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<int>>();
             var actual = transformer.Parse(data.inputText);
 
             Assert.That(actual, Is.Not.Null);
 
-            Assert.That(((IAggressionValuesProvider<int>)actual).Values, Is.EqualTo(data.expectedValues));
+            Assert.That(actual.GetValues().ToList(),
+                Is.EqualTo(data.expectedValues));
         }
 
-        private static IEnumerable<TCD> FromValues_Invalid() => new []
+        private static IEnumerable<TCD> FromValues_Invalid() => new[]
         {
             new TCD("1#2", "0, 1, 3 or 9 elements, but contained 2"),
             new TCD("1#2#3#4", "0, 1, 3 or 9 elements, but contained 4"),
@@ -117,7 +121,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(FromValues_Invalid))]
         public void AggressionBasedTransformer_Parse_NegativeTests(string input, string expectedMessagePart)
         {
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<int>>();
 
             var ex = Assert.Throws<ArgumentException>(() => transformer.Parse(input.AsSpan()));
 

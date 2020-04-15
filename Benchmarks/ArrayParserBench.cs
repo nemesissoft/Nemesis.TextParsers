@@ -11,6 +11,9 @@ namespace Benchmarks
     [MemoryDiagnoser]
     public class ArrayParserBench
     {
+        private readonly ITransformer<int> _intTransformer = TextTransformer.Default.GetTransformer<int>();
+        private readonly ITransformer<int[]> _intArrayTransformer = TextTransformer.Default.GetTransformer<int[]>();
+        
         public struct TestData
         {
             public ushort Capacity { get; }
@@ -47,9 +50,8 @@ namespace Benchmarks
         [Benchmark]
         public int ToArray_Test()
         {
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse<int>('\\', '∅');
-            int[] parsed = stream.ToArray(Data.Capacity);
-            return parsed[parsed.Length - 1];
+            int[] parsed = _intArrayTransformer.Parse(Data.Text.AsSpan());
+            return parsed[^1];
         }
 
         [Benchmark(Baseline = true)]
@@ -58,21 +60,20 @@ namespace Benchmarks
             if (Data.Capacity > 128)
                 throw new NotSupportedException("Not supported");
 
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse<int>('\\', '∅');
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
 
             Span<int> parsed = stackalloc int[Data.Capacity];
             int i = 0;
             foreach (var num in stream)
-                parsed[i++] = num;
+                parsed[i++] = num.ParseWith(_intTransformer);
 
-            return parsed[parsed.Length - 1];
+            return parsed[^1];
         }
 
         [Benchmark]
         public int Mul_ToArray_Test()
         {
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse<int>('\\', '∅');
-            int[] parsed = stream.ToArray(Data.Capacity);
+            int[] parsed = _intArrayTransformer.Parse(Data.Text.AsSpan());
 
             int result = 0;
             foreach (int num in parsed)
@@ -87,12 +88,12 @@ namespace Benchmarks
             if (Data.Capacity > 128)
                 throw new NotSupportedException("Not supported");
 
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse<int>('\\', '∅');
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
 
             Span<int> parsed = stackalloc int[Data.Capacity];
             int i = 0;
             foreach (var num in stream)
-                parsed[i++] = num;
+                parsed[i++] = num.ParseWith(_intTransformer);
 
             int result = 0;
             foreach (int num in parsed)
@@ -104,11 +105,11 @@ namespace Benchmarks
         [Benchmark]
         public int Mul_Optimized()
         {
-            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).Parse<int>('\\', '∅');
+            var stream = Data.Text.AsSpan().Tokenize('|', '\\', true).PreParse('\\', '∅', '|');
 
             int result = 0;
-            foreach (int num in stream)
-                result = unchecked(result * num);
+            foreach (var num in stream)
+                result = unchecked(result * num.ParseWith(_intTransformer));
 
             return result;
         }

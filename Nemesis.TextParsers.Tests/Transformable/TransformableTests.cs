@@ -23,7 +23,7 @@ namespace Nemesis.TextParsers.Tests.Transformable
         [TestCaseSource(nameof(CorrectData))]
         public void Transformable_ParseAndFormat(ParsleyAndLeekFactors instance, string text)
         {
-            var sut = TextTransformer.Default.GetTransformer<ParsleyAndLeekFactors>();
+            var sut = Sut.GetTransformer<ParsleyAndLeekFactors>();
             
             var actualParsed1 = sut.Parse(text);
             
@@ -50,7 +50,7 @@ namespace Nemesis.TextParsers.Tests.Transformable
         [TestCaseSource(nameof(GenericTransformable_Data))]
         public void GenericTransformable_ParseAndFormat(ICustomList<float> instance, string text)
         {
-            var sut = TextTransformer.Default.GetTransformer<ICustomList<float>>();
+            var sut = Sut.GetTransformer<ICustomList<float>>();
 
             var actualParsed1 = sut.Parse(text);
 

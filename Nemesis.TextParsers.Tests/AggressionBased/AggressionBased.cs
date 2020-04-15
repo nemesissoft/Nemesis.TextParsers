@@ -15,21 +15,10 @@ using NotNull = JetBrains.Annotations.NotNullAttribute;
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
-    [PublicAPI]
-    public interface IAggressionValuesProvider<out TValue>
-    {
-        /// <summary>
-        /// For introspection and test purposes. This might allocate a new list
-        /// </summary>
-        IReadOnlyList<TValue> Values { get; }
-
-        string ToString();
-    }
-
     [Transformer(typeof(AggressionBasedTransformer<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
-    public interface IAggressionBased<out TValue>
+    public interface IAggressionBased<TValue>
     {
         TValue PassiveValue { get; }
         TValue NormalValue { get; }
@@ -37,19 +26,14 @@ namespace Nemesis.TextParsers.Tests
 
         TValue GetValueFor(StrategyAggression aggression);
         TValue GetValueFor(byte aggression);
-    }
 
-    internal static class AggressionBasedSerializer
-    {
-        public static readonly SpanCollectionSerializer Instance = new SpanCollectionSerializer('#', ';', '=', '∅', '\\');
+        LeanCollection<TValue> GetValues();
     }
 
     [Transformer(typeof(AggressionBasedTransformer<>))]
-    internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>, IAggressionValuesProvider<TValue>
+    internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>
     {
-        IReadOnlyList<TValue> IAggressionValuesProvider<TValue>.Values => GetValues().ToList();
-
-        protected abstract LeanCollection<TValue> GetValues();
+        public abstract LeanCollection<TValue> GetValues();
 
         protected static bool IsStructurallyEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
@@ -64,7 +48,7 @@ namespace Nemesis.TextParsers.Tests
                 case AggressionBased3<TValue> o3: return Equals3(o3);
                 case AggressionBased9<TValue> o9: return Equals9(o9);
                 default: throw new ArgumentException(
-                        $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
+                   $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
             }
         }
 
@@ -80,14 +64,17 @@ namespace Nemesis.TextParsers.Tests
         public sealed override int GetHashCode() => GetHashCodeCore();
         protected abstract int GetHashCodeCore();
 
-        public sealed override string ToString() => AggressionBasedSerializer.Instance.FormatCollection(GetValues());
+        /// <summary>
+        /// Text representation. For debugging purposes only
+        /// </summary>
+        public sealed override string ToString() => string.Join(" # ", GetValues().ToList());
     }
 
     internal sealed class AggressionBased1<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
         public TValue One { get; }
 
-        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
+        public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
 
         public TValue PassiveValue => One;
         public TValue NormalValue => One;
@@ -114,7 +101,7 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased3<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
-        protected override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
+        public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
 
         public TValue PassiveValue { get; }
         public TValue NormalValue { get; }
@@ -135,12 +122,11 @@ namespace Nemesis.TextParsers.Tests
             switch (aggression)
             {
                 case 1: case 2: case 3: return PassiveValue;
-                
-                case 0: 
-                case 4: case 5: case 6: return NormalValue;
-                
+
+                case 0: case 4: case 5: case 6: return NormalValue;
+
                 case 7: case 8: case 9: return AggressiveValue;
-                
+
                 default: throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
             }
         }
@@ -176,7 +162,7 @@ namespace Nemesis.TextParsers.Tests
     {
         private readonly TValue[] _values;
 
-        protected override LeanCollection<TValue> GetValues() => LeanCollectionFactory.FromArrayChecked(_values);
+        public override LeanCollection<TValue> GetValues() => LeanCollectionFactory.FromArrayChecked(_values);
 
         public TValue PassiveValue => GetValueFor(StrategyAggression.Passive);
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
@@ -229,39 +215,85 @@ namespace Nemesis.TextParsers.Tests
         protected override int GetHashCodeCore() => _values?.GetHashCode() ?? 0;
     }
 
+
     [TextConverterSyntax("Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3", '#')]
-    public class AggressionBasedTransformer<TValue>: TransformerBase<IAggressionBased<TValue>>
+    public sealed class AggressionBasedTransformer<TValue> : TransformerBase<IAggressionBased<TValue>>
     {
+        private const char LIST_DELIMITER = '#';
+        private const char NULL_ELEMENT_MARKER = '∅';
+        private const char ESCAPING_SEQUENCE_START = '\\';
+
         private readonly ITransformerStore _transformerStore;
-        public AggressionBasedTransformer(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly ITransformer<TValue> _elementTransformer;
+        public AggressionBasedTransformer(ITransformerStore transformerStore)
+        {
+            _transformerStore = transformerStore;
+            _elementTransformer = _transformerStore.GetTransformer<TValue>();
+        }
 
-        protected override IAggressionBased<TValue> ParseCore(in ReadOnlySpan<char> input) => 
-            FromValues(AggressionBasedSerializer.Instance.ParseStream<TValue>(input, out _));
+        protected override IAggressionBased<TValue> ParseCore(in ReadOnlySpan<char> input)
+        {
+            var tokens = input.Tokenize(LIST_DELIMITER, ESCAPING_SEQUENCE_START, true);
+            var parsed = tokens.PreParse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, LIST_DELIMITER);
 
-        public override string Format(IAggressionBased<TValue> element) => 
-            element?.ToString();
+            return FromValues(parsed);
+        }
+
+        public override string Format(IAggressionBased<TValue> ab)
+        {
+            if (ab == null) return null;
+
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            try
+            {
+                var enumerator = ab.GetValues().GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    string elementText = _elementTransformer.Format(enumerator.Current);
+                    if (elementText == null)
+                        accumulator.Append(NULL_ELEMENT_MARKER);
+                    else
+                    {
+                        foreach (char c in elementText)
+                        {
+                            if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == LIST_DELIMITER)
+                                accumulator.Append(ESCAPING_SEQUENCE_START);
+                            accumulator.Append(c);
+                        }
+                    }
+                    accumulator.Append(LIST_DELIMITER);
+                }
+                accumulator.Shrink();
+
+                return accumulator.ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+
 
 
         //this should not be cached. Nobody wants to expose globally available i.e. empty collection just for people to be able to add elements to it ;-)
-        public override IAggressionBased<TValue> GetEmpty() => 
-            AggressionBasedFactory<TValue>.FromOneValue(_transformerStore.GetEmptyInstance<TValue>());
+        public override IAggressionBased<TValue> GetEmpty() =>
+            AggressionBasedFactory<TValue>.FromOneValue(_transformerStore.GetTransformer<TValue>().GetEmpty());
 
         //this can be safely cached as long as it wraps null/immutable objects - AB<T> is immutable itself
-        public override IAggressionBased<TValue> GetNull() => 
+        public override IAggressionBased<TValue> GetNull() =>
             AggressionBasedFactory<TValue>.FromOneValue(default);
 
-        private static IAggressionBased<TValue> FromValues(ParsedSequence<TValue> values)
+        private IAggressionBased<TValue> FromValues(ParsingSequence values)
         {
             var enumerator = values.GetEnumerator();
 
             if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
-            var pass = enumerator.Current;
+            var pass = enumerator.Current.ParseWith(_elementTransformer);
 
             if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
-            var norm = enumerator.Current;
+            var norm = enumerator.Current.ParseWith(_elementTransformer);
 
             if (!enumerator.MoveNext()) throw GetException(2);
-            var aggr = enumerator.Current;
+            var aggr = enumerator.Current.ParseWith(_elementTransformer);
 
             if (!enumerator.MoveNext())
                 return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
@@ -283,7 +315,12 @@ namespace Nemesis.TextParsers.Tests
             //end of sequence
             if (enumerator.MoveNext()) throw GetException(10);//10 means more than 9 == do not check for more
 
-            return new AggressionBased9<TValue>(new[] { v1, v2, v3, v4, v5, v6, v7, v8, v9 });
+            return new AggressionBased9<TValue>(new[]
+            {
+                v1, v2, v3,
+                v4.ParseWith(_elementTransformer), v5.ParseWith(_elementTransformer), v6.ParseWith(_elementTransformer),
+                v7.ParseWith(_elementTransformer), v8.ParseWith(_elementTransformer), v9.ParseWith(_elementTransformer)
+            });
 
             Exception GetException(int numberOfElements) => new ArgumentException(
                 // ReSharper disable once UseNameofExpression
@@ -308,21 +345,21 @@ namespace Nemesis.TextParsers.Tests
 
         internal static IAggressionBased<TValue> FromValues(IEnumerable<TValue> values)
         {
-            if (values == null) return AggressionBasedFactory<TValue>.Default();
+            if (values == null) return Default();
 
             using var enumerator = values.GetEnumerator();
 
-            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.Default();
+            if (!enumerator.MoveNext()) return Default();
             var pass = enumerator.Current;
 
-            if (!enumerator.MoveNext()) return AggressionBasedFactory<TValue>.FromOneValue(pass);
+            if (!enumerator.MoveNext()) return FromOneValue(pass);
             var norm = enumerator.Current;
 
             if (!enumerator.MoveNext()) throw GetException(2);
             var aggr = enumerator.Current;
 
             if (!enumerator.MoveNext())
-                return AggressionBasedFactory<TValue>.FromPassiveNormalAggressiveChecked(pass, norm, aggr);
+                return FromPassiveNormalAggressiveChecked(pass, norm, aggr);
 
             TValue v1 = pass, v2 = norm, v3 = aggr;
 
@@ -395,7 +432,7 @@ namespace Nemesis.TextParsers.Tests
                 $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
         }
 
-        /*internal static IAggressionBased<TValue> FromValuesCompact(ParsedSequence<TValue> values)
+        /*internal static IAggressionBased<TValue> FromValuesCompact(ParsingSequence<TValue> values)
         {
             var enumerator = values.GetEnumerator();
 

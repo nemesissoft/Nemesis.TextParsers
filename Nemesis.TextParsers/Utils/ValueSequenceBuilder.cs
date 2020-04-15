@@ -56,6 +56,17 @@ namespace Nemesis.TextParsers.Utils
             this = default;
         }
 
+        public void Shrink(uint by = 1)
+        {
+            if (Length > 0)
+                Length -= (int)by;
+        }
+
+        /// <summary>
+        /// Converts this instance to string. If underlying type <paramref name="{T}"/> is <see cref="System.Char"/> then it returns text written so far
+        /// </summary>
+        public override string ToString() => AsSpan().ToString();
+
         private void Grow()
         {
             T[] array = ArrayPool<T>.Shared.Rent(Math.Max(_current.Length * 2, 16));

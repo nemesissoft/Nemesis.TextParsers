@@ -6,6 +6,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers
 {
@@ -16,28 +17,34 @@ namespace Nemesis.TextParsers
 
         bool IsSupportedForTransformation(Type type);
 
-        object GetEmptyInstance(Type type);
-        TElement GetEmptyInstance<TElement>();
+        SettingsStore SettingsStore { get; }
     }
 
     public static class TextTransformer
     {
-        public static ITransformerStore Default { get; } = StandardTransformerStore.GetDefaultTextTransformer();
+        public static ITransformerStore Default { get; } =
+            StandardTransformerStore.GetDefault(SettingsStoreBuilder.GetDefault().Build());
+        
+        public static ITransformerStore GetDefaultStoreWith(SettingsStore settingsStore) =>
+            StandardTransformerStore.GetDefault(settingsStore);
     }
 
     internal sealed class StandardTransformerStore : ITransformerStore
     {
         private readonly IEnumerable<ICanCreateTransformer> _transformerCreators;
-        private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache;
+        public SettingsStore SettingsStore { get; }
 
-        private StandardTransformerStore([NotNull] IEnumerable<ICanCreateTransformer> transformerCreators,
-            ConcurrentDictionary<Type, ITransformer> transformerCache = null)
+
+        private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache = new ConcurrentDictionary<Type, ITransformer>();
+
+        public StandardTransformerStore([NotNull] IEnumerable<ICanCreateTransformer> transformerCreators,
+            [NotNull] SettingsStore settingsStore)
         {
             _transformerCreators = transformerCreators ?? throw new ArgumentNullException(nameof(transformerCreators));
-            _transformerCache = transformerCache ?? new ConcurrentDictionary<Type, ITransformer>();
+            SettingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         }
 
-        internal static ITransformerStore GetDefaultTextTransformer()
+        public static ITransformerStore GetDefault(SettingsStore settingsStore)
         {
             static bool IsUnique<TElement>(IEnumerable<TElement> list)
             {
@@ -48,34 +55,13 @@ namespace Nemesis.TextParsers
             var types = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
-            static ICanCreateTransformer CreateTransformerCreator(Type type, ITransformerStore store)
-            {
-                var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                if (ctors.Length != 1)
-                    throw new NotSupportedException($"Only single constructor is supported for transformer creator: {type.GetFriendlyName()}");
-
-                var ctor = ctors[0];
-                var @params = ctor.GetParameters();
-
-                return @params.Length switch
-                {
-                    0 => (ICanCreateTransformer)Activator.CreateInstance(type, true),
-                    1 => @params[0].ParameterType == typeof(ITransformerStore)
-                        ? (ICanCreateTransformer)Activator.CreateInstance(type, store)
-                        : throw new NotSupportedException(
-                            $"Among single parameter constructors only the one that takes {nameof(ITransformerStore)} is supported"),
-                    _ => throw new NotSupportedException("Only constructors of arity 0..1 are supported")
-                };
-            }
-
-
             var transformerCreators = new List<ICanCreateTransformer>(16);
-            var store = new StandardTransformerStore(transformerCreators);
+            var store = new StandardTransformerStore(transformerCreators, settingsStore);
 
             transformerCreators.AddRange(
                 from type in types
                 where typeof(ICanCreateTransformer).IsAssignableFrom(type)
-                select CreateTransformerCreator(type, store)
+                select CreateTransformerCreator(type, store, settingsStore)
             );
 
             if (!IsUnique(transformerCreators.Select(d => d.Priority)))
@@ -84,6 +70,38 @@ namespace Nemesis.TextParsers
             transformerCreators.Sort((i1, i2) => i1.Priority.CompareTo(i2.Priority));
 
             return store;
+        }
+
+        private static ICanCreateTransformer CreateTransformerCreator(Type type, ITransformerStore transformerStore, SettingsStore settingsStore)
+        {
+            var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (ctors.Length != 1)
+                throw new NotSupportedException($"Only single constructor is supported for transformer creator: {type.GetFriendlyName()}");
+
+            var ctor = ctors[0];
+            var @params = ctor.GetParameters();
+
+            if (@params.Length == 0)
+                return (ICanCreateTransformer)Activator.CreateInstance(type, true);
+            else
+            {
+                object GetArgument(Type argType)
+                {
+                    if (argType == typeof(ITransformerStore))
+                        return transformerStore;
+                    else if (typeof(ISettings).IsAssignableFrom(argType))
+                        return settingsStore.GetSettingsFor(argType);
+                    else
+                        throw new NotSupportedException(
+                            $"Only supported arguments for auto-injection to {type.GetFriendlyName()} are {nameof(ITransformerStore)} or {nameof(ISettings)} implementations");
+                }
+                
+                var arguments = @params.Select(p => p.ParameterType)
+                    .Select(GetArgument)
+                    .ToArray();
+
+                return (ICanCreateTransformer)Activator.CreateInstance(type, arguments);
+            }
         }
 
         #region GetTransformer
@@ -132,17 +150,6 @@ namespace Nemesis.TextParsers
             !type.IsGenericTypeDefinition &&
             _transformerCreators.FirstOrDefault(c => c.CanHandle(type)) is { } creator &&
             !(creator is AnyTransformerCreator);
-
-        #endregion
-
-
-        #region GetEmptyInstance
-
-        public object GetEmptyInstance(Type type) =>
-            GetTransformer(type).GetEmptyObject();
-
-        public TElement GetEmptyInstance<TElement>() =>
-            GetTransformer<TElement>().GetEmpty();
 
         #endregion
     }

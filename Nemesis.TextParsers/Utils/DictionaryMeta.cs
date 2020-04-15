@@ -90,8 +90,8 @@ namespace Nemesis.TextParsers.Utils
             {
                 // ReSharper disable once PossibleNullReferenceException
                 var (oKey, oValue) = sourceElements[i];
-                TKey key = SpanParserHelper.ConvertElement<TKey>(oKey);
-                TValue value = SpanParserHelper.ConvertElement<TValue>(oValue);
+                TKey key = ConvertElement<TKey>(oKey);
+                TValue value = ConvertElement<TValue>(oValue);
 
                 if (key == null) key = GetQuiteUniqueNotNullKey();
 
@@ -122,6 +122,22 @@ namespace Nemesis.TextParsers.Utils
                 catch { return default; }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
+        }
+
+        private static TDest ConvertElement<TDest>(object element)
+        {
+            try
+            {
+                return element switch
+                {
+                    TDest dest => dest,
+                    null => default,
+                    IFormattable formattable when typeof(TDest) == typeof(string) =>
+                    (TDest)(object)formattable.ToString(null, CultureInfo.InvariantCulture),
+                    _ => (TDest)TypeMeta.GetDefault(typeof(TDest))
+                };
+            }
+            catch (Exception) { return default; }
         }
     }
 

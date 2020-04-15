@@ -7,17 +7,31 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using AutoFixture;
+using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Deconstructable;
+using Nemesis.TextParsers.Tests.Entities;
 using Nemesis.TextParsers.Tests.Infrastructure;
 using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
 {
-    [TestFixture]
+    [TestFixture(typeof(Sut), nameof(Sut.DefaultStore))]
+    [TestFixture(typeof(Sut), nameof(Sut.BorderedStore))]
+    [TestFixture(typeof(Sut), nameof(Sut.RandomStore))]
     public sealed class ExploratoryTests
     {
+        private readonly ITransformerStore _transformerStore;
+
+        public ExploratoryTests(Type containerType, string propertyName)
+        {
+            var prop = containerType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new MissingMemberException(containerType.FullName, propertyName);
+            _transformerStore = (ITransformerStore) prop.GetValue(null)
+                ?? throw new InvalidOperationException("TransformerStore cannot be null");
+        }
+
         private readonly Fixture _fixture = new Fixture();
         private readonly RandomSource _randomSource = new RandomSource();
 
@@ -33,7 +47,7 @@ namespace Nemesis.TextParsers.Tests
 
                     typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum),
                     typeof(Int64Enum), typeof(UInt64Enum),
-                    typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors),
+                    typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors), typeof(BasisPoint),
 
                     typeof(Fruits[]), typeof(Dictionary<Fruits, double>),
                     typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
@@ -43,6 +57,7 @@ namespace Nemesis.TextParsers.Tests
                     typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
                     typeof(IAggressionBased<float?>),
                     typeof(IAggressionBased<int[]>),
+                    typeof(IAggressionBased<ValueTuple<bool, bool>>),
                     typeof(IAggressionBased<List<string>>), typeof(List<IAggressionBased<string>>),
                     typeof(IAggressionBased<List<float>>), typeof(List<IAggressionBased<float>>),
                     typeof(IAggressionBased<List<TimeSpan>>), typeof(List<IAggressionBased<TimeSpan>>),
@@ -63,9 +78,33 @@ namespace Nemesis.TextParsers.Tests
             Console.WriteLine($"{GetType().Name} initial seed = {seed}");
             GetTestCases(_randomSource);
 
+            string GetRandomString()
+            {
+                Span<char> special = stackalloc char[]
+                    {'\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')'};
+                return
+                    ""+
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextString('A', 'Z', 8) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextString('a', 'z', 8) +
+                    _randomSource.NextFrom(special) +
+                    _randomSource.NextFrom(special);
+            }
+            Uri GetRandomUri()
+            {
+                var address = _randomSource.NextString('A', 'Z');
+                return new Uri(
+                    _randomSource.NextDouble() < 0.5 ? $"mailto:{address}@google.com" : $"https://{address}.google.com"
+                );
+            }
 
-            _fixture.Register<string>(() => _randomSource.NextString('A', 'Z'));
+            _fixture.Register<string>(GetRandomString);
+            _fixture.Register<Uri>(GetRandomUri);
 
+            _fixture.Register<bool>(() => _randomSource.NextDouble() < 0.5);
             _fixture.Register<double>(() => _randomSource.NextFloatingNumber());
             _fixture.Register<float>(() => (float)_randomSource.NextFloatingNumber());
             _fixture.Register<decimal>(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
@@ -74,6 +113,11 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.NextFloatingNumber(1000, false)
             ));
             _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
+
+            _fixture.Register<BasisPoint>(() => BasisPoint.FromBps(
+                ((_randomSource.NextDouble() - 0.5) * 2 + 0.1) * (_randomSource.NextDouble() < 0.5 ? 100 : 10)
+            ));
+
 
 
             _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
@@ -95,6 +139,19 @@ namespace Nemesis.TextParsers.Tests
                 .Select(d => d.type)
                 .ToList();
 
+
+            var valueTuples = _allTestCases.Select(t => t.type)
+                .Where(TypeMeta.IsValueTuple).Distinct().ToList();
+
+            var valueTupleElementTypes =
+                _allTestCases.Select(t => t.type).Where(t => t.IsGenericType && !t.IsGenericTypeDefinition)
+                .SelectMany(t => t.GenericTypeArguments)
+                .Where(TypeMeta.IsValueTuple)
+                .Distinct().ToList();
+
+            valueTuples.AddRange(valueTupleElementTypes);
+
+            FixtureUtils.RegisterAllValueTuples(_fixture, valueTuples);
 
             var aggBasedElements = _allTestCases
                 .Where(d => d.category == ExploratoryTestCategory.AggressionBased)
@@ -180,14 +237,17 @@ namespace Nemesis.TextParsers.Tests
 
         private void ShouldParseAndFormat(Type testType)
         {
-            var tester = MakeDelegate<Action<ExploratoryTests>>
-                (test => test.ShouldParseAndFormatHelper<int>(), testType);
+            var tester = MakeDelegate<Action<ExploratoryTests, ITransformer>>
+                ((test, trans) => test.ShouldParseAndFormatHelper<int>(trans), testType);
 
-            tester(this);
+            tester(this, _transformerStore.GetTransformer(testType));
         }
 
-        private void ShouldParseAndFormatHelper<T>()
+        private void ShouldParseAndFormatHelper<T>(ITransformer ngTransformer)
         {
+            var transformer = ngTransformer as ITransformer<T>;
+            Assert.That(transformer, Is.Not.Null, "Cast failed");
+
             Type testType = typeof(T);
             string friendlyName = testType.GetFriendlyName();
             string reason = "<none>";
@@ -195,10 +255,6 @@ namespace Nemesis.TextParsers.Tests
 
             try
             {
-                reason = "Transformer retrieval";
-                var transformer = TextTransformer.Default.GetTransformer<T>();
-                Assert.That(transformer, Is.Not.Null);
-
                 //nulls
                 reason = $"Parsing null with {transformer}";
                 var parsedNull1 = ParseAndAssert(null);
@@ -458,32 +514,6 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        public static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
-        {
-            var registerMethod = Method
-                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
-                .GetGenericMethodDefinition();
-
-            foreach (var elementType in structs)
-            {
-                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
-            }
-        }
-
-        public static void RegisterAllCollections(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
-        {
-            var registerMethod = Method
-                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterCollections<int>(fix, rs))
-                .GetGenericMethodDefinition();
-
-            foreach (var elementType in elementTypes)
-            {
-                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
-            }
-        }
-
         private static void RegisterAggressionBased<TElement>(IFixture fixture, RandomSource randomSource)
         {
             AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
@@ -517,6 +547,20 @@ namespace Nemesis.TextParsers.Tests
             fixture.Register(InterfaceCreator);
         }
 
+
+        public static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
+        {
+            var registerMethod = Method
+                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterNullable<int>(fix, rs))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in structs)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            }
+        }
+
         private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource)
             where TUnderlyingType : struct
         {
@@ -525,6 +569,20 @@ namespace Nemesis.TextParsers.Tests
                 : fixture.Create<TUnderlyingType>();
 
             fixture.Register(Creator);
+        }
+
+
+        public static void RegisterAllCollections(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
+        {
+            var registerMethod = Method
+                .OfExpression<Action<Fixture, RandomSource>>((fix, rs) => RegisterCollections<int>(fix, rs))
+                .GetGenericMethodDefinition();
+
+            foreach (var elementType in elementTypes)
+            {
+                var concreteMethod = registerMethod.MakeGenericMethod(elementType);
+                concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            }
         }
 
         private static void RegisterCollections<TElement>(Fixture fixture, RandomSource randomSource)
@@ -551,6 +609,116 @@ namespace Nemesis.TextParsers.Tests
 
             fixture.Register(ArrayCreator);
             fixture.Register(ListCreator);
+        }
+
+
+
+        public static void RegisterAllValueTuples(Fixture fixture, IEnumerable<Type> tupleTypes)
+        {
+            foreach (var tupleType in tupleTypes)
+            {
+                if (!TypeMeta.TryGetValueTupleElements(tupleType, out var elementTypes))
+                    throw new NotSupportedException($"{tupleType.GetFriendlyName()} is not supported for value tuple fixture registration");
+
+                var arity = elementTypes.Length;
+
+                var method = typeof(FixtureUtils).GetMethod($"RegisterValueTuple{arity}",
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                    ?? throw new MissingMethodException(nameof(FixtureUtils), $"RegisterValueTuple{arity}");
+
+                method = method.MakeGenericMethod(elementTypes);
+
+                method.Invoke(null, new object[] { fixture });
+            }
+        }
+
+        [UsedImplicitly]
+        private static void RegisterValueTuple1<T1>(IFixture fixture)
+        {
+            ValueTuple<T1> TupleCreator() => new ValueTuple<T1>(fixture.Create<T1>());
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple2<T1, T2>(IFixture fixture)
+        {
+            (T1, T2) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple3<T1, T2, T3>(IFixture fixture)
+        {
+            (T1, T2, T3) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple4<T1, T2, T3, T4>(IFixture fixture)
+        {
+            (T1, T2, T3, T4) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple5<T1, T2, T3, T4, T5>(IFixture fixture)
+        {
+            (T1, T2, T3, T4, T5) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>(),
+                fixture.Create<T5>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple6<T1, T2, T3, T4, T5, T6>(IFixture fixture)
+        {
+            (T1, T2, T3, T4, T5, T6) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>(),
+                fixture.Create<T5>(),
+                fixture.Create<T6>()
+            );
+
+            fixture.Register(TupleCreator);
+        }
+        [UsedImplicitly]
+        private static void RegisterValueTuple7<T1, T2, T3, T4, T5, T6, T7>(IFixture fixture)
+        {
+            (T1, T2, T3, T4, T5, T6, T7) TupleCreator() =>
+            (
+                fixture.Create<T1>(),
+                fixture.Create<T2>(),
+                fixture.Create<T3>(),
+                fixture.Create<T4>(),
+                fixture.Create<T5>(),
+                fixture.Create<T6>(),
+                fixture.Create<T7>()
+            );
+
+            fixture.Register(TupleCreator);
         }
     }
 }

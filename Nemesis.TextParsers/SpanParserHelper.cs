@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
-using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 using PureMethod = System.Diagnostics.Contracts.PureAttribute;
 
@@ -18,185 +13,11 @@ namespace Nemesis.TextParsers
             new TokenSequence<T>(sequence, separator, escapingElement, emptySequenceYieldsEmpty);
 
         [PureMethod]
-        public static ParsedSequence<TTo> Parse<TTo>(this in TokenSequence<char> tokenSource, char escapingElement,
-            char nullElement, char allowedEscapeCharacter1 = default) =>
-            new ParsedSequence<TTo>(tokenSource, escapingElement, nullElement, allowedEscapeCharacter1);
+        public static ParsingSequence PreParse(this in TokenSequence<char> tokenSource, char escapingElement,
+            char nullElement, char sequenceDelimiter) =>
+            new ParsingSequence(tokenSource, escapingElement, nullElement, sequenceDelimiter);
 
-        [PureMethod]
-        public static TTo[] ToArray<TTo>(this in ParsedSequence<TTo> parsedSequence, ushort capacity = 8)
-        {
-            var initialBuffer = ArrayPool<TTo>.Shared.Rent(capacity);
-            try
-            {
-                using var accumulator = new ValueSequenceBuilder<TTo>(initialBuffer);
-
-                foreach (TTo part in parsedSequence)
-                    accumulator.Append(part);
-
-                return accumulator.AsSpan().ToArray();
-            }
-            finally
-            {
-                ArrayPool<TTo>.Shared.Return(initialBuffer);
-            }
-        }
-
-        [PureMethod]
-        public static IReadOnlyCollection<TTo> ToCollection<TTo>(this in ParsedSequence<TTo> parsedSequence,
-            CollectionKind kind = CollectionKind.List, ushort capacity = 8)
-        {
-            switch (kind)
-            {
-                case CollectionKind.List:
-                case CollectionKind.ReadOnlyCollection:
-                    {
-                        var result = new List<TTo>(capacity);
-
-                        foreach (var part in parsedSequence)
-                            result.Add(part);
-
-                        return kind == CollectionKind.List ?
-                            (IReadOnlyCollection<TTo>)result :
-                            result.AsReadOnly();
-                    }
-                case CollectionKind.HashSet:
-                case CollectionKind.SortedSet:
-                    {
-                        ISet<TTo> result = kind == CollectionKind.HashSet
-                            ? (ISet<TTo>)new HashSet<TTo>(
-#if NETSTANDARD2_0 || NETFRAMEWORK
-                
-#else
-                            capacity
-#endif
-                        )
-                            : new SortedSet<TTo>();
-
-                        foreach (var part in parsedSequence)
-                            result.Add(part);
-
-                        return (IReadOnlyCollection<TTo>)result;
-                    }
-                case CollectionKind.LinkedList:
-                    {
-                        var result = new LinkedList<TTo>();
-
-                        foreach (var part in parsedSequence)
-                            result.AddLast(part);
-
-                        return result;
-                    }
-                case CollectionKind.Stack:
-                    {
-                        var result = new Stack<TTo>(capacity);
-
-                        foreach (var part in parsedSequence)
-                            result.Push(part);
-
-                        return result;
-                    }
-                case CollectionKind.Queue:
-                    {
-                        var result = new Queue<TTo>(capacity);
-
-                        foreach (var part in parsedSequence)
-                            result.Enqueue(part);
-
-                        return result;
-                    }
-                case CollectionKind.ObservableCollection:
-                    {
-                        var result = new ObservableCollection<TTo>();
-
-                        foreach (var part in parsedSequence)
-                            result.Add(part);
-
-                        return result;
-                    }
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
-            }
-        }
-
-        [PureMethod]
-        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this in ParsedPairSequence<TKey, TValue> parsedPairs,
-            DictionaryKind kind = DictionaryKind.Dictionary, DictionaryBehaviour behaviour = DictionaryBehaviour.OverrideKeys,
-            ushort capacity = 8)
-        {
-            IDictionary<TKey, TValue> result = kind switch
-                {
-                    DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(kind), kind, $"{nameof(kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
-                    DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
-                    DictionaryKind.SortedList => new SortedList<TKey, TValue>(capacity),
-                    _ => new Dictionary<TKey, TValue>(capacity)
-                };
-
-            foreach (var pair in parsedPairs)
-            {
-                var key = pair.Key;
-                var value = pair.Value;
-                switch (behaviour)
-                {
-                    case DictionaryBehaviour.OverrideKeys:
-                        result[key] = value; break;
-                    case DictionaryBehaviour.DoNotOverrideKeys:
-                        if (!result.ContainsKey(key))
-                            result.Add(key, value);
-                        break;
-                    case DictionaryBehaviour.ThrowOnDuplicate:
-                        if (!result.ContainsKey(key))
-                            result.Add(key, value);
-                        else
-                            throw new ArgumentException($"The key '{key}' has already been added");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(behaviour), behaviour, null);
-                }
-            }
-
-            return kind == DictionaryKind.ReadOnlyDictionary
-                ? new ReadOnlyDictionary<TKey, TValue>(result)
-                : result;
-        }
-
-
-        [PureMethod]
-        public static LeanCollection<T> ToLeanCollection<T>(this in ParsedSequence<T> parsedSequence)
-        {
-            var enumerator = parsedSequence.GetEnumerator();
-
-            if (!enumerator.MoveNext()) return new LeanCollection<T>();
-            var first = enumerator.Current;
-
-            if (!enumerator.MoveNext()) return new LeanCollection<T>(first);
-            var second = enumerator.Current;
-
-            if (!enumerator.MoveNext()) return new LeanCollection<T>(first, second);
-            var third = enumerator.Current;
-
-            if (!enumerator.MoveNext()) return new LeanCollection<T>(first, second, third);
-
-
-            var initialBuffer = ArrayPool<T>.Shared.Rent(8);
-            try
-            {
-                using var accumulator = new ValueSequenceBuilder<T>(initialBuffer);
-                 
-                accumulator.Append(first);
-                accumulator.Append(second);
-                accumulator.Append(third);
-                accumulator.Append(enumerator.Current); //fourth
-
-                if (enumerator.MoveNext())
-                    accumulator.Append(enumerator.Current);
-                
-                return LeanCollectionFactory.FromArrayChecked(accumulator.AsSpan().ToArray());
-            }
-            finally
-            {
-                ArrayPool<T>.Shared.Return(initialBuffer);
-            }
-        }
+        
 
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
@@ -209,7 +30,8 @@ namespace Nemesis.TextParsers
                 input.Slice(escapeStart).IndexOf(character) >= 0
             ) //is it worth looking for escape sequence ?
             {
-                Span<char> initialBuffer = stackalloc char[Math.Min(length, 256)];
+                var bufferLength = Math.Min(Math.Max(length, 16), 256);
+                Span<char> initialBuffer = stackalloc char[bufferLength];
                 using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
 
@@ -241,6 +63,9 @@ namespace Nemesis.TextParsers
             else return input;
         }
 
+        /* TODO add tests that cover these cases i.e. escaping sequence in the end
+         private ParserInput ParseElement(in ReadOnlySpan<char> input)*/
+
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character1, char character2)
         {
@@ -252,7 +77,8 @@ namespace Nemesis.TextParsers
                 input.Slice(escapeStart).IndexOfAny(character1, character2) >= 0
             ) //is it worth looking for escape sequence ?
             {
-                Span<char> initialBuffer = stackalloc char[Math.Min(length, 256)];
+                var bufferLength = Math.Min(Math.Max(length, 16), 256);
+                Span<char> initialBuffer = stackalloc char[bufferLength];
                 using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
 
@@ -284,28 +110,52 @@ namespace Nemesis.TextParsers
             }
             else return input;
         }
-
-        internal static TDest ConvertElement<TDest>(object element)
+        
+        
+        [PureMethod]
+        public static ReadOnlySpan<char> UnParenthesize(this in ReadOnlySpan<char> span, char? startChar, char? endChar, string typeName = null)
         {
-            try
-            {
-                return element switch
-                {
-                    TDest dest => dest,
-                    null => default,
-                    IFormattable formattable when typeof(TDest) == typeof(string) =>
-                        (TDest) (object) formattable.ToString(null, CultureInfo.InvariantCulture),
-                    _ => (TDest) TypeMeta.GetDefault(typeof(TDest))
-                };
-            }
-            catch (Exception) { return default; }
-        }
-    }
+            if (startChar is null && endChar is null)
+                return span;
 
-    public enum DictionaryBehaviour : byte
-    {
-        OverrideKeys,
-        DoNotOverrideKeys,
-        ThrowOnDuplicate
+            int minLength = (startChar.HasValue ? 1 : 0) + (endChar.HasValue ? 1 : 0);
+            if (span.Length < minLength) throw GetStateException(span.ToString(), startChar, endChar, typeName);
+
+            int start = 0;
+
+            if (startChar.HasValue)
+            {
+                for (; start < span.Length; start++)
+                    if (!char.IsWhiteSpace(span[start]))
+                        break;
+
+                bool startsWithChar = start < span.Length && span[start] == startChar.Value;
+                if (!startsWithChar) throw GetStateException(span.ToString(), startChar, endChar, typeName);
+
+                ++start;
+            }
+
+
+            int end = span.Length - 1;
+
+            if (endChar.HasValue)
+            {
+                for (; end > start; end--)
+                    if (!char.IsWhiteSpace(span[end]))
+                        break;
+
+                bool endsWithChar = end > 0 && span[end] == endChar.Value;
+                if (!endsWithChar) throw GetStateException(span.ToString(), startChar, endChar, typeName);
+
+                --end;
+            }
+
+            return span.Slice(start, end - start + 1);
+
+            static Exception GetStateException(string text, char? start, char? end, string typeName) => new ArgumentException(
+                $@"{typeName ?? "Object" } representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
+These requirements were not met in:
+'{text ?? "<NULL>"}'");
+        }
     }
 }

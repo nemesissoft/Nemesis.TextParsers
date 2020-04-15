@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
+using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -8,7 +11,12 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class ArrayTransformerCreator : ICanCreateTransformer
     {
         private readonly ITransformerStore _transformerStore;
-        public ArrayTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly ArraySettings _settings;
+        public ArrayTransformerCreator(ITransformerStore transformerStore, ArraySettings settings)
+        {
+            _transformerStore = transformerStore;
+            _settings = settings;
+        }
 
 
         public ITransformer<TArray> CreateTransformer<TArray>()
@@ -16,23 +24,24 @@ namespace Nemesis.TextParsers.Parsers
             if (!TryGetElements(typeof(TArray), out var elementType) || elementType == null)
                 throw new NotSupportedException($"Type {typeof(TArray).GetFriendlyName()} is not supported by {GetType().Name}");
 
-            var transType = typeof(InnerArrayTransformer<>).MakeGenericType(elementType);
 
-            return (ITransformer<TArray>)Activator.CreateInstance(transType);
+            var createMethod = Method.OfExpression<
+                Func<ArrayTransformerCreator, ITransformer<int[]>>
+            >(@this => @this.CreateArrayTransformer<int>()
+            ).GetGenericMethodDefinition();
+
+            createMethod = createMethod.MakeGenericMethod(elementType);
+
+            return (ITransformer<TArray>)createMethod.Invoke(this, null);
         }
 
-        private sealed class InnerArrayTransformer<TElement> : TransformerBase<TElement[]>
-        {
-            protected override TElement[] ParseCore(in ReadOnlySpan<char> input) =>
-                    SpanCollectionSerializer.DefaultInstance.ParseArray<TElement>(input);
+        private ITransformer<TElement[]> CreateArrayTransformer<TElement>() =>
+            new ArrayTransformer<TElement>(
+                _transformerStore.GetTransformer<TElement>(),
+                _settings
+        );
 
-            public override string Format(TElement[] array) =>
-                SpanCollectionSerializer.DefaultInstance.FormatCollection(array);
 
-            public override TElement[] GetEmpty() => Array.Empty<TElement>();
-
-            public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}[]";
-        }
 
         public bool CanHandle(Type type) =>
             TryGetElements(type, out var elementType) &&
@@ -56,5 +65,39 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 60;
+    }
+
+    public sealed class ArrayTransformer<TElement> : EnumerableTransformerBase<TElement, TElement[]>
+    {
+        public ArrayTransformer(ITransformer<TElement> elementTransformer, ArraySettings settings)
+            : base(elementTransformer, settings) { }
+
+        protected override TElement[] ParseCore(in ReadOnlySpan<char> input)
+        {
+            if (input.IsEmpty)
+                return Array.Empty<TElement>();
+
+            var stream = ParseStream(input);
+
+            int capacity = Settings.GetCapacity(input);
+
+            var initialBuffer = ArrayPool<TElement>.Shared.Rent(capacity);
+            var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
+            try
+            {
+                foreach (var part in stream)
+                    accumulator.Append(part.ParseWith(ElementTransformer));
+
+                return accumulator.AsSpan().ToArray();
+            }
+            finally
+            {
+                accumulator.Dispose();
+                ArrayPool<TElement>.Shared.Return(initialBuffer);
+            }
+        }
+
+
+        public override TElement[] GetEmpty() => Array.Empty<TElement>();
     }
 }

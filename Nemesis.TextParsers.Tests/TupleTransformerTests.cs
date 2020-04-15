@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Nemesis.Essentials.Runtime;
-using Nemesis.TextParsers.Parsers;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
@@ -15,16 +14,15 @@ namespace Nemesis.TextParsers.Tests
         {
             Type tupleType = typeof(TTuple);
 
-            var store = TextTransformer.Default;
+            bool isValueTuple = 
+                tupleType.IsValueType && tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition && 
+                tupleType.Namespace == "System" && tupleType.Name.StartsWith("ValueTuple`") ;
+            bool isKvp = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
+                         tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
 
-            var creator = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
-                          tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
-                ? new KeyValuePairTransformerCreator(store)
-                : (ICanCreateTransformer)new ValueTupleTransformerCreator(store);
-
-            Assert.That(creator.CanHandle(tupleType), $"Type is not supported: {tupleType}");
-
-            var transformer = creator.CreateTransformer<TTuple>();
+            Assert.IsTrue(isValueTuple || isKvp, "isValueTuple || isKvp");
+            
+            var transformer = Sut.GetTransformer<TTuple>();
 
             return transformer;
         }
@@ -157,7 +155,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
             (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException), @"Input string was not in a correct format"),
 
-            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"Key=Value pair of arity=2 separated by '=' cannot have more than 2 elements: 'TooMuch'"),
+            (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"Key-value pair of arity=2 separated by '=' cannot have more than 2 elements: 'TooMuch'"),
             (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"2nd element was not found after '15'"),
             (typeof(KeyValuePair<float?, string>), @"∅", typeof(ArgumentException), @"2nd element was not found after '∅'"),
             (typeof(KeyValuePair<string, float?>), @" ", typeof(ArgumentException), @"2nd element was not found after ' '"),
@@ -166,7 +164,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
-#if NETCOREAPP3_0 
+#if NETCOREAPP3_0
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String ' ' was not recognized as a valid TimeSpan."),
 #else
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
@@ -184,7 +182,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof(ValueTuple<TimeSpan>), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             
-#if NETCOREAPP3_0 
+#if NETCOREAPP3_0
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),
             (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),      
 #else
@@ -227,7 +225,7 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (Exception actual)
             {
-                TestHelper.AssertException(actual, expectedException, expectedErrorMessagePart);
+                AssertException(actual, expectedException, expectedErrorMessagePart);
             }
             if (passed)
                 Assert.Fail($"'{input}' should not be parseable to:{Environment.NewLine}\t{parsed}");

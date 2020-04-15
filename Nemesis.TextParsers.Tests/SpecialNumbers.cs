@@ -30,7 +30,7 @@ namespace Nemesis.TextParsers.Tests
 
         [UsedImplicitly]
         public static LowPrecisionFloat FromText(ReadOnlySpan<char> text) => new LowPrecisionFloat(
-            SingleParser.Instance.Parse(text)
+            SingleTransformer.Instance.Parse(text)
                 );
 
         private static bool AlmostEqualUlps(float a, float b, uint maxUlpsDiff = 100 * 1024)
@@ -85,7 +85,7 @@ namespace Nemesis.TextParsers.Tests
         public static CarrotAndOnionFactors FromText(ReadOnlySpan<char> text)
         {
             var stream = text.Split(';').GetEnumerator();
-            var floatParser = TextTransformer.Default.GetTransformer<float>();
+            var floatParser = Sut.GetTransformer<float>();
 
             if (!stream.MoveNext()) throw new FormatException($"At least one element is expected to parse {nameof(CarrotAndOnionFactors)}");
             var carrot = floatParser.Parse(stream.Current);
@@ -126,8 +126,6 @@ namespace Nemesis.TextParsers.Tests
     [TestFixture]
     public class SpecialNumbersTests
     {
-        private readonly ITransformer<LowPrecisionFloat> _sut = TextTransformer.Default.GetTransformer<LowPrecisionFloat>();
-
         private static IEnumerable<(string, float)> ValidValuesForFactory()
             => new[]
             {
@@ -139,7 +137,8 @@ namespace Nemesis.TextParsers.Tests
         [TestCaseSource(nameof(ValidValuesForFactory))]
         public void LowPrecisionFloat_FromText_ShouldParse((string inputText, float expected) data)
         {
-            LowPrecisionFloat actual = _sut.Parse(data.inputText.AsSpan());
+            LowPrecisionFloat actual = Sut.GetTransformer<LowPrecisionFloat>()
+                .Parse(data.inputText.AsSpan());
 
             Assert.That(actual.Value, Is.EqualTo(data.expected).Within(3).Ulps);
             Assert.That(actual, Is.EqualTo(new LowPrecisionFloat(data.expected)));
@@ -148,7 +147,8 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void LowPrecisionFloat_ParseList()
         {
-            var actual = SpanCollectionSerializer.DefaultInstance.ParseCollection<LowPrecisionFloat>("3.14|1|2|3.0005");
+            var actual = Sut.GetTransformer<List<LowPrecisionFloat>>()
+                .Parse("3.14|1|2|3.0005");
 
             Assert.That(actual, Has.Count.EqualTo(4));
             Assert.That(actual.Select(lpf => lpf.Value), Is.EqualTo(new[] { 3.14f, 1f, 2f, 3.0005f }));
@@ -164,10 +164,13 @@ namespace Nemesis.TextParsers.Tests
                 new CarrotAndOnionFactors(10.1f, new[]{20.1f, 30.1f, 40.1f}),
             };
 
-            var formatted = SpanCollectionSerializer.DefaultInstance.FormatCollection(list);
+            var trans = Sut.GetTransformer<List<CarrotAndOnionFactors>>();
+
+            var formatted = trans.Format(list);
             Assert.That(formatted, Is.EqualTo("1.10000002;2.0999999,3.0999999,4.0999999|10.1000004;20.1000004,30.1000004,40.0999985"));
 
-            var parsed = SpanCollectionSerializer.DefaultInstance.ParseCollection<CarrotAndOnionFactors>(formatted);
+            var parsed = Sut.GetTransformer<List<CarrotAndOnionFactors>>()
+                .Parse(formatted);
 
             Assert.That(parsed, Has.Count.EqualTo(2));
             Assert.That(parsed, Is.EqualTo(list));

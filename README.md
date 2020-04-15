@@ -1,4 +1,4 @@
-# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
+﻿# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
 
 [![Build status - master](https://img.shields.io/appveyor/ci/Nemesis/nemesis-textparsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master)
 [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message&style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests)
@@ -120,9 +120,12 @@ But imagine a service application like exchange trading suite that has to perfor
     * access to every implemented parser/formatter
 8. basic LINQ support 
 ```csharp
-var avg = SpanCollectionSerializer.DefaultInstance.ParseStream<double>("1|2|3".AsSpan()).Average();
+var avg = "1|2|3".AsSpan()
+    .Tokenize('|', '\\', true)
+    .Parse('\\', '∅', '|')
+    .Average(DoubleTransformer.Instance);
 ```
-9. basic support for GUI editors for compound types like collections/dictionaries: [CollectionMeta](Nemesis.TextParsers/CollectionMeta.cs), [DictionaryMeta](Nemesis.TextParsers/DictionaryMeta.cs)
+9. basic support for GUI editors for compound types like collections/dictionaries: [CollectionMeta](Nemesis.TextParsers/Utils/CollectionMeta.cs), [DictionaryMeta](Nemesis.TextParsers/Utils/DictionaryMeta.cs)
 10. lean/frugal implementation of StringBuilder - ValueSequenceBuilder
 ```csharp
 Span<char> initialBuffer = stackalloc char[32];

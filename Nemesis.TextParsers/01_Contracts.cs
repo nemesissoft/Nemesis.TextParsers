@@ -71,10 +71,7 @@ namespace Nemesis.TextParsers
                 "" => GetEmpty(),
                 _ => ParseText(text)
             };
-
-
-
-
+        
 
 
 
@@ -84,9 +81,7 @@ namespace Nemesis.TextParsers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string FormatObject(object element) => Format((TElement)element);
 
-
-
-
+        
 
 
         public virtual TElement GetEmpty() => default;
@@ -96,6 +91,8 @@ namespace Nemesis.TextParsers
 
         public virtual TElement GetNull() => default;
         public object GetNullObject() => GetNull();
+
+        public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}";
     }
 
     public interface ICanCreateTransformer

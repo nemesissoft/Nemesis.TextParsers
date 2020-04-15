@@ -57,10 +57,10 @@ namespace Nemesis.TextParsers.Tests
             var enumerator = text.Split(';').GetEnumerator();
 
             if (!enumerator.MoveNext()) return default;
-            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
 
             if (!enumerator.MoveNext()) return default;
-            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
 
             return new Point(x, y);
         }
@@ -117,16 +117,16 @@ namespace Nemesis.TextParsers.Tests
             var enumerator = text.Split(';').GetEnumerator();
 
             if (!enumerator.MoveNext()) return default;
-            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
             
             if (!enumerator.MoveNext()) return default;
-            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
 
             if (!enumerator.MoveNext()) return default;
-            int width = Int32Parser.Instance.Parse(enumerator.Current);
+            int width = Int32Transformer.Instance.Parse(enumerator.Current);
             
             if (!enumerator.MoveNext()) return default;
-            int height = Int32Parser.Instance.Parse(enumerator.Current);
+            int height = Int32Transformer.Instance.Parse(enumerator.Current);
 
 
             return new Rect(x, y, width, height);
@@ -215,19 +215,21 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static ThreeElements<TElement> FromText(ReadOnlySpan<char> text)
         {
+            var trans = Sut.GetTransformer<TElement>();
+
             var tokens = text.Tokenize(',', '\\', true);
-            var parsed = tokens.Parse<TElement>('\\', '∅', ',');
+            var parsed = tokens.PreParse('\\', '∅', ',');
 
             var enumerator = parsed.GetEnumerator();
             {
                 if (!enumerator.MoveNext()) throw GetException(0);
-                var first = enumerator.Current;
+                var first = enumerator.Current.ParseWith(trans);
 
                 if (!enumerator.MoveNext()) throw GetException(1);
-                var second = enumerator.Current;
+                var second = enumerator.Current.ParseWith(trans);
 
                 if (!enumerator.MoveNext()) throw GetException(2);
-                var third = enumerator.Current;
+                var third = enumerator.Current.ParseWith(trans);
 
                 //end of sequence
                 if (enumerator.MoveNext()) throw GetException(4);
@@ -247,7 +249,7 @@ namespace Nemesis.TextParsers.Tests
         private const char ESCAPING_SEQUENCE_START = '\\';
         private const char NULL_ELEMENT_MARKER = '∅';
 
-        private static readonly IFormatter<TElement> _formatter = TextTransformer.Default.GetTransformer<TElement>();
+        private static readonly IFormatter<TElement> _formatter = Sut.GetTransformer<TElement>();
 
         public TElement From { get; }
         public TElement To { get; }
@@ -292,8 +294,10 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static Range<TElement> FromText(ReadOnlySpan<char> text)
         {
+            var trans = Sut.GetTransformer<TElement>();
+
             var tokens = text.Tokenize(SEPARATOR, ESCAPING_SEQUENCE_START, true);
-            var parsed = tokens.Parse<TElement>(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
+            var parsed = tokens.PreParse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
 
             var enumerator = parsed.GetEnumerator();
             {
@@ -305,7 +309,7 @@ namespace Nemesis.TextParsers.Tests
 
                 if (enumerator.MoveNext()) throw GetException(3);//end of sequence
 
-                return new Range<TElement>(from, to);
+                return new Range<TElement>(from.ParseWith(trans), to.ParseWith(trans));
             }
 
             static Exception GetException(int numberOfElements) => new ArgumentException(
@@ -351,8 +355,10 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         public static PairWithFactory<TElement> FromText(ReadOnlySpan<char> text)
         {
+            var trans = Sut.GetTransformer<TElement>();
+
             var tokens = text.Tokenize(',', '\\', true);
-            var parsed = tokens.Parse<TElement>('\\', '∅', ',');
+            var parsed = tokens.PreParse('\\', '∅', ',');
 
             var enumerator = parsed.GetEnumerator();
             {
@@ -365,7 +371,7 @@ namespace Nemesis.TextParsers.Tests
                 //end of sequence
                 if (enumerator.MoveNext()) throw GetException(3);
 
-                return new PairWithFactory<TElement>(left, right);
+                return new PairWithFactory<TElement>(left.ParseWith(trans), right.ParseWith(trans));
             }
 
             static Exception GetException(int numberOfElements) => new ArgumentException(
@@ -492,10 +498,10 @@ namespace Nemesis.TextParsers.Tests
             var enumerator = text.Split(';').GetEnumerator();
 
             if (!enumerator.MoveNext()) return default;
-            int x = Int32Parser.Instance.Parse(enumerator.Current);
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
 
             if (!enumerator.MoveNext()) return default;
-            int y = Int32Parser.Instance.Parse(enumerator.Current);
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
             
             return new PointWithConverter(x, y);
         }

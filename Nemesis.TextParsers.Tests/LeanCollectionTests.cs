@@ -98,17 +98,6 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(collMore.ToList(), Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }));
         }
 
-        [TestCase(null, "")]
-        [TestCase(new float[0], "")]
-        [TestCase(new[] { 15.5f }, "15.5")]
-        [TestCase(new[] { 15.5f, 25.6f }, "15.5|25.6")]
-        [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, "15.5|25.6|35.99|50|999")]
-        public void ToStringTest(float[] elements, string expectedText)
-        {
-            var coll = LeanCollectionFactory.FromArray(elements);
-            Assert.That(coll.ToString(), Is.EqualTo(expectedText));
-        }
-
         [TestCase(null)]
         [TestCase(new float[0])]
         [TestCase(new[] { 15.5f })]

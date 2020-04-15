@@ -47,7 +47,7 @@ namespace Benchmarks
             //Enumerable.Range(0, 130).Select(i => i.ToString()).ToArray();
             Enumerable.Range(0, 130).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
 
-        private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _parser = new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
+        private static readonly ITransformer<DaysOfWeek> _parser = TextTransformer.Default.GetTransformer<DaysOfWeek>();
 
         static EnumParserBench() => _parser.Parse("10".AsSpan());
 
@@ -333,8 +333,8 @@ namespace Benchmarks
 
         private static readonly (int Start, int Length)[] _sliceData;
         private static readonly string _toParse;
-
-        private static readonly EnumTransformer<DaysOfWeek, byte, ByteNumber> _parser = new EnumTransformer<DaysOfWeek, byte, ByteNumber>(new ByteNumber());
+        
+        private static readonly ITransformer<DaysOfWeek> _parser = TextTransformer.Default.GetTransformer<DaysOfWeek>();
 
         static EnumParserBenchEdn()
         {

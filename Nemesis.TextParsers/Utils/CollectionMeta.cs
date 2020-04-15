@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
@@ -86,7 +87,7 @@ namespace Nemesis.TextParsers.Utils
 
                 for (int i = 0; i < count; i++)
                     // ReSharper disable once PossibleNullReferenceException
-                    result[i] = SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]);
+                    result[i] = ConvertElement<TDestElem>(sourceElements[i]);
 
                 return result;
             }
@@ -99,7 +100,7 @@ namespace Nemesis.TextParsers.Utils
 
                         for (int i = 0; i < count; i++)
                             // ReSharper disable once PossibleNullReferenceException
-                            result.Add(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+                            result.Add(ConvertElement<TDestElem>(sourceElements[i]));
 
                         return Kind == CollectionKind.List ?
                             (IReadOnlyCollection<TDestElem>)result :
@@ -120,7 +121,7 @@ namespace Nemesis.TextParsers.Utils
 
                         for (int i = 0; i < count; i++)
                             // ReSharper disable once PossibleNullReferenceException
-                            result.Add(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+                            result.Add(ConvertElement<TDestElem>(sourceElements[i]));
 
                         return (IReadOnlyCollection<TDestElem>)result;
                     }
@@ -130,7 +131,7 @@ namespace Nemesis.TextParsers.Utils
 
                         for (int i = 0; i < count; i++)
                             // ReSharper disable once PossibleNullReferenceException
-                            result.AddLast(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+                            result.AddLast(ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
                     }
@@ -140,7 +141,7 @@ namespace Nemesis.TextParsers.Utils
 
                         for (int i = 0; i < count; i++)
                             // ReSharper disable once PossibleNullReferenceException
-                            result.Push(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+                            result.Push(ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
                     }
@@ -150,7 +151,7 @@ namespace Nemesis.TextParsers.Utils
 
                         for (int i = 0; i < count; i++)
                             // ReSharper disable once PossibleNullReferenceException
-                            result.Enqueue(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+                            result.Enqueue(ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
                     }
@@ -160,13 +161,29 @@ namespace Nemesis.TextParsers.Utils
 
                         for (int i = 0; i < count; i++)
                             // ReSharper disable once PossibleNullReferenceException
-                            result.Add(SpanParserHelper.ConvertElement<TDestElem>(sourceElements[i]));
+                            result.Add(ConvertElement<TDestElem>(sourceElements[i]));
 
                         return result;
                     }
                 default:
                     throw new NotSupportedException($@"{nameof(Kind)} = '{Kind}' is not supported");
             }
+        }
+
+        private static TDest ConvertElement<TDest>(object element)
+        {
+            try
+            {
+                return element switch
+                {
+                    TDest dest => dest,
+                    null => default,
+                    IFormattable formattable when typeof(TDest) == typeof(string) =>
+                    (TDest)(object)formattable.ToString(null, CultureInfo.InvariantCulture),
+                    _ => (TDest)TypeMeta.GetDefault(typeof(TDest))
+                };
+            }
+            catch (Exception) { return default; }
         }
     }
 

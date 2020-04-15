@@ -86,7 +86,7 @@ namespace Nemesis.TextParsers.Parsers
     }
 
     [UsedImplicitly]
-    public sealed class StringParser : SimpleTransformer<string>
+    public sealed class StringTransformer : SimpleTransformer<string>
     {
         protected override string ParseCore(in ReadOnlySpan<char> input) => input.ToString();
 
@@ -94,15 +94,15 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string GetEmpty() => "";
 
-        public static readonly ITransformer<string> Instance = new StringParser();
+        public static readonly ITransformer<string> Instance = new StringTransformer();
 
-        private StringParser() { }
+        private StringTransformer() { }
     }
 
     #region Structs
 
     [UsedImplicitly]
-    public sealed class BooleanParser : SimpleTransformer<bool>
+    public sealed class BooleanTransformer : SimpleTransformer<bool>
     {
 #if NETSTANDARD2_0 || NETFRAMEWORK
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -203,13 +203,13 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string Format(bool element) => element ? "True" : "False";
 
-        public static readonly ITransformer<bool> Instance = new BooleanParser();
+        public static readonly ITransformer<bool> Instance = new BooleanTransformer();
 
-        private BooleanParser() { }
+        private BooleanTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class CharParser : SimpleTransformer<char>
+    public sealed class CharTransformer : SimpleTransformer<char>
     {
         protected override char ParseCore(in ReadOnlySpan<char> input) => input.Length switch
         {
@@ -221,9 +221,9 @@ namespace Nemesis.TextParsers.Parsers
         public override string Format(char element) => element == '\0' ? "" : char.ToString(element);
 
 
-        public static readonly ITransformer<char> Instance = new CharParser();
+        public static readonly ITransformer<char> Instance = new CharTransformer();
 
-        private CharParser() { }
+        private CharTransformer() { }
     }
 
     public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer<TElement>
@@ -236,7 +236,7 @@ namespace Nemesis.TextParsers.Parsers
     }
 
     [UsedImplicitly]
-    public sealed class ByteParser : SimpleFormattableTransformer<byte>
+    public sealed class ByteTransformer : SimpleFormattableTransformer<byte>
     {
         protected override byte ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -245,13 +245,13 @@ namespace Nemesis.TextParsers.Parsers
             byte.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<byte> Instance = new ByteParser();
+        public static readonly ITransformer<byte> Instance = new ByteTransformer();
 
-        private ByteParser() { }
+        private ByteTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class SByteParser : SimpleFormattableTransformer<sbyte>
+    public sealed class SByteTransformer : SimpleFormattableTransformer<sbyte>
     {
         protected override sbyte ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -260,13 +260,13 @@ namespace Nemesis.TextParsers.Parsers
             sbyte.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<sbyte> Instance = new SByteParser();
+        public static readonly ITransformer<sbyte> Instance = new SByteTransformer();
 
-        private SByteParser() { }
+        private SByteTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class Int16Parser : SimpleFormattableTransformer<short>
+    public sealed class Int16Transformer : SimpleFormattableTransformer<short>
     {
         protected override short ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -275,13 +275,13 @@ namespace Nemesis.TextParsers.Parsers
             short.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<short> Instance = new Int16Parser();
+        public static readonly ITransformer<short> Instance = new Int16Transformer();
 
-        private Int16Parser() { }
+        private Int16Transformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class UInt16Parser : SimpleFormattableTransformer<ushort>
+    public sealed class UInt16Transformer : SimpleFormattableTransformer<ushort>
     {
         protected override ushort ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -290,13 +290,13 @@ namespace Nemesis.TextParsers.Parsers
             ushort.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<ushort> Instance = new UInt16Parser();
+        public static readonly ITransformer<ushort> Instance = new UInt16Transformer();
 
-        private UInt16Parser() { }
+        private UInt16Transformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class Int32Parser : SimpleFormattableTransformer<int>
+    public sealed class Int32Transformer : SimpleFormattableTransformer<int>
     {
         protected override int ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -305,12 +305,12 @@ namespace Nemesis.TextParsers.Parsers
             int.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<int> Instance = new Int32Parser();
-        private Int32Parser() { }
+        public static readonly ITransformer<int> Instance = new Int32Transformer();
+        private Int32Transformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class UInt32Parser : SimpleFormattableTransformer<uint>
+    public sealed class UInt32Transformer : SimpleFormattableTransformer<uint>
     {
         protected override uint ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -319,13 +319,13 @@ namespace Nemesis.TextParsers.Parsers
             uint.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<uint> Instance = new UInt32Parser();
+        public static readonly ITransformer<uint> Instance = new UInt32Transformer();
 
-        private UInt32Parser() { }
+        private UInt32Transformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class Int64Parser : SimpleFormattableTransformer<long>
+    public sealed class Int64Transformer : SimpleFormattableTransformer<long>
     {
         protected override long ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -334,13 +334,13 @@ namespace Nemesis.TextParsers.Parsers
             long.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<long> Instance = new Int64Parser();
+        public static readonly ITransformer<long> Instance = new Int64Transformer();
 
-        private Int64Parser() { }
+        private Int64Transformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class UInt64Parser : SimpleFormattableTransformer<ulong>
+    public sealed class UInt64Transformer : SimpleFormattableTransformer<ulong>
     {
         protected override ulong ParseCore(in ReadOnlySpan<char> input) =>
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -349,13 +349,13 @@ namespace Nemesis.TextParsers.Parsers
             ulong.Parse(input, NumberStyles.Integer, Culture.InvCult);
 #endif
 
-        public static readonly ITransformer<ulong> Instance = new UInt64Parser();
+        public static readonly ITransformer<ulong> Instance = new UInt64Transformer();
 
-        private UInt64Parser() { }
+        private UInt64Transformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class SingleParser : SimpleFormattableTransformer<float>
+    public sealed class SingleTransformer : SimpleFormattableTransformer<float>
     {
         protected override float ParseCore(in ReadOnlySpan<char> input) =>
             input.Length switch
@@ -373,13 +373,13 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override string FormatString { get; } = "R";
 
-        public static readonly ITransformer<float> Instance = new SingleParser();
+        public static readonly ITransformer<float> Instance = new SingleTransformer();
 
-        private SingleParser() { }
+        private SingleTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class DoubleParser : SimpleFormattableTransformer<double>
+    public sealed class DoubleTransformer : SimpleFormattableTransformer<double>
     {
         protected override double ParseCore(in ReadOnlySpan<char> input) =>
             input.Length switch
@@ -397,13 +397,13 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override string FormatString { get; } = "R";
 
-        public static readonly ITransformer<double> Instance = new DoubleParser();
+        public static readonly ITransformer<double> Instance = new DoubleTransformer();
 
-        private DoubleParser() { }
+        private DoubleTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class DecimalParser : SimpleFormattableTransformer<decimal>
+    public sealed class DecimalTransformer : SimpleFormattableTransformer<decimal>
     {
         protected override decimal ParseCore(in ReadOnlySpan<char> input) =>
             decimal.Parse(
@@ -414,13 +414,13 @@ namespace Nemesis.TextParsers.Parsers
 #endif
                 , NumberStyles.Number, Culture.InvCult);
 
-        public static readonly ITransformer<decimal> Instance = new DecimalParser();
+        public static readonly ITransformer<decimal> Instance = new DecimalTransformer();
 
-        private DecimalParser() { }
+        private DecimalTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class TimeSpanParser : SimpleFormattableTransformer<TimeSpan>
+    public sealed class TimeSpanTransformer : SimpleFormattableTransformer<TimeSpan>
     {
         protected override TimeSpan ParseCore(in ReadOnlySpan<char> input) =>
             TimeSpan.Parse(
@@ -432,13 +432,13 @@ namespace Nemesis.TextParsers.Parsers
                 , Culture.InvCult);
 
 
-        public static readonly ITransformer<TimeSpan> Instance = new TimeSpanParser();
+        public static readonly ITransformer<TimeSpan> Instance = new TimeSpanTransformer();
 
-        private TimeSpanParser() { }
+        private TimeSpanTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class DateTimeParser : SimpleFormattableTransformer<DateTime>
+    public sealed class DateTimeTransformer : SimpleFormattableTransformer<DateTime>
     {
         protected override DateTime ParseCore(in ReadOnlySpan<char> input) =>
             DateTime.Parse(
@@ -451,13 +451,13 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override string FormatString { get; } = "o";
 
-        public static readonly ITransformer<DateTime> Instance = new DateTimeParser();
+        public static readonly ITransformer<DateTime> Instance = new DateTimeTransformer();
 
-        private DateTimeParser() { }
+        private DateTimeTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class DateTimeOffsetParser : SimpleFormattableTransformer<DateTimeOffset>
+    public sealed class DateTimeOffsetTransformer : SimpleFormattableTransformer<DateTimeOffset>
     {
         protected override DateTimeOffset ParseCore(in ReadOnlySpan<char> input) =>
             DateTimeOffset.Parse(
@@ -470,13 +470,13 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override string FormatString { get; } = "o";
 
-        public static readonly ITransformer<DateTimeOffset> Instance = new DateTimeOffsetParser();
+        public static readonly ITransformer<DateTimeOffset> Instance = new DateTimeOffsetTransformer();
 
-        private DateTimeOffsetParser() { }
+        private DateTimeOffsetTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class GuidParser : SimpleFormattableTransformer<Guid>
+    public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
     {
         protected override Guid ParseCore(in ReadOnlySpan<char> input) => Guid.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -489,13 +489,13 @@ namespace Nemesis.TextParsers.Parsers
         protected override string FormatString { get; } = "D";
 
 
-        public static readonly ITransformer<Guid> Instance = new GuidParser();
+        public static readonly ITransformer<Guid> Instance = new GuidTransformer();
 
-        private GuidParser() { }
+        private GuidTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class BigIntegerParser : SimpleFormattableTransformer<BigInteger>
+    public sealed class BigIntegerTransformer : SimpleFormattableTransformer<BigInteger>
     {
         protected override BigInteger ParseCore(in ReadOnlySpan<char> input) => BigInteger.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -508,13 +508,13 @@ namespace Nemesis.TextParsers.Parsers
         protected override string FormatString { get; } = "R";
 
 
-        public static readonly ITransformer<BigInteger> Instance = new BigIntegerParser();
+        public static readonly ITransformer<BigInteger> Instance = new BigIntegerTransformer();
 
-        private BigIntegerParser() { }
+        private BigIntegerTransformer() { }
     }
 
     [UsedImplicitly]
-    public sealed class ComplexParser : SimpleTransformer<Complex>
+    public sealed class ComplexTransformer : SimpleTransformer<Complex>
     {
         private const string TYPE_NAME = "Complex number";
 
@@ -522,7 +522,7 @@ namespace Nemesis.TextParsers.Parsers
 
         protected override Complex ParseCore(in ReadOnlySpan<char> input)
         {
-            var doubleParser = DoubleParser.Instance;
+            var doubleParser = DoubleTransformer.Instance;
 
             var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
@@ -539,7 +539,7 @@ namespace Nemesis.TextParsers.Parsers
 
         public override string Format(Complex c)
         {
-            var doubleParser = DoubleParser.Instance;
+            var doubleParser = DoubleTransformer.Instance;
             Span<char> initialBuffer = stackalloc char[16];
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
             try
@@ -559,9 +559,9 @@ namespace Nemesis.TextParsers.Parsers
             finally { accumulator.Dispose(); }
         }
 
-        public static readonly ITransformer<Complex> Instance = new ComplexParser();
+        public static readonly ITransformer<Complex> Instance = new ComplexTransformer();
 
-        private ComplexParser() { }
+        private ComplexTransformer() { }
     }
 
     #endregion

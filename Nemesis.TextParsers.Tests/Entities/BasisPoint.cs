@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using Nemesis.TextParsers.Parsers;
-using Nemesis.TextParsers.Tests.Transformable;
 using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.TestHelper;
@@ -15,7 +13,6 @@ namespace Nemesis.TextParsers.Tests.Entities
     /// Represents BasisPoint. 1bs is 1/100th of 1%
     /// </summary>
     [Transformer(typeof(BasisPointTransformer))]
-    [DebuggerDisplay("{" + nameof(BpsValue) + "} bps")]
     public readonly struct BasisPoint : IEquatable<BasisPoint>
     {
         private const double BPS_FACTOR = 10_000d;
@@ -30,16 +27,21 @@ namespace Nemesis.TextParsers.Tests.Entities
 
         #region Equals
         public bool Equals(BasisPoint other) =>
-            Math.Abs(RealValue - other.RealValue) < 1E-08;
+           Math.Round(Math.Abs(BpsValue - other.BpsValue), 2) < 1E-02;//two decimal points of bps
 
         public override bool Equals(object obj) => obj is BasisPoint other && Equals(other);
 
         public override int GetHashCode() => RealValue.GetHashCode();
+
+        public static BasisPoint operator -(BasisPoint left, BasisPoint right)
+            => FromBps(left.BpsValue - right.BpsValue);
+
         #endregion
+
+        public override string ToString() => FormattableString.Invariant($"{BpsValue} bps");
     }
 
-    //TODO
-    [TextConverterSyntax("")]
+    [TextConverterSyntax("Number followed by optional 'bps' letters. BasisPoint - 1bs is 1/100th of 1%")]
     internal sealed class BasisPointTransformer : TransformerBase<BasisPoint>
     {
         protected override BasisPoint ParseCore(in ReadOnlySpan<char> input)
@@ -71,7 +73,7 @@ namespace Nemesis.TextParsers.Tests.Entities
                 text = text.Slice(0, length - 2);
 
 
-            var bps = DoubleParser.Instance.Parse(text);
+            var bps = DoubleTransformer.Instance.Parse(text);
             return BasisPoint.FromBps(bps);
         }
 
@@ -84,34 +86,56 @@ namespace Nemesis.TextParsers.Tests.Entities
     {
         internal static IEnumerable<TCD> CorrectData() => new[]
         {
-            //TODO negative, 0.123456789, 0, 1000, 1000000000 + exploratory tests
-            new TCD(BasisPoint.FromBps(1), "1 bp"),
-            new TCD(BasisPoint.FromBps(2), "2 bps"),
-            new TCD(BasisPoint.FromBps(-1), "-1 bps"),
-            new TCD(BasisPoint.FromBps(100), "100"),
-            //TODO change precision to 6 places
-            //new TCD(BasisPoint.FromBps(Math.PI), "3.141592653589793bpS"),
-            //new TCD(BasisPoint.FromBps(Math.E), "2.718281828459045 bPS"),
-            new TCD(BasisPoint.FromBps(10.15), "10.15 BpS"),
+            new TCD("01", BasisPoint.FromBps(0), null),
+            new TCD("02", BasisPoint.FromBps(0), ""),
+            new TCD("03", BasisPoint.FromBps(0), "0"),
+            new TCD("04", BasisPoint.FromBps(0), "0 bp"),
+            new TCD("05", BasisPoint.FromBps(0.123456789), "0.12 bp"),
+            new TCD("06", BasisPoint.FromBps(1), "1 bp"),
+            new TCD("07", BasisPoint.FromBps(2), "2 bps"),
+            new TCD("08", BasisPoint.FromBps(-1), "-1 bps"),
+            new TCD("09", BasisPoint.FromBps(-123.453), "-123.45 bps"),
+            new TCD("10", BasisPoint.FromBps(100), "100"),
+            new TCD("11", BasisPoint.FromBps(1000), "1000"),
+            new TCD("12", BasisPoint.FromBps(1_000_000_000), "1000000000 BPS"),
+            new TCD("13", BasisPoint.FromBps(Math.PI), "3.14bpS"),
+            new TCD("14", BasisPoint.FromBps(Math.E), "2.72 bPS"),
+            new TCD("15", BasisPoint.FromBps(10.15), "10.15 BpS"),
         };
 
         [TestCaseSource(nameof(CorrectData))]
-        public void ParseAndFormat(BasisPoint instance, string text)
+        public void BasisPoint_ParseAndFormat(string _, BasisPoint instance, string text) 
+            => ParseAndFormat(instance, text);
+
+        [Test]
+        public void PrecisionTests()
         {
-            var sut = TextTransformer.Default.GetTransformer<BasisPoint>();
+            var bps = BasisPoint.FromBps(123.45);
+            Assert.That(
+                bps,
+                Is.EqualTo(BasisPoint.FromBps(123.453))
+            );
 
-            var actualParsed1 = sut.Parse(text);
+            Assert.That(
+                bps,
+                Is.EqualTo(BasisPoint.FromBps(123.4501))
+            );
 
-            string formattedInstance = sut.Format(instance);
-            string formattedActualParsed = sut.Format(actualParsed1);
-            Assert.That(formattedInstance, Is.EqualTo(formattedActualParsed));
 
-            var actualParsed2 = sut.Parse(formattedInstance);
+            var sut = Sut.GetTransformer<BasisPoint>();
 
-            IsMutuallyEquivalent(actualParsed1, instance);
-            IsMutuallyEquivalent(actualParsed2, instance);
-            IsMutuallyEquivalent(actualParsed1, actualParsed2);
+            var bps2 = BasisPoint.FromBps(123.455);
+            var text2 = sut.Format(bps2);
+            var greater = sut.Parse(text2);
+            Assert.That(
+                bps,
+                Is.Not.EqualTo(greater)
+            );
+
+            var diff = greater - bps;
+            var marginBps = BasisPoint.FromBps(0.01);
+
+            Assert.That(diff.BpsValue, Is.LessThan(marginBps.BpsValue));
         }
-
     }
 }

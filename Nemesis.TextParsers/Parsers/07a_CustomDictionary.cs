@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers
 {
@@ -13,8 +14,13 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
     {
         private readonly ITransformerStore _transformerStore;
-        public CustomDictionaryTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+        private readonly DictionarySettings _settings;
 
+        public CustomDictionaryTransformerCreator(ITransformerStore transformerStore, DictionarySettings settings)
+        {
+            _transformerStore = transformerStore;
+            _settings = settings;
+        }
 
 
         public ITransformer<TDictionary> CreateTransformer<TDictionary>()
@@ -22,107 +28,58 @@ namespace Nemesis.TextParsers.Parsers
             var dictType = typeof(TDictionary);
             var supportsDeserializationLogic = typeof(IDeserializationCallback).IsAssignableFrom(dictType);
 
+            const BindingFlags FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
             if (IsCustomDictionary(dictType, out var meta1))
             {
-                var transType = typeof(CustomDictionaryTransformer<,,>).MakeGenericType(meta1.keyType, meta1.valueType, dictType);
-                return (ITransformer<TDictionary>)Activator.CreateInstance(transType, new object[] { supportsDeserializationLogic });
+                var createMethod =
+                    (GetType().GetMethod(nameof(CreateCustomDictionaryTransformer), FLAGS)
+                        ?? throw new MissingMethodException(GetType().Name, nameof(CreateCustomDictionaryTransformer))
+                    ).GetGenericMethodDefinition();
+
+                createMethod = createMethod.MakeGenericMethod(meta1.keyType, meta1.valueType, dictType);
+
+                return (ITransformer<TDictionary>)createMethod.Invoke(this, new object[] { supportsDeserializationLogic });
             }
             else if (IsReadOnlyDictionary(dictType, out var meta2))
             {
-                var transType = typeof(ReadOnlyDictionaryTransformer<,,>).MakeGenericType(meta2.keyType, meta2.valueType, dictType);
-                var getDictConverterMethod =
-                        (GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                            .SingleOrDefault(mi => mi.Name == nameof(GetDictConverter))
-                        ?? throw new MissingMethodException($"Method {nameof(GetDictConverter)} does not exist"))
-                    .MakeGenericMethod(meta2.keyType, meta2.valueType, dictType);
+                var createMethod =
+                    (GetType().GetMethod(nameof(CreateReadOnlyDictionaryTransformer), FLAGS)
+                     ?? throw new MissingMethodException(GetType().Name, nameof(CreateReadOnlyDictionaryTransformer))
+                    ).GetGenericMethodDefinition();
 
-                var funcConverter = getDictConverterMethod.Invoke(null, new object[] { meta2.ctor });
+                createMethod = createMethod.MakeGenericMethod(meta2.keyType, meta2.valueType, dictType);
 
-                return (ITransformer<TDictionary>)Activator.CreateInstance(transType, supportsDeserializationLogic, funcConverter);
+                return (ITransformer<TDictionary>)createMethod.Invoke(this,
+                    new object[] { supportsDeserializationLogic, meta2.ctor });
             }
             else
                 throw new NotSupportedException(
                     "Only concrete types based on IDictionary or IReadOnlyDictionary are supported");
         }
 
-        private static Func<IDictionary<TKey, TValue>, TDict> GetDictConverter<TKey, TValue, TDict>(ConstructorInfo ctorInfo)
+        private ITransformer<TDict> CreateCustomDictionaryTransformer<TKey, TValue, TDict>(bool supportsDeserializationLogic)
+            where TDict : IDictionary<TKey, TValue>, new() =>
+            new CustomDictionaryTransformer<TKey, TValue, TDict>(
+                _transformerStore.GetTransformer<TKey>(),
+                _transformerStore.GetTransformer<TValue>(),
+                _settings,
+                supportsDeserializationLogic
+            );
+
+        private ITransformer<TDict> CreateReadOnlyDictionaryTransformer<TKey, TValue, TDict>
+            (bool supportsDeserializationLogic, ConstructorInfo ctor)
             where TDict : IReadOnlyDictionary<TKey, TValue>
         {
-            Type keyType = typeof(TKey), valueType = typeof(TValue),
-                 iDictType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
+            var dictConversion = ReadOnlyDictionaryTransformer<TKey, TValue, TDict>.GetDictConverter(ctor);
 
-            var param = Expression.Parameter(iDictType, "dict");
-            var ctor = Expression.New(ctorInfo, param);
-
-            var λ = Expression.Lambda<Func<IDictionary<TKey, TValue>, TDict>>(ctor, param);
-            return λ.Compile();
-        }
-
-        private abstract class DictionaryTransformer<TKey, TValue, TDict> : TransformerBase<TDict>
-            where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
-        {
-            private readonly bool _supportsDeserializationLogic;
-            protected DictionaryTransformer(bool supportsDeserializationLogic) => _supportsDeserializationLogic = supportsDeserializationLogic;
-
-
-            protected override TDict ParseCore(in ReadOnlySpan<char> input) 
-            {
-                var stream = SpanCollectionSerializer.DefaultInstance.ParsePairsStream<TKey, TValue>(input, out _);
-                TDict result = GetDictionary(stream);
-
-                if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
-                    callback.OnDeserialization(this);
-
-                return result;
-            }
-
-            protected abstract TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream);
-
-            public override string Format(TDict dict) =>
-                SpanCollectionSerializer.DefaultInstance.FormatDictionary(dict);
-
-            public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
-        }
-
-        private sealed class CustomDictionaryTransformer<TKey, TValue, TDict> : DictionaryTransformer<TKey, TValue, TDict>
-            where TDict : IDictionary<TKey, TValue>, new()
-        {
-            public CustomDictionaryTransformer(bool supportsDeserializationLogic) :
-                base(supportsDeserializationLogic)
-            { }
-
-            protected override TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream)
-            {
-                var result = new TDict();
-
-                foreach (var pair in stream)
-                    result[pair.Key] = pair.Value;
-
-                return result;
-            }
-            
-            public override TDict GetEmpty() => new TDict();
-        }
-
-        private sealed class ReadOnlyDictionaryTransformer<TKey, TValue, TDict> : DictionaryTransformer<TKey, TValue, TDict>
-            where TDict : IReadOnlyDictionary<TKey, TValue>
-        {
-            private readonly Func<IDictionary<TKey, TValue>, TDict> _dictConversion;
-
-            public ReadOnlyDictionaryTransformer(bool supportsDeserializationLogic, Func<IDictionary<TKey, TValue>, TDict> dictConversion) : base(supportsDeserializationLogic) => _dictConversion = dictConversion;
-
-            protected override TDict GetDictionary(in ParsedPairSequence<TKey, TValue> stream)
-            {
-                var innerDict = new Dictionary<TKey, TValue>();
-
-                foreach (var pair in stream)
-                    innerDict[pair.Key] = pair.Value;
-
-                var result = _dictConversion(innerDict);
-                return result;
-            }
-
-            public override TDict GetEmpty() => _dictConversion(new Dictionary<TKey, TValue>());
+            return new ReadOnlyDictionaryTransformer<TKey, TValue, TDict>(
+                _transformerStore.GetTransformer<TKey>(),
+                _transformerStore.GetTransformer<TValue>(),
+                _settings,
+                supportsDeserializationLogic,
+                dictConversion
+            );
         }
 
         private static bool IsCustomDictionary(Type dictType, out (Type keyType, Type valueType) meta)
@@ -194,5 +151,86 @@ namespace Nemesis.TextParsers.Parsers
         ;
 
         public sbyte Priority => 51;
+    }
+
+
+    public abstract class CustomDictionaryTransformerBase<TKey, TValue, TDict> : DictionaryTransformerBase<TKey, TValue, TDict>
+        where TDict : IEnumerable<KeyValuePair<TKey, TValue>>
+    {
+        private readonly bool _supportsDeserializationLogic;
+
+        protected CustomDictionaryTransformerBase(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, bool supportsDeserializationLogic)
+            : base(keyTransformer, valueTransformer, settings)
+            => _supportsDeserializationLogic = supportsDeserializationLogic;
+
+
+        protected override TDict ParseCore(in ReadOnlySpan<char> input)
+        {
+            var stream = ParsePairsStream(input);
+            int capacity = Settings.GetCapacity(input);
+
+            TDict result = GetDictionary(stream, capacity);
+
+            if (_supportsDeserializationLogic && result is IDeserializationCallback callback)
+                callback.OnDeserialization(this);
+
+            return result;
+        }
+
+        protected abstract TDict GetDictionary(in ParsingPairSequence stream, int capacity);
+
+        public sealed override string ToString() => $"Transform custom {typeof(TDict).GetFriendlyName()} with ({typeof(TKey).GetFriendlyName()}, {typeof(TValue).GetFriendlyName()}) elements";
+    }
+
+    public sealed class CustomDictionaryTransformer<TKey, TValue, TDict> : CustomDictionaryTransformerBase<TKey, TValue, TDict>
+        where TDict : IDictionary<TKey, TValue>, new()
+    {
+        public CustomDictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, bool supportsDeserializationLogic)
+            : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic) { }
+
+        protected override TDict GetDictionary(in ParsingPairSequence stream, int capacity)
+        {
+            var result = new TDict();
+            PopulateDictionary(stream, result);
+            return result;
+        }
+
+        public override TDict GetEmpty() => new TDict();
+    }
+
+    public sealed class ReadOnlyDictionaryTransformer<TKey, TValue, TDict> : CustomDictionaryTransformerBase<TKey, TValue, TDict>
+        where TDict : IReadOnlyDictionary<TKey, TValue>
+    {
+        private readonly Func<IDictionary<TKey, TValue>, TDict> _dictConversion;
+
+        public ReadOnlyDictionaryTransformer(ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer, DictionarySettings settings, bool supportsDeserializationLogic, Func<IDictionary<TKey, TValue>, TDict> dictConversion)
+            : base(keyTransformer, valueTransformer, settings, supportsDeserializationLogic)
+            => _dictConversion = dictConversion;
+
+        internal static Func<IDictionary<TKey, TValue>, TDict> GetDictConverter(ConstructorInfo ctorInfo)
+        {
+            Type keyType = typeof(TKey), valueType = typeof(TValue),
+                iDictType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
+
+            var param = Expression.Parameter(iDictType, "dict");
+            var ctor = Expression.New(ctorInfo, param);
+
+            var λ = Expression.Lambda<Func<IDictionary<TKey, TValue>, TDict>>(ctor, param);
+            return λ.Compile();
+        }
+
+        protected override TDict GetDictionary(in ParsingPairSequence stream, int capacity)
+        {
+            var innerDict = new Dictionary<TKey, TValue>(capacity);
+
+            PopulateDictionary(stream, innerDict);
+
+            var result = _dictConversion(innerDict);
+            return result;
+        }
+
+
+
+        public override TDict GetEmpty() => _dictConversion(new Dictionary<TKey, TValue>());
     }
 }

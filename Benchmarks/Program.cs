@@ -11,13 +11,12 @@ namespace Benchmarks
         private static void Main(string[] args)
         {
 #if DEBUG
-            var d = new Deconstructables { N = 10 };
+            var d = new DeconstructablesBench() { N = 10 };
             d.GlobalSetup();
             d.Standard();
             d.Dedicated();
             d.Convention();
             d.Deconstructable();
-
 #endif
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
