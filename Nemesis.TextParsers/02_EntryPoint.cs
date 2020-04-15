@@ -17,7 +17,6 @@ namespace Nemesis.TextParsers
 
         bool IsSupportedForTransformation(Type type);
 
-        //TODO can that be done better ?
         SettingsStore SettingsStore { get; }
     }
 
