@@ -74,9 +74,9 @@ namespace Nemesis.TextParsers.Tests
             return Expression.Lambda<TDelegate>(call, parameters).Compile();
         }
 
-        public static void ParseAndFormat<T>(T instance, string text)
+        public static void ParseAndFormat<T>(T instance, string text, ITransformerStore store = null)
         {
-            var sut = Sut.GetTransformer<T>();
+            var sut = (store ?? Sut.DefaultStore).GetTransformer<T>();
 
             var actualParsed1 = sut.Parse(text);
 
@@ -90,11 +90,12 @@ namespace Nemesis.TextParsers.Tests
             IsMutuallyEquivalent(actualParsed2, instance);
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
         }
-        
-        public static void ParseAndFormatObject([NotNull] object instance, string text)
+
+        public static void ParseAndFormatObject([NotNull] object instance, string text, ITransformerStore store = null)
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
-            var sut = Sut.GetTransformer(instance.GetType());
+
+            var sut = (store ?? Sut.DefaultStore).GetTransformer(instance.GetType());
 
             var actualParsed1 = sut.ParseObject(text);
 
@@ -166,7 +167,7 @@ namespace Nemesis.TextParsers.Tests
                 chars[i] = (char)_rand.Next(start, end + 1);
             return new string(chars);
         }
-        
+
         public T NextFrom<T>(Span<T> span) => span[Next(span.Length)];
 
         public double NextFloatingNumber(int magnitude = 1000, bool generateSpecialValues = true)

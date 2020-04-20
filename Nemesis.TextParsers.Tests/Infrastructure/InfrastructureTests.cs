@@ -51,7 +51,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         [TestCaseSource(nameof(IsSupportedForTransformation_Data))]
         public void IsSupportedForTransformation(Type type, bool expected) =>
             Assert.That(
-                TextTransformer.Default.IsSupportedForTransformation(type),
+                Sut.DefaultStore.IsSupportedForTransformation(type),
                 Is.EqualTo(expected)
             );
 
@@ -142,7 +142,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
                 .Select(td => td.type)
                 .Select(type => (
                     type,
-                    actual: TextTransformer.Default.IsSupportedForTransformation(type)
+                    actual: Sut.DefaultStore.IsSupportedForTransformation(type)
                 )).ToList();
 
 
@@ -238,12 +238,12 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
         {
             IsMutuallyEquivalent(
-                TextTransformer.Default.GetTransformer(type).GetEmptyObject(),
+                Sut.GetTransformer(type).GetEmptyObject(),
                 expectedEmpty, "empty value should be as expected");
 
 
             IsMutuallyEquivalent(
-                TextTransformer.Default.GetTransformer(type).GetNullObject(),
+                Sut.GetTransformer(type).GetNullObject(),
                 expectedNull, "null value should be as expected");
         }
 
@@ -302,7 +302,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
 
         private static void EmptyNullParsingTest_Helper<T>(string input, object expectedOutput)
         {
-            var sut = TextTransformer.Default.GetTransformer<T>();
+            var sut = Sut.GetTransformer<T>();
 
             var parsed1 = sut.Parse(input);
 

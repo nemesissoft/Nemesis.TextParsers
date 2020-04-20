@@ -6,7 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using Nemesis.TextParsers.Settings;
 using NUnit.Framework;
+using TCD = NUnit.Framework.TestCaseData;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests.Collections
@@ -15,7 +17,7 @@ namespace Nemesis.TextParsers.Tests.Collections
     public class CollectionsTests
     {
         private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
-        private static readonly ITransformerStore _store = TextTransformer.Default;
+        private static readonly ITransformerStore _store = Sut.DefaultStore;
 
         const string NULL_PLACEHOLDER = "维基百科";
         private static string NormalizeNullMarkers(string text) =>
@@ -541,7 +543,7 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             var expectedList = expectedOutput?.Cast<TElement>().ToList();
 
-            var trans = TextTransformer.Default.GetTransformer<IReadOnlyCollection<TElement>>();
+            var trans = Sut.GetTransformer<IReadOnlyCollection<TElement>>();
 
             string textExpected = trans.Format(expectedList);
 
@@ -584,7 +586,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                         Enumerable.Range(10, 6).Select(i => i % 2 == 0 ? (float?)null : 10 * i).ToList()
                 );
 
-            var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<List<float?>>>();
+            var transformer = Sut.GetTransformer<IAggressionBased<List<float?>>>();
 
             string text = transformer.Format( input);
             Assert.That(text, Is.EqualTo(@"10|\∅|30#∅#\∅|110|\∅|130|\∅|150"));
@@ -610,11 +612,73 @@ namespace Nemesis.TextParsers.Tests.Collections
             Assert.That(parsed2, Is.EqualTo(new int?[] { 300, null, null, 400 }));
 
 
-            var trans = TextTransformer.Default.GetTransformer<IAggressionBased<int?[]>>();
+            var trans = Sut.GetTransformer<IAggressionBased<int?[]>>();
             var parsed3 = trans.Parse(@"3000|\∅|\∅|4000");
             Assert.That(
                 parsed3.GetValues().ToList().SingleOrDefault(),
                 Is.EqualTo(new int?[] { 3000, null, null, 4000 }));
+        }
+
+
+        private static IEnumerable<TCD> InnerCollectionsData() => new[]
+        {
+            new TCD(new List<string[]>
+            {
+                new[] {"A", "B", "C"},
+                new[] {"D", "E", "F"},
+            }, @"[[A\|B\|C]|[D\|E\|F]]"),
+            new TCD(new List<string[]>
+            {
+                new string[0],
+                new string[0],
+            }, @"[|]"),
+            new TCD(new List<string[]>(), @""),
+            
+
+            new TCD(new[]
+            {
+                new List<string> {"A", "B", "C"},
+                new List<string> {"D", "E", "F"},
+            }, @"[[A\|B\|C]|[D\|E\|F]]"),
+            new TCD(new[]
+            {
+                new List<string>(),
+                new List<string>(),
+            }, @"[|]"),
+            new TCD(new[]
+            {
+                new List<string>(),
+                new List<string>{"1","2","3"},
+                new List<string>(),
+            }, @"[|[1\|2\|3]|]"),
+            new TCD(new List<string>[0], @""),
+            //TODO add more cases 
+        };
+
+        [TestCaseSource(nameof(InnerCollectionsData))]
+        public void InnerListWithBorders_ShouldProperlyHandleBoundingMarkers(object instance, string text)
+        {
+            var sut = GetBorderedSut();
+            ParseAndFormatObject(instance, text, sut);
+        }
+
+        private static ITransformerStore GetBorderedSut()
+        {
+            var borderedCollection = CollectionSettings.Default
+                    .With(s => s.Start, '[')
+                    .With(s => s.End, ']')
+                ;
+            var borderedArray = ArraySettings.Default
+                    .With(s => s.Start, '[')
+                    .With(s => s.End, ']')
+                ;
+
+            var borderedStore = SettingsStoreBuilder.GetDefault()
+                .AddOrUpdate(borderedArray)
+                .AddOrUpdate(borderedCollection)
+                .Build();
+
+            return TextTransformer.GetDefaultStoreWith(borderedStore);
         }
     }
 }
