@@ -264,8 +264,8 @@ namespace Nemesis.TextParsers.Tests.Collections
         [SuppressMessage("ReSharper", "RedundantCast")]
         internal static IEnumerable<(Type elementType, IEnumerable expectedOutput, string input)> ListCompoundData() => new (Type, IEnumerable, string)[]
         {
-            (typeof(byte), null, null),
-            (typeof(string), null, null),
+            /*(typeof(int), new List<int>(), @""),
+            (typeof(string), new List<string>(), @""),*/
 
             (typeof(byte), GetTestNumbers<byte>(byte.MinValue, byte.MaxValue-1, 1, (n1, n2) => (byte)(n1+n2)),
                 @"∅|  1 | 2 |3 | 4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89|90|91|92|93|94|95|96|97|98|99|100|101|102|103|104|105|106|107|108|109|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|128|129|130|131|132|133|134|135|136|137|138|139|140|141|142|143|144|145|146|147|148|149|150|151|152|153|154|155|156|157|158|159|160|161|162|163|164|165|166|167|168|169|170|171|172|173|174|175|176|177|178|179|180|181|182|183|184|185|186|187|188|189|190|191|192|193|194|195|196|197|198|199|200|201|202|203|204|205|206|207|208|209|210|211|212|213|214|215|216|217|218|219|220|221|222|223|224|225|226|227|228|229|230|231|232|233|234|235|236|237|238|239|240|241|242|243|244|245|246|247|248|249|250|251|252|253|254" ),
@@ -525,7 +525,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             var listCompound = MakeDelegate<Action<IEnumerable, string>>(
                 (p1, p2) => List_CompoundTestsHelper<int>(p1, p2), data.elementType
             );
-            
+
             listCompound(data.expectedOutput, data.input);
         }
 
@@ -588,7 +588,7 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             var transformer = Sut.GetTransformer<IAggressionBased<List<float?>>>();
 
-            string text = transformer.Format( input);
+            string text = transformer.Format(input);
             Assert.That(text, Is.EqualTo(@"10|\∅|30#∅#\∅|110|\∅|130|\∅|150"));
             var deser = transformer.Parse(text.AsSpan());
             Assert.That(deser, Is.EqualTo(input));
@@ -622,44 +622,85 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         private static IEnumerable<TCD> InnerCollectionsData() => new[]
         {
-            new TCD(new List<string[]>
+            new TCD("01", new List<string>{null}, @"[∅]"),
+            new TCD("02", new List<string>(), @""),
+            new TCD("03", new List<string>{""}, @"[]"),
+
+            new TCD("04", new List<string[]>
             {
                 new[] {"A", "B", "C"},
                 new[] {"D", "E", "F"},
             }, @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD(new List<string[]>
+            new TCD("05", new List<string[]>
             {
                 new string[0],
                 new string[0],
             }, @"[|]"),
-            new TCD(new List<string[]>(), @""),
-            
+            new TCD("06", new List<string[]>(), @""),
 
-            new TCD(new[]
+
+            new TCD("07", new[]
             {
                 new List<string> {"A", "B", "C"},
                 new List<string> {"D", "E", "F"},
             }, @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD(new[]
+            new TCD("08", new[]
             {
                 new List<string>(),
                 new List<string>(),
             }, @"[|]"),
-            new TCD(new[]
+            new TCD("09", new[]
             {
                 new List<string>(),
                 new List<string>{"1","2","3"},
                 new List<string>(),
             }, @"[|[1\|2\|3]|]"),
-            new TCD(new List<string>[0], @""),
-            //TODO add more cases 
+            new TCD("10", new List<string>[0], @""),
+
+
+            new TCD("11", AggressionBasedFactory<List<string>>.FromOneValue(null) , @"∅"), //null
+            new TCD("12", AggressionBasedFactory<List<string>>.FromOneValue(new List<string>()) , @""), //empty
+            new TCD("13", AggressionBasedFactory<List<string>>.FromOneValue(new List<string>{""}) , @"[]"), //one empty element
+            new TCD("14", AggressionBasedFactory<List<string>>.FromOneValue(new List<string>{null}) , @"[∅]"), //one null element
+            
+            new TCD("15", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
+                    new List<string>{""}, new List<string>{""}, new List<string>{""}
+                   ), @"[]#[]#[]"),
+
+            new TCD("16", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
+                null, new List<string>(), new List<string>{""}
+            ), @"∅##[]"), //null # empty # one empty element
         };
 
         [TestCaseSource(nameof(InnerCollectionsData))]
-        public void InnerListWithBorders_ShouldProperlyHandleBoundingMarkers(object instance, string text)
+        public void Bordered_ShouldProperlyHandleBoundingMarkers(string _, object instance, string text)
         {
             var sut = GetBorderedSut();
             ParseAndFormatObject(instance, text, sut);
+        }
+
+
+        [TestCaseSource(nameof(ListCompoundData))]
+        public void Bordered_Compound((Type _, IEnumerable expectedOutput, string text) data)
+        {
+            var borderedStore = GetBorderedSut();
+            object instance = data.expectedOutput;
+            RoundTrip(instance, borderedStore);
+
+
+            var defaultTrans = _store.GetTransformer(instance.GetType());
+            var borderedTrans = borderedStore.GetTransformer(instance.GetType());
+
+
+            var parsedDefault = defaultTrans.ParseObject(data.text);
+
+            var borderedText = borderedTrans.FormatObject(instance);
+            var parsedBordered = borderedTrans.ParseObject(borderedText);
+
+
+            IsMutuallyEquivalent(parsedDefault, instance);
+            IsMutuallyEquivalent(parsedBordered, instance);
+            IsMutuallyEquivalent(parsedDefault, parsedBordered);
         }
 
         private static ITransformerStore GetBorderedSut()

@@ -47,7 +47,7 @@ Start ('{start}') and end ('{end}') can be equal to each other");
 
 
         public int GetCapacity(in ReadOnlySpan<char> input)
-            => DefaultCapacity ?? CountCharacters(input, ListDelimiter);
+            => DefaultCapacity ?? CountCharacters(input, ListDelimiter) + 1;
 
         private static int CountCharacters(in ReadOnlySpan<char> input, char character)
         {
@@ -140,7 +140,7 @@ Start ('{start}') and end ('{end}') can be equal to each other");
 
 
         public int GetCapacity(in ReadOnlySpan<char> input)
-            => DefaultCapacity ?? CountCharacters(input, DictionaryPairsDelimiter);
+            => DefaultCapacity ?? CountCharacters(input, DictionaryPairsDelimiter) + 1;
 
         private static int CountCharacters(in ReadOnlySpan<char> input, char character)
         {

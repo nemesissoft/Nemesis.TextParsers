@@ -95,7 +95,17 @@ namespace Nemesis.TextParsers.Tests
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
 
-            var sut = (store ?? Sut.DefaultStore).GetTransformer(instance.GetType());
+            store ??= Sut.DefaultStore;
+
+            Type transType = 
+                TypeMeta.TryGetGenericRealization(instance.GetType(), typeof(IAggressionBased<>), out var realization) &&
+                        realization.GenericTypeArguments.Length == 1 &&
+                        realization.GenericTypeArguments[0] is { } elementType
+                ? typeof(IAggressionBased<>).MakeGenericType(elementType)
+                : instance.GetType();
+
+
+            var sut = store.GetTransformer(transType);
 
             var actualParsed1 = sut.ParseObject(text);
 
@@ -108,6 +118,28 @@ namespace Nemesis.TextParsers.Tests
             IsMutuallyEquivalent(actualParsed1, instance);
             IsMutuallyEquivalent(actualParsed2, instance);
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        }
+
+
+        public static void RoundTrip([NotNull] object instance, ITransformerStore store = null)
+        {
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+
+            var sut = (store ?? Sut.DefaultStore).GetTransformer(instance.GetType());
+            
+            var text = sut.FormatObject(instance);
+
+            var parsed1 = sut.ParseObject(text);
+            var parsed2 = sut.ParseObject(text);
+            IsMutuallyEquivalent(parsed1, instance);
+            IsMutuallyEquivalent(parsed2, instance);
+
+
+            var text3 = sut.FormatObject(parsed1);
+            var parsed3 = sut.ParseObject(text3);
+
+            IsMutuallyEquivalent(parsed3, instance);
+            IsMutuallyEquivalent(parsed1, parsed3);
         }
     }
 

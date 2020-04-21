@@ -22,7 +22,7 @@ namespace Nemesis.TextParsers.Parsers
             if (Settings.Start.HasValue || Settings.End.HasValue)
                 toParse = toParse.UnParenthesize(Settings.Start, Settings.End, "Collection");
             
-            var tokens = toParse.Tokenize(Settings.ListDelimiter, Settings.EscapingSequenceStart, true);
+            var tokens = toParse.Tokenize(Settings.ListDelimiter, Settings.EscapingSequenceStart, false);
             var parsed = tokens.PreParse(Settings.EscapingSequenceStart, Settings.NullElementMarker, Settings.ListDelimiter);
 
             return parsed;

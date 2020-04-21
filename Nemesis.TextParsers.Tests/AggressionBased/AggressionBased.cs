@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Nemesis.TextParsers.Parsers;
@@ -76,8 +77,11 @@ namespace Nemesis.TextParsers.Tests
 
         public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public TValue PassiveValue => One;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public TValue NormalValue => One;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public TValue AggressiveValue => One;
 
         public AggressionBased1(TValue one) => One = one;

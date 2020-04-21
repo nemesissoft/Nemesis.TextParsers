@@ -43,7 +43,6 @@ namespace Nemesis.TextParsers.Tests
             var baseTypes = ExploratoryTestsData.GetStandardTypes().Concat(
                 new[]
                 {
-                    //TODO add more type cases 
                     typeof(List<string[]>), typeof(List<int[]>), typeof(List<string>[]), typeof(List<int>[]),
 
                     typeof(Person), typeof(LargeStruct), typeof(LotsOfDeconstructableData),
