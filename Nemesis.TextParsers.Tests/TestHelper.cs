@@ -43,8 +43,35 @@ namespace Nemesis.TextParsers.Tests
 
         public static void IsMutuallyEquivalent(object o1, object o2, string because = "")
         {
-            o1.Should().BeEquivalentTo(o2, because);
-            o2.Should().BeEquivalentTo(o1, because);
+            if (
+                o1 != null && TypeMeta.TryGetGenericRealization(o1.GetType(), typeof(IAggressionBased<>), out var ab1) &&
+                ab1.GenericTypeArguments[0] is var elem1 &&
+                o2 != null && TypeMeta.TryGetGenericRealization(o2.GetType(), typeof(IAggressionBased<>), out var ab2) &&
+                ab2.GenericTypeArguments[0] is var elem2 &&
+                elem1 == elem2
+            )
+            {
+                var abEquivalent = MakeDelegate<Action<object, object>>(
+                    (a1, a2) => IsMutuallyEquivalentAggressionBased<int>(a1, a2), elem1
+                );
+
+                abEquivalent(o1, o2);
+            }
+            else
+            {
+                o1.Should().BeEquivalentTo(o2, options => options.WithStrictOrdering().WithTracing(), because);
+                o2.Should().BeEquivalentTo(o1, options => options.WithStrictOrdering(), because);
+            }
+        }
+
+        private static void IsMutuallyEquivalentAggressionBased<T>(object o1, object o2)
+        {
+            var ab1 = (IAggressionBased<T>)o1;
+            var ab2 = (IAggressionBased<T>)o2;
+
+            IsMutuallyEquivalent(ab1.PassiveValue, ab2.PassiveValue);
+            IsMutuallyEquivalent(ab1.NormalValue, ab2.NormalValue);
+            IsMutuallyEquivalent(ab1.AggressiveValue, ab2.AggressiveValue);
         }
 
         public static TDelegate MakeDelegate<TDelegate>(Expression<TDelegate> expression, params Type[] typeArguments)
@@ -97,7 +124,7 @@ namespace Nemesis.TextParsers.Tests
 
             store ??= Sut.DefaultStore;
 
-            Type transType = 
+            Type transType =
                 TypeMeta.TryGetGenericRealization(instance.GetType(), typeof(IAggressionBased<>), out var realization) &&
                         realization.GenericTypeArguments.Length == 1 &&
                         realization.GenericTypeArguments[0] is { } elementType
@@ -126,7 +153,7 @@ namespace Nemesis.TextParsers.Tests
             if (instance == null) throw new ArgumentNullException(nameof(instance));
 
             var sut = (store ?? Sut.DefaultStore).GetTransformer(instance.GetType());
-            
+
             var text = sut.FormatObject(instance);
 
             var parsed1 = sut.ParseObject(text);

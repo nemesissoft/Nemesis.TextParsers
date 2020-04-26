@@ -59,7 +59,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                 (typeof(SortedSet<int>), @"27|2|3|5", 4, typeof(SortedSet<int>)),
 
                 (typeof(LinkedList<int>), @"37|2|3|5|16", 5, typeof(LinkedList<int>)),
-                (typeof(Stack<int>), @"37|2|3|5|26", 5, typeof(Stack<int>)),
+                (typeof(Stack<int>), @"1|22|333|444|5555", 5, typeof(Stack<int>)),
                 (typeof(Queue<int>), @"37|2|3|5|36", 5, typeof(Queue<int>)),
 
                 (typeof(ObservableCollection<int>), @"18|14|12|13|10", 5, typeof(ObservableCollection<int>)),

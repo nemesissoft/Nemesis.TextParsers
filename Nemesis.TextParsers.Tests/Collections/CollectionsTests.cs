@@ -670,6 +670,9 @@ namespace Nemesis.TextParsers.Tests.Collections
             new TCD("16", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
                 null, new List<string>(), new List<string>{""}
             ), @"∅##[]"), //null # empty # one empty element
+            new TCD("17", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
+                null, new List<string>{null}, new List<string>{""}
+            ), @"∅#[∅]#[]"), //null # empty # one empty element
         };
 
         [TestCaseSource(nameof(InnerCollectionsData))]

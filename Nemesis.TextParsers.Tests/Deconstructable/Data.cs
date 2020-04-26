@@ -86,7 +86,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         }
     }
 
-    internal struct DataWithNoDeconstruct
+    internal readonly struct DataWithNoDeconstruct
     {
         public string Name { get; }
         public string City { get; }
@@ -120,7 +120,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         }
     }
 
-    internal struct LargeStruct
+    internal readonly struct LargeStruct
     {
         public double N1 { get; }
         public float N2 { get; }
