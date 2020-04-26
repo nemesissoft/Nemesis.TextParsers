@@ -4,10 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Design;
 
 namespace Nemesis.TextParsers.Tests.Infrastructure
 {
-    internal class LotsOfDeconstructableData
+    internal class LotsOfDeconstructableData : IEquatable<LotsOfDeconstructableData>
     {
         public string D1 { get; }
         public bool D2 { get; }
@@ -61,8 +62,47 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         public static readonly LotsOfDeconstructableData EmptyInstance = new LotsOfDeconstructableData("", false, 0, null, 0.0f, null, 0, new List<string>(),
             new List<int>(), new Dictionary<string, float?>(), new decimal[0], new BigInteger[0][], new Complex(0.0, 0.0)
         );
+
+        public bool Equals(LotsOfDeconstructableData other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return D1 == other.D1 && D2 == other.D2 && D3 == other.D3 && D4 == other.D4 &&
+                   D5.Equals(other.D5) && Nullable.Equals(D6, other.D6) && D7 == other.D7 &&
+                   EnumerableEqualityComparer<string>.DefaultInstance.Equals(D8, other.D8) &&
+                   EnumerableEqualityComparer<int>.DefaultInstance.Equals(D9, other.D9) &&
+                   EnumerableEqualityComparer<KeyValuePair<string, float?>>.DefaultInstance.Equals(D10, other.D10) &&
+                   EnumerableEqualityComparer<decimal>.DefaultInstance.Equals(D11, other.D11) &&
+                   EnumerableEqualityComparer<BigInteger[]>.DefaultInstance.Equals(D12, other.D12) &&
+                   D13.Equals(other.D13);
+        }
+
+        public override bool Equals(object obj) =>
+            !(obj is null) &&
+            (ReferenceEquals(this, obj) || obj is LotsOfDeconstructableData lots && Equals(lots));
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = (D1 != null ? D1.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ D2.GetHashCode();
+                hashCode = (hashCode * 397) ^ D3;
+                hashCode = (hashCode * 397) ^ D4.GetHashCode();
+                hashCode = (hashCode * 397) ^ D5.GetHashCode();
+                hashCode = (hashCode * 397) ^ D6.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)D7;
+                hashCode = (hashCode * 397) ^ (D8 != null ? D8.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (D9 != null ? D9.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (D10 != null ? D10.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (D11 != null ? D11.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (D12 != null ? D12.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ D13.GetHashCode();
+                return hashCode;
+            }
+        }
     }
-    
+
     //this is to demonstrate support of LSP rule 
     internal abstract class EmptyConventionBase { }
 

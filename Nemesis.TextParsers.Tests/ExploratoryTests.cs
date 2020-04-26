@@ -28,7 +28,7 @@ namespace Nemesis.TextParsers.Tests
         {
             var prop = containerType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
                 ?? throw new MissingMemberException(containerType.FullName, propertyName);
-            _transformerStore = (ITransformerStore) prop.GetValue(null)
+            _transformerStore = (ITransformerStore)prop.GetValue(null)
                 ?? throw new InvalidOperationException("TransformerStore cannot be null");
         }
 
@@ -45,7 +45,7 @@ namespace Nemesis.TextParsers.Tests
                 {
                     typeof(List<string[]>), typeof(List<int[]>), typeof(List<string>[]), typeof(List<int>[]),
 
-                    typeof(Person), typeof(LargeStruct), typeof(LotsOfDeconstructableData),
+                    typeof(Person), typeof(LargeStruct), typeof(ThreeStrings),
 
                     typeof(Fruits), typeof(Enum1), typeof(Enum2), typeof(Enum3), typeof(ByteEnum), typeof(SByteEnum),
                     typeof(Int64Enum), typeof(UInt64Enum),
@@ -83,9 +83,9 @@ namespace Nemesis.TextParsers.Tests
             string GetRandomString()
             {
                 Span<char> special = stackalloc char[]
-                    {'\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')'};
+                    { '\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')' };
                 return
-                    ""+
+                    "" +
                     _randomSource.NextFrom(special) +
                     _randomSource.NextFrom(special) +
                     _randomSource.NextString('A', 'Z', 8) +
@@ -120,6 +120,16 @@ namespace Nemesis.TextParsers.Tests
                 ((_randomSource.NextDouble() - 0.5) * 2 + 0.1) * (_randomSource.NextDouble() < 0.5 ? 100 : 10)
             ));
 
+            _fixture.Register<LotsOfDeconstructableData>(() => new LotsOfDeconstructableData(
+                _fixture.Create<string>(), _fixture.Create<bool>(), _fixture.Create<int>(), _fixture.Create<uint?>(),
+                _fixture.Create<float>(), _fixture.Create<double?>(), _fixture.Create<FileMode>(), _fixture.Create<List<string>>(),
+                _fixture.Create<IReadOnlyList<int>>(), _fixture.Create<Dictionary<string, float?>>(), _fixture.Create<decimal[]>(),
+                _fixture.Create<BigInteger[][]>(), _fixture.Create<Complex>()
+            ));
+
+            _fixture.Register<TimeSpan>(() => new TimeSpan(
+                _randomSource.Next(2), _randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(100))
+            );
 
 
             _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
@@ -169,7 +179,12 @@ namespace Nemesis.TextParsers.Tests
             FixtureUtils.RegisterAllNullable(_fixture, _randomSource, nonNullableStructs);
 
 
-            FixtureUtils.RegisterAllCollections(_fixture, _randomSource, structs);
+            var collectionElementTypes = _allTestCases.Select(d => d.type)
+                .Where(t => TypeMeta.TryGetGenericRealization(t, typeof(IEnumerable<>), out _))
+                .Select(t => TypeMeta.GetGenericRealization(t, typeof(IEnumerable<>)).GenericTypeArguments[0])
+                .Union(structs)
+                .Distinct().ToList();
+            FixtureUtils.RegisterAllCollections(_fixture, _randomSource, collectionElementTypes);
         }
 
         [SetUp]
@@ -254,7 +269,6 @@ namespace Nemesis.TextParsers.Tests
             string friendlyName = testType.GetFriendlyName();
             string reason = "<none>";
 
-
             try
             {
                 //nulls
@@ -293,7 +307,7 @@ namespace Nemesis.TextParsers.Tests
 
                 //instances
                 reason = "Creating fixtures";
-                var instances = _fixture.CreateMany<T>(8);
+                IList<T> instances = _fixture.CreateMany<T>(8).ToList();
                 int i = 1;
                 foreach (var instance in instances)
                 {
@@ -368,6 +382,8 @@ namespace Nemesis.TextParsers.Tests
             var typeComparer = Comparer<Type>.Create((t1, t2) =>
                 string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
             );
+
+            var allTypesCopy = new List<Type>(allTypes);
 
             SortedSet<Type> Carve(Predicate<Type> condition)
             {
@@ -448,6 +464,10 @@ namespace Nemesis.TextParsers.Tests
                 );
 
 
+            var ab = typeof(IAggressionBased<>);
+            foreach (var type in allTypesCopy)
+                if (!type.DerivesOrImplementsGeneric(ab))
+                    aggressionBased.Add(ab.MakeGenericType(type));
 
             var @return = new List<(ExploratoryTestCategory category, Type type)>();
 
@@ -589,16 +609,6 @@ namespace Nemesis.TextParsers.Tests
 
         private static void RegisterCollections<TElement>(Fixture fixture, RandomSource randomSource)
         {
-            TElement[] ArrayCreator()
-            {
-                int length = randomSource.Next(2, 6);
-                var array = new TElement[length];
-                for (int i = 0; i < array.Length; i++)
-                    array[i] = fixture.Create<TElement>();
-
-                return array;
-            }
-
             List<TElement> ListCreator()
             {
                 int length = randomSource.Next(2, 6);
@@ -609,12 +619,19 @@ namespace Nemesis.TextParsers.Tests
                 return list;
             }
 
+            TElement[] ArrayCreator() => ListCreator().ToArray();
+            LinkedList<TElement> LinkedListCreator() => new LinkedList<TElement>(ListCreator());
+            Stack<TElement> StackCreator() => new Stack<TElement>(ListCreator());
+            Queue<TElement> QueueCreator() => new Queue<TElement>(ListCreator());
+
             fixture.Register(ArrayCreator);
             fixture.Register(ListCreator);
+            fixture.Register(LinkedListCreator);
+            fixture.Register(StackCreator);
+            fixture.Register(QueueCreator);
         }
 
-
-
+        #region Value Tuple
         public static void RegisterAllValueTuples(Fixture fixture, IEnumerable<Type> tupleTypes)
         {
             foreach (var tupleType in tupleTypes)
@@ -722,5 +739,6 @@ namespace Nemesis.TextParsers.Tests
 
             fixture.Register(TupleCreator);
         }
+        #endregion
     }
 }

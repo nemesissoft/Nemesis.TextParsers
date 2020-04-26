@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using JetBrains.Annotations;
@@ -127,12 +128,27 @@ namespace Nemesis.TextParsers.Parsers
                     }
                 case CollectionKind.Stack:
                     {
-                        var result = new Stack<TElement>(capacity);
+                        var initialBuffer = ArrayPool<TElement>.Shared.Rent(capacity);
+                        var accumulator = new ValueSequenceBuilder<TElement>(initialBuffer);
+                        try
+                        {
+                            foreach (var part in stream)
+                                accumulator.Append(part.ParseWith(ElementTransformer));
 
-                        foreach (var part in stream)
-                            result.Push(part.ParseWith(ElementTransformer));
+                            var elements = accumulator.AsSpan();
 
-                        return (TCollection)(IReadOnlyCollection<TElement>)result;
+
+                            var result = new Stack<TElement>(elements.Length);
+                            for (int i = elements.Length - 1; i >= 0; i--)
+                                result.Push(elements[i]);
+
+                            return (TCollection)(IReadOnlyCollection<TElement>)result;
+                        }
+                        finally
+                        {
+                            accumulator.Dispose();
+                            ArrayPool<TElement>.Shared.Return(initialBuffer);
+                        }
                     }
                 case CollectionKind.Queue:
                     {
