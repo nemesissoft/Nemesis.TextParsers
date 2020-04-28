@@ -10,7 +10,7 @@ using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
-    internal struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactors>
+    internal readonly struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactors>
     {
         public decimal Carrot { get; }
         public float[] OnionFactors { get; }
@@ -45,7 +45,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         );
     }
 
-    internal struct Person
+    internal readonly struct Person
     {
         public string Name { get; }
         public int Age { get; }

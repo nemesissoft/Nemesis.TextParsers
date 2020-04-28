@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Utils
 {
@@ -63,6 +64,34 @@ namespace Nemesis.TextParsers.Utils
         internal static NumberFormatInfo InvInfo = NumberFormatInfo.InvariantInfo;
     }
 
+    //TODO move functionality to transformers
+    /*public static bool TryParseObject(this ITransformer transformer, in ReadOnlySpan<char> input, out object result)
+            {
+                try
+                {
+                    result = transformer.ParseObject(input);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    result = default;
+                    return false;
+                }
+            }
+
+            public static bool TryParse<TElement>(this ITransformer<TElement> transformer, in ReadOnlySpan<char> input, out TElement result)
+            {
+                try
+                {
+                    result = transformer.Parse(input);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    result = default;
+                    return false;
+                }
+            }*/
     [UsedImplicitly]
     public sealed class ByteNumber : INumber<byte>
     {
@@ -88,7 +117,7 @@ namespace Nemesis.TextParsers.Utils
         public byte Div(byte left, byte right) => (byte)(left / right);
 
 
-        public bool TryParse(in ReadOnlySpan<char> input, out byte value) =>
+        public bool TryParse(in ReadOnlySpan<char> input, out byte value) => 
 #if NETSTANDARD2_0 || NETFRAMEWORK
             Legacy.ByteParser.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
 #else

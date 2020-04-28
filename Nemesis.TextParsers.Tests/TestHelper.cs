@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
@@ -57,9 +58,14 @@ namespace Nemesis.TextParsers.Tests
 
                 abEquivalent(o1, o2);
             }
+            else if (o1 is Regex re1 && o2 is Regex re2)
+            {
+                Assert.That(re1.Options, Is.EqualTo(re2.Options));
+                Assert.That(re1.ToString(), Is.EqualTo(re2.ToString()));
+            }
             else
             {
-                o1.Should().BeEquivalentTo(o2, options => options.WithStrictOrdering().WithTracing(), because);
+                o1.Should().BeEquivalentTo(o2, options => options.WithStrictOrdering(), because);
                 o2.Should().BeEquivalentTo(o1, options => options.WithStrictOrdering(), because);
             }
         }
@@ -247,17 +253,25 @@ namespace Nemesis.TextParsers.Tests
         {
             var values = Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().ToList();
 
+            bool isFlag = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
+
+            TUnderlying value;
+
             if (values.Count == 0)
             {
                 var numberHandler = NumberHandlerCache.GetNumberHandler<TUnderlying>();
-                var value = _rand.NextDouble() < 0.5 ? numberHandler.Zero : numberHandler.One;
-                return Unsafe.As<TUnderlying, TEnum>(ref value);
+                value = _rand.NextDouble() < 0.5 ? numberHandler.Zero : numberHandler.One;
+            }
+            else if (isFlag)
+            {
+                var numberHandler = NumberHandlerCache.GetNumberHandler<TUnderlying>();
+                long last = numberHandler.ToInt64(values.Last());
+                value = numberHandler.FromInt64(_rand.Next((int)(last * 2)));
             }
             else
-            {
-                var value = values[_rand.Next(0, values.Count)];
-                return Unsafe.As<TUnderlying, TEnum>(ref value);
-            }
+                value = values[_rand.Next(0, values.Count)];
+
+            return Unsafe.As<TUnderlying, TEnum>(ref value);
         }
     }
 }

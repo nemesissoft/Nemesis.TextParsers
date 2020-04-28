@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Numerics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
@@ -85,6 +87,8 @@ namespace Nemesis.TextParsers.Parsers
         public sealed override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}";
     }
 
+    #region System types
+
     [UsedImplicitly]
     public sealed class StringTransformer : SimpleTransformer<string>
     {
@@ -98,8 +102,6 @@ namespace Nemesis.TextParsers.Parsers
 
         private StringTransformer() { }
     }
-
-    #region Structs
 
     [UsedImplicitly]
     public sealed class BooleanTransformer : SimpleTransformer<bool>
@@ -511,6 +513,198 @@ namespace Nemesis.TextParsers.Parsers
         public static readonly ITransformer<BigInteger> Instance = new BigIntegerTransformer();
 
         private BigIntegerTransformer() { }
+    }
+
+    [UsedImplicitly]
+    public sealed class VersionTransformer : SimpleTransformer<Version>
+    {
+        protected override Version ParseCore(in ReadOnlySpan<char> input) => Version.Parse(
+#if NETSTANDARD2_0 || NETFRAMEWORK
+                input.ToString()
+#else
+            input
+#endif
+            );
+
+        public override string Format(Version element) => element?.ToString();
+
+        public static readonly ITransformer<Version> Instance = new VersionTransformer();
+
+        private VersionTransformer() { }
+
+        public override Version GetEmpty() => new Version(0, 0, 0, 0);
+    }
+
+    [UsedImplicitly]
+    public sealed class IpAddressTransformer : SimpleTransformer<IPAddress>
+    {
+        protected override IPAddress ParseCore(in ReadOnlySpan<char> input) => IPAddress.Parse(
+#if NETSTANDARD2_0 || NETFRAMEWORK
+                input.ToString()
+#else
+            input
+#endif
+            );
+
+        public override string Format(IPAddress element) => element?.ToString();
+
+        public static readonly ITransformer<IPAddress> Instance = new IpAddressTransformer();
+
+        private IpAddressTransformer() { }
+
+        public override IPAddress GetEmpty() => new IPAddress(0);
+    }
+
+    [UsedImplicitly]
+    public sealed class RegexTransformer : SimpleTransformer<Regex>
+    {
+        private const string TYPE_NAME = "Regex";
+        private static readonly TupleHelper _helper = new TupleHelper(';', '∅', '~', '{', '}');
+
+        protected override Regex ParseCore(in ReadOnlySpan<char> input)
+        {
+            var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
+
+            var options = _helper.ParseElement(ref enumerator, RegexOptionsTransformer.Instance);
+
+            _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
+            var pattern = _helper.ParseElement(ref enumerator, StringTransformer.Instance);
+
+            _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
+
+            return new Regex(pattern, options);
+        }
+
+        public override string Format(Regex re)
+        {
+            if (re == null) return null;
+
+            Span<char> initialBuffer = stackalloc char[16];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            try
+            {
+                _helper.StartFormat(ref accumulator);
+
+                _helper.FormatElement(RegexOptionsTransformer.Instance, re.Options, ref accumulator);
+                _helper.AddDelimiter(ref accumulator);
+
+                _helper.FormatElement(StringTransformer.Instance, re.ToString(), ref accumulator);
+
+                _helper.EndFormat(ref accumulator);
+
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+
+        public static readonly ITransformer<Regex> Instance = new RegexTransformer();
+
+        private RegexTransformer() { }
+
+        public override Regex GetEmpty() => new Regex("", RegexOptions.None);
+    }
+
+    internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
+    {
+        protected override RegexOptions ParseCore(in ReadOnlySpan<char> input)
+        {
+            if (input.IsEmpty) return default;
+
+            var result = RegexOptions.None;
+
+            for (int i = input.Length - 1; i >= 0; i--)
+                result |= ParseSingle(input[i]);
+
+            return result;
+        }
+
+        private static readonly RegexOptions[] _optionValues = {
+                RegexOptions.IgnoreCase,
+                RegexOptions.Multiline,
+                RegexOptions.ExplicitCapture,
+                RegexOptions.Compiled,
+                RegexOptions.Singleline,
+                RegexOptions.IgnorePatternWhitespace,
+                RegexOptions.RightToLeft,
+                (RegexOptions)128,
+                RegexOptions.ECMAScript,
+                RegexOptions.CultureInvariant
+            };
+
+        public override string Format(RegexOptions element)
+        {
+            if (element == RegexOptions.None) return "0";
+
+            Span<char> initialBuffer = stackalloc char[8];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+            try
+            {
+                foreach (var option in _optionValues)
+                    if ((element & option) > 0)
+                        accumulator.Append(FormatSingle(option));
+
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+
+        public static readonly ITransformer<RegexOptions> Instance = new RegexOptionsTransformer();
+        private RegexOptionsTransformer() { }
+
+        private static RegexOptions ParseSingle(char element) =>
+            element switch
+            {
+                '0' => RegexOptions.None,
+                'i' => RegexOptions.IgnoreCase,
+                'm' => RegexOptions.Multiline,
+                'n' => RegexOptions.ExplicitCapture,
+                'c' => RegexOptions.Compiled,
+                's' => RegexOptions.Singleline,
+                'x' => RegexOptions.IgnorePatternWhitespace,
+                'r' => RegexOptions.RightToLeft,
+
+                'd' => (RegexOptions)128,
+
+                'e' => RegexOptions.ECMAScript,
+                'v' => RegexOptions.CultureInvariant,
+                _ => throw new ArgumentException($"'{element}' is not supported for parsing RegexOptions")
+            };
+
+        private static char FormatSingle(RegexOptions option) =>
+            option switch
+            {
+                RegexOptions.None => '0',
+                RegexOptions.IgnoreCase => 'i',
+                RegexOptions.Multiline => 'm',
+                RegexOptions.ExplicitCapture => 'n',
+                RegexOptions.Compiled => 'c',
+                RegexOptions.Singleline => 's',
+                RegexOptions.IgnorePatternWhitespace => 'x',
+                RegexOptions.RightToLeft => 'r',
+
+                (RegexOptions)128 => 'd',
+
+                RegexOptions.ECMAScript => 'e',
+                RegexOptions.CultureInvariant => 'v',
+                _ => throw new ArgumentException($"'{option}' is not supported for formatting RegexOptions")
+            };
+
+        /*[Flags]
+        public enum RegexOptions
+        {
+            None                    = 0x0000, // '0'
+            IgnoreCase              = 0x0001, // 'i'
+            Multiline               = 0x0002, // 'm'
+            ExplicitCapture         = 0x0004, // 'n'
+            Compiled                = 0x0008, // 'c'
+            Singleline              = 0x0010, // 's'
+            IgnorePatternWhitespace = 0x0020, // 'x'
+            RightToLeft             = 0x0040, // 'r'
+
+            ECMAScript              = 0x0100, // 'e'
+            CultureInvariant        = 0x0200, // 'v'
+        }*/
     }
 
     [UsedImplicitly]

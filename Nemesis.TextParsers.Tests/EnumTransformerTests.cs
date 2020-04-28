@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
@@ -679,6 +680,29 @@ namespace Nemesis.TextParsers.Tests
             else
                 throw new FormatException(
                     "Enum of type 'DaysOfWeek' cannot be parsed.Valid values are: None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All or number within Byte range.");
+        }
+    }
+
+    [TestFixture]
+    public class RegexOptionsTransformerTests
+    {
+        [Test]
+        public void ParseTests()
+        {
+            var sut = RegexOptionsTransformer.Instance;
+
+            for (int i = 0; i < 1024; i++)
+            {
+                var option = (RegexOptions)i;
+
+                var text = sut.Format(option);
+
+                var parsed1 = sut.Parse(text);
+                var parsed2 = sut.Parse(text);
+
+                Assert.That(parsed1, Is.EqualTo(option), $"Case {i}");
+                Assert.That(parsed2, Is.EqualTo(option), $"Case {i}");
+            }
         }
     }
 }

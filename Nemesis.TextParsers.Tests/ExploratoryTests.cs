@@ -4,8 +4,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Numerics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using AutoFixture;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
@@ -130,6 +132,58 @@ namespace Nemesis.TextParsers.Tests
             _fixture.Register<TimeSpan>(() => new TimeSpan(
                 _randomSource.Next(2), _randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(100))
             );
+
+            Regex GetRandomRegex()
+            {
+                var rs = _randomSource;
+
+                string GetNextPattern() =>
+                    (uint)rs.Next(11) switch
+                    {
+                        0 => @".",
+                        1 => @"\w",
+                        2 => @"\d",
+                        3 => @"\s",
+                        4 => @"\p{L}",
+                        5 => rs.NextString('A', 'Z', 3),
+                        6 => rs.NextString('a', 'z', 3),
+                        7 => rs.NextString('0', '9', 2),
+                        8 => $"[{(char)rs.Next('a', 'h')}-{(char)rs.Next('h', 'z' + 1)}]",
+                        9 => ";",
+                        10 => "~",
+                        _ => throw new NotSupportedException("Too big number for auto pattern generation")
+                    };
+
+
+                string GetNextRepetition() =>
+                    (uint)rs.Next(7) switch
+                    {
+                        0 => @"",
+                        1 => @"*",
+                        2 => @"+",
+                        3 => @"?",
+                        4 => $"{{{rs.Next(4)}}}",
+                        5 => $"{{{rs.Next(4)},}}",
+                        6 => $"{{{rs.Next(4)},{rs.Next(4, 9)}}}",
+                        _ => throw new NotSupportedException("Too big number for auto repetition generation")
+                    };
+
+                var pattern = GetNextPattern() + GetNextRepetition() + GetNextPattern() + GetNextRepetition() +
+                              GetNextPattern() + GetNextRepetition() + GetNextPattern() + GetNextRepetition();
+                RegexOptions options;
+                do
+                {
+                    options = rs.NextEnum<RegexOptions, int>() & ~(RegexOptions)128;
+                } while ((options & RegexOptions.ECMAScript) != 0
+                         && (options & ~(RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.Multiline |
+                                         RegexOptions.Compiled | RegexOptions.CultureInvariant)) != 0);
+
+                return new Regex(pattern, options);
+            }
+            _fixture.Register<Regex>(GetRandomRegex);
+
+            _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
+            _fixture.Register(() => new IPAddress(new[] { (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255) }));
 
 
             _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
@@ -287,7 +341,7 @@ namespace Nemesis.TextParsers.Tests
                 reason = $"Retrieving empty with {transformer}";
                 var emptyInstance = transformer.GetEmpty();
 
-                reason = "Parsing empty";
+                reason = "Parsing empty 1";
                 var parsedEmpty = ParseAndAssert("");
 
                 reason = "Formatting empty";
@@ -295,7 +349,7 @@ namespace Nemesis.TextParsers.Tests
                 string emptyText2 = transformer.Format(emptyInstance);
                 IsMutuallyEquivalent(emptyText1, emptyText2);
 
-                reason = "Parsing empty";
+                reason = "Parsing empty 2";
                 var parsedEmpty1 = ParseAndAssert(emptyText1);
                 var parsedEmpty2 = ParseAndAssert(emptyText2);
 
@@ -504,7 +558,9 @@ namespace Nemesis.TextParsers.Tests
             typeof(DateTime), typeof(TimeSpan), typeof(DateTimeOffset),
             typeof(Guid), typeof(Guid?),
 
-
+            //special system types
+            typeof(Regex), typeof(RegexOptions), typeof(Version), typeof(IPAddress), 
+            
             //array + collections + dictionaries
             typeof(string[]), typeof(int?[]),
             typeof(List<string>), typeof(ReadOnlyCollection<string>),
