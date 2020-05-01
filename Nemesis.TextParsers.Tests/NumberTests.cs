@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Numerics;
 using Nemesis.TextParsers.Parsers;
 using NUnit.Framework;
 
@@ -18,7 +19,7 @@ namespace Nemesis.TextParsers.Tests
         where TNumberHandler : NumberTransformer<TUnderlying>
     {
         private static readonly TNumberHandler _sut = (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
-        
+
         [Test]
         public void AddTest()
         {
@@ -59,7 +60,7 @@ namespace Nemesis.TextParsers.Tests
 
             var loopFrom = _sut.Add(min, _sut.One);
             var increment = _sut.Div(max, _sut.FromInt64(120));
-            var loopMax = _sut.Sub(_sut.MaxValue, increment);
+            var loopMax = _sut.Sub(max, increment);
 
             var prev = min;
             uint passes = 0;
@@ -71,13 +72,17 @@ namespace Nemesis.TextParsers.Tests
                 bool success = _sut.TryParse(text.AsSpan(), out var value);
 
                 Assert.That(success, Is.True, $"Failed at '{text}'");
-
                 Assert.That(value, Is.GreaterThan(prev));
                 prev = value;
 
-                passes++;
 
-                //Console.WriteLine($"✔ '{text}'");
+                var left = BigInteger.Parse(text, NumberStyles.Number, CultureInfo.InvariantCulture);
+                string text2 = value.ToString(null, CultureInfo.InvariantCulture);
+                var right = BigInteger.Parse(text2, NumberStyles.Number, CultureInfo.InvariantCulture);
+                Assert.That(left, Is.EqualTo(right), $"BigInt {text}");
+
+
+                passes++;
             }
 
             Assert.That(passes, Is.GreaterThanOrEqualTo(120));
