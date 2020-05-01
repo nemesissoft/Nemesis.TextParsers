@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
-using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -59,24 +59,24 @@ namespace Nemesis.TextParsers.Tests
     // ReSharper restore UnusedMember.Global 
     #endregion
 
-    [TestFixture(TypeArgs = new[] { typeof(DaysOfWeek), typeof(byte), typeof(ByteNumber) })]
-    [TestFixture(TypeArgs = new[] { typeof(EmptyEnum), typeof(int), typeof(Int32Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(Enum1), typeof(int), typeof(Int32Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(Enum2), typeof(int), typeof(Int32Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(Enum3), typeof(int), typeof(Int32Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(ByteEnum), typeof(byte), typeof(ByteNumber) })]
-    [TestFixture(TypeArgs = new[] { typeof(SByteEnum), typeof(sbyte), typeof(SByteNumber) })]
-    [TestFixture(TypeArgs = new[] { typeof(Int64Enum), typeof(long), typeof(Int64Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(UInt64Enum), typeof(ulong), typeof(UInt64Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(Fruits), typeof(ushort), typeof(UInt16Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(FruitsWeirdAll), typeof(short), typeof(Int16Number) })]
+    [TestFixture(TypeArgs = new[] { typeof(DaysOfWeek), typeof(byte), typeof(ByteTransformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(EmptyEnum), typeof(int), typeof(Int32Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(Enum1), typeof(int), typeof(Int32Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(Enum2), typeof(int), typeof(Int32Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(Enum3), typeof(int), typeof(Int32Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(ByteEnum), typeof(byte), typeof(ByteTransformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(SByteEnum), typeof(sbyte), typeof(SByteTransformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(Int64Enum), typeof(long), typeof(Int64Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(UInt64Enum), typeof(ulong), typeof(UInt64Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(Fruits), typeof(ushort), typeof(UInt16Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(FruitsWeirdAll), typeof(short), typeof(Int16Transformer) })]
     public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         where TEnum : Enum
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
-        where TNumberHandler : class, INumber<TUnderlying>
+        where TNumberHandler : NumberTransformer<TUnderlying>
     {
         private static readonly TNumberHandler _numberHandler =
-            (TNumberHandler)NumberHandlerCache.GetNumberHandler<TUnderlying>();
+            (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
 
         private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
             new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default);
@@ -88,9 +88,10 @@ namespace Nemesis.TextParsers.Tests
             new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.AllowParsingNumerics, false));
 
 
-        private static TEnum ToEnum(TUnderlying value) => EnumTransformer<TEnum, TUnderlying, TNumberHandler>.ToEnum(value);
+        private static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
-        private static IReadOnlyList<TUnderlying> GetEnumValues()
+        private static readonly IReadOnlyList<(TUnderlying Number, TEnum Enum, string Text)> _testValues = GetTestValues();
+        private static IReadOnlyList<(TUnderlying Number, TEnum Enum, string Text)> GetTestValues()
         {
             Type enumType = typeof(TEnum);
             var values = Enum.GetValues(enumType).Cast<TUnderlying>().ToList();
@@ -98,26 +99,31 @@ namespace Nemesis.TextParsers.Tests
 
             TUnderlying min = values.Count == 0 ? _numberHandler.Zero : values.Min(),
                         max = values.Count == 0 ? _numberHandler.Zero : values.Max();
-            int i = 5;
-            while (i-- > 0)
-                if (_numberHandler.SupportsNegative && min.CompareTo(_numberHandler.MinValue) > 0)
-                    min = _numberHandler.Sub(min, _numberHandler.One);
 
-            i = 5;
-            while (i-- > 0)
+            int iMin = 10, iMax = 10;
+            while (iMin-- > 0)
+                if (min.CompareTo(_numberHandler.MinValue) > 0)
+                    min = _numberHandler.Sub(min, _numberHandler.One);
+                else iMax++;
+
+            while (iMax-- > 0)
                 if (max.CompareTo(_numberHandler.MaxValue) < 0)
                     max = _numberHandler.Add(max, _numberHandler.One);
 
-            var result = new List<TUnderlying>();
+            var result = new List<(TUnderlying, TEnum, string)>();
 
-            for (TUnderlying number = min; number.CompareTo(max) <= 0; number = _numberHandler.Add(number, _numberHandler.One))
-                result.Add(number);
+            for (var number = min; number.CompareTo(max) <= 0; number = _numberHandler.Add(number, _numberHandler.One))
+                result.Add(
+                    (number, ToEnum(number), ToEnum(number).ToString("G"))
+                    );
 
-            return result;
+            return result.AsReadOnly();
         }
 
-        private static IReadOnlyList<(TEnum Enum, string Text)> GetEnumToText() =>
-            GetEnumValues().Select(v => (ToEnum(v), ToEnum(v).ToString("G"))).ToList();
+        private static readonly IReadOnlyList<(TUnderlying Number, TEnum Enum, string Text)> _definedValues =
+            Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>()
+                .Select(number => (number, ToEnum(number), ToEnum(number).ToString("G")))
+                .ToList().AsReadOnly();
 
         private static string ToTick(bool result) => result ? "✔" : "✖";
         private static string ToOperator(bool result) => result ? "==" : "!=";
@@ -170,7 +176,7 @@ namespace Nemesis.TextParsers.Tests
 
             var sb = new StringBuilder();
             var failed = new List<string>();
-            foreach (var number in GetEnumValues())
+            foreach (var (number, _, _) in _testValues)
             {
                 if (number.CompareTo(_numberHandler.Zero) <= 0)
                     continue;
@@ -211,7 +217,7 @@ namespace Nemesis.TextParsers.Tests
         public void ParseNumber()
         {
             var failed = new List<string>();
-            foreach (TUnderlying number in GetEnumValues())
+            foreach (var (number, _, _) in _testValues)
             {
                 var actual = _sut.Parse(number.ToString().AsSpan());
 
@@ -235,9 +241,7 @@ namespace Nemesis.TextParsers.Tests
         {
             var failed = new List<string>();
 
-            IReadOnlyList<(TEnum Enum, string Text)> enumToText = GetEnumToText();
-
-            foreach (var (enumValue, text) in enumToText)
+            foreach (var (_, enumValue, text) in _testValues)
             {
                 var actual = _sut.Parse(text.AsSpan());
                 var actualNative = (TEnum)Enum.Parse(typeof(TEnum), text, true);
@@ -260,7 +264,7 @@ namespace Nemesis.TextParsers.Tests
         {
             var failed = new List<string>();
 
-            foreach (var (enumValue, text) in GetEnumToText())
+            foreach (var (_, enumValue, text) in _testValues)
             {
                 var actual = _sut.Format(enumValue);
                 var actualNative = enumValue.ToString("G");
@@ -279,15 +283,15 @@ namespace Nemesis.TextParsers.Tests
         }
 
 
+
+
         [Test]
         public void DoNotAllowParsingNumerics_Exploratory()
         {
-            var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
-            if (enumValues.Count == 0)
+            if (_definedValues.Count == 0)
                 Assert.Pass("Test is not designed for empty enums");
 
-            foreach (var (enumValue, text) in GetEnumToText())
+            foreach (var (_, enumValue, text) in _testValues)
             {
                 Assert.DoesNotThrow(() => _sut.Parse(text));
 
@@ -312,10 +316,7 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void CaseSensitive_PositiveExploratory()
         {
-            var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
-
-            foreach (var (name, value) in enumValues)
+            foreach (var (value, _, name) in _definedValues)
             {
                 var init = _sut.Parse(name);
                 Assert.That((TUnderlying)(object)init, Is.EqualTo(value));
@@ -352,8 +353,8 @@ namespace Nemesis.TextParsers.Tests
                 return newText;
             }
 
-            var shuffledNames = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(enumField => ShuffleText(enumField.Name)).ToList();
+            var shuffledNames = _definedValues
+                .Select(v => ShuffleText(v.Text)).ToList();
 
             foreach (var name in shuffledNames)
             {
@@ -371,7 +372,7 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public static void CaseSensitive_Weird()
         {
-            var sut = new EnumTransformer<Casing, int, Int32Number>(new Int32Number(), EnumSettings.Default.With(s => s.CaseInsensitive, false));
+            var sut = new EnumTransformer<Casing, int, Int32Transformer>((Int32Transformer)Int32Transformer.Instance, EnumSettings.Default.With(s => s.CaseInsensitive, false));
 
             var enumValues = typeof(Casing).GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Select(enumField => (enumField.Name, Value: (Casing)(int)enumField.GetValue(null))).ToList();
@@ -427,7 +428,7 @@ namespace Nemesis.TextParsers.Tests
 
             var enumStream = input.Split(',').GetEnumerator();
 
-            if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {typeof(DaysOfWeek).Name} enum");
+            if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {nameof(DaysOfWeek)} enum");
             byte currentValue = ParseDaysOfWeekElement(enumStream.Current);
 
             while (enumStream.MoveNext())

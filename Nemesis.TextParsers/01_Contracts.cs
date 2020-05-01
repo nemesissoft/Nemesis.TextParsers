@@ -6,11 +6,12 @@ using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    [PublicAPI]
     public interface ITransformer
     {
         object ParseObject(string text);
-        [UsedImplicitly]
         object ParseObject(in ReadOnlySpan<char> input);
+        bool TryParseObject(in ReadOnlySpan<char> input, out object result);
 
 
         string FormatObject(object element);
@@ -20,9 +21,10 @@ namespace Nemesis.TextParsers
         object GetEmptyObject();
     }
 
-    public interface ISpanParser<out TElement>
+    public interface ISpanParser<TElement>
     {
         TElement Parse(in ReadOnlySpan<char> input);
+        bool TryParse(in ReadOnlySpan<char> input, out TElement result);
     }
 
     public interface IFormatter<in TElement>
@@ -71,8 +73,36 @@ namespace Nemesis.TextParsers
                 "" => GetEmpty(),
                 _ => ParseText(text)
             };
-        
 
+
+
+        public bool TryParseObject(in ReadOnlySpan<char> input, out object result)
+        {
+            try
+            {
+                result = ParseObject(input);
+                return true;
+            }
+            catch (Exception)
+            {
+                result = default;
+                return false;
+            }
+        }
+
+        public virtual bool TryParse(in ReadOnlySpan<char> input, out TElement result)
+        {
+            try
+            {
+                result = Parse(input);
+                return true;
+            }
+            catch (Exception)
+            {
+                result = default;
+                return false;
+            }
+        }
 
 
 

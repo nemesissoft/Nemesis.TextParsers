@@ -453,12 +453,38 @@ namespace Nemesis.TextParsers.Tests
             };
         }
 
+        public bool TryParse(in ReadOnlySpan<char> input, out Option result)
+        {
+            try
+            {
+                result = Parse(input);
+                return true;
+            }
+            catch (Exception)
+            {
+                result = default;
+                return false;
+            }
+        }
+
         public Option Parse(string text) => Parse(text.AsSpan());
 
         public object ParseObject(string text) => Parse(text.AsSpan());
 
         public object ParseObject(in ReadOnlySpan<char> input) => Parse(input);
-
+        public bool TryParseObject(in ReadOnlySpan<char> input, out object result)
+        {
+            try
+            {
+                result = ParseObject(input);
+                return true;
+            }
+            catch (Exception)
+            {
+                result = default;
+                return false;
+            }
+        }
 
 
         public string Format(Option element) => element.ToString();
@@ -477,7 +503,7 @@ namespace Nemesis.TextParsers.Tests
 
     [TypeConverter(typeof(PointConverter2))]
     [DebuggerDisplay("X = {" + nameof(X) + "}, Y = {" + nameof(Y) + "}")]
-    struct PointWithConverter : IEquatable<PointWithConverter>
+    readonly struct PointWithConverter : IEquatable<PointWithConverter>
     {
         public int X { get; }
         public int Y { get; }

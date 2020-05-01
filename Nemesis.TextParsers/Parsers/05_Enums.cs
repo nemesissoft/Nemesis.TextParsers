@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Nemesis.TextParsers.Utils;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 #if NETCOREAPP3_0 || NETCOREAPP3_1
@@ -32,7 +31,7 @@ namespace Nemesis.TextParsers.Parsers
                 throw new NotSupportedException($@"Type {enumType.GetFriendlyName()} is not supported by {GetType().Name}. 
 UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numeric one");
 
-            var numberHandler = NumberHandlerCache.GetNumberHandler(underlyingType) ??
+            var numberHandler = NumberTransformerCache.GetNumberHandler(underlyingType) ??
                 throw new NotSupportedException($"UnderlyingType {underlyingType.Name} was not found in parser cache");
 
             var transType = typeof(EnumTransformer<,,>).MakeGenericType(enumType, underlyingType, numberHandler.GetType());
@@ -73,7 +72,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
     public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : TransformerBase<TEnum>
         where TEnum : Enum
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
-        where TNumberHandler : class, INumber<TUnderlying> //PERF: making number handler a concrete specification can win additional up to 3% in speed
+        where TNumberHandler : NumberTransformer<TUnderlying> //PERF: making number handler a concrete specification can win additional up to 3% in speed
     {
         private readonly TNumberHandler _numberHandler;
         private readonly EnumSettings _settings;
@@ -134,7 +133,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
         public override string Format(TEnum element) => element.ToString("G");
 
-        public override string ToString() => $"Transform {typeof(TEnum).Name} based on {typeof(TUnderlying).GetFriendlyName()}";
+        public override string ToString() => $"Transform {typeof(TEnum).Name} based on {typeof(TUnderlying).GetFriendlyName()} ({_settings})";
     }
 
     internal static class EnumTransformerHelper

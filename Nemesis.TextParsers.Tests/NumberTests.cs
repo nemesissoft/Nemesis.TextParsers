@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Globalization;
-using Nemesis.TextParsers.Utils;
+using Nemesis.TextParsers.Parsers;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {
-    [TestFixture(TypeArgs = new[] { typeof(byte), typeof(ByteNumber) })]
-    [TestFixture(TypeArgs = new[] { typeof(sbyte), typeof(SByteNumber) })]
-    [TestFixture(TypeArgs = new[] { typeof(short), typeof(Int16Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(ushort), typeof(UInt16Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(int), typeof(Int32Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(uint), typeof(UInt32Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(long), typeof(Int64Number) })]
-    [TestFixture(TypeArgs = new[] { typeof(ulong), typeof(UInt64Number) })]
+    [TestFixture(TypeArgs = new[] { typeof(byte), typeof(ByteTransformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(sbyte), typeof(SByteTransformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(short), typeof(Int16Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(ushort), typeof(UInt16Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(int), typeof(Int32Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(uint), typeof(UInt32Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(long), typeof(Int64Transformer) })]
+    [TestFixture(TypeArgs = new[] { typeof(ulong), typeof(UInt64Transformer) })]
     public class NumberTests<TUnderlying, TNumberHandler>
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
-        where TNumberHandler : class, INumber<TUnderlying>
+        where TNumberHandler : NumberTransformer<TUnderlying>
     {
-        private static readonly TNumberHandler _sut = (TNumberHandler)NumberHandlerCache.GetNumberHandler<TUnderlying>();
+        private static readonly TNumberHandler _sut = (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
         
         [Test]
         public void AddTest()

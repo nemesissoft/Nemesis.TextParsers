@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Runtime;
-using Nemesis.TextParsers.Utils;
+using Nemesis.TextParsers.Parsers;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -259,12 +259,12 @@ namespace Nemesis.TextParsers.Tests
 
             if (values.Count == 0)
             {
-                var numberHandler = NumberHandlerCache.GetNumberHandler<TUnderlying>();
+                var numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
                 value = _rand.NextDouble() < 0.5 ? numberHandler.Zero : numberHandler.One;
             }
             else if (isFlag)
             {
-                var numberHandler = NumberHandlerCache.GetNumberHandler<TUnderlying>();
+                var numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
                 long last = numberHandler.ToInt64(values.Last());
                 value = numberHandler.FromInt64(_rand.Next((int)(last * 2)));
             }
