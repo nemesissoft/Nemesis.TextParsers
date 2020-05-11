@@ -132,8 +132,8 @@ Span<char> initialBuffer = stackalloc char[32];
 using var accumulator = new ValueSequenceBuilder<char>initialBuffer);
 using (var enumerator = coll.GetEnumerator())
     while (enumerator.MoveNext())
-        FormatElement(formatter, enumerator.Current, ref ccumulator);
-return accumulator.AsSpanTo(accumulator.Length > 0 ? ccumulator.Length - 1 : 0).ToString();
+        FormatElement(formatter, enumerator.Current, ref accumulator);
+return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
 ```
 
 ## Funding
@@ -143,9 +143,5 @@ Open source software is free but creating it is not. Should you wish to support 
 
 
 ## Todo / road map
-- [ ] context based transformer creation with settings for:
-	- [ ] DictionaryBehaviour
-    - [ ] Enum casing+other customizations
-    - [ ] empty string meaning (empty, default, null?))
-- [ ] ability to format to buffer
-- [ ] become DI friendly adding support for cross cutting concerns i.e. logging
+- [ ] ability to format to buffer i.e. TryFormat pattern
+- [ ] become DI friendly adding support for cross cutting concerns i.e. logging and own TransformerStore customizations 
