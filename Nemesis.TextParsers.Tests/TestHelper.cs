@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using JetBrains.Annotations;
+using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
 using NUnit.Framework;
@@ -63,12 +64,31 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(re1.Options, Is.EqualTo(re2.Options));
                 Assert.That(re1.ToString(), Is.EqualTo(re2.ToString()));
             }
+            else if (o1 != null && TypeMeta.TryGetGenericRealization(o1.GetType(), typeof(ArraySegment<>), out var as1) &&
+                     as1.GenericTypeArguments[0] is var ase1 &&
+                     o2 != null && TypeMeta.TryGetGenericRealization(o2.GetType(), typeof(ArraySegment<>), out var as2) &&
+                     as2.GenericTypeArguments[0] is var ase2 &&
+                     ase1 == ase2
+            )
+            {
+                var method = typeof(TestHelper).GetMethod(nameof(ArraySegmentEquals), BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                    ?? throw new MissingMethodException(nameof(TestHelper), nameof(ArraySegmentEquals));
+                method = method.MakeGenericMethod(ase1);
+                var equals = (bool)method.Invoke(null, new[] { o1, o2 });
+
+                Assert.That(equals, Is.True, "o1 != o2 when treated as ArraySegment");
+            }
             else
             {
                 o1.Should().BeEquivalentTo(o2, options => options.WithStrictOrdering(), because);
                 o2.Should().BeEquivalentTo(o1, options => options.WithStrictOrdering(), because);
             }
         }
+
+        private static bool ArraySegmentEquals<T>(ArraySegment<T> o1, ArraySegment<T> o2) =>
+            EnumerableEqualityComparer<T>.DefaultInstance.Equals(o1.Array, o2.Array) &&
+            o1.Offset == o2.Offset &&
+            o1.Count == o2.Count;
 
         private static void IsMutuallyEquivalentAggressionBased<T>(object o1, object o2)
         {

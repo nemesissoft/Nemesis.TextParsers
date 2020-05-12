@@ -14,7 +14,7 @@ namespace Benchmarks
         private readonly ITransformer<int> _intTransformer = TextTransformer.Default.GetTransformer<int>();
         private readonly ITransformer<int[]> _intArrayTransformer = TextTransformer.Default.GetTransformer<int[]>();
         
-        public struct TestData
+        public readonly struct TestData
         {
             public ushort Capacity { get; }
             public string Text { get; }

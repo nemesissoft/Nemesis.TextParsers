@@ -45,6 +45,7 @@ namespace Nemesis.TextParsers.Tests
             var baseTypes = ExploratoryTestsData.GetStandardTypes().Concat(
                 new[]
                 {
+                    typeof(ArraySegment<char>), typeof(ArraySegment<byte>), typeof(ArraySegment<string>),
                     typeof(List<string[]>), typeof(List<int[]>), typeof(List<string>[]), typeof(List<int>[]),
 
                     typeof(Person), typeof(LargeStruct), typeof(ThreeStrings),
@@ -199,6 +200,10 @@ namespace Nemesis.TextParsers.Tests
             _fixture.Register(() => _randomSource.NextEnum<FruitsWeirdAll, short>());
             _fixture.Register(() => _randomSource.NextEnum<FileMode, int>());
 
+            FixtureUtils.RegisterArraySegment<byte>(_fixture, _randomSource);
+            FixtureUtils.RegisterArraySegment<char>(_fixture, _randomSource);
+            FixtureUtils.RegisterArraySegment<string>(_fixture, _randomSource);
+
             var structs = _allTestCases
                 .Where(d => d.category == ExploratoryTestCategory.Structs ||
                             d.category == ExploratoryTestCategory.Enums)
@@ -347,7 +352,7 @@ namespace Nemesis.TextParsers.Tests
                 reason = "Formatting empty";
                 string emptyText1 = transformer.Format(parsedEmpty);
                 string emptyText2 = transformer.Format(emptyInstance);
-                IsMutuallyEquivalent(emptyText1, emptyText2);
+                Assert.That(emptyText1, Is.EqualTo(emptyText2));
 
                 reason = "Parsing empty 2";
                 var parsedEmpty1 = ParseAndAssert(emptyText1);
@@ -403,11 +408,11 @@ namespace Nemesis.TextParsers.Tests
             }
             catch (AssertionException ae)
             {
-                throw new Exception($"Failed for {friendlyName} during: {reason} due to {ae.Message}");
+                throw new Exception($"Failed for {friendlyName} during: {reason} due to '{ae.Message}'");
             }
             catch (Exception e)
             {
-                throw new Exception($"Failed for {friendlyName} during: {reason}", e);
+                throw new Exception($"Failed for {friendlyName} during: {reason} due to '{e.Message}'");
             }
         }
     }
@@ -466,7 +471,9 @@ namespace Nemesis.TextParsers.Tests
             var classes = Carve(t => !t.IsValueType && !t.IsArray);
             var remaining = allTypes;
 
-            var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(structs).ToList();
+            var simpleTypes = new[] { typeof(string) }.Concat(enums).Concat(
+                    structs.Where(t => !(t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ArraySegment<>)))
+                ).ToList();
 
 
             var simpleTypesCopy = simpleTypes;
@@ -578,7 +585,7 @@ namespace Nemesis.TextParsers.Tests
         };
     }
 
-    static class FixtureUtils
+    internal static class FixtureUtils
     {
         public static void RegisterAllAggressionBased(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
         {
@@ -639,7 +646,7 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        private static void RegisterNullable<TUnderlyingType>(Fixture fixture, RandomSource randomSource)
+        private static void RegisterNullable<TUnderlyingType>(IFixture fixture, RandomSource randomSource)
             where TUnderlyingType : struct
         {
             TUnderlyingType? Creator() => randomSource.NextDouble() < 0.1
@@ -663,7 +670,7 @@ namespace Nemesis.TextParsers.Tests
             }
         }
 
-        private static void RegisterCollections<TElement>(Fixture fixture, RandomSource randomSource)
+        private static void RegisterCollections<TElement>(IFixture fixture, RandomSource randomSource)
         {
             List<TElement> ListCreator()
             {
@@ -685,6 +692,20 @@ namespace Nemesis.TextParsers.Tests
             fixture.Register(LinkedListCreator);
             fixture.Register(StackCreator);
             fixture.Register(QueueCreator);
+        }
+
+
+        public static void RegisterArraySegment<TElement>(Fixture fixture, RandomSource randomSource)
+        {
+            TElement[] ArrayCreator(int length)
+            {
+                var array = new TElement[length];
+                for (int i = 0; i < length; i++)
+                    array[i] = fixture.Create<TElement>();
+                return array;
+            }
+
+            fixture.Register<ArraySegment<TElement>>(() => new ArraySegment<TElement>(ArrayCreator(10), randomSource.Next(4), randomSource.Next(1, 5)));
         }
 
         #region Value Tuple
