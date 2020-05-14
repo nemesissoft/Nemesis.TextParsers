@@ -12,22 +12,50 @@ When it's not marked otherwise, library follows Postel's Law (formatting is done
 
 ## Serialization format 
 General rules
-1.	Default value can always be enforced using '∅' character. Where it's not relevant - whitespace are trimmed upon parsing, 
-2.	Escaping sequences are supported – each parser/formatter might use different set of escaping sequences and it escapes/unescape only characters of its interest.  As a rule of thumb, special characters are escaped with backslash ('\\') and backslash itself is escaped with double backslash.
-3. recognized types can be arbitrarily embedded/mixed i.e. it's possible to parse/format ```SortedDictionary<char?, IList<float[][]>>``` with no hiccups
+1. Default value can always be enforced using '∅' character. Where it's not relevant - whitespace are trimmed upon parsing, 
+2. Escaping sequences are supported – each parser/formatter might use different set of escaping sequences and it escapes/unescape only characters of its interest.  As a rule of thumb, special characters are escaped with backslash ('\\') and backslash itself is escaped with double backslash.
+3. Recognized types can be arbitrarily embedded/mixed i.e. it's possible to parse/format ```SortedDictionary<char?, IList<float[][]>>``` with no hiccups
+4. Serialization grammar discovery is possible using TextConverterSyntax.GetSyntaxFor method i.e.
+```csharp
+var actual = TextConverterSyntax.Default.GetSyntaxFor(AggressionBased3<Dictionary<uint, System.IO.FileMode?>>);	
+Assert.That(actual, Is.EqualTo(@"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
+escape '#' with ""\#"" and '\' by doubling it ""\\""
+
+AggressionBased3`1 elements syntax:
+	KEY=VALUE pairs separated with ';' bound with nothing and nothing i.e.
+	key1=value1;key2=value2;key3=value3
+	(escape '=' with ""\="", ';' with ""\;"", '∅' with ""\∅"" and '\' by doubling it ""\\"")
+	Key syntax:
+		Whole number from 0 to 4294967295
+	Value syntax:
+		One of following: CreateNew, Create, Open, OpenOrCreate, Truncate, Append or null"));
+```
 
 ###	Simple types 
 Generally, not affected by custom settings, parsed using InvariantCulture. The following types are supported: 
 1. string – no special border characters (i.e ' or ") are needed. Empty string is serialized to empty string. No inner escaping sequences are supported – but every UTF-16 character is recognized 
 2. bool – case insensitive True or False literals 
 3. char - single UTF-16 character
-4. Numbers (byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal) are formatted in default format for InvariantCulture
+4. Numbers (byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal) are formatted in default roundtrip format with InvariantCulture
 5. Several build-in types are formatted using InvariantCulture and the following format
    * TimeSpan – null
    * DateTime/ DateTimeOffset - o
    * Guid – D
    * BigInteger – R
-   * Complex – semicolon separated and parenthesis bound two numbers (real and imaginary part) i.e. *(1; 10)*
+6. Version - integers separated with dots
+7. IpAddress - valid integers separated with dots
+8. Complex – semicolon separated and parenthesis bound two numbers (real and imaginary part) i.e. *(3.14; 2)* which translates to *π+2ⅈ*
+9. Regex - option and pattern serialized in Deconstructable fashion (see below) - separated with ';', escaped with '~' (to avoid overescaping of already frequent '\' escaping character in regex format), bounded by curly braces ('{', '}'). Options serialized using regex option format (flag combination specified without separators i.e. ``` "mi" == RegexOptions.Multiline | RegexOptions.IgnoreCase ```):
+   * RegexOptions.None → '0'
+   * RegexOptions.IgnoreCase → 'i'
+   * RegexOptions.Multiline → 'm'
+   * RegexOptions.ExplicitCapture → 'n'
+   * RegexOptions.Compiled → 'c'
+   * RegexOptions.Singleline → 's'
+   * RegexOptions.IgnorePatternWhitespace → 'x'
+   * RegexOptions.RightToLeft → 'r'
+   * RegexOptions.ECMAScript → 'e'
+   * RegexOptions.CultureInvariant → 'v'  
 
 
 ### KeyValuePair<,> (compound parser)
@@ -71,6 +99,9 @@ Generally parsed as separated with '|' and optionally enclosed in brackets/brace
 2. Collections - Generic realizations of following types are supported: ```IEnumerable<>, ICollection<>, IList<>, List<>, IReadOnlyCollection<>, IReadOnlyList<>, ReadOnlyCollection<>, ISet<>, SortedSet<>, HashSet<>, LinkedList<>, Stack<>, Queue<>, ObservableCollection<>```
 3. LeanCollection -  LeanCollection type is a discriminated union that conveniently stashes 1,2,3 or more types (for performance reasons) but they are formatted like normal collections 
 4. Custom collection - in addition to that user can automatically parse his custom collection-like data structures provided that they implement ```ICollection<>``` while providing empty public constructor or implement ```IReadOnlyCollection<>``` while having public constructor that accepts ```IList<>``` realized using same generic parameters
+5. ArraySegment<> serialized in Deconstructable fashion (see below) - separated with '@', escaped with '~', bounded by curly braces ('{', '}'). Serialized parts are (in order of occurrence): offset, count, array
+
+
 
 Format can be customized using settings - separately for arrays and other collections.
 
@@ -219,3 +250,9 @@ var newSettings = tupleSettings.With(s => s.Delimiter, '_');
 Assert.That(tupleSettings.Delimiter, Is.EqualTo(',')); //not modified, Delimiter property is get-only by the way 
 Assert.That(newSettings.Delimiter, Is.EqualTo('_'));
 ```
+
+
+## TBA
+ - [ ] ILookup<,>
+ - [ ] IGrouping<,>
+ - [ ] ReadOnlyObservableCollection<>

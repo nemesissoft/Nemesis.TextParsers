@@ -128,38 +128,51 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(ex.Message, Does.Contain(expectedMessagePart));
         }
 
-        private const string AGG_BASED_STRING_SYNTAX =
-            @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
-escape '#' with ""\#""and '\' with double backslash ""\\""
-Elements syntax:
-UTF-16 character string";
+        private const string AGG_BASED_STRING_SYNTAX = @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
+escape '#' with ""\#"" and '\' by doubling it ""\\""
+
+IAggressionBased`1 elements syntax:
+	UTF-16 character string";
+        
+        private const string AGG_BASED_DICT = @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
+escape '#' with ""\#"" and '\' by doubling it ""\\""
+
+AggressionBased3`1 elements syntax:
+	KEY=VALUE pairs separated with ';' bound with nothing and nothing i.e.
+	key1=value1;key2=value2;key3=value3
+	(escape '=' with ""\="", ';' with ""\;"", '∅' with ""\∅"" and '\' by doubling it ""\\"")
+	Key syntax:
+		Whole number from 0 to 4294967295
+	Value syntax:
+		One of following: CreateNew, Create, Open, OpenOrCreate, Truncate, Append or null";
 
         private const string AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX = @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
-escape '#' with ""\#""and '\' with double backslash ""\\""
-Elements syntax:
-Elements separated with pipe ('|') i.e.
-1|2|3
-(escape '|' with ""\|""and '\' with double backslash ""\\"")
-Element syntax:
-Whole number from -2147483648 to 2147483647 or null";
+escape '#' with ""\#"" and '\' by doubling it ""\\""
+
+AggressionBased3`1 elements syntax:
+	Elements separated with '|' bound with nothing and nothing i.e.
+	1|2|3
+	(escape '|' with ""\|"", '∅' with ""\∅"" and '\' by doubling it ""\\"")
+	Element syntax:
+		Whole number from -2147483648 to 2147483647 or null";
 
         private static IEnumerable<TCD> GetSyntaxData() => new[]
         {
             new TCD(typeof(IAggressionBased<string>), AGG_BASED_STRING_SYNTAX),
-            new TCD(typeof(AggressionBased3<string>), AGG_BASED_STRING_SYNTAX),
+            new TCD(typeof(AggressionBased3<Dictionary<uint, System.IO.FileMode?>>), AGG_BASED_DICT),
             new TCD(typeof(AggressionBased3<int?[]>), AGG_BASED_NULLABLE_INT_ARRAY_SYNTAX),
         };
 
 
 
         [TestCaseSource(nameof(GetSyntaxData))]
-        public void AggressionBased_GetSyntax(Type type, string expectedSyntax) =>
-            Assert.That(
-                TextConverterSyntaxAttribute.GetConverterSyntax(type),
-                Is.EqualTo(
-                    expectedSyntax
-                    )
-                .Using(IgnoreNewLinesComparer.EqualityComparer)
-                );
+        public void AggressionBased_GetSyntax(Type type, string expectedSyntax)
+        {
+            var actual = TextConverterSyntax.Default.GetSyntaxFor(type);
+            Assert.That(actual,
+                Is.EqualTo(expectedSyntax)
+                    .Using(IgnoreNewLinesComparer.EqualityComparer)
+            );
+        }
     }
 }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Utils
 {
@@ -81,16 +82,131 @@ namespace Nemesis.TextParsers.Utils
             Syntax = syntax;
             SpecialCharacters = specialCharacters;
         }
+    }
 
-        // ReSharper disable once InconsistentNaming
-        private static readonly string NL = Environment.NewLine;
+    public class TextConverterSyntax
+    {
+        private readonly SettingsStore _settingsStore;
+        public TextConverterSyntax([NotNull] SettingsStore settingsStore) => _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
 
-        private static string GetEscapeSequences(params char[] specialChars) =>
-            string.Join(", ",
-                specialChars.Select(c => $@"escape '{c}' with ""\{c}""")
-            ) + @"and '\' with double backslash ""\\""";
+        public static TextConverterSyntax Default { get; } = new TextConverterSyntax(TextTransformer.Default.SettingsStore);
 
-        private static string GetSyntaxFromAttribute(Type source, Type originalType)
+        [UsedImplicitly]
+        public string GetSyntaxFor([NotNull] Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
+            if (TryGetGrammarDescription(type, out string message)) return message;
+            else if (typeof(string) == type) return GetStringSyntax();
+            else if (type.IsValueType && TryGetValueTypeSyntax(type, out string valueTypeSyntax)) return valueTypeSyntax;
+            else if (TryGetDictionarySyntax(type, out string dictSyntax)) return dictSyntax;
+            else if (TryGetCollectionSyntax(type, out string collSyntax)) return collSyntax;
+            else if (typeof(IDictionary).IsAssignableFrom(type)) return "key1=value1;key2=value2;key3=value3";
+            else if (typeof(ICollection).IsAssignableFrom(type)) return "Values separated with pipe ('|')";
+            return type.GetFriendlyName();
+        }
+
+        protected virtual bool TryGetCollectionSyntax(Type type, out string syntax)
+        {
+            if (TypeMeta.TryGetGenericRealization(type, typeof(ICollection<>), out var collType) || type.IsArray)
+            {
+                var elemType = (type.IsArray
+                        ? type.GetElementType()
+                        : collType?.GenericTypeArguments[0]
+                    ) ?? throw new NotSupportedException(
+                        $"Type {type.GetFriendlyName()} is not supported for formatting");
+
+                string elemSyntax = GetSyntaxFor(elemType);
+
+                var s = type.IsArray ? (CollectionSettingsBase)_settingsStore.GetSettingsFor<ArraySettings>() : _settingsStore.GetSettingsFor<CollectionSettings>();
+                char deli = s.ListDelimiter;
+                char? start = s.Start, end = s.End;
+
+                syntax = @$"Elements separated with '{deli}' bound with {(start.HasValue ? start.Value.ToString() : "nothing")} and {(end.HasValue ? end.Value.ToString() : "nothing")} i.e.
+{start}1{deli}2{deli}3{end}
+({GetEscapeSequences(s.EscapingSequenceStart, deli, s.NullElementMarker)})"
+                       +
+                       (string.IsNullOrWhiteSpace(elemSyntax) ? "" : $"{NL}Element syntax:{NL}{AddIndentation(elemSyntax)}")
+                    ;
+                return true;
+            }
+            else
+            {
+                syntax = null;
+                return false;
+            }
+        }
+
+        protected virtual bool TryGetDictionarySyntax(Type type, out string syntax)
+        {
+            if (TypeMeta.TryGetGenericRealization(type, typeof(IDictionary<,>), out var dictType))
+            {
+                string keySyntax = GetSyntaxFor(dictType.GenericTypeArguments[0]),
+                       valSyntax = GetSyntaxFor(dictType.GenericTypeArguments[1]);
+
+                var s = _settingsStore.GetSettingsFor<DictionarySettings>();
+                char eq = s.DictionaryKeyValueDelimiter, semi = s.DictionaryPairsDelimiter;
+                char? start = s.Start, end = s.End;
+
+                syntax = @$"KEY{eq}VALUE pairs separated with '{semi}' bound with {(start.HasValue ? start.Value.ToString() : "nothing")} and {(end.HasValue ? end.Value.ToString() : "nothing")} i.e.
+{start}key1{eq}value1{semi}key2{eq}value2{semi}key3{eq}value3{end}
+({GetEscapeSequences(s.EscapingSequenceStart, eq, semi, s.NullElementMarker)})"
+                         +
+                         (string.IsNullOrWhiteSpace(keySyntax) ? "" : $"{NL}Key syntax:{NL}{AddIndentation(keySyntax)}")
+                         +
+                         (string.IsNullOrWhiteSpace(valSyntax) ? "" : $"{NL}Value syntax:{NL}{AddIndentation(valSyntax)}")
+                    ;
+                return true;
+            }
+            else
+            {
+                syntax = null;
+                return false;
+            }
+        }
+
+        protected virtual bool TryGetValueTypeSyntax(Type type, out string syntax)
+        {
+            syntax = null;
+
+            bool isNullable = false;
+            if (Nullable.GetUnderlyingType(type) is { } underlyingType)
+            {
+                isNullable = true;
+                type = underlyingType;
+            }
+
+
+            (bool isNumeric, var min, var max, bool isFloating) = GetNumberMeta(type);
+            if (isNumeric)
+                syntax = FormattableString.Invariant(
+                    $"{(isFloating ? "Floating" : "Whole")} number from {min} to {max}{(isNullable ? " or null" : "")}");
+            else if (typeof(bool) == type)
+                syntax = FormattableString.Invariant($"'{true}' or '{false}'{(isNullable ? " or null" : "")}");
+
+            else if (typeof(char) == type)
+                syntax = $"Single UTF-16 character{(isNullable ? " or null" : "")}";
+
+            else if (typeof(TimeSpan) == type)
+                syntax = $"hh:mm:ss {(isNullable ? " or null" : "")}";
+
+            else if (typeof(DateTime) == type)
+                // ReSharper disable once StringLiteralTypo
+                syntax =
+                    $"ISO 8601 roundtrip datetime literal (yyyy-MM-ddTHH:mm:ss.fffffffK) {(isNullable ? " or null" : "")}";
+
+            else if (type.IsEnum)
+                syntax = FormattableString.Invariant(
+                    $"One of following: {string.Join(", ", Enum.GetValues(type).Cast<object>())}{(isNullable ? " or null" : "")}");
+
+            return syntax != null;
+        }
+
+        protected virtual string GetStringSyntax() => "UTF-16 character string";
+
+        // ReSharper disable SuggestBaseTypeForParameter
+        private string GetSyntaxFromAttribute(Type source, Type originalType)
+        // ReSharper restore SuggestBaseTypeForParameter
         {
             var attr = source?.GetCustomAttribute<TextConverterSyntaxAttribute>(true);
             if (attr == null) return null;
@@ -100,22 +216,19 @@ namespace Nemesis.TextParsers.Utils
             string elementsSyntax =
                 originalType.IsGenericType && !originalType.IsGenericTypeDefinition &&
                 originalType.GenericTypeArguments is { } genArgs && genArgs.Length > 0
-                  ? string.Join(NL, genArgs.Select(GetConverterSyntax))
-                  : "";
+                    ? string.Join(NL, genArgs.Select(GetSyntaxFor))
+                    : "";
 
             return syntax
                    +
-                   (specialChars?.Length > 0 ? $"{NL}{GetEscapeSequences(specialChars)}" : "")
+                   (specialChars?.Length > 0 ? $"{NL}{GetEscapeSequences('\\', specialChars)}" : "")
                    +
-                   (string.IsNullOrWhiteSpace(elementsSyntax) ? "" : $"{NL}{NL}Elements syntax:{NL}{elementsSyntax}")
+                   (string.IsNullOrWhiteSpace(elementsSyntax) ? "" : $"{NL}{NL}{originalType.Name} elements syntax:{NL}{AddIndentation(elementsSyntax)}")
                 ;
         }
 
-        [UsedImplicitly]
-        public static string GetConverterSyntax([NotNull] Type type)
+        private bool TryGetGrammarDescription(Type type, out string message)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-
             string fromType = GetSyntaxFromAttribute(type, type);
 
             string fromConverter =
@@ -134,90 +247,8 @@ namespace Nemesis.TextParsers.Utils
                     ? GetSyntaxFromAttribute(transformerType, type)
                     : null;
 
-            if (TryConcat(out string message, fromType, fromConverter, fromTextFactory, fromTransformer))
-                return message;
-            else if (typeof(string) == type)
-                return "UTF-16 character string";
-            else
-            {
-                bool isNullable = false;
-                if (Nullable.GetUnderlyingType(type) is { } underlyingType)
-                {
-                    isNullable = true;
-                    type = underlyingType;
-                }
+            var texts = new[] { fromType, fromConverter, fromTextFactory, fromTransformer };
 
-
-                (bool isNumeric, var min, var max, bool isFloating) = GetNumberMeta(type);
-                if (isNumeric)
-                    return FormattableString.Invariant(
-                        $"{(isFloating ? "Floating" : "Whole")} number from {min} to {max}{(isNullable ? " or null" : "")}");
-                else if (typeof(bool) == type)
-                    return FormattableString.Invariant($"'{true}' or '{false}'{(isNullable ? " or null" : "")}");
-
-                else if (typeof(char) == type)
-                    return $"Single UTF-16 character{(isNullable ? " or null" : "")}";
-
-                else if (typeof(TimeSpan) == type)
-                    return $"hh:mm:ss {(isNullable ? " or null" : "")}";
-
-                else if (typeof(DateTime) == type)
-                    // ReSharper disable once StringLiteralTypo
-                    return
-                        $"ISO 8601 roundtrip datetime literal (yyyy-MM-ddTHH:mm:ss.fffffffK) {(isNullable ? " or null" : "")}";
-
-                else if (type.IsEnum)
-                    return FormattableString.Invariant(
-                        $"'{string.Join(", ", Enum.GetValues(type).Cast<object>())}'{(isNullable ? " or null" : "")}");
-
-
-                else if (TypeMeta.TryGetGenericRealization(type, typeof(IDictionary<,>), out var dictType))
-                {
-                    string keySyntax = GetConverterSyntax(dictType.GenericTypeArguments[0]),
-                        valSyntax = GetConverterSyntax(dictType.GenericTypeArguments[1]);
-
-                    return @$"KEY=VALUE pairs separated with semicolons(';') i.e.
-key1=value1;key2=value2;key3=value3
-({GetEscapeSequences('=', ';')})"
-                           +
-                           (string.IsNullOrWhiteSpace(keySyntax) ? "" : $"{NL}Key syntax:{NL}{keySyntax}")
-                           +
-                           (string.IsNullOrWhiteSpace(valSyntax) ? "" : $"{NL}Value syntax:{NL}{valSyntax}")
-                        ;
-                }
-
-                else if (TypeMeta.TryGetGenericRealization(type, typeof(ICollection<>), out var collType) ||
-                         type.IsArray)
-                {
-                    var elemType = (type.IsArray
-                            ? type.GetElementType()
-                            : collType?.GenericTypeArguments[0]
-                        ) ?? throw new NotSupportedException(
-                            $"Type {type.GetFriendlyName()} is not supported for formatting");
-
-                    string elemSyntax = GetConverterSyntax(elemType);
-
-                    return @$"Elements separated with pipe ('|') i.e.
-1|2|3
-({GetEscapeSequences('|')})"
-                           +
-                           (string.IsNullOrWhiteSpace(elemSyntax) ? "" : $"{NL}Element syntax:{NL}{elemSyntax}")
-                        ;
-                }
-
-
-                else if (typeof(IDictionary).IsAssignableFrom(type))
-                    return "key1=value1;key2=value2;key3=value3";
-
-                else if (typeof(ICollection).IsAssignableFrom(type))
-                    return "Values separated with pipe ('|')";
-
-                return null;
-            }
-        }
-
-        private static bool TryConcat(out string message, params string[] texts)
-        {
             message = "";
 
             foreach (string text in texts)
@@ -250,6 +281,21 @@ key1=value1;key2=value2;key3=value3
                 TypeCode.Decimal => (notEnum, decimal.MinValue, decimal.MaxValue, true),
                 _ => default
             };
+        }
+
+        // ReSharper disable once InconsistentNaming
+        private static readonly string NL = Environment.NewLine;
+
+        private static string GetEscapeSequences(char escapingSequenceStart, params char[] specialChars) =>
+            "escape " + string.Join(", ",
+                specialChars.Select(c => $@"'{c}' with ""\{c}""")
+            ) + $@" and '{escapingSequenceStart}' by doubling it ""{escapingSequenceStart}{escapingSequenceStart}""";
+
+        private static string AddIndentation(string text)
+        {
+            var indented = text.Split(new[] { Environment.NewLine, "\r", "\n" }, StringSplitOptions.None)
+                .Select(line => $"\t{line}");
+            return string.Join(Environment.NewLine, indented);
         }
     }
 }

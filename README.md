@@ -145,3 +145,4 @@ Open source software is free but creating it is not. Should you wish to support 
 ## Todo / road map
 - [ ] ability to format to buffer i.e. TryFormat pattern
 - [ ] become DI friendly adding support for cross cutting concerns i.e. logging and own TransformerStore customizations 
+- [ ] support for ILookup<,>, IGrouping<,>, ReadOnlyObservableCollection<>
