@@ -84,12 +84,12 @@ namespace Nemesis.TextParsers.Utils
         }
     }
 
-    public class TextConverterSyntax
+    public class TextSyntaxProvider
     {
         private readonly SettingsStore _settingsStore;
-        public TextConverterSyntax([NotNull] SettingsStore settingsStore) => _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+        public TextSyntaxProvider([NotNull] SettingsStore settingsStore) => _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
 
-        public static TextConverterSyntax Default { get; } = new TextConverterSyntax(TextTransformer.Default.SettingsStore);
+        public static TextSyntaxProvider Default { get; } = new TextSyntaxProvider(TextTransformer.Default.SettingsStore);
 
         [UsedImplicitly]
         public string GetSyntaxFor([NotNull] Type type)

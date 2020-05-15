@@ -17,7 +17,7 @@ General rules
 3. Recognized types can be arbitrarily embedded/mixed i.e. it's possible to parse/format ```SortedDictionary<char?, IList<float[][]>>``` with no hiccups
 4. Serialization grammar discovery is possible using TextConverterSyntax.GetSyntaxFor method i.e.
 ```csharp
-var actual = TextConverterSyntax.Default.GetSyntaxFor(AggressionBased3<Dictionary<uint, System.IO.FileMode?>>);	
+var actual = TextSyntaxProvider.Default.GetSyntaxFor(AggressionBased3<Dictionary<uint, System.IO.FileMode?>>);	
 Assert.That(actual, Is.EqualTo(@"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
 escape '#' with ""\#"" and '\' by doubling it ""\\""
 

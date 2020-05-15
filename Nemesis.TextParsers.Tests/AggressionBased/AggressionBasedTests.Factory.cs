@@ -168,7 +168,7 @@ AggressionBased3`1 elements syntax:
         [TestCaseSource(nameof(GetSyntaxData))]
         public void AggressionBased_GetSyntax(Type type, string expectedSyntax)
         {
-            var actual = TextConverterSyntax.Default.GetSyntaxFor(type);
+            var actual = TextSyntaxProvider.Default.GetSyntaxFor(type);
             Assert.That(actual,
                 Is.EqualTo(expectedSyntax)
                     .Using(IgnoreNewLinesComparer.EqualityComparer)
