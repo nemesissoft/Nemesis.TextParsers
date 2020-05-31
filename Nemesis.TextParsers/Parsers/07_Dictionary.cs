@@ -9,6 +9,7 @@ using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
 {
+    //todo support ILookup with null as key 
     [UsedImplicitly]
     public sealed class DictionaryTransformerCreator : ICanCreateTransformer
     {

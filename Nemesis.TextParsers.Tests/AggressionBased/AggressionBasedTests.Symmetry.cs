@@ -20,7 +20,7 @@ namespace Nemesis.TextParsers.Tests
         {
             (01, @"1|2|3#4|5|6#7|8|9", (IEnumerable)new[]{new List<int>{1,2,3},new List<int>{4,5,6},new List<int>{7,8,9}}, typeof(AggressionBased3<List<int>>), typeof(List<int>)),
             (02, @"1|2|3#1|2|3#1|2|3",              new[]{new List<int>{1,2,3},new List<int>{1,2,3},new List<int>{1,2,3}}, typeof(AggressionBased3<List<int>>), typeof(List<int>)),
-
+            
             (03, @"1\#2\#4#40\#50\#70#7\#8\#9", new[]
             {
                 FacInt.FromPassiveNormalAggressive(1,2,4),
@@ -257,13 +257,6 @@ namespace Nemesis.TextParsers.Tests
             IsMutuallyEquivalent(empty3, parsed3);
 
             IsMutuallyEquivalent(parsed1, AggressionBasedFactory<TCollection>.FromOneValue((TCollection)emptyValue));
-        }
-
-        [Test]
-        public void TransformConcreteAggressionBased()
-        {
-            //var transformer = TextTransformer.Default.GetTransformer<IAggressionBased<int>>();
-            //var formatter = (IFormatter<AggressionBased1<int>>) transformer;
         }
     }
 }
