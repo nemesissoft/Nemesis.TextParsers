@@ -16,10 +16,15 @@ using NotNull = JetBrains.Annotations.NotNullAttribute;
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
+    public interface IAggressionBased
+    {
+        int Arity { get; }
+    }
+
     [Transformer(typeof(AggressionBasedTransformer<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
-    public interface IAggressionBased<TValue>
+    public interface IAggressionBased<TValue>: IAggressionBased
     {
         TValue PassiveValue { get; }
         TValue NormalValue { get; }
@@ -73,6 +78,7 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased1<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
+        public int Arity => 1;
         public TValue One { get; }
 
         public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
@@ -105,6 +111,8 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased3<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
+        public int Arity => 3;
+
         public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
 
         public TValue PassiveValue { get; }
@@ -164,6 +172,8 @@ namespace Nemesis.TextParsers.Tests
 
     internal sealed class AggressionBased9<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
+        public int Arity => 9;
+
         private readonly TValue[] _values;
 
         public override LeanCollection<TValue> GetValues() => LeanCollectionFactory.FromArrayChecked(_values);
