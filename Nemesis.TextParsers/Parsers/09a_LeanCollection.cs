@@ -56,6 +56,9 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 71;
+        
+        public override string ToString() =>
+            $"Create transformer for LeanCollection with settings:{_settings}";
     }
 
     public sealed class LeanCollectionTransformer<TElement> : TransformerBase<LeanCollection<TElement>>

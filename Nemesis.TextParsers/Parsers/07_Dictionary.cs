@@ -67,6 +67,9 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 50;
+        
+        public override string ToString() =>
+            $"Create transformer for Dictionary-like structures with settings:{_settings}";
     }
 
     public abstract class DictionaryTransformerBase<TKey, TValue, TDict> : TransformerBase<TDict>

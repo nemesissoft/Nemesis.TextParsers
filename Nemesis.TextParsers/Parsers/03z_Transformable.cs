@@ -94,6 +94,7 @@ namespace Nemesis.TextParsers.Parsers
     // ReSharper disable RedundantAttributeUsageProperty
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
     // ReSharper restore RedundantAttributeUsageProperty
+    [PublicAPI]
     public sealed class TransformerAttribute : Attribute
     {
         public Type TransformerType { get; }

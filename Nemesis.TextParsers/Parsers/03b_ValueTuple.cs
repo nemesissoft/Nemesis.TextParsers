@@ -81,5 +81,8 @@ namespace Nemesis.TextParsers.Parsers
             elementTypes.All(t => _transformerStore.IsSupportedForTransformation(t));
         
         public sbyte Priority => 12;
+        
+        public override string ToString() =>
+            $"Create transformer for ValueTuple struct with settings:{_helper}";
     }
 }

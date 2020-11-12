@@ -100,6 +100,9 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 60;
+        
+        public override string ToString() =>
+            $"Create transformer for array with settings:{_settings}";
     }
 
     public sealed class ArrayTransformer<TElement> : EnumerableTransformerBase<TElement, TElement[]>

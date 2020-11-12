@@ -67,6 +67,9 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         }
 
         public sbyte Priority => 30;
+        
+        public override string ToString() =>
+            $"Create transformer for any Enum with settings:{_settings}";
     }
 
     public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : TransformerBase<TEnum>

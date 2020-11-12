@@ -43,7 +43,7 @@ namespace Nemesis.TextParsers.Parsers
         public override sbyte Priority => 21;
 
         public override string ToString() =>
-            $"Generate transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(string or ReadOnlySpan<char>)";
+            $"Create transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(ReadOnlySpan<char> or string)";
     }
 
     // ReSharper disable RedundantAttributeUsageProperty

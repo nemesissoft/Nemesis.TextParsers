@@ -35,6 +35,9 @@ namespace Nemesis.TextParsers.Parsers
         ;
 
         public sbyte Priority => 110;
+        
+        public override string ToString() =>
+            $"Create transformer for Deconstructable aspect with settings:{_transformerStore.SettingsStore.GetSettingsFor<DeconstructableSettings>()}";
     }
 
     public enum DeconstructionMethod : byte

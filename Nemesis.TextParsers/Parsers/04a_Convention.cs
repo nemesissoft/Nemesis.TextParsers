@@ -18,6 +18,6 @@ namespace Nemesis.TextParsers.Parsers
         public override sbyte Priority => 20;
 
         public override string ToString() =>
-            $"Generate transformer using this.{FactoryMethodName}(string or ReadOnlySpan<char>)";
+            $"Create transformer using this.{FactoryMethodName}(ReadOnlySpan<char> or string)";
     }
 }

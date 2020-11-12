@@ -151,6 +151,9 @@ namespace Nemesis.TextParsers.Parsers
         ;
 
         public sbyte Priority => 51;
+        
+        public override string ToString() =>
+            $"Create transformer for custom dictionaries with settings:{_settings}";
     }
 
 

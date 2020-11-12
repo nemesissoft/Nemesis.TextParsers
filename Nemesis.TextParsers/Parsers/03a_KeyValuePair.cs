@@ -11,8 +11,9 @@ namespace Nemesis.TextParsers.Parsers
     [UsedImplicitly]
     public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
     {
-        private readonly TupleHelper _helper; 
+        private readonly TupleHelper _helper;
         private readonly ITransformerStore _transformerStore;
+
         public KeyValuePairTransformerCreator(ITransformerStore transformerStore, KeyValuePairSettings settings)
         {
             _transformerStore = transformerStore;
@@ -23,11 +24,12 @@ namespace Nemesis.TextParsers.Parsers
         public ITransformer<TPair> CreateTransformer<TPair>()
         {
             if (!TryGetElements(typeof(TPair), out var keyType, out var valueType))
-                throw new NotSupportedException($"Type {typeof(TPair).GetFriendlyName()} is not supported by {GetType().Name}");
+                throw new NotSupportedException(
+                    $"Type {typeof(TPair).GetFriendlyName()} is not supported by {GetType().Name}");
 
             var m = _createTransformerCoreMethod.MakeGenericMethod(keyType, valueType);
 
-            return (ITransformer<TPair>)m.Invoke(this, null);
+            return (ITransformer<TPair>) m.Invoke(this, null);
         }
 
         private static readonly MethodInfo _createTransformerCoreMethod = Method.OfExpression<
@@ -49,7 +51,8 @@ namespace Nemesis.TextParsers.Parsers
             private readonly ITransformer<TKey> _keyTransformer;
             private readonly ITransformer<TValue> _valueTransformer;
 
-            public KeyValuePairTransformer(TupleHelper helper, ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer)
+            public KeyValuePairTransformer(TupleHelper helper, ITransformer<TKey> keyTransformer,
+                ITransformer<TValue> valueTransformer)
             {
                 _helper = helper;
                 _keyTransformer = keyTransformer;
@@ -86,7 +89,10 @@ namespace Nemesis.TextParsers.Parsers
                     _helper.EndFormat(ref accumulator);
                     return accumulator.AsSpan().ToString();
                 }
-                finally { accumulator.Dispose(); }
+                finally
+                {
+                    accumulator.Dispose();
+                }
             }
 
             public override KeyValuePair<TKey, TValue> GetEmpty() =>
@@ -118,5 +124,8 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 11;
+
+        public override string ToString() =>
+            $"Create transformer for KeyValuePair struct with settings:{_helper}";
     }
 }

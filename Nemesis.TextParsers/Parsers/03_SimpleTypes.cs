@@ -54,6 +54,9 @@ namespace Nemesis.TextParsers.Parsers
         public bool CanHandle(Type type) => _simpleTransformers.ContainsKey(type);
 
         public sbyte Priority => 10;
+
+        public override string ToString() => 
+            $"Create transformer for simple system types: {string.Join(", ", _simpleTransformers.Keys.Select(t=>t.GetFriendlyName()))}";
     }
 
     internal static class NumberTransformerCache

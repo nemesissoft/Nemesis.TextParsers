@@ -14,5 +14,7 @@ namespace Nemesis.TextParsers.Parsers
         public bool CanHandle(Type type) => true;
 
         public sbyte Priority => sbyte.MaxValue;
+        
+        public override string ToString() => "Sink for Transformer creator chain of responsibility";
     }
 }

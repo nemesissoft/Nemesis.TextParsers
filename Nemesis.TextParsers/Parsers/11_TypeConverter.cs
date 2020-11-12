@@ -11,6 +11,7 @@ namespace Nemesis.TextParsers.Parsers
         public ITransformer<TElement> CreateTransformer<TElement>() =>
             TypeDescriptor.GetConverter(typeof(TElement)) switch
             {
+                // ReSharper disable once SuspiciousTypeConversion.Global
                 ITransformer<TElement> t => t,
 
                 var t1 when t1.GetType() == typeof(TypeConverter) => throw new NotSupportedException(
@@ -55,5 +56,7 @@ namespace Nemesis.TextParsers.Parsers
             typeConverter.CanConvertTo(typeof(string));
 
         public sbyte Priority => 120;
+        
+        public override string ToString() => "Create transformer based on registered TypeConverter";
     }
 }

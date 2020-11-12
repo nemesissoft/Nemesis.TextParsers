@@ -20,8 +20,7 @@ namespace Nemesis.TextParsers.Parsers
             _transformerStore = transformerStore;
             _settings = settings;
         }
-
-
+        
         public ITransformer<TCollection> CreateTransformer<TCollection>()
         {
             var collectionType = typeof(TCollection);
@@ -141,6 +140,9 @@ namespace Nemesis.TextParsers.Parsers
         ;
 
         public sbyte Priority => 72;
+        
+        public override string ToString() =>
+            $"Create transformer for custom collections with settings:{_settings}";
     }
 
 

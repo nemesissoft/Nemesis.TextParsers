@@ -55,5 +55,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 40;
+        
+        public override string ToString() => "Create transformer for Nullable generic realization";
     }
 }

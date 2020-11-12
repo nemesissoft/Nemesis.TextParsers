@@ -20,7 +20,6 @@ namespace Nemesis.TextParsers.Parsers
             _settings = settings;
         }
 
-
         public ITransformer<TCollection> CreateTransformer<TCollection>()
         {
             var collectionType = typeof(TCollection);
@@ -67,6 +66,9 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 70;
+        
+        public override string ToString() =>
+            $"Create transformer for Collection-like structures with settings:{_settings}";
     }
 
     public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTransformerBase<TElement, TCollection>
