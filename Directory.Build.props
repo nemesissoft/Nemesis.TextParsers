@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <Version>1.0.0</Version><!--This will get replaced by AppVeyor-->
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <!--<NullableContextOptions>enable</NullableContextOptions>-->
 
     <Authors>Michał Bryłka, Leszek Kowalski</Authors>
