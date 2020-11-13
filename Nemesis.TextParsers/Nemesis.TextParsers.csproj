@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>    
-    <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1;netstandard2.0;net461;net47</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.1;netstandard2.0;net461;net47</TargetFrameworks>
 
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
     <Description>Contains various parser optimized for speed and no allocation</Description>
