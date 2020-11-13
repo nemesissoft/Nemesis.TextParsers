@@ -8,10 +8,10 @@ using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
 using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+#if PRE_NULLABLES
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
 
 
