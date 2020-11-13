@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <!--<Nullable>enable</Nullable>-->
-
-    <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;netstandard2.1;netstandard2.0;net461;net47</TargetFrameworks>
-    
+  <PropertyGroup>    
+    <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1;netstandard2.0;net461;net47</TargetFrameworks>
 
     <PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
     <Description>Contains various parser optimized for speed and no allocation</Description>
@@ -12,7 +9,9 @@
     <PackageIcon>review-icon.png</PackageIcon>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
-    <PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER<!--starts with "RELEASE_NOTES_PLACEHOLDER" == this will be patched by AppVeyor--></PackageReleaseNotes>
+    <PackageReleaseNotes>
+      RELEASE_NOTES_PLACEHOLDER<!--starts with "RELEASE_NOTES_PLACEHOLDER" == this will be patched by AppVeyor-->
+    </PackageReleaseNotes>
 
 
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
@@ -42,24 +41,30 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" Version="1.*" PrivateAssets="All" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.*" />
   </ItemGroup>
 
   <!--Legacy on-->
   <PropertyGroup>
     <AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net47' ">true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.*" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="System.Memory" Version="4.*" />
   </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="System.Memory" Version="4.*" />
   </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net47'">
     <PackageReference Include="System.Memory" Version="4.*" />
   </ItemGroup>
-  
+
   <!--Legacy off-->
 
 
@@ -70,7 +75,8 @@
   </ItemGroup>
 
 
-  <!--Pack documentation once it's suppoerted on nuget--> <!--
+  <!--Pack documentation once it's suppoerted on nuget-->
+  <!--
   <PropertyGroup>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

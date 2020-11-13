@@ -7,10 +7,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
-#if NETCOREAPP3_0
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
-#else
+#if PRE_NULLABLES
 using NotNull = JetBrains.Annotations.NotNullAttribute;
+#else
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
 
 // ReSharper disable once CheckNamespace

@@ -218,7 +218,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(ulong), @"-1|0", typeof(OverflowException)),
             (typeof(ulong), @"18446744073709551615|18446744073709551616", typeof(OverflowException)),
 
-#if NETCOREAPP3_0 == false
+#if !(NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent wit IEEE
             (typeof(float), @"-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", typeof(OverflowException)),
             (typeof(float), @" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
 #endif
