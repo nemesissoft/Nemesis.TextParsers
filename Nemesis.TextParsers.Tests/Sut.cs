@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Settings;
 
@@ -41,7 +42,7 @@ namespace Nemesis.TextParsers.Tests
 
             Stack<char> GetRandomChars(int length, string reason)
             {
-                
+
                 seed += 10;
                 Console.WriteLine($"Seed for {reason} = {seed}");
                 var rand = new Random(seed);
@@ -66,7 +67,7 @@ namespace Nemesis.TextParsers.Tests
             foreach (var settingType in settingTypes)
             {
                 var ctor = settingType.GetConstructors().Select(c => (Ctor: c, Params: c.GetParameters()))
-                    .Where(pair => pair.Params.Length > 0)
+                    .Where(pair => (pair.Params?.Length ?? 0) > 0)
                     .OrderByDescending(p => p.Params.Length)
                     .FirstOrDefault().Ctor ?? throw new NotSupportedException($"No suitable constructor found for {settingType}");
                 var @params = ctor.GetParameters();
