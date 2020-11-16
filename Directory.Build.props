@@ -15,7 +15,7 @@
   <!--Nullable Reference Types-->
   <PropertyGroup>
     <!--<Nullable>enable</Nullable> $(DefineConstants);-->
-    <DefineConstants Condition=" $(TargetFramework.StartsWith('netstandard')) AND '$(TargetFramework)' != 'netstandard2.1' OR $(TargetFramework.StartsWith('net4')) OR $(TargetFramework.StartsWith('netcoreapp')) AND !$(TargetFramework.StartsWith('netcoreapp3'))">PRE_NULLABLES</DefineConstants>
+    <DefineConstants Condition=" ($(TargetFramework.StartsWith('netstandard')) AND '$(TargetFramework)' != 'netstandard2.1') OR $(TargetFramework.StartsWith('net4')) OR ($(TargetFramework.StartsWith('netcoreapp')) AND !$(TargetFramework.StartsWith('netcoreapp3')))">PRE_NULLABLES</DefineConstants>
   </PropertyGroup>  
   
 </Project>

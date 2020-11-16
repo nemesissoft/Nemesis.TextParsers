@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
+
 using JetBrains.Annotations;
+
 using Nemesis.Essentials.Design;
 
 namespace Nemesis.TextParsers.Tests.Infrastructure
@@ -121,7 +123,8 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
 
         //it's generally no a good idea for a property not to be deterministic. But this works well for our demo.
         //And have a look at DateTime.Now ;-)
-        public static EmptyConventionBase Empty => new EmptyFactoryMethodConvention(3.14f, DateTime.Now);
+        private static readonly DateTime _emptyDate = DateTime.Now;
+        public static EmptyConventionBase Empty => new EmptyFactoryMethodConvention(3.14f, _emptyDate);
 
         //this is just to conform to FactoryMethod convention - will not be used 
         [UsedImplicitly]
