@@ -291,6 +291,21 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(ulong), GetTestNumbers<ulong>(ulong.MinValue, ulong.MaxValue-ulong.MaxValue/10, ulong.MaxValue/10, (n1, n2) => (ulong)(n1+n2)),
                 @"0|  1844674407370955161 | 3689348814741910322 | 5534023222112865483|7378697629483820644 |9223372036854775805|11068046444225730966|12912720851596686127|14757395258967641288|16602069666338596449" ),
 
+#if NET
+            (typeof(Half), GetTestNumbers<float>((float)Half.MinValue+(float)Half.MaxValue/10,
+                (float)Half.MaxValue-(float)Half.MaxValue/10,
+                (float)Half.MaxValue/10, (n1, n2) => (float)(n1+n2)).Select(f=>(Half)f),
+                @"-58940|-52400|-45860|-39300|-32750|-26200|-19650|-13100|-6550|-0.004883|6550|13100|19650|26200|32750|39300|45860|52400|58940" ),
+
+            (typeof(Half), GetTestNumbers<int>(1, 0b11_1111_1111, 100, (n1, n2) => n1+n2).Select(i=>
+                {
+                    ushort variable = (ushort)i;
+                    return System.Runtime.CompilerServices.Unsafe.As<ushort, Half>(ref variable);
+                }
+            ),
+                @"5.9604644775390625E-08|6.0200691223144531E-06|1.1980533599853516E-05|1.7940998077392578E-05|2.3901462554931641E-05|2.9861927032470703E-05|3.5822391510009766E-05|4.1782855987548828E-05|4.7743320465087891E-05|5.3703784942626953E-05|5.9664249420166016E-05" ),
+#endif
+
             (typeof(float), GetTestNumbers<float>(float.MinValue+float.MaxValue/10, float.MaxValue-float.MaxValue/10, float.MaxValue/10, (n1, n2) => (float)(n1+n2)),
                 @"-3.06254122E+38|-2.72225877E+38|-2.38197633E+38|-2.04169388E+38|-1.70141153E+38|-1.36112918E+38|-1.02084684E+38|-6.8056449E+37|-3.40282144E+37|2.02824096E+31|3.40282549E+37|6.80564896E+37|1.02084724E+38|1.36112959E+38|1.70141183E+38|2.04169428E+38|2.38197673E+38|2.72225918E+38" ),
 

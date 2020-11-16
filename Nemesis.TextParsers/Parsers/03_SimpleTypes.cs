@@ -6,7 +6,9 @@ using System.Net;
 using System.Numerics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+
 using JetBrains.Annotations;
+
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 
@@ -55,8 +57,8 @@ namespace Nemesis.TextParsers.Parsers
 
         public sbyte Priority => 10;
 
-        public override string ToString() => 
-            $"Create transformer for simple system types: {string.Join(", ", _simpleTransformers.Keys.Select(t=>t.GetFriendlyName()))}";
+        public override string ToString() =>
+            $"Create transformer for simple system types: {string.Join(", ", _simpleTransformers.Keys.Select(t => t.GetFriendlyName()))}";
     }
 
     public static class NumberTransformerCache
@@ -633,6 +635,28 @@ namespace Nemesis.TextParsers.Parsers
         public static readonly ITransformer<ulong> Instance = new UInt64Transformer();
         private UInt64Transformer() { }
     }
+
+#if NET
+
+    [UsedImplicitly]
+    public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
+    {
+        protected override Half ParseCore(in ReadOnlySpan<char> input) =>
+            input.Length switch
+            {
+                1 when input[0] == '∞' => Half.PositiveInfinity,
+                2 when input[0] == '-' && input[1] == '∞' => Half.NegativeInfinity,
+                _ => Half.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+            };
+
+        protected override string FormatString { get; } = "G17";
+
+        public static readonly ITransformer<Half> Instance = new HalfTransformer();
+
+        private HalfTransformer() { }
+    }
+
+#endif
 
     [UsedImplicitly]
     public sealed class SingleTransformer : SimpleFormattableTransformer<float>

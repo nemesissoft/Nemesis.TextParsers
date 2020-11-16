@@ -251,6 +251,44 @@ Assert.That(tupleSettings.Delimiter, Is.EqualTo(',')); //not modified, Delimiter
 Assert.That(newSettings.Delimiter, Is.EqualTo('_'));
 ```
 
+## C# 9.0 Records
+With introduction of [Records](https://devblogs.microsoft.com/dotnet/welcome-to-c-9-0/#records) in C# 9.0 one may wonder how they might be serialized to flat text formats. As a matter of fact, Records are merely a syntax sugar for C# - they stand for a class with automatically implemented structural equality(along with IEquatable and operators), positional deconstruction and printing/formatting. Hence, as such they are supported in NTP out-of-the-box - via Deconstructable pattern. Caution is advised when employing this pattern for derived positional records:
+```csharp 
+record Vertebrate(string Name)
+{
+    public Vertebrate() : this("") { }
+}
+
+//Deconstruct will be generated for reduced property set 
+record ReptileWithoutName(Habitat Habitat) : Vertebrate { }
+
+//repeat Name property to become part of contract
+record ReptileWithName(string Name, Habitat Habitat) : Vertebrate(Name) { }
+
+//use automatic transformer
+TextTransformer.Default.GetTransformer<ReptileWithName>().Parse("(Comodo Dragon;Terrestrial)")
+```
+
+Alternatively you might implement semi-automatic transformation via Transformable pattern (here depicted in tandem with Deconstructable transformation):
+```csharp 
+[Transformer(typeof(PersonTransformer))]
+record Person(string FirstName, string FamilyName, int Age) { }
+
+class PersonTransformer : CustomDeconstructionTransformer<Person>
+{
+    public PersonTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
+
+    protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype) =>
+        prototype
+            .WithoutBorders()
+            .WithDelimiter('-')
+            .WithNullElementMarker('␀')
+            .WithDeconstructableEmpty();
+}
+```
+
+Finally, you can implement own _`Nemesis.TextParsers.ITransformer<TElement>`_ or (if you really have no other option) _`System.ComponentModel.TypeConverter`_ class
+
 
 ## TBA
  - [ ] ILookup<,>

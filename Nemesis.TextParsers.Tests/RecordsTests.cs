@@ -17,7 +17,7 @@ namespace Nemesis.TextParsers.Tests
     class Records_AutomaticTransformation
     {
         [TestCase(typeof(Vertebrate), "(Agama)")]
-        [TestCase(typeof(Reptile), "(Agama;Terrestrial)")]
+        [TestCase(typeof(ReptileWithName), "(Agama;Terrestrial)")]
         [TestCase(typeof(TerrestrialLizard), "(Carnivorous)")]
         public void ShouldBeAbleToFormat(Type contractType, string expectedResult)
         {
@@ -25,7 +25,7 @@ namespace Nemesis.TextParsers.Tests
             reptile = reptile with { Name = "Agama" };
 
             var actual = Sut.GetTransformer(contractType).FormatObject(reptile);
-
+            
             Assert.That(actual, Is.EqualTo(expectedResult));
         }
 
@@ -34,7 +34,7 @@ namespace Nemesis.TextParsers.Tests
         {
             var collector = new AnimalCollector("Mike", 36, new[]
             {
-                new Reptile("Comodo Dragon", Habitat.Terrestrial),
+                new ReptileWithName("Comodo Dragon", Habitat.Terrestrial),
                 new TerrestrialLizard(Diet.Carnivorous)
             });
             var sut = Sut.GetTransformer<AnimalCollector>();
@@ -55,13 +55,18 @@ namespace Nemesis.TextParsers.Tests
 
         enum Diet { Carnivorous, Herbivorous, Omnivorous }
 
-        record Vertebrate(string Name) { }
+        record Vertebrate(string Name)
+        {
+            public Vertebrate() : this("") { }
+        }
 
         //repeat Name property to become part of contract
-        record Reptile(string Name, Habitat Habitat) : Vertebrate(Name) { }
+        record ReptileWithName(string Name, Habitat Habitat) : Vertebrate(Name) { }
+
+        record ReptileWithoutName(Habitat Habitat) : Vertebrate { }
 
         //omit repetitions in case you want to fix them - but pass fixed values as argument list for base class specification 
-        record TerrestrialLizard(Diet Diet) : Reptile("Lizard", Habitat.Terrestrial) { }
+        record TerrestrialLizard(Diet Diet) : ReptileWithName("Lizard", Habitat.Terrestrial) { }
 
         record AnimalCollector(string Name, byte Age, Vertebrate[] Animals/*serialization of this array will loose data not available on Vertebrate level*/) { }
     }
