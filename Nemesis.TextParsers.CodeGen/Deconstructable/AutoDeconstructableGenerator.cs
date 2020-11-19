@@ -188,7 +188,4 @@ namespace Auto
             return left.Count == right.Count && AreEqualByParamTypes();
         }
     }
-
-
-    //TODO add enum parser generator from string 
 }

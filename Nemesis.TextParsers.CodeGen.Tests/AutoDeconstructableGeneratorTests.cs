@@ -115,7 +115,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
     }
 }
-"));
+").Using(IgnoreNewLinesComparer.EqualityComparer));
 
         }
 
