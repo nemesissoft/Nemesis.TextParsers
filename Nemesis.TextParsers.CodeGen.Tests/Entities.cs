@@ -1,12 +1,11 @@
 ﻿using System;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
-//GENERATE: append namespaces from source file
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
-    //[AutoDeconstructable(';', '∅', '\\', '(', ')')]
-    public readonly partial struct Point3d
+    [AutoDeconstructable(';', '∅', '\\', '(', ')')]
+    readonly partial struct Point3d
     {
         public double X { get; }
         public double Y { get; }
@@ -29,14 +28,14 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
     //generated
     [Transformer(typeof(Point3dTransformer))]
-    public readonly partial struct Point3d
+    readonly partial struct Point3d
     {
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("AutoDeconstructableGenerator", "1.0")]
     [System.Runtime.CompilerServices.CompilerGenerated]
-    public sealed class Point3dTransformer: TransformerBase<Point3d>
+    sealed class Point3dTransformer: TransformerBase<Point3d>
     {
         private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
         private readonly ITransformer<double> _transformerX = TextTransformer.Default.GetTransformer<double>();
@@ -84,6 +83,25 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                 return accumulator.AsSpan().ToString();
             }
             finally { accumulator.Dispose(); }
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false)]
+    sealed class AutoDeconstructableAttribute : Attribute
+    {
+        public char Delimiter { get; }
+        public char NullElementMarker { get; }
+        public char EscapingSequenceStart { get; }
+        public char Start { get; }
+        public char End { get; }
+
+        public AutoDeconstructableAttribute(char delimiter, char nullElementMarker, char escapingSequenceStart, char start = '\0', char end='\0')
+        {
+            Delimiter = delimiter;
+            NullElementMarker = nullElementMarker;
+            EscapingSequenceStart = escapingSequenceStart;
+            Start = start;
+            End = end;
         }
     }
 }

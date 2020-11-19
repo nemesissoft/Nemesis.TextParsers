@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -18,10 +19,10 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var source = @"
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
-    [AutoDeconstructable(',', '∅', '\\', '[', ']')]
-    public record RecordPoint3d(double X, double Y, double Z) { }
+    [Auto.AutoDeconstructable(',', '∅', '\\', '[', ']')]
+    public partial record RecordPoint3d(double X, double Y, double Z) { }
 
-    [AutoDeconstructable(';', '∅', '\\', '(', ')')]
+    [Auto.AutoDeconstructable(';', '∅', '\\', '(', ')')]
     public readonly partial struct Point3d
     {
         public double X { get; }
@@ -35,7 +36,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             Z = z;
         }
 
-        public void Deconstruct(out double x, out double y, out double z)
+        public void Deconstruct(out double x, out System.Double y, out double z)
         {
             x = X;
             y = Y;
