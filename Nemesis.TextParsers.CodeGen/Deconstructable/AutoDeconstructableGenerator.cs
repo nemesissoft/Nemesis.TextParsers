@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
@@ -12,10 +10,10 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Nemesis.TextParsers.CodeGen
+namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     [Generator]
-    public class AutoDeconstructableGenerator : ISourceGenerator
+    public partial class AutoDeconstructableGenerator : ISourceGenerator
     {
         internal const string DECONSTRUCT = "Deconstruct";
         internal const string ATTRIBUTE_NAME = @"AutoDeconstructableAttribute";
@@ -44,13 +42,13 @@ namespace Auto
     }
 }
 ";
-        public void Initialize(GeneratorInitializationContext context) => context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+        public void Initialize(GeneratorInitializationContext context) => context.RegisterForSyntaxNotifications(() => new DeconstructableSyntaxReceiver());
 
         public void Execute(GeneratorExecutionContext context)
         {
             context.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8));
 
-            if (context.SyntaxReceiver is not SyntaxReceiver receiver || context.Compilation is not CSharpCompilation cSharpCompilation) return;
+            if (!(context.SyntaxReceiver is DeconstructableSyntaxReceiver receiver) || !(context.Compilation is CSharpCompilation cSharpCompilation)) return;
 
             var options = cSharpCompilation.SyntaxTrees[0].Options as CSharpParseOptions;
             var compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8), options));
@@ -58,11 +56,10 @@ namespace Auto
             var attributeSymbol = compilation.GetTypeByMetadataName($"Auto.{ATTRIBUTE_NAME}");
             if (attributeSymbol is null)
             {
-                //TODO error: report diagnostic 
+                ReportError(context, DiagnosticsId.NoAutoAttribute, null, $"Internal error: Auto.{ATTRIBUTE_NAME} is not defined");
                 return;
             }
 
-            var processTypes = new List<(INamedTypeSymbol TypeSymbol, IEnumerable<(string Name, string Type)> Members, DeconstructableSettings Settings)>();
             foreach (var record in receiver.CandidateRecords)
             {
                 //TODO make clever assumptions about record layout or use runtime symbols
@@ -72,13 +69,14 @@ namespace Auto
             {
                 var model = compilation.GetSemanticModel(type.SyntaxTree);
 
-                //TODO inspect why autoAttributeData has null arguments 
                 if (ShouldProcess(type, attributeSymbol, model, context, out var autoAttributeData, out var typeSymbol) && autoAttributeData != null && typeSymbol != null)
                     if (TryGetDefaultDeconstruct(type, model, out var deconstruct, out var ctor) && deconstruct != null && ctor != null)
                     {
                         //TODO get namespaces for some exotic member types 
                         var members = ctor.ParameterList.Parameters.Select(p => (p.Identifier.Text, model.GetTypeInfo(p.Type!).Type!.ToDisplayString())).ToList();
-
+                        if (members.Count == 0)
+                            ReportWarning(context, DiagnosticsId.NoContractMembers, typeSymbol, $"{typeSymbol.Name} does not possess members for serialization");
+                        
                         var aa = autoAttributeData.ConstructorArguments;
                         var settings = new DeconstructableSettings(
                             (char)aa[0].Value!,
@@ -87,64 +85,19 @@ namespace Auto
                             aa.Length >= 4 ? (char)aa[3].Value! : '\0',
                             aa.Length >= 5 ? (char)aa[4].Value! : '\0'
                         );
-                        processTypes.Add((typeSymbol, members, settings));
+
+                        //TODO GENERATE: append namespaces from source file
+                        var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
+
+                        //TODO do not hard-code modifiers 
+                        string classSource = RenderRecord(typeSymbol, "readonly partial struct", members, settings, namespaces, context);
+                        context.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
                     }
                     else
                     {
-                        //TODO report error diagnostic - no compatible ctor/Deconstruct pair
+                        ReportError(context, DiagnosticsId.NoMatchingCtorAndDeconstruct, typeSymbol, $"{typeSymbol.Name} does not possess matching constructor and Deconstruct pair");
                     }
             }
-            
-            foreach (var pt in processTypes)
-            {
-                string classSource = ProcessRecord(pt.TypeSymbol, pt.Members, pt.Settings, context);
-                context.AddSource($"{pt.TypeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
-            }
-        }
-
-        private string ProcessRecord(INamedTypeSymbol typeSymbol, IEnumerable<(string Name, string Type)> members, DeconstructableSettings settings, in GeneratorExecutionContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        private string ProcessRecord(INamedTypeSymbol classSymbol, IEnumerable<string> properties, INamedTypeSymbol attributeSymbol, INamedTypeSymbol recordHelperSymbol, in GeneratorExecutionContext context)
-        {
-            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default)) return ""; //TODO: issue a diagnostic that it must be top level
-
-            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-
-            var source = new StringBuilder($@"
-using System;
-using Nemesis.TextParsers.Parsers;
-using Nemesis.TextParsers.Utils;
-//TODO GENERATE: append namespaces from source file
-
-namespace {namespaceName}
-{{
-    partial record {classSymbol.Name}
-    {{
-
-         protected virtual bool PrintMembers(System.Text.StringBuilder builder) 
-         {{         
-");
-
-            foreach (var property in properties)
-                ProcessProperty(source, property, recordHelperSymbol);
-
-            source.Append(@"
-               return true; 
-         }
-    }
-}");
-            return source.ToString();
-        }
-
-        private void ProcessProperty(StringBuilder source, string property, INamedTypeSymbol recordHelperSymbol)
-        {
-            source.AppendLine($"               builder.Append(\"{property}\");");
-            source.AppendLine($"               builder.Append(\" = \");");
-            source.AppendLine($"               builder.Append({recordHelperSymbol.ToDisplayString()}.FormatValue({property}));");
-            source.AppendLine($"               builder.Append(\", \");");
         }
 
         private static bool ShouldProcess(TypeDeclarationSyntax type, ISymbol attributeSymbol, SemanticModel? model, in GeneratorExecutionContext context, out AttributeData? autoAttributeData, out INamedTypeSymbol? typeSymbol)
@@ -168,25 +121,11 @@ namespace {namespaceName}
                         return true;
                     }
                     else
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor("AutoDeconstructable002",
-                                $"Attribute {ATTRIBUTE_NAME} must be constructed with primitive character instances",
-                                messageFormat: "Couldn't generate automatic deconstructable pattern for '{0}'.",
-                                category: "AutoGenerator",
-                                DiagnosticSeverity.Warning,
-                                isEnabledByDefault: true), ts.Locations[0], ts.Name));
-                    //TODO commonalize ReportDiagnostic logic
+                        ReportError(context, DiagnosticsId.NonPrimitiveCharacters, ts, $"Attribute {ATTRIBUTE_NAME} must be constructed with primitive character instances");
                 }
                 else
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("AutoDeconstructable001",
-                            $"Type decorated with {ATTRIBUTE_NAME} must be also declared partial",
-                            messageFormat: "Couldn't generate automatic deconstructable pattern for '{0}'.",
-                            category: "AutoGenerator",
-                            DiagnosticSeverity.Warning,
-                            isEnabledByDefault: true), ts.Locations[0], ts.Name));
+                    ReportError(context, DiagnosticsId.NonPartialType, ts, $"Type decorated with {ATTRIBUTE_NAME} must be also declared partial");
             }
-
             return false;
         }
 
@@ -227,7 +166,6 @@ namespace {namespaceName}
 
         private static bool IsCompatible(IReadOnlyList<ParameterSyntax> left, IReadOnlyList<ParameterSyntax> right, SemanticModel model)
         {
-            //TODO report warning diagnostic when parameter names are different
             bool AreEqualByParamTypes()
             {
                 for (var i = 0; i < left.Count; i++)
@@ -248,55 +186,6 @@ namespace {namespaceName}
             }
 
             return left.Count == right.Count && AreEqualByParamTypes();
-        }
-        
-        private sealed class SyntaxReceiver : ISyntaxReceiver
-        {
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly List<RecordDeclarationSyntax> _candidateRecords = new List<RecordDeclarationSyntax>();
-            public IEnumerable<RecordDeclarationSyntax> CandidateRecords => _candidateRecords;
-
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly List<TypeDeclarationSyntax> _candidateTypes = new List<TypeDeclarationSyntax>();
-            public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
-
-
-            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-            {
-                static bool HasConstructorDeConstructPair(SyntaxNode node) =>
-                    node.ChildNodes().OfType<ConstructorDeclarationSyntax>()
-                        .Any(ctor => ctor.ParameterList.Parameters.Count > 0) &&
-                    node.ChildNodes().OfType<MethodDeclarationSyntax>()
-                        .Any(m => m.Identifier.Text == DECONSTRUCT && m.ParameterList.Parameters.Count > 0);
-
-
-                if (syntaxNode is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0)
-                    switch (tds)
-                    {
-                        case RecordDeclarationSyntax rds: _candidateRecords.Add(rds); break;
-
-                        case StructDeclarationSyntax sds when HasConstructorDeConstructPair(sds): _candidateTypes.Add(sds); break;
-                        case ClassDeclarationSyntax cds when HasConstructorDeConstructPair(cds): _candidateTypes.Add(cds); break;
-                    }
-            }
-        }
-
-        readonly struct DeconstructableSettings
-        {
-            public char Delimiter { get; }
-            public char NullElementMarker { get; }
-            public char EscapingSequenceStart { get; }
-            public char? Start { get; }
-            public char? End { get; }
-
-            public DeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
-            {
-                Delimiter = delimiter;
-                NullElementMarker = nullElementMarker;
-                EscapingSequenceStart = escapingSequenceStart;
-                Start = start;
-                End = end;
-            }
         }
     }
 
