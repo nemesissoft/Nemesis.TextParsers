@@ -1,10 +1,12 @@
 ﻿using System;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
-    [AutoDeconstructable(';', '∅', '\\', '(', ')')]
+    [AutoDeconstructable]
+    [DeconstructableSettings(';', '∅', '\\', '(', ')')]
     readonly partial struct Point3d
     {
         public double X { get; }
@@ -86,22 +88,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     sealed class AutoDeconstructableAttribute : Attribute
     {
-        public char Delimiter { get; }
-        public char NullElementMarker { get; }
-        public char EscapingSequenceStart { get; }
-        public char Start { get; }
-        public char End { get; }
-
-        public AutoDeconstructableAttribute(char delimiter, char nullElementMarker, char escapingSequenceStart, char start = '\0', char end='\0')
-        {
-            Delimiter = delimiter;
-            NullElementMarker = nullElementMarker;
-            EscapingSequenceStart = escapingSequenceStart;
-            Start = start;
-            End = end;
-        }
     }
 }

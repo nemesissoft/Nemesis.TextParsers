@@ -39,6 +39,9 @@ namespace {namespaceName}
         private readonly TupleHelper _helper = new TupleHelper({Escape(delimiter)}, {Escape(nullElementMarker)}, {Escape(escapingSequenceStart)}, {Escape(start)}, {Escape(end)});
 ");
 
+            //TODO add tuple helper retrieval for no DeconstructableSettingsAttribute
+            //transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper()
+
             foreach (var (name, type) in members)
                 source.AppendLine($@"        private readonly ITransformer<{type}> _transformer_{name} = TextTransformer.Default.GetTransformer<{type}>();");
 

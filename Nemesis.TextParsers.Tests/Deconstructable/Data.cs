@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Tests.Deconstructable
 {
@@ -334,7 +337,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             name = Name;
             furniturePrices = FurniturePrices;
         }
-        
+
         public override string ToString() => $"{Name}[{string.Join(", ", FurniturePrices?.Select(kvp => $"{kvp.Key}=>{kvp.Value}") ?? Enumerable.Empty<string>())}]";
     }
 
@@ -349,7 +352,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         ;
 
         public static Room Empty => new Room("Empty room", new Dictionary<string, decimal> { ["Null"] = 0.0m });
-        
+
 
         public override Room GetEmpty() => Empty;
     }
@@ -494,7 +497,7 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     internal class CountryTransformer : CustomDeconstructionTransformer<Country>
     {
         public CountryTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
-        
+
         protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype)
             => prototype
                 .WithBorders('[', ']')
@@ -700,4 +703,60 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
     }
 
     #endregion
+
+    [DeconstructableSettings(',', '∅', '\\', '{', '}')]
+    internal readonly struct Child
+    {
+        public byte Age { get; }
+        public float Weight { get; }
+
+        public Child(byte age, float weight) { Age = age; Weight = weight; }
+
+        public void Deconstruct(out byte age, out float weight) { age = Age; weight = Weight; }
+
+        public override string ToString() => $"{nameof(Age)}: {Age}, {nameof(Weight)}: {Weight}";
+    }
+
+    [DeconstructableSettings(';', '␀', '/', '\0', '\0')]
+    internal class Kindergarten
+    {
+        public string Address { get; }
+        public Child[] Children { get; }
+
+        public Kindergarten(string address, Child[] children)
+        {
+            Address = address;
+            Children = children;
+        }
+
+        public void Deconstruct(out string address, out Child[] children)
+        {
+            address = Address;
+            children = Children;
+        }
+    }
+
+    [DeconstructableSettings('_')]
+    internal class UnderscoreSeparatedProperties
+    {
+        public string Data1 { get; }
+        public string Data2 { get; }
+        public string Data3 { get; }
+
+        public UnderscoreSeparatedProperties(string data1, string data2, string data3)
+        {
+            Data1 = data1;
+            Data2 = data2;
+            Data3 = data3;
+        }
+
+        public void Deconstruct(out string data1, out string data2, out string data3)
+        {
+            data1 = Data1;
+            data2 = Data2;
+            data3 = Data3;
+        }
+
+        public override string ToString() => $"{nameof(Data1)}: {Data1}, {nameof(Data2)}: {Data2}, {nameof(Data3)}: {Data3}";
+    }
 }

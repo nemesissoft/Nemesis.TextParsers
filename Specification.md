@@ -170,7 +170,7 @@ readonly struct Address
         city = City;
         zipCode = ZipCode;
     }
-    //3. using default settings, this will be formatted to (CityName;ZipCode)
+    //3. using default settings, this will be formatted to (CityName;ZipCode), esacaped using '\' and with '∅' as null marker
 }
 struct Person
 {
@@ -218,6 +218,19 @@ class DeconstructableTransformer : CustomDeconstructionTransformer<DataWithCusto
         new DataWithCustomDeconstructableTransformer(666, true, new decimal[] { 6, 7, 8, 9 });
 }
 
+/*8. TextTransformer.Default provides default values for (among others) DeconstructableSettings. They can be globally overriden inside referenced SettingsStore but user may opt to override them only for given type. For more info see point 5 and 6 of this listing, but there is also a convenient declarative approach: */
+[DeconstructableSettings(',', '∅', '\\', '{', '}')] //9. user may want to specify all characters or leave some out as defaults - taken from DeconstructableSettingsAttribute constructor defaults, not from SettingsStore 
+internal readonly struct Child
+{
+    public byte Age { get; }
+    public float Weight { get; }
+
+    public Child(byte age, float weight) { Age = age; Weight = weight; }
+
+    public void Deconstruct(out byte age, out float weight) { age = Age; weight = Weight; }
+
+    public override string ToString() => $"{nameof(Age)}: {Age}, {nameof(Weight)}: {Weight}";
+}
 ```
 
 ## Settings

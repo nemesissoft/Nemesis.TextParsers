@@ -16,6 +16,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         //TODO add tests with static using, + using Mnemonic = System.Double
         //TODO add tests with various modifiers + class/struct/record
         //TODO test all reported diagnostics
+        //TODO add test for default settings (Settings store, create new Sut) and attribute provided settings (both default and user provided)
 
         [Test]
         public void SimpleGeneratorTest()
@@ -23,29 +24,19 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var source = @"
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
-    [Auto.AutoDeconstructable(',', '∅', '\\', '[', ']')]
+    [Auto.AutoDeconstructable]
+    [Nemesis.TextParsers.Settings.DeconstructableSettings(',', '∅', '\\', '[', ']')]
     public partial record RecordPoint3d(double X, double Y, double Z) { }
 
-    [Auto.AutoDeconstructable(';', '∅', '\\', '(', ')')]
+    [Auto.AutoDeconstructable]
+    [Nemesis.TextParsers.Settings.DeconstructableSettings(';', '∅', '\\', '(', ')')]
     public readonly partial struct Point3d
     {
-        public double X { get; }
-        public double Y { get; }
-        public double Z { get; }
+        public double X { get; } public double Y { get; } public double Z { get; }
 
-        public Point3d(double x, double y, double z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
+        public Point3d(double x, double y, double z) { X = x; Y = y; Z = z; }
 
-        public void Deconstruct(out double x, out System.Double y, out double z)
-        {
-            x = X;
-            y = Y;
-            z = Z;
-        }
+        public void Deconstruct(out double x, out System.Double y, out double z) { x = X; y = Y; z = Z; }
     }   
 }";
             var comp = CreateCompilation(source);

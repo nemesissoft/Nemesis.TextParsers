@@ -23,23 +23,7 @@ using System;
 namespace Auto
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false)]
-    sealed class " + ATTRIBUTE_NAME + @" : Attribute
-    {
-        public char Delimiter { get; }
-        public char NullElementMarker { get; }
-        public char EscapingSequenceStart { get; }
-        public char Start { get; }
-        public char End { get; }
-
-        public " + ATTRIBUTE_NAME + @"(char delimiter, char nullElementMarker, char escapingSequenceStart, char start = '\0', char end = '\0')
-        {
-            Delimiter = delimiter;
-            NullElementMarker = nullElementMarker;
-            EscapingSequenceStart = escapingSequenceStart;
-            Start = start;
-            End = end;
-        }
-    }
+    sealed class " + ATTRIBUTE_NAME + @" : Attribute { }
 }
 ";
         public void Initialize(GeneratorInitializationContext context) => context.RegisterForSyntaxNotifications(() => new DeconstructableSyntaxReceiver());

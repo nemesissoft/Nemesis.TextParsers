@@ -237,6 +237,44 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             );
         }
 
+        [Test]
+        public void ParseAndFormat_AttributeProvidedSettings()
+        {
+            var instance = new Kindergarten("Wrocław", new[] { new Child(3, 20.2f), new Child(5, 25.66f) });
+            var text = @"Wrocław;{3,20.2}|{5,25.66}";
+
+            var sut = Sut.GetTransformer<Kindergarten>();
+            
+            var actualFormatted = sut.Format(instance);
+            Assert.That(actualFormatted, Is.EqualTo(text));
+
+
+            var actualParsed1 = sut.Parse(text);
+            var actualParsed2 = sut.Parse(actualFormatted);
+            IsMutuallyEquivalent(actualParsed1, instance);
+            IsMutuallyEquivalent(actualParsed2, instance);
+            IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        } 
+        
+        [Test]
+        public void ParseAndFormat_AttributeProvidedSettings_DefaultSettings()
+        {
+            var instance = new UnderscoreSeparatedProperties("ABC_DEF", "∅NULL∅", @"\ Start:( END:)");
+            var text = @"(ABC\_DEF_\∅NULL\∅_\\ Start:( END:))";
+
+            var sut = Sut.GetTransformer<UnderscoreSeparatedProperties>();
+            
+            var actualFormatted = sut.Format(instance);
+            Assert.That(actualFormatted, Is.EqualTo(text));
+
+
+            var actualParsed1 = sut.Parse(text);
+            var actualParsed2 = sut.Parse(actualFormatted);
+            IsMutuallyEquivalent(actualParsed1, instance);
+            IsMutuallyEquivalent(actualParsed2, instance);
+            IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        }
+
 
         internal static IEnumerable<TCD> CustomDeconstructable_Data() => new[]
         {

@@ -25,7 +25,10 @@ namespace Nemesis.TextParsers.Parsers
 
 
         public ITransformer<TDeconstructable> CreateTransformer<TDeconstructable>()
-            => Builder.GetDefault(_transformerStore).ToTransformer<TDeconstructable>();
+            => (typeof(TDeconstructable).GetCustomAttribute<DeconstructableSettingsAttribute>(true) is { } attribute
+                ? Builder.FromSettings(attribute.ToSettings(), _transformerStore)
+                : Builder.GetDefault(_transformerStore)
+        ).ToTransformer<TDeconstructable>();
 
 
         public bool CanHandle(Type type) =>
@@ -35,9 +38,9 @@ namespace Nemesis.TextParsers.Parsers
         ;
 
         public sbyte Priority => 110;
-        
+
         public override string ToString() =>
-            $"Create transformer for Deconstructable aspect with settings:{_transformerStore.SettingsStore.GetSettingsFor<DeconstructableSettings>()}";
+            $"Create transformer for Deconstructable aspect with DEFAULT settings:{_transformerStore.SettingsStore.GetSettingsFor<DeconstructableSettings>()}. Specify own settings using {nameof(DeconstructableSettingsAttribute)}";
     }
 
     public enum DeconstructionMethod : byte
@@ -57,14 +60,14 @@ namespace Nemesis.TextParsers.Parsers
         private readonly ITransformerStore _transformerStore;
 
         //settings
-        public char Delimiter { get; private set; } 
-        public char NullElementMarker { get; private set; } 
-        public char EscapingSequenceStart { get; private set; } 
-        public char? Start { get; private set; } 
-        public char? End { get; private set; } 
-        public bool UseDeconstructableEmpty { get; private set; } 
+        public char Delimiter { get; private set; }
+        public char NullElementMarker { get; private set; }
+        public char EscapingSequenceStart { get; private set; }
+        public char? Start { get; private set; }
+        public char? End { get; private set; }
+        public bool UseDeconstructableEmpty { get; private set; }
         //settings
-        
+
         public DeconstructionMethod Mode { get; private set; } = DeconstructionMethod.DefaultConstructorDeconstructPair;
         public MethodInfo Deconstruct { get; private set; }
         public ConstructorInfo Ctor { get; private set; }
@@ -332,7 +335,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         internal DeconstructionTransformer([NotNull] TupleHelper helper, [NotNull] ITransformer[] transformers,
             [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
         {
-            _helper = helper ?? throw new ArgumentNullException(nameof(helper)) ;
+            _helper = helper ?? throw new ArgumentNullException(nameof(helper));
 
             _transformers = transformers ?? throw new ArgumentNullException(nameof(transformers));
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));
@@ -602,7 +605,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             }
 
             return
-                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()}).";
+                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()}) formatted as {_helper}.";
         }
     }
 
