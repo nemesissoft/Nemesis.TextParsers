@@ -31,6 +31,8 @@ namespace Auto
 
         public void Execute(GeneratorExecutionContext context)
         {
+            //TODO add support for debugging code gen in apps
+
             context.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8));
 
             if (!(context.SyntaxReceiver is DeconstructableSyntaxReceiver receiver) || !(context.Compilation is CSharpCompilation cSharpCompilation)) return;

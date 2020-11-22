@@ -23,9 +23,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Specification.md = Specification.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.CodeGen", "Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj", "{78E75B6B-80A6-46EE-B84D-CE8A287775CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen", "Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj", "{78E75B6B-80A6-46EE-B84D-CE8A287775CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.CodeGen.Tests", "Nemesis.TextParsers.CodeGen.Tests\Nemesis.TextParsers.CodeGen.Tests.csproj", "{FC3A4A7E-D28D-4A84-8F52-6BCED05BED78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen.Tests", "Nemesis.TextParsers.CodeGen.Tests\Nemesis.TextParsers.CodeGen.Tests.csproj", "{FC3A4A7E-D28D-4A84-8F52-6BCED05BED78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.CodeGen.Sample", "Nemesis.TextParsers.CodeGen.Sample\Nemesis.TextParsers.CodeGen.Sample.csproj", "{7C32D596-6B5B-4E39-8C96-2FC8757E3213}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{FC3A4A7E-D28D-4A84-8F52-6BCED05BED78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC3A4A7E-D28D-4A84-8F52-6BCED05BED78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC3A4A7E-D28D-4A84-8F52-6BCED05BED78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
