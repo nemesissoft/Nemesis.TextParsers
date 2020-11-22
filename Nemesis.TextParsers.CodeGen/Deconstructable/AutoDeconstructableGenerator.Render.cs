@@ -8,7 +8,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     public partial class AutoDeconstructableGenerator
     {
-        private static string RenderRecord(INamedTypeSymbol typeSymbol, string typeModifiers, IReadOnlyList<(string Name, string Type)> members, DeconstructableSettings settings, IEnumerable<string> namespaces, in GeneratorExecutionContext context)
+        private static string RenderRecord(INamedTypeSymbol typeSymbol, string typeModifiers, IReadOnlyList<(string Name, string Type)> members, GeneratedDeconstructableSettings? settings, IEnumerable<string> namespaces, in GeneratorExecutionContext context)
         {
             if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
             {
@@ -23,9 +23,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
                 source.Append("using ").Append(ns).AppendLine(";");
 
             var typeName = typeSymbol.Name;
-
-            var (delimiter, nullElementMarker, escapingSequenceStart, start, end) = settings;
-
+            
             source.Append($@"
 namespace {namespaceName}
 {{
@@ -35,12 +33,25 @@ namespace {namespaceName}
     [System.CodeDom.Compiler.GeneratedCode(""AutoDeconstructableGenerator"", ""1.0"")]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class {typeName}Transformer : TransformerBase<{typeName}>
-    {{
-        private readonly TupleHelper _helper = new TupleHelper({Escape(delimiter)}, {Escape(nullElementMarker)}, {Escape(escapingSequenceStart)}, {Escape(start)}, {Escape(end)});
-");
+    {{");
 
-            //TODO add tuple helper retrieval for no DeconstructableSettingsAttribute
-            //transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper()
+            if (settings is { } s)
+            {
+                source.AppendLine($@"
+        private readonly TupleHelper _helper = new TupleHelper({Escape(s.Delimiter)}, {Escape(s.NullElementMarker)}, {Escape(s.EscapingSequenceStart)}, {Escape(s.Start)}, {Escape(s.End)});");
+            }
+            else
+            {
+                source.Append($@"
+        public {typeName}Transformer(Nemesis.TextParsers.ITransformerStore transformerStore)
+        {{");
+                source.Append($@"
+            _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
+");
+                source.Append(@"
+        }
+");
+            }
 
             foreach (var (name, type) in members)
                 source.AppendLine($@"        private readonly ITransformer<{type}> _transformer_{name} = TextTransformer.Default.GetTransformer<{type}>();");
@@ -76,7 +87,7 @@ namespace {namespaceName}
                 static string GetEscapeCode(string ch) => $@"'\{ch}'";
             }
         }
-
+        
         private static void RenderParseCore(StringBuilder source, string typeName, IReadOnlyList<(string Name, string Type)> members)
         {
             source.AppendLine($"        protected override {typeName} ParseCore(in ReadOnlySpan<char> input)");

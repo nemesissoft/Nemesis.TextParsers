@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿extern alias original;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -17,6 +19,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         //TODO add tests with various modifiers + class/struct/record
         //TODO test all reported diagnostics
         //TODO add test for default settings (Settings store, create new Sut) and attribute provided settings (both default and user provided)
+        //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
         [Test]
         public void SimpleGeneratorTest()
@@ -24,12 +27,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var source = @"
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
-    [Auto.AutoDeconstructable]
-    [Nemesis.TextParsers.Settings.DeconstructableSettings(',', '∅', '\\', '[', ']')]
-    public partial record RecordPoint3d(double X, double Y, double Z) { }
+    public record RecordPoint2d(double X, double Y) { }
 
     [Auto.AutoDeconstructable]
-    [Nemesis.TextParsers.Settings.DeconstructableSettings(';', '∅', '\\', '(', ')')]
+    [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(',', '∅', '\\', '[', ']')]
+    public partial record RecordPoint3d(double X, double Y, double Z): RecordPoint2d(X, Y) 
+    {
+        public double Magnitude { get; init; } //will NOT be subject to deconstruction
+    }
+
+    [Auto.AutoDeconstructable]
+    [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(';', '∅', '\\', '(', ')')]
     public readonly partial struct Point3d
     {
         public double X { get; } public double Y { get; } public double Z { get; }
@@ -40,8 +48,14 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     }   
 }";
             var comp = CreateCompilation(source);
+            var initialDiagnostics = GetCompilationIssues(comp);
+            
+            //TODO check for 2 Auto non-existing attributes
+            //Assert.That(initialDiagnostics, Is.Empty);
+
             var newComp = RunGenerators(comp, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
+           
 
             var generatedTrees = newComp.RemoveSyntaxTrees(comp.SyntaxTrees).SyntaxTrees;
 
@@ -110,11 +124,25 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
         }
 
-        private static Compilation CreateCompilation(string source, OutputKind outputKind = OutputKind.ConsoleApplication)
+        private static Compilation CreateCompilation(string source, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary)
             => CSharpCompilation.Create("compilation",
                 new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
-                new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
+                new[]
+                {
+                    MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(original::Nemesis.TextParsers.ITransformer).GetTypeInfo().Assembly.Location),
+                },
                 new CSharpCompilationOptions(outputKind));
+
+        private static IEnumerable<string> GetCompilationIssues(Compilation compilation)
+        {
+            using var ms = new MemoryStream();
+            var result = compilation.Emit(ms);
+            return result.Diagnostics
+                .Where(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning)
+                .Select(d => d.ToString()).ToList();
+        }
 
         private static GeneratorDriver CreateDriver(Compilation c, params ISourceGenerator[] generators)
             => CSharpGeneratorDriver.Create(generators, parseOptions: (CSharpParseOptions)c.SyntaxTrees.First().Options);

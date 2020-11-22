@@ -17,5 +17,10 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <Compile Include="..\Nemesis.TextParsers\Settings\DeconstructableSettingsAttribute.cs" Link="Deconstructable\DeconstructableSettingsAttribute.cs" />
+  </ItemGroup>
+
+
 
 </Project>

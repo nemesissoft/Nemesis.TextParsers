@@ -1,7 +1,16 @@
-﻿using System;
-using Nemesis.TextParsers.Parsers;
-using Nemesis.TextParsers.Settings;
-using Nemesis.TextParsers.Utils;
+﻿extern alias original;
+
+using System;
+
+using DeconstructableSettings = original::Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
+using Transformer = original::Nemesis.TextParsers.Parsers.TransformerAttribute;
+
+using TextTransformer = original::Nemesis.TextParsers.TextTransformer;
+using TransformerBase = original::Nemesis.TextParsers.TransformerBase<Nemesis.TextParsers.CodeGen.Tests.Point3d>;
+using DoubleTransformer = original::Nemesis.TextParsers.ITransformer<double>;
+using ITransformerStore = original::Nemesis.TextParsers.ITransformerStore;
+using TupleHelper = original::Nemesis.TextParsers.Utils.TupleHelper;
+using ValueSequenceBuilder = original::Nemesis.TextParsers.Utils.ValueSequenceBuilder<char>;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -13,39 +22,26 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public double Y { get; }
         public double Z { get; }
 
-        public Point3d(double x, double y, double z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
+        public Point3d(double x, double y, double z) { X = x; Y = y; Z = z; }
 
-        public void Deconstruct(out double x, out double y, out double z)
-        {
-            x = X;
-            y = Y;
-            z = Z;
-        }
+        public void Deconstruct(out double x, out double y, out double z) { x = X; y = Y; z = Z; }
     }
 
     //generated
     [Transformer(typeof(Point3dTransformer))]
-    readonly partial struct Point3d
-    {
-
-    }
+    readonly partial struct Point3d { }
 
     [System.CodeDom.Compiler.GeneratedCode("AutoDeconstructableGenerator", "1.0")]
     [System.Runtime.CompilerServices.CompilerGenerated]
-    sealed class Point3dTransformer: TransformerBase<Point3d>
+    sealed class Point3dTransformer : TransformerBase
     {
         private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
-        private readonly ITransformer<double> _transformerX = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformerY = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformerZ = TextTransformer.Default.GetTransformer<double>();
+        private readonly DoubleTransformer _transformerX = TextTransformer.Default.GetTransformer<double>();
+        private readonly DoubleTransformer _transformerY = TextTransformer.Default.GetTransformer<double>();
+        private readonly DoubleTransformer _transformerZ = TextTransformer.Default.GetTransformer<double>();
 
         private const int ARITY = 3;
-        
+
         protected override Point3d ParseCore(in ReadOnlySpan<char> input)
         {
             var enumerator = _helper.ParseStart(input, ARITY);
@@ -66,7 +62,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public override string Format(Point3d element)
         {
             Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            var accumulator = new ValueSequenceBuilder(initialBuffer);
 
             try
             {

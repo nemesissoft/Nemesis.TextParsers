@@ -20,7 +20,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj" />
-    <ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
+    <ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj">
+      <Aliases>original</Aliases>
+    </ProjectReference>
   </ItemGroup>
 
 

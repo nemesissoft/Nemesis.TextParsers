@@ -18,7 +18,8 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             NoMatchingCtorAndDeconstruct = 3,
             NoContractMembers = 4,
             NoAutoAttribute = 5,
-            NamespaceAndTypeNamesEqual = 6,
+            NoSettingsAttribute = 6,
+            NamespaceAndTypeNamesEqual = 7,
         }
 
         private static void ReportError(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string title) =>
@@ -75,7 +76,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             }
         }
 
-        private readonly struct DeconstructableSettings
+        private readonly struct GeneratedDeconstructableSettings
         {
             public char Delimiter { get; }
             public char NullElementMarker { get; }
@@ -83,7 +84,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             public char? Start { get; }
             public char? End { get; }
 
-            public DeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+            public GeneratedDeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
             {
                 Delimiter = delimiter;
                 NullElementMarker = nullElementMarker;

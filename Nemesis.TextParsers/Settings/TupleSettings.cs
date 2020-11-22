@@ -1,6 +1,6 @@
-﻿using System;
-using Nemesis.TextParsers.Utils;
-using DectorSett = Nemesis.TextParsers.Settings.DeconstructableSettings;
+﻿using Nemesis.TextParsers.Utils;
+
+using Dsa = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
 
 namespace Nemesis.TextParsers.Settings
 {
@@ -49,61 +49,26 @@ namespace Nemesis.TextParsers.Settings
 
     public sealed class DeconstructableSettings : TupleSettings
     {
-        public const char DEFAULT_DELIMITER = ';';
-        public const char DEFAULT_NULL_ELEMENT_MARKER = '∅';
-        public const char DEFAULT_ESCAPING_SEQUENCE_START = '\\';
-        public const char DEFAULT_START = '(';
-        public const char DEFAULT_END = ')';
-        public const bool DEFAULT_USE_DECONSTRUCTABLE_EMPTY = true;
-
         public bool UseDeconstructableEmpty { get; }
-        public DeconstructableSettings(char delimiter = DEFAULT_DELIMITER,
-                char nullElementMarker = DEFAULT_NULL_ELEMENT_MARKER, 
-                char escapingSequenceStart = DEFAULT_ESCAPING_SEQUENCE_START,
-                char? start = DEFAULT_START, char? end = DEFAULT_END,
-                bool useDeconstructableEmpty = DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
+        public DeconstructableSettings(char delimiter = Dsa.DEFAULT_DELIMITER,
+                char nullElementMarker = Dsa.DEFAULT_NULL_ELEMENT_MARKER,
+                char escapingSequenceStart = Dsa.DEFAULT_ESCAPING_SEQUENCE_START,
+                char? start = Dsa.DEFAULT_START, char? end = Dsa.DEFAULT_END,
+                bool useDeconstructableEmpty = Dsa.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
             : base(delimiter, nullElementMarker, escapingSequenceStart, start, end)
             => UseDeconstructableEmpty = useDeconstructableEmpty;
 
-        public static DectorSett Default { get; } = new DectorSett();
+        public static DeconstructableSettings Default { get; } = new DeconstructableSettings();
 
         public override string ToString() =>
             $@"{base.ToString()}. {(UseDeconstructableEmpty ? "With" : "Without")} deconstructable empty generator.";
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public sealed class DeconstructableSettingsAttribute : Attribute
+    public static class DeconstructableSettingsAttributeExtensions
     {
-        public char Delimiter { get; }
-        public char NullElementMarker { get; }
-        public char EscapingSequenceStart { get; }
-        public char Start { get; }
-        public char End { get; }
-        public bool UseDeconstructableEmpty { get; }
-
-        /// <summary>Initialize DeconstructableSettingsAttribute </summary>
-        /// <param name="delimiter">Properties text delimiter</param>
-        /// <param name="nullElementMarker">Null element marker</param>
-        /// <param name="escapingSequenceStart">Escaping sequence start</param>
-        /// <param name="start">Starting character. Use default(char)=='\0' to omit this character</param>
-        /// <param name="end">End character. Use default(char)=='\0' to omit this character</param>
-        /// <param name="useDeconstructableEmpty">When <c>true</c>, a default "empty" instance will be crated from empty string i.e. new Class(empty(parameter1), ..., empty(parameterN)) </param>
-        public DeconstructableSettingsAttribute(char delimiter = DectorSett.DEFAULT_DELIMITER,
-            char nullElementMarker = DectorSett.DEFAULT_NULL_ELEMENT_MARKER, char escapingSequenceStart = DectorSett.DEFAULT_ESCAPING_SEQUENCE_START,
-            char start = DectorSett.DEFAULT_START, char end = DectorSett.DEFAULT_END,
-            bool useDeconstructableEmpty = DectorSett.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
-        {
-            Delimiter = delimiter;
-            NullElementMarker = nullElementMarker;
-            EscapingSequenceStart = escapingSequenceStart;
-            Start = start;
-            End = end;
-            UseDeconstructableEmpty = useDeconstructableEmpty;
-        }
-
-        public DectorSett ToSettings() => new DectorSett(Delimiter, NullElementMarker, EscapingSequenceStart,
-            Start == '\0' ? (char?)null : Start,
-            End == '\0' ? (char?)null : End,
-            UseDeconstructableEmpty);
+        public static DeconstructableSettings ToSettings(this Dsa attr) => new DeconstructableSettings(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
+            attr.Start == '\0' ? (char?)null : attr.Start,
+            attr.End == '\0' ? (char?)null : attr.End,
+            attr.UseDeconstructableEmpty);
     }
 }
