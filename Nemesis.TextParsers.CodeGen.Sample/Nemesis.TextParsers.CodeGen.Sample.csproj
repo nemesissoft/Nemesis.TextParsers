@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <CompilerVisibleProperty Include="DebugAutoDeconstructableGenerator" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
   </ItemGroup>
