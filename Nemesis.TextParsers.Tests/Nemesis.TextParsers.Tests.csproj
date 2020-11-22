@@ -3,12 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>net5.0;netcoreapp3.1;net48;net461</TargetFrameworks>
 
-
-    <SignAssembly>true</SignAssembly>
-    <DelaySign>false</DelaySign>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
-
   </PropertyGroup>
 
   <ItemGroup>

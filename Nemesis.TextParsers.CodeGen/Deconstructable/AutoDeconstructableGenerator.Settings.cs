@@ -13,7 +13,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     public partial class AutoDeconstructableGenerator
     {
-        enum DiagnosticsId : byte
+        internal enum DiagnosticsId : byte
         {
             NonPartialType = 1,
             NonPrimitiveCharacters = 2,

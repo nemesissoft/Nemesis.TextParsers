@@ -18,12 +18,6 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
 
-
-    <SignAssembly>true</SignAssembly>
-    <DelaySign>false</DelaySign>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
-
   </PropertyGroup>
 
   <ItemGroup>
