@@ -1,18 +1,12 @@
 ﻿extern alias original;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Nemesis.TextParsers.CodeGen.Deconstructable;
 
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
+using static Nemesis.TextParsers.CodeGen.Tests.Utils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -148,41 +142,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             text = _headerPattern.Replace(text, "HEAD");
 
             return text;
-        }
-
-        private static Compilation CreateCompilation(string source, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary)
-        {
-            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
-
-            return CSharpCompilation.Create("compilation",
-                new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
-                new[]
-                {
-                    MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
-                    MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
-                    MetadataReference.CreateFromFile(typeof(original::Nemesis.TextParsers.ITransformer).GetTypeInfo()
-                        .Assembly.Location),
-                },
-                new CSharpCompilationOptions(outputKind));
-        }
-
-        private static IReadOnlyCollection<string> GetCompilationIssues(Compilation compilation)
-        {
-            using var ms = new MemoryStream();
-            var result = compilation.Emit(ms);
-            return result.Diagnostics
-                .Where(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning)
-                .Select(d => d.ToString()).ToList();
-        }
-
-        private static GeneratorDriver CreateDriver(Compilation c, params ISourceGenerator[] generators)
-            => CSharpGeneratorDriver.Create(generators, parseOptions: (CSharpParseOptions)c.SyntaxTrees.First().Options);
-
-        private static Compilation RunGenerators(Compilation c, out IReadOnlyList<Diagnostic> diagnostics, params ISourceGenerator[] generators)
-        {
-            CreateDriver(c, generators).RunGeneratorsAndUpdateCompilation(c, out var compilation, out var diagnosticsArray);
-            diagnostics = diagnosticsArray;
-            return compilation;
         }
     }
 }
