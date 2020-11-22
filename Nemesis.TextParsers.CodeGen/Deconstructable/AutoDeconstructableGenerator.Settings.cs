@@ -31,6 +31,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string title, DiagnosticSeverity diagnosticSeverity) =>
             context.ReportDiagnostic(Diagnostic.Create(
                 new DiagnosticDescriptor($"AutoDeconstructable{(byte)id:00}",
+                    //TODO consider merging title with message ?
                     title,
                     messageFormat: "Couldn't generate automatic deconstructable pattern for '{0}'.",
                     category: "AutoGenerator",

@@ -1,12 +1,16 @@
 ﻿extern alias original;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using Nemesis.TextParsers.CodeGen.Deconstructable;
+
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
@@ -47,19 +51,20 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public void Deconstruct(out double x, out System.Double y, out double z) { x = X; y = Y; z = Z; }
     }   
 }";
-            var comp = CreateCompilation(source);
-            var initialDiagnostics = GetCompilationIssues(comp);
-            
-            //TODO check for 2 Auto non-existing attributes
-            //Assert.That(initialDiagnostics, Is.Empty);
+            var compilation = CreateCompilation(source);
+            var initialDiagnostics = GetCompilationIssues(compilation);
 
-            var newComp = RunGenerators(comp, out var diagnostics, new AutoDeconstructableGenerator());
+            Assert.That(initialDiagnostics, Has.Count.EqualTo(2));
+            Assert.That(initialDiagnostics, Has.All.Contain("The type or namespace name 'Auto' could not be found"));
+
+
+            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
-           
 
-            var generatedTrees = newComp.RemoveSyntaxTrees(comp.SyntaxTrees).SyntaxTrees;
 
-            var root = (CompilationUnitSyntax) generatedTrees.Last().GetRoot();
+            var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
+
+            var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
 
             var actual = root.ToFullString();
 
@@ -125,17 +130,22 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
 
         private static Compilation CreateCompilation(string source, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary)
-            => CSharpCompilation.Create("compilation",
+        {
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
+
+            return CSharpCompilation.Create("compilation",
                 new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
                 new[]
                 {
-                    MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
+                    MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
                     MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
-                    MetadataReference.CreateFromFile(typeof(original::Nemesis.TextParsers.ITransformer).GetTypeInfo().Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(original::Nemesis.TextParsers.ITransformer).GetTypeInfo()
+                        .Assembly.Location),
                 },
                 new CSharpCompilationOptions(outputKind));
+        }
 
-        private static IEnumerable<string> GetCompilationIssues(Compilation compilation)
+        private static IReadOnlyCollection<string> GetCompilationIssues(Compilation compilation)
         {
             using var ms = new MemoryStream();
             var result = compilation.Emit(ms);

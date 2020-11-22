@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -21,8 +22,6 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         internal const string DECONSTRUCT = "Deconstruct";
         internal const string ATTRIBUTE_NAME = @"AutoDeconstructableAttribute";
         private const string ATTRIBUTE_SOURCE = @"using System;
-using System;
-
 namespace Auto
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false)]
@@ -39,13 +38,18 @@ namespace Auto
 
             var options = cSharpCompilation.SyntaxTrees[0].Options as CSharpParseOptions;
             var compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8), options));
-
+            
             var autoAttributeSymbol = compilation.GetTypeByMetadataName($"Auto.{ATTRIBUTE_NAME}");
             if (autoAttributeSymbol is null)
             {
                 ReportError(context, DiagnosticsId.NoAutoAttribute, null, $"Internal error: Auto.{ATTRIBUTE_NAME} is not defined");
                 return;
             }
+
+            /*var allTypes = compilation.References.Select(compilation.GetAssemblyOrModuleSymbol)
+                .OfType<IAssemblySymbol>().Select(assemblySymbol =>
+                    assemblySymbol.GetTypeByMetadataName("Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute"))
+                .Where(t => t != null).ToList();*/
 
             var deconstructableSettingsAttributeSymbol = compilation.GetTypeByMetadataName(DeconstructableSettingsAttributeName);
             if (deconstructableSettingsAttributeSymbol is null)
