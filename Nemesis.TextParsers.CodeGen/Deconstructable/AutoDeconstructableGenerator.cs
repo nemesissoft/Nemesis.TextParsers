@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+
 using Nemesis.TextParsers.CodeGen.Utils;
 
 #nullable enable
@@ -73,6 +74,12 @@ namespace Auto
                 if (ShouldProcessType(type, autoAttributeSymbol, deconstructableSettingsAttributeSymbol, model, context, out var deconstructableSettingsAttributeData, out var typeSymbol)
                     && typeSymbol != null)
                 {
+                    if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+                    {
+                        ReportError(context, DiagnosticsId.NamespaceAndTypeNamesEqual, typeSymbol, $"Type '{typeSymbol.Name}' cannot be equal to containing namespace: '{typeSymbol.ContainingNamespace}'");
+                        continue;
+                    }
+
                     if (TryGetDefaultDeconstruct(type, model, out var deconstruct, out var ctor) && deconstruct != null && ctor != null)
                     {
                         //TODO get namespaces for some exotic member types 
@@ -89,7 +96,7 @@ namespace Auto
 
                         string typeModifiers = GetTypeModifiers(type);
 
-                        string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces, context);
+                        string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces);
                         context.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
                     }
                     else
@@ -126,14 +133,15 @@ namespace Auto
                 {
                     if (GetAttribute(ts, deconstructableSettingsAttributeSymbol) is { } settingsAttributeData)
                     {
-                        if (settingsAttributeData.ConstructorArguments.All(a => a.Kind == TypedConstantKind.Primitive && (a.Value is char || a.Value is bool)))
+                        if (settingsAttributeData.ConstructorArguments.Length > 0 &&
+                            settingsAttributeData.ConstructorArguments.All(a => a.Kind == TypedConstantKind.Primitive && (a.Value is char || a.Value is bool)))
                         {
                             deconstructableSettingsAttributeData = settingsAttributeData;
                             typeSymbol = ts;
                             return true;
                         }
                         else
-                            ReportError(context, DiagnosticsId.NonPrimitiveCharacters, ts, $"Attribute {DeconstructableSettingsAttributeName} must be constructed with primitive character instances");
+                            ReportError(context, DiagnosticsId.InvalidSettingsAttribute, ts, $"Attribute {DeconstructableSettingsAttributeName} must be constructed with 5 characters and bool type, or with default values");
                     }
                     else
                     {
@@ -148,6 +156,11 @@ namespace Auto
         }
 
         //TODO - take all from ISymbol, not TypeDeclarationSyntax and make if common with Records meta retrieval
+        /*static bool HasConstructorDeConstructPair(SyntaxNode node) =>
+                            node.ChildNodes().OfType<ConstructorDeclarationSyntax>()
+                                .Any(ctor => ctor.ParameterList.Parameters.Count > 0) &&
+                            node.ChildNodes().OfType<MethodDeclarationSyntax>()
+                                .Any(m => m.Identifier.Text == DECONSTRUCT && m.ParameterList.Parameters.Count > 0);*/
         private static bool TryGetDefaultDeconstruct(TypeDeclarationSyntax type, SemanticModel semanticModel, out MethodDeclarationSyntax? deconstruct, out ConstructorDeclarationSyntax? ctor)
         {
             deconstruct = default;

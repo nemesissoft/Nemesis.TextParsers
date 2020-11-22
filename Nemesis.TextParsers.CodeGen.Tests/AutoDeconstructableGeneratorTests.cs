@@ -1,12 +1,21 @@
 ﻿extern alias original;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Nemesis.TextParsers.CodeGen.Deconstructable;
 
 using NUnit.Framework;
+
 using static Nemesis.TextParsers.CodeGen.Tests.Utils;
+
+// ReSharper disable once IdentifierTypo
 using DiagId = Nemesis.TextParsers.CodeGen.Deconstructable.AutoDeconstructableGenerator.DiagnosticsId;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
@@ -17,7 +26,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         //TODO test for missing start/end characters in DeconstructableSettings
         //TODO add tests with static using, + using Mnemonic = System.Double
         //TODO add tests with various modifiers + class/struct/record
-        //TODO test all reported diagnostics
         //TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
         //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
@@ -48,11 +56,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     }   
 }";
             var compilation = CreateCompilation(source);
-            var initialDiagnostics = GetCompilationIssues(compilation);
-
-            Assert.That(initialDiagnostics, Has.Count.EqualTo(2));
-            Assert.That(initialDiagnostics, Has.All.Contain("The type or namespace name 'Auto' could not be found"));
-
 
             var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
@@ -134,101 +137,103 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
         }
 
-
-        private static readonly IEnumerable<TestCaseData> _negativeDiagnostics = new (string source, DiagId id, string expectedMessagePart)[]
+        [Test]
+        public void DiagnosticsRemoval_LackOfAutoAttribute()
         {
-            (@"", DiagId.NonPartialType, "")
-        }.Select(t=> new TestCaseData(t.source, t.id, t.expectedMessagePart));
-
-        [TestCaseSource(nameof(_negativeDiagnostics))]
-        internal void Diagnostics_CheckNegativeCases(string source, DiagId id, string expectedMessagePart )
-        {
-            
+            var source = @"namespace Tests
+{
+    [Auto.AutoDeconstructable]
+    public partial record RecordPoint2d(double X, double Y) { }  
+}";
             var compilation = CreateCompilation(source);
             var initialDiagnostics = GetCompilationIssues(compilation);
 
-            Assert.That(initialDiagnostics, Has.Count.EqualTo(2));
+            Assert.That(initialDiagnostics, Has.Count.EqualTo(1));
             Assert.That(initialDiagnostics, Has.All.Contain("The type or namespace name 'Auto' could not be found"));
 
 
-            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
+        }
 
+        private static readonly IEnumerable<TestCaseData> _negativeDiagnostics = new (string source, DiagId id, string expectedMessagePart)[]
+        {
+            (@"[AutoDeconstructable] class NonPartial { }", DiagId.NonPartialType, "Type decorated with AutoDeconstructableAttribute must be also declared partial"),
 
-            var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
+            (@"[AutoDeconstructable]
+              [DeconstructableSettings('1','2','3','4','5','6')]
+              partial class NonPrimitive { }", DiagId.InvalidSettingsAttribute, "DeconstructableSettingsAttribute must be constructed with 5 characters and bool type, or with default values"),
 
-            var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
+            (@"[AutoDeconstructable] partial class NoMembers { }", DiagId.NoMatchingCtorAndDeconstruct, "NoMembers does not possess matching constructor and Deconstruct pair"),
 
-            var actual = ScrubGeneratorComments(root.ToFullString());
-
-            Assert.That(actual, Is.EqualTo(@"HEAD
-using System;
-using Nemesis.TextParsers.Parsers;
-using Nemesis.TextParsers.Utils;
-
+            (@"[AutoDeconstructable]
+              partial class Ctor1Deconstruct2
+              {
+                  public int A { get; } public int B { get; }
+                  public Ctor1Deconstruct2(int a) => A = a;
+                  public void Deconstruct(out int a, out int b) { a = A; b = B; }
+              }", DiagId.NoMatchingCtorAndDeconstruct, "Ctor1Deconstruct2 does not possess matching constructor and Deconstruct pair"),
+            
+            //(@"[AutoDeconstructable] partial class NoProperties { public NoProperties() {} public void Deconstruct() { }}", DiagId.NoContractMembers, "Cannot emulate test"),
+            
+            (@"namespace Tests {
+    partial class Containing { [Auto.AutoDeconstructable] partial class Tests{} } 
+}", DiagId.NamespaceAndTypeNamesEqual, "Type 'Tests' cannot be equal to containing namespace: 'Nemesis.TextParsers.CodeGen.Tests.Tests"),
+        }.Select((t, i) => new TestCaseData($@"using Auto;
+using Nemesis.TextParsers.Settings;
 namespace Nemesis.TextParsers.CodeGen.Tests
-{
-    [Transformer(typeof(Point3dTransformer))]
-    public readonly partial struct Point3d 
-    {
-#if DEBUG
-        internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
-#endif
-    }
+{{
+{t.source}
+}}
+", (byte)t.id, t.expectedMessagePart).SetName($"{(i + 1):00}_{t.id}"));
 
-    [System.CodeDom.Compiler.GeneratedCode(META)]
-    [System.Runtime.CompilerServices.CompilerGenerated]
-    sealed class Point3dTransformer : TransformerBase<Point3d>
-    {
-        private readonly ITransformer<double> _transformer_x = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_y = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_z = TextTransformer.Default.GetTransformer<double>();
-        private const int ARITY = 3;
-
-
-        private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
-
-        public override Point3d GetEmpty() => new Point3d(_transformer_x.GetEmpty(), _transformer_y.GetEmpty(), _transformer_z.GetEmpty());
-        protected override Point3d ParseCore(in ReadOnlySpan<char> input)
+        [TestCaseSource(nameof(_negativeDiagnostics))]
+        public void Diagnostics_CheckNegativeCases(in string source, in byte id, in string expectedMessagePart)
         {
-            var enumerator = _helper.ParseStart(input, ARITY);
-            var t1 = _helper.ParseElement(ref enumerator, _transformer_x);
+            var compilation = CreateCompilation(source);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_y);
+            RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            var diagnosticsList = diagnostics.ToList();
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_z);
 
-            _helper.ParseEnd(ref enumerator, ARITY);
-            return new Point3d(t1, t2, t3);
+            Assert.That(diagnosticsList, Has.Count.EqualTo(1));
+
+            var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
+
+            Assert.That(diagnosticDescriptor.Id, Is.EqualTo($"AutoDeconstructable{id:00}"));
+            Assert.That(diagnosticDescriptor.MessageFormat.ToString(), Does.Contain(expectedMessagePart));
         }
 
-        public override string Format(Point3d element)
+        [Test]
+        public void Diagnostics_RemoveSettingsAttribute()
         {
-            Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-            try
-            {
-                 _helper.StartFormat(ref accumulator);
-                 var (x, y, z) = element;
-                _helper.FormatElement(_transformer_x, x, ref accumulator);
+            var source = @"[AutoDeconstructable] partial class DoeNotMatter { }";
 
-                _helper.AddDelimiter(ref accumulator);
-                _helper.FormatElement(_transformer_y, y, ref accumulator);
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
 
-                _helper.AddDelimiter(ref accumulator);
-                _helper.FormatElement(_transformer_z, z, ref accumulator);
+            var compilation = CSharpCompilation.Create("compilation",
+                new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
+                new[]
+                {
+                    MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
+                    MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
+                    //Important - no NTP reference
+                },
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-                _helper.EndFormat(ref accumulator);
-                return accumulator.AsSpan().ToString();
-            }
-            finally { accumulator.Dispose(); }
+
+            RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            var diagnosticsList = diagnostics.ToList();
+
+
+            Assert.That(diagnosticsList, Has.Count.EqualTo(1));
+
+            var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
+
+            Assert.That(diagnosticDescriptor.Id, Is.EqualTo($"AutoDeconstructable{(byte)DiagId.NoSettingsAttribute:00}"));
+            Assert.That(diagnosticDescriptor.MessageFormat.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
         }
     }
 }
-").Using(IgnoreNewLinesComparer.EqualityComparer));
 
-        }
-    }
-}
+

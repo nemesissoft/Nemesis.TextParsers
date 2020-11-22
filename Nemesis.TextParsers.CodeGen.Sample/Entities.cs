@@ -15,6 +15,8 @@ namespace Nemesis.TextParsers.CodeGen.Sample
         public void Deconstruct(out double x, out double y, out double z) { x = X; y = Y; z = Z; }
     }
 
+    //[Auto.AutoDeconstructable] public class BadPoint2d { }
+
     [Auto.AutoDeconstructable]
     public record RecordPoint2d(double X, double Y) { }
 

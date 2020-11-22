@@ -10,14 +10,8 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     public partial class AutoDeconstructableGenerator
     {
-        private static string RenderRecord(INamedTypeSymbol typeSymbol, string typeModifiers, IReadOnlyList<(string Name, string Type)> members, GeneratedDeconstructableSettings? settings, IEnumerable<string> namespaces, in GeneratorExecutionContext context)
+        private static string RenderRecord(INamedTypeSymbol typeSymbol, string typeModifiers, IReadOnlyList<(string Name, string Type)> members, GeneratedDeconstructableSettings? settings, IEnumerable<string> namespaces)
         {
-            if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
-            {
-                ReportError(context, DiagnosticsId.NamespaceAndTypeNamesEqual, typeSymbol, $"Type '{typeSymbol.Name}' cannot be equal to containing namespace: '{typeSymbol.ContainingNamespace}'");
-                return "";
-            }
-
             string namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
 
             var source = new StringBuilder(512);

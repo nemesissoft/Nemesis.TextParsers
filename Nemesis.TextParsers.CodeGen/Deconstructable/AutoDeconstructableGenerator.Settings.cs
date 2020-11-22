@@ -16,7 +16,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         internal enum DiagnosticsId : byte
         {
             NonPartialType = 1,
-            NonPrimitiveCharacters = 2,
+            InvalidSettingsAttribute = 2,
             NoMatchingCtorAndDeconstruct = 3,
             NoContractMembers = 4,
             NoAutoAttribute = 5,
@@ -24,18 +24,17 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             NamespaceAndTypeNamesEqual = 7,
         }
 
-        private static void ReportError(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string title) =>
-            ReportDiagnostics(context, id, symbol, title, DiagnosticSeverity.Error);
+        private static void ReportError(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string message) =>
+            ReportDiagnostics(context, id, symbol, message, DiagnosticSeverity.Error);
 
-        private static void ReportWarning(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string title) =>
-            ReportDiagnostics(context, id, symbol, title, DiagnosticSeverity.Warning);
+        private static void ReportWarning(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string message) =>
+            ReportDiagnostics(context, id, symbol, message, DiagnosticSeverity.Warning);
 
-        private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string title, DiagnosticSeverity diagnosticSeverity) =>
+        private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string message, DiagnosticSeverity diagnosticSeverity) =>
             context.ReportDiagnostic(Diagnostic.Create(
                 new DiagnosticDescriptor($"AutoDeconstructable{(byte)id:00}",
-                    //TODO consider merging title with message ?
-                    title,
-                    messageFormat: "Couldn't generate automatic deconstructable pattern for '{0}'.",
+                    $"Couldn't generate automatic deconstructable pattern for '{symbol?.Name}'",
+                    messageFormat: "{0}: "+ message,
                     category: "AutoGenerator",
                     diagnosticSeverity,
                     isEnabledByDefault: true), symbol?.Locations[0], symbol?.Name));
@@ -55,13 +54,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
-                static bool HasConstructorDeConstructPair(SyntaxNode node) =>
-                    node.ChildNodes().OfType<ConstructorDeclarationSyntax>()
-                        .Any(ctor => ctor.ParameterList.Parameters.Count > 0) &&
-                    node.ChildNodes().OfType<MethodDeclarationSyntax>()
-                        .Any(m => m.Identifier.Text == DECONSTRUCT && m.ParameterList.Parameters.Count > 0);
-
-
+                //TODO add to only 1 list 
                 if (syntaxNode is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0)
                     switch (tds)
                     {
@@ -69,10 +62,10 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
                             _candidateRecords.Add(rds);
                             break;
 
-                        case StructDeclarationSyntax sds when HasConstructorDeConstructPair(sds):
+                        case StructDeclarationSyntax sds:
                             _candidateTypes.Add(sds);
                             break;
-                        case ClassDeclarationSyntax cds when HasConstructorDeConstructPair(cds):
+                        case ClassDeclarationSyntax cds:
                             _candidateTypes.Add(cds);
                             break;
                     }
@@ -111,6 +104,8 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             public override string ToString() =>
                 $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
+
+            //TODO get rid of that method - get all parameters from symbol analysis 
             public static GeneratedDeconstructableSettings? FromDeconstructableSettingsAttribute(AttributeData? deconstructableSettingsAttributeData)
             {
                 if (deconstructableSettingsAttributeData?.ConstructorArguments is { } args)
