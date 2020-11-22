@@ -29,7 +29,12 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 namespace {namespaceName}
 {{
     [Transformer(typeof({typeName}Transformer))]
-    {typeModifiers} {typeName} {{ }}
+    {typeModifiers} {typeName} 
+    {{
+#if DEBUG
+        internal void DebuggerHook() {{ System.Diagnostics.Debugger.Launch(); }}
+#endif
+    }}
 
     [System.CodeDom.Compiler.GeneratedCode(""AutoDeconstructableGenerator"", ""1.0"")]
     [System.Runtime.CompilerServices.CompilerGenerated]

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -8,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Nemesis.TextParsers.CodeGen.Utils;
 
 #nullable enable
 
@@ -31,7 +31,7 @@ namespace Auto
 
         public void Execute(GeneratorExecutionContext context)
         {
-            //TODO add support for debugging code gen in apps
+            context.CheckDebugger(nameof(AutoDeconstructableGenerator));
 
             context.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8));
 

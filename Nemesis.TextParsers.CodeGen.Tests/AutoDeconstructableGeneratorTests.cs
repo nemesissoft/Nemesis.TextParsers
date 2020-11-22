@@ -75,7 +75,12 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
     [Transformer(typeof(Point3dTransformer))]
-    public readonly partial struct Point3d { }
+    public readonly partial struct Point3d 
+    {
+#if DEBUG
+        internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#endif
+    }
 
     [System.CodeDom.Compiler.GeneratedCode(""AutoDeconstructableGenerator"", ""1.0"")]
     [System.Runtime.CompilerServices.CompilerGenerated]
