@@ -18,7 +18,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         //TODO add tests with static using, + using Mnemonic = System.Double
         //TODO add tests with various modifiers + class/struct/record
         //TODO test all reported diagnostics
-        //TODO add test for default settings (Settings store, create new Sut) and attribute provided settings (both default and user provided)
+        //TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
         //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
         [Test]
