@@ -38,7 +38,7 @@ namespace Auto
 
             var options = cSharpCompilation.SyntaxTrees[0].Options as CSharpParseOptions;
             var compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8), options));
-            
+
             var autoAttributeSymbol = compilation.GetTypeByMetadataName($"Auto.{ATTRIBUTE_NAME}");
             if (autoAttributeSymbol is null)
             {
@@ -69,7 +69,6 @@ namespace Auto
             {
                 var model = compilation.GetSemanticModel(type.SyntaxTree);
 
-                //TODO check why deconstructableSettingsAttributeData is null ????
                 if (ShouldProcessType(type, autoAttributeSymbol, deconstructableSettingsAttributeSymbol, model, context, out var deconstructableSettingsAttributeData, out var typeSymbol)
                     && typeSymbol != null)
                 {
@@ -81,27 +80,13 @@ namespace Auto
                             ReportWarning(context, DiagnosticsId.NoContractMembers, typeSymbol, $"{typeSymbol.Name} does not possess members for serialization");
 
 
-                        var settings = deconstructableSettingsAttributeData?.ConstructorArguments is { } args ?
-                            new GeneratedDeconstructableSettings(
-                                args.Length > 0 ? (char)args[0].Value! : LocalSettingsAttribute.DEFAULT_DELIMITER,
-                                args.Length > 1 ? (char)args[1].Value! : LocalSettingsAttribute.DEFAULT_NULL_ELEMENT_MARKER,
-                                args.Length > 2 ? (char)args[2].Value! : LocalSettingsAttribute.DEFAULT_ESCAPING_SEQUENCE_START,
-                                args.Length > 3 ? (char)args[3].Value! : LocalSettingsAttribute.DEFAULT_START,
-                                args.Length > 4 ? (char)args[4].Value! : LocalSettingsAttribute.DEFAULT_END
-                            )
-                            : (GeneratedDeconstructableSettings?)null;
+                        var settings = GetGeneratedDeconstructableSettings(deconstructableSettingsAttributeData);
 
 
                         //TODO GENERATE: append namespaces from source file
                         var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
 
-                        string typeModifiers = type.Modifiers + " " + type switch
-                        {
-                            ClassDeclarationSyntax _ => "class",
-                            StructDeclarationSyntax _ => "struct",
-                            RecordDeclarationSyntax _ => "record",
-                            _ => throw new NotSupportedException("Only class, struct or record types are allowed")
-                        };
+                        string typeModifiers = GetTypeModifiers(type);
 
                         string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces, context);
                         context.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
@@ -112,6 +97,35 @@ namespace Auto
                     }
                 }
             }
+        }
+
+        private static string GetTypeModifiers(TypeDeclarationSyntax type) =>
+            type.Modifiers + " " + type switch
+            {
+                ClassDeclarationSyntax _ => "class",
+                StructDeclarationSyntax _ => "struct",
+                RecordDeclarationSyntax _ => "record",
+                _ => throw new NotSupportedException("Only class, struct or record types are allowed")
+            };
+
+        private static GeneratedDeconstructableSettings? GetGeneratedDeconstructableSettings(AttributeData? deconstructableSettingsAttributeData)
+        {
+            if (deconstructableSettingsAttributeData?.ConstructorArguments is { } args)
+            {
+                char GetCharValue(int i, char @default) => args.Length > i ? (char)args[i].Value! : @default;
+                bool GetBoolValue(int i, bool @default) => args.Length > i ? (bool)args[i].Value! : @default;
+
+                return new GeneratedDeconstructableSettings(
+                    GetCharValue(0, LocalSettingsAttribute.DEFAULT_DELIMITER),
+                    GetCharValue(1, LocalSettingsAttribute.DEFAULT_NULL_ELEMENT_MARKER),
+                    GetCharValue(2, LocalSettingsAttribute.DEFAULT_ESCAPING_SEQUENCE_START),
+                    GetCharValue(3, LocalSettingsAttribute.DEFAULT_START),
+                    GetCharValue(4, LocalSettingsAttribute.DEFAULT_END),
+                    GetBoolValue(5, LocalSettingsAttribute.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
+                );
+            }
+            else
+                return null;
         }
 
         private static bool ShouldProcessType(TypeDeclarationSyntax type, ISymbol autoAttributeSymbol, ISymbol deconstructableSettingsAttributeSymbol,
@@ -131,7 +145,7 @@ namespace Auto
                 {
                     if (GetAttribute(ts, deconstructableSettingsAttributeSymbol) is { } settingsAttributeData)
                     {
-                        if (settingsAttributeData.ConstructorArguments.All(a => a.Kind == TypedConstantKind.Primitive && a.Value is char))
+                        if (settingsAttributeData.ConstructorArguments.All(a => a.Kind == TypedConstantKind.Primitive && (a.Value is char || a.Value is bool)))
                         {
                             deconstructableSettingsAttributeData = settingsAttributeData;
                             typeSymbol = ts;
@@ -152,7 +166,7 @@ namespace Auto
             return false;
         }
 
-        //TODO - take all from ISymbol, not TypeDeclarationSyntax 
+        //TODO - take all from ISymbol, not TypeDeclarationSyntax and make if common with Records meta retrieval
         private static bool TryGetDefaultDeconstruct(TypeDeclarationSyntax type, SemanticModel semanticModel, out MethodDeclarationSyntax? deconstruct, out ConstructorDeclarationSyntax? ctor)
         {
             deconstruct = default;

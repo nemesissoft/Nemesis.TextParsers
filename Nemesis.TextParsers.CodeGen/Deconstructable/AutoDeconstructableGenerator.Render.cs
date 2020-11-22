@@ -39,6 +39,11 @@ namespace {namespaceName}
             {
                 source.AppendLine($@"
         private readonly TupleHelper _helper = new TupleHelper({Escape(s.Delimiter)}, {Escape(s.NullElementMarker)}, {Escape(s.EscapingSequenceStart)}, {Escape(s.Start)}, {Escape(s.End)});");
+
+                if (s.UseDeconstructableEmpty)
+                {
+                    //TODO implement
+                }
             }
             else
             {

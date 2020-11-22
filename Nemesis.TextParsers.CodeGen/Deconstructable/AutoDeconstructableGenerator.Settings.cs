@@ -84,24 +84,27 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             public char EscapingSequenceStart { get; }
             public char? Start { get; }
             public char? End { get; }
+            public bool UseDeconstructableEmpty { get; }
 
-            public GeneratedDeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+            public GeneratedDeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, bool useDeconstructableEmpty)
             {
                 Delimiter = delimiter;
                 NullElementMarker = nullElementMarker;
                 EscapingSequenceStart = escapingSequenceStart;
                 Start = start;
                 End = end;
+                UseDeconstructableEmpty = useDeconstructableEmpty;
             }
 
-            public void Deconstruct(out char delimiter, out char nullElementMarker, out char escapingSequenceStart, out char? start, out char? end)
+            /*public void Deconstruct(out char delimiter, out char nullElementMarker, out char escapingSequenceStart, out char? start, out char? end, out bool useDeconstructableEmpty)
             {
                 delimiter = Delimiter;
                 nullElementMarker = NullElementMarker;
                 escapingSequenceStart = EscapingSequenceStart;
                 start = Start;
                 end = End;
-            }
+                useDeconstructableEmpty = UseDeconstructableEmpty;
+            }*/
 
             public override string ToString() =>
                 $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
