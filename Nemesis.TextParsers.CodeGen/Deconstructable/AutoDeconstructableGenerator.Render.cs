@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+
 using Microsoft.CodeAnalysis;
 
 #nullable enable
@@ -14,7 +15,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             {
                 ReportError(context, DiagnosticsId.NamespaceAndTypeNamesEqual, typeSymbol, $"Type '{typeSymbol.Name}' cannot be equal to containing namespace: '{typeSymbol.ContainingNamespace}'");
                 return "";
-            } 
+            }
 
             string namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
 
@@ -35,6 +36,13 @@ namespace {namespaceName}
     sealed class {typeName}Transformer : TransformerBase<{typeName}>
     {{");
 
+            foreach (var (name, type) in members)
+                source.Append($@"
+        private readonly ITransformer<{type}> {GetTransformerName(name)} = TextTransformer.Default.GetTransformer<{type}>();");
+            source.AppendLine($@"
+        private const int ARITY = {members.Count};").AppendLine();
+
+
             if (settings is { } s)
             {
                 source.AppendLine($@"
@@ -42,12 +50,23 @@ namespace {namespaceName}
 
                 if (s.UseDeconstructableEmpty)
                 {
-                    //TODO implement
+                    source.Append($@"
+        public override {typeName} GetEmpty() => new {typeName}(");
+
+                    for (int i = 0; i < members.Count; i++)
+                    {
+                        source.Append($"{GetTransformerName(members[i].Name)}.GetEmpty()");
+                        if (i < members.Count-1)
+                            source.Append(", ");
+                    }
+                    source.AppendLine(");");
                 }
             }
             else
             {
                 source.Append($@"
+        private readonly TupleHelper _helper;
+
         public {typeName}Transformer(Nemesis.TextParsers.ITransformerStore transformerStore)
         {{");
                 source.Append($@"
@@ -56,12 +75,8 @@ namespace {namespaceName}
                 source.Append(@"
         }
 ");
+                //IDEA: generate GetEmpty based on DeconstructableSettings taken from SettingsStore
             }
-
-            foreach (var (name, type) in members)
-                source.AppendLine($@"        private readonly ITransformer<{type}> _transformer_{name} = TextTransformer.Default.GetTransformer<{type}>();");
-
-            source.AppendLine($"        private const int ARITY = {members.Count};").AppendLine();
 
             RenderParseCore(source, typeName, members);
             source.AppendLine();
@@ -92,7 +107,7 @@ namespace {namespaceName}
                 static string GetEscapeCode(string ch) => $@"'\{ch}'";
             }
         }
-        
+
         private static void RenderParseCore(StringBuilder source, string typeName, IReadOnlyList<(string Name, string Type)> members)
         {
             source.AppendLine($"        protected override {typeName} ParseCore(in ReadOnlySpan<char> input)");
@@ -103,7 +118,7 @@ namespace {namespaceName}
             {
                 if (i != 1)
                     source.AppendLine($"            _helper.ParseNext(ref enumerator, {i});");
-                source.AppendLine($"            var t{i} = _helper.ParseElement(ref enumerator, _transformer_{members[i - 1].Name});").AppendLine();
+                source.AppendLine($"            var t{i} = _helper.ParseElement(ref enumerator, {GetTransformerName(members[i - 1].Name)});").AppendLine();
             }
 
             source.Append("            _helper.ParseEnd(ref enumerator, ARITY);").AppendLine();
@@ -141,7 +156,7 @@ namespace {namespaceName}
             {
                 if (i != 1)
                     source.AppendLine("                _helper.AddDelimiter(ref accumulator);");
-                source.AppendLine($"                _helper.FormatElement(_transformer_{members[i - 1].Name}, {members[i - 1].Name}, ref accumulator);").AppendLine();
+                source.AppendLine($"                _helper.FormatElement({GetTransformerName(members[i - 1].Name)}, {members[i - 1].Name}, ref accumulator);").AppendLine();
             }
 
             source.AppendLine("                _helper.EndFormat(ref accumulator);");
@@ -150,5 +165,7 @@ namespace {namespaceName}
             source.AppendLine("            finally { accumulator.Dispose(); }");
             source.AppendLine("        }");
         }
+
+        private static string GetTransformerName(string memberName) => $"_transformer_{memberName}";
     }
 }

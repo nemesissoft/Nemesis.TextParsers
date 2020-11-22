@@ -75,18 +75,21 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
     [Transformer(typeof(Point3dTransformer))]
-    readonly partial struct Point3d { }
+    public readonly partial struct Point3d { }
 
     [System.CodeDom.Compiler.GeneratedCode(""AutoDeconstructableGenerator"", ""1.0"")]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class Point3dTransformer : TransformerBase<Point3d>
     {
-        private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
         private readonly ITransformer<double> _transformer_x = TextTransformer.Default.GetTransformer<double>();
         private readonly ITransformer<double> _transformer_y = TextTransformer.Default.GetTransformer<double>();
         private readonly ITransformer<double> _transformer_z = TextTransformer.Default.GetTransformer<double>();
         private const int ARITY = 3;
 
+
+        private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
+
+        public override Point3d GetEmpty() => new Point3d(_transformer_x.GetEmpty(), _transformer_y.GetEmpty(), _transformer_z.GetEmpty());
         protected override Point3d ParseCore(in ReadOnlySpan<char> input)
         {
             var enumerator = _helper.ParseStart(input, ARITY);

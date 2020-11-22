@@ -5,6 +5,8 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using LocalSettingsAttribute = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
+
 #nullable enable
 
 namespace Nemesis.TextParsers.CodeGen.Deconstructable
@@ -86,7 +88,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             public char? End { get; }
             public bool UseDeconstructableEmpty { get; }
 
-            public GeneratedDeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, bool useDeconstructableEmpty)
+            private GeneratedDeconstructableSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, bool useDeconstructableEmpty)
             {
                 Delimiter = delimiter;
                 NullElementMarker = nullElementMarker;
@@ -108,6 +110,26 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 
             public override string ToString() =>
                 $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
+
+            public static GeneratedDeconstructableSettings? FromDeconstructableSettingsAttribute(AttributeData? deconstructableSettingsAttributeData)
+            {
+                if (deconstructableSettingsAttributeData?.ConstructorArguments is { } args)
+                {
+                    char GetCharValue(int i, char @default) => args.Length > i ? (char)args[i].Value! : @default;
+                    bool GetBoolValue(int i, bool @default) => args.Length > i ? (bool)args[i].Value! : @default;
+
+                    return new GeneratedDeconstructableSettings(
+                        GetCharValue(0, LocalSettingsAttribute.DEFAULT_DELIMITER),
+                        GetCharValue(1, LocalSettingsAttribute.DEFAULT_NULL_ELEMENT_MARKER),
+                        GetCharValue(2, LocalSettingsAttribute.DEFAULT_ESCAPING_SEQUENCE_START),
+                        GetCharValue(3, LocalSettingsAttribute.DEFAULT_START),
+                        GetCharValue(4, LocalSettingsAttribute.DEFAULT_END),
+                        GetBoolValue(5, LocalSettingsAttribute.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
+                    );
+                }
+                else
+                    return null;
+            }
         }
     }
 }

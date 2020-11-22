@@ -82,6 +82,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             }
             finally { accumulator.Dispose(); }
         }
+
+        public override Point3d GetEmpty() => new Point3d(_transformerX.GetEmpty(), _transformerY.GetEmpty(), _transformerZ.GetEmpty());
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]

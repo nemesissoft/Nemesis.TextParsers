@@ -9,8 +9,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-using LocalSettingsAttribute = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
-
 #nullable enable
 
 namespace Nemesis.TextParsers.CodeGen.Deconstructable
@@ -18,7 +16,8 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
     [Generator]
     public partial class AutoDeconstructableGenerator : ISourceGenerator
     {
-        internal static readonly string DeconstructableSettingsAttributeName = typeof(LocalSettingsAttribute).FullName;
+        // ReSharper disable once RedundantNameQualifier
+        internal static readonly string DeconstructableSettingsAttributeName = typeof(Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute).FullName;
         internal const string DECONSTRUCT = "Deconstruct";
         internal const string ATTRIBUTE_NAME = @"AutoDeconstructableAttribute";
         private const string ATTRIBUTE_SOURCE = @"using System;
@@ -80,7 +79,7 @@ namespace Auto
                             ReportWarning(context, DiagnosticsId.NoContractMembers, typeSymbol, $"{typeSymbol.Name} does not possess members for serialization");
 
 
-                        var settings = GetGeneratedDeconstructableSettings(deconstructableSettingsAttributeData);
+                        var settings = GeneratedDeconstructableSettings.FromDeconstructableSettingsAttribute(deconstructableSettingsAttributeData);
 
 
                         //TODO GENERATE: append namespaces from source file
@@ -107,26 +106,6 @@ namespace Auto
                 RecordDeclarationSyntax _ => "record",
                 _ => throw new NotSupportedException("Only class, struct or record types are allowed")
             };
-
-        private static GeneratedDeconstructableSettings? GetGeneratedDeconstructableSettings(AttributeData? deconstructableSettingsAttributeData)
-        {
-            if (deconstructableSettingsAttributeData?.ConstructorArguments is { } args)
-            {
-                char GetCharValue(int i, char @default) => args.Length > i ? (char)args[i].Value! : @default;
-                bool GetBoolValue(int i, bool @default) => args.Length > i ? (bool)args[i].Value! : @default;
-
-                return new GeneratedDeconstructableSettings(
-                    GetCharValue(0, LocalSettingsAttribute.DEFAULT_DELIMITER),
-                    GetCharValue(1, LocalSettingsAttribute.DEFAULT_NULL_ELEMENT_MARKER),
-                    GetCharValue(2, LocalSettingsAttribute.DEFAULT_ESCAPING_SEQUENCE_START),
-                    GetCharValue(3, LocalSettingsAttribute.DEFAULT_START),
-                    GetCharValue(4, LocalSettingsAttribute.DEFAULT_END),
-                    GetBoolValue(5, LocalSettingsAttribute.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
-                );
-            }
-            else
-                return null;
-        }
 
         private static bool ShouldProcessType(TypeDeclarationSyntax type, ISymbol autoAttributeSymbol, ISymbol deconstructableSettingsAttributeSymbol,
             SemanticModel? model, in GeneratorExecutionContext context, out AttributeData? deconstructableSettingsAttributeData, out INamedTypeSymbol? typeSymbol)
