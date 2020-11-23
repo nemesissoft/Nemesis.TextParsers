@@ -23,11 +23,15 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         internal static readonly DiagnosticDescriptor NonPartialTypeRule = GetDiagnosticDescriptor(1, $"Type decorated with {ATTRIBUTE_NAME} must be also declared partial");
         internal static readonly DiagnosticDescriptor InvalidSettingsAttributeRule = GetDiagnosticDescriptor(2, $"Attribute {DeconstructableSettingsAttributeName} must be constructed with 5 characters and bool type, or with default values");
         internal static readonly DiagnosticDescriptor NoMatchingCtorAndDeconstructRule = GetDiagnosticDescriptor(3, "No matching constructor and Deconstruct pair found");
-        internal static readonly DiagnosticDescriptor NoContractMembersRule = GetDiagnosticDescriptor(4, "No members for serialization", DiagnosticSeverity.Warning);
-        internal static readonly DiagnosticDescriptor NoAutoAttributeRule = GetDiagnosticDescriptor(5, $"Internal error: Auto.{ATTRIBUTE_NAME} is not defined");
-        internal static readonly DiagnosticDescriptor NoSettingsAttributeRule = GetDiagnosticDescriptor(6, $"{DeconstructableSettingsAttributeName} is not recognized. Please reference Nemesis.TextParsers into your project");
-        internal static readonly DiagnosticDescriptor NamespaceAndTypeNamesEqualRule = GetDiagnosticDescriptor(7, "Type name cannot be equal to containing namespace: '{1}'");
+        internal static readonly DiagnosticDescriptor NoAutoAttributeRule = GetDiagnosticDescriptor(4, $"Internal error: Auto.{ATTRIBUTE_NAME} is not defined");
+        internal static readonly DiagnosticDescriptor NoSettingsAttributeRule = GetDiagnosticDescriptor(5, $"{DeconstructableSettingsAttributeName} is not recognized. Please reference Nemesis.TextParsers into your project");
+        internal static readonly DiagnosticDescriptor NamespaceAndTypeNamesEqualRule = GetDiagnosticDescriptor(6, "Type name cannot be equal to containing namespace: '{1}'");
+        internal static readonly DiagnosticDescriptor NoConstructor = GetDiagnosticDescriptor(7, "No constructor to support serialization. Only Record get constructors automatically. Private constructor is not enough - it cannot be called");
+        internal static readonly DiagnosticDescriptor NoDeconstruct = GetDiagnosticDescriptor(8, "No Deconstruct to support serialization. Only Record get Deconstruct automatically. All Deconstruct parameters must have 'out' passing type");
 
+        
+        internal static readonly DiagnosticDescriptor NoContractMembersRule = GetDiagnosticDescriptor(50, "No members for serialization", DiagnosticSeverity.Warning);
+        
 
         private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticDescriptor rule, ISymbol? symbol) =>
             context.ReportDiagnostic(Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.Name, symbol?.ContainingNamespace?.ToString()));

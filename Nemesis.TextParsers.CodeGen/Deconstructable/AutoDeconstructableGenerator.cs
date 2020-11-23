@@ -78,28 +78,17 @@ namespace Auto
                         continue;
                     }
 
-                    if (TryGetDefaultDeconstruct(type, model, out var deconstruct, out var ctor) && deconstruct != null && ctor != null)
+                    //TODO GENERATE: append namespaces from source file
+                    var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
+
+                    if (TryGetMembers(typeSymbol, context, namespaces, out var members) && members != null)
                     {
-                        //TODO get namespaces for some exotic member types 
-                        var members = ctor.ParameterList.Parameters.Select(p => (p.Identifier.Text, model.GetTypeInfo(p.Type!).Type!.ToDisplayString())).ToList();
-                        if (members.Count == 0)
-                            ReportDiagnostics(context, NoContractMembersRule, typeSymbol);
-
-
                         var settings = GeneratedDeconstructableSettings.FromDeconstructableSettingsAttribute(deconstructableSettingsAttributeData);
-
-
-                        //TODO GENERATE: append namespaces from source file
-                        var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
 
                         string typeModifiers = GetTypeModifiers(type);
 
                         string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces);
                         context.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
-                    }
-                    else
-                    {
-                        ReportDiagnostics(context, NoMatchingCtorAndDeconstructRule, typeSymbol);
                     }
                 }
             }
@@ -153,63 +142,71 @@ namespace Auto
             return false;
         }
 
-        //TODO - take all from ISymbol, not TypeDeclarationSyntax and make if common with Records meta retrieval
-        /*static bool HasConstructorDeConstructPair(SyntaxNode node) =>
-                            node.ChildNodes().OfType<ConstructorDeclarationSyntax>()
-                                .Any(ctor => ctor.ParameterList.Parameters.Count > 0) &&
-                            node.ChildNodes().OfType<MethodDeclarationSyntax>()
-                                .Any(m => m.Identifier.Text == DECONSTRUCT && m.ParameterList.Parameters.Count > 0);*/
-        private static bool TryGetDefaultDeconstruct(TypeDeclarationSyntax type, SemanticModel semanticModel, out MethodDeclarationSyntax? deconstruct, out ConstructorDeclarationSyntax? ctor)
+        private static bool TryGetMembers(INamedTypeSymbol typeSymbol, in GeneratorExecutionContext context, ISet<string> namespaces, out IReadOnlyList<(string Name, string Type)>? members)
         {
-            deconstruct = default;
-            ctor = default;
+            members = default;
 
-            var ctors = type.ChildNodes().OfType<ConstructorDeclarationSyntax>()
-                .Where(c => c.ParameterList.Parameters.Count > 0)
+            var ctors = typeSymbol.InstanceConstructors
+                .Where(c => c.DeclaredAccessibility != Accessibility.Private)
                 .ToList();
-            if (ctors.Count == 0) return false;
-
-            var deconstructs = type
-                .ChildNodes().OfType<MethodDeclarationSyntax>()
-                .Where(m => string.Equals(m.Identifier.Text, DECONSTRUCT, StringComparison.Ordinal) &&
-                           m.ParameterList.Parameters is var @params &&
-                           @params.Count > 0 &&
-                           @params.All(p => p.Modifiers.Any(mod => mod.IsKind(SyntaxKind.OutKeyword)))
-
-                           )
-                .Select(m => (method: m, @params: m.ParameterList.Parameters))
-                .OrderByDescending(p => p.@params.Count);
-
-            foreach (var (method, @params) in deconstructs)
+            if (ctors.Count == 0)
             {
-                var compatibleCtor = ctors.FirstOrDefault(c => IsCompatible(c.ParameterList.Parameters, @params, semanticModel));
-                if (compatibleCtor == null) continue;
-
-                deconstruct = method;
-                ctor = compatibleCtor;
-
-                return true;
+                ReportDiagnostics(context, NoConstructor, typeSymbol);
+                return false;
             }
 
+            var deconstructs = typeSymbol.GetMembers().Where(s => s.Kind == SymbolKind.Method).OfType<IMethodSymbol>()
+                .Where(m => string.Equals(m.Name, DECONSTRUCT, StringComparison.Ordinal) &&
+                            m.Parameters is var @params &&
+                            @params.All(p => p.RefKind == RefKind.Out)
+                )
+                .Select(m => (method: m, @params: m.Parameters))
+                .OrderByDescending(p => p.@params.Length).ToList();
+            if (deconstructs.Count == 0)
+            {
+                ReportDiagnostics(context, NoDeconstruct, typeSymbol);
+                return false;
+            }
+
+            foreach (var (_, @params) in deconstructs)
+            {
+                var ctor = ctors.FirstOrDefault(c => IsCompatible(c.Parameters, @params));
+                if (ctor == null) continue;
+
+                members = ctor.Parameters.Select(p => (p.Name, p.Type.ToDisplayString())).ToList();
+
+                if (members.Count > 0)
+                {
+                    foreach (var parameter in ctor.Parameters)
+                    {
+                        //TODO for arrays ang generics - add element type and container type 
+                        namespaces.Add(parameter.Type.ContainingNamespace.ToDisplayString());
+                    }
+                    return true;
+                }
+            }
+
+            if (members != null && members.Count == 0)
+            {
+                ReportDiagnostics(context, NoContractMembersRule, typeSymbol);
+                return false;
+            }
+
+            ReportDiagnostics(context, NoMatchingCtorAndDeconstructRule, typeSymbol);
             return false;
         }
 
-        private static bool IsCompatible(IReadOnlyList<ParameterSyntax> left, IReadOnlyList<ParameterSyntax> right, SemanticModel model)
+        private static bool IsCompatible(IReadOnlyList<IParameterSymbol> left, IReadOnlyList<IParameterSymbol> right)
         {
             bool AreEqualByParamTypes()
             {
                 for (var i = 0; i < left.Count; i++)
                 {
-                    TypeSyntax? leftType = left[i].Type, rightType = right[i].Type;
+                    ITypeSymbol? leftType = left[i]?.Type, rightType = right[i]?.Type;
 
                     if (leftType == null || rightType == null) return false;
 
-                    var leftTypeSymbol = model.GetTypeInfo(leftType);
-                    var rightTypeSymbol = model.GetTypeInfo(rightType);
-
-                    if (leftTypeSymbol.Type == null || rightTypeSymbol.Type == null) return false;
-
-                    if (!leftTypeSymbol.Equals(rightTypeSymbol))
+                    if (!leftType.Equals(rightType, SymbolEqualityComparer.Default))
                         return false;
                 }
                 return true;

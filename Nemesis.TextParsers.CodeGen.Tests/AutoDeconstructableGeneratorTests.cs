@@ -161,7 +161,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
               [DeconstructableSettings('1','2','3','4','5','6')]
               partial class NonPrimitive { }", nameof(AutoDeconstructableGenerator.InvalidSettingsAttributeRule), "DeconstructableSettingsAttribute must be constructed with 5 characters and bool type, or with default values"),
 
-            (@"[AutoDeconstructable] partial class NoMembers { }", nameof(AutoDeconstructableGenerator.NoMatchingCtorAndDeconstructRule), "NoMembers: No matching constructor and Deconstruct pair found"),
+            (@"[AutoDeconstructable] partial class NoMatching { public NoMatching(int i){} public void Deconstruct(out float f){} }", nameof(AutoDeconstructableGenerator.NoMatchingCtorAndDeconstructRule), "NoMatching: No matching constructor and Deconstruct pair found"),
 
             (@"[AutoDeconstructable]
               partial class Ctor1Deconstruct2
@@ -171,8 +171,12 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                   public void Deconstruct(out int a, out int b) { a = A; b = B; }
               }", nameof(AutoDeconstructableGenerator.NoMatchingCtorAndDeconstructRule), "Ctor1Deconstruct2: No matching constructor and Deconstruct pair found"),
             
-            //(@"[AutoDeconstructable] partial class NoProperties { public NoProperties() {} public void Deconstruct() { }}", AutoDeconstructableGenerator.NoContractMembersRule, "Cannot emulate test"),
+            (@"[AutoDeconstructable] partial class NoProperties { public NoProperties() {} public void Deconstruct() { }}", nameof(AutoDeconstructableGenerator.NoContractMembersRule), "warning AutoDeconstructable50: NoProperties: No members for serialization"),
             
+            (@"[AutoDeconstructable] partial class NoCtor { private NoCtor() {} public void Deconstruct() { }}", nameof(AutoDeconstructableGenerator.NoConstructor), "NoCtor: No constructor to support serialization. Only Record get constructors automatically. Private constructor is not enough - it cannot be called"),
+            
+            (@"[AutoDeconstructable] partial class NoDeconstruct { public NoDeconstruct() {} }", nameof(AutoDeconstructableGenerator.NoDeconstruct), "NoDeconstruct: No Deconstruct to support serialization. Only Record get Deconstruct automatically. All Deconstruct parameters must have 'out' passing type"),
+
             (@"namespace Test {
     partial class ContainingType { [Auto.AutoDeconstructable] partial class Test{} } 
 }", nameof(AutoDeconstructableGenerator.NamespaceAndTypeNamesEqualRule), "Test: Type name cannot be equal to containing namespace: 'Nemesis.TextParsers.CodeGen.Tests.Test'"),
@@ -224,10 +228,10 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
             Assert.That(diagnosticsList, Has.Count.EqualTo(1));
 
-            var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
+            var diagnostic = diagnosticsList.Single(); var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
 
-            Assert.That(diagnosticDescriptor.Id, Is.EqualTo($"AutoDeconstructable06"));
-            Assert.That(diagnosticDescriptor.MessageFormat.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
+            Assert.That(diagnostic.Descriptor.Id, Is.EqualTo(AutoDeconstructableGenerator.NoSettingsAttributeRule.Id));
+            Assert.That(diagnostic.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
         }
 
         private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
@@ -244,7 +248,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
        }
            .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
                .SetName($"{(i + 1):00}"));
-
+//TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
+        //+ for UseDeconstructableEmpty == true/false:  public override Child GetEmpty() => new Child(_transformer_age.GetEmpty(), _transformer_weight.GetEmpty());
+        //TODO implement record support and add examples with that 
         [TestCaseSource(nameof(_settingsCases))]
         public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
         {
@@ -260,11 +266,10 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             Assert.That(diagnostics, Is.Empty);
 
             Assert.That(actual, Does.Contain(expectedCodePart));
-
         }
-        //TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
-        //+ for UseDeconstructableEmpty == true/false:  public override Child GetEmpty() => new Child(_transformer_age.GetEmpty(), _transformer_weight.GetEmpty());
-        //implement record support and add examples with that 
+
+
+
 
         /*
 
