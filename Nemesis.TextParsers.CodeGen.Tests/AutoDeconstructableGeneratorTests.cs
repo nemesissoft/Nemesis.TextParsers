@@ -26,6 +26,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         //TODO add tests with various modifiers + class/struct/record
         //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
+
+        //TODO rework this as approval tests
         [Test]
         public void SimpleGeneratorTest()
         {
@@ -54,17 +56,80 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 }";
             var compilation = CreateCompilation(source);
 
-            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
-            Assert.That(diagnostics, Is.Empty);
+            var generatedTrees = GetGeneratedTreesOnly(compilation, 2);
+            
+            var actualRecord = ScrubGeneratorComments(generatedTrees[0]);
+            var actualStruct = ScrubGeneratorComments(generatedTrees[1]);
+
+            Assert.That(actualRecord, Is.EqualTo(@"HEAD
+using System;
+using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
+
+namespace Nemesis.TextParsers.CodeGen.Tests
+{
+    [Transformer(typeof(RecordPoint3dTransformer))]
+    public partial record RecordPoint3d 
+    {
+#if DEBUG
+        internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#endif
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode(META)]
+    [System.Runtime.CompilerServices.CompilerGenerated]
+    sealed class RecordPoint3dTransformer : TransformerBase<RecordPoint3d>
+    {
+        private readonly ITransformer<double> _transformer_X = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_Y = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_Z = TextTransformer.Default.GetTransformer<double>();
+        private const int ARITY = 3;
 
 
-            var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
+        private readonly TupleHelper _helper = new TupleHelper(',', '∅', '\\', '[', ']');
 
-            var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
+        public override RecordPoint3d GetEmpty() => new RecordPoint3d(_transformer_X.GetEmpty(), _transformer_Y.GetEmpty(), _transformer_Z.GetEmpty());
+        protected override RecordPoint3d ParseCore(in ReadOnlySpan<char> input)
+        {
+            var enumerator = _helper.ParseStart(input, ARITY);
+            var t1 = _helper.ParseElement(ref enumerator, _transformer_X);
 
-            var actual = ScrubGeneratorComments(root.ToFullString());
+            _helper.ParseNext(ref enumerator, 2);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_Y);
 
-            Assert.That(actual, Is.EqualTo(@"HEAD
+            _helper.ParseNext(ref enumerator, 3);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_Z);
+
+            _helper.ParseEnd(ref enumerator, ARITY);
+            return new RecordPoint3d(t1, t2, t3);
+        }
+
+        public override string Format(RecordPoint3d element)
+        {
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            try
+            {
+                 _helper.StartFormat(ref accumulator);
+                 var (X, Y, Z) = element;
+                _helper.FormatElement(_transformer_X, X, ref accumulator);
+
+                _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer_Y, Y, ref accumulator);
+
+                _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer_Z, Z, ref accumulator);
+
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+    }
+}
+"));
+
+            Assert.That(actualStruct, Is.EqualTo(@"HEAD
 using System;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
@@ -228,8 +293,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
             Assert.That(diagnosticsList, Has.Count.EqualTo(1));
 
-            var diagnostic = diagnosticsList.Single(); var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
-
+            var diagnostic = diagnosticsList.Single();
             Assert.That(diagnostic.Descriptor.Id, Is.EqualTo(AutoDeconstructableGenerator.NoSettingsAttributeRule.Id));
             Assert.That(diagnostic.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
         }
@@ -275,7 +339,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
            .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
                .SetName($"{(i + 1):00}"));
-        
+
         [TestCaseSource(nameof(_settingsCases))]
         public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
         {
@@ -287,34 +351,41 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var compilation = CreateCompilation(source);
 
             //act
-            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
-            //1 TODO add helper for removing added AutoAttribute (and assert on list cardinality)
-            var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
-            var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
-            var actual = root.ToFullString();
+            var generatedTrees = GetGeneratedTreesOnly(compilation);
+            var actual = generatedTrees.Single();
 
 
             //assert
-            Assert.That(diagnostics, Is.Empty);
             Assert.That(actual, matchNotContain ? Does.Not.Contain(expectedCodePart) : Does.Contain(expectedCodePart));
         }
 
-        /*
+        private static IReadOnlyList<string> GetGeneratedTreesOnly(Compilation compilation, int requiredCardinality = 1)
+        {
+            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            Assert.That(diagnostics, Is.Empty);
 
-            [DeconstructableSettings(';', '␀', '/', '\0', '\0')]
-            internal class Kindergarten
+            SyntaxTree attributeTree = null;
+            foreach (var tree in newComp.SyntaxTrees)
             {
-                public string Address { get; }
-                public Child[] Children { get; }       
+                var attributeDeclaration = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>()
+                    .FirstOrDefault(cds => string.Equals(cds.Identifier.ValueText, AutoDeconstructableGenerator.ATTRIBUTE_NAME, StringComparison.Ordinal));
+                if (attributeDeclaration != null)
+                {
+                    attributeTree = tree;
+                    break;
+                }
             }
+            Assert.That(attributeTree, Is.Not.Null, "Auto attribute not found among generated trees");
 
-            [DeconstructableSettings('_')]
-            internal class UnderscoreSeparatedProperties
-            {
-                public string Data1 { get; }
-                public string Data2 { get; }
-                public string Data3 { get; }
-            }*/
+            var toRemove = compilation.SyntaxTrees.Append(attributeTree);
+
+            var generatedTrees = newComp.RemoveSyntaxTrees(toRemove).SyntaxTrees.ToList();
+            Assert.That(generatedTrees, Has.Count.EqualTo(requiredCardinality));
+            
+            return generatedTrees.Select(tree =>
+                ((CompilationUnitSyntax) tree.GetRoot())
+                .ToFullString()).ToList();
+        }
     }
 }
 
