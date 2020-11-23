@@ -28,40 +28,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
 
         //TODO rework this as approval tests
-        [Test]
-        public void SimpleGeneratorTest()
+
+        private static readonly IEnumerable<TestCaseData> _endToEndCases = new (string source, string expectedCode)[]
         {
-            var source = @"
-namespace Nemesis.TextParsers.CodeGen.Tests
-{
-    public record RecordPoint2d(double X, double Y) { }
+            (@"public record RecordPoint2d(double X, double Y) { }
 
-    [Auto.AutoDeconstructable]
-    [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(',', '∅', '\\', '[', ']')]
-    public partial record RecordPoint3d(double X, double Y, double Z): RecordPoint2d(X, Y) 
-    {
-        public double Magnitude { get; init; } //will NOT be subject to deconstruction
-    }
-
-    [Auto.AutoDeconstructable]
-    [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(';', '∅', '\\', '(', ')')]
-    public readonly partial struct Point3d
-    {
-        public double X { get; } public double Y { get; } public double Z { get; }
-
-        public Point3d(double x, double y, double z) { X = x; Y = y; Z = z; }
-
-        public void Deconstruct(out double x, out System.Double y, out double z) { x = X; y = Y; z = Z; }
-    }   
-}";
-            var compilation = CreateCompilation(source);
-
-            var generatedTrees = GetGeneratedTreesOnly(compilation, 2);
-            
-            var actualRecord = ScrubGeneratorComments(generatedTrees[0]);
-            var actualStruct = ScrubGeneratorComments(generatedTrees[1]);
-
-            Assert.That(actualRecord, Is.EqualTo(@"HEAD
+               [Auto.AutoDeconstructable]
+               [DeconstructableSettings(',', '∅', '\\', '[', ']')]
+               public partial record RecordPoint3d(double X, double Y, double Z): RecordPoint2d(X, Y) 
+               {
+                   public double Magnitude { get; init; } //will NOT be subject to deconstruction
+               }", @"HEAD
 using System;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
@@ -126,10 +103,19 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             finally { accumulator.Dispose(); }
         }
     }
-}
-"));
+}"),
 
-            Assert.That(actualStruct, Is.EqualTo(@"HEAD
+
+
+            (@"[Auto.AutoDeconstructable]
+               [DeconstructableSettings(';', '∅', '\\', '(', ')')]
+               public readonly partial struct Point3d
+               {
+                   public double X { get; } public double Y { get; } public double Z { get; }
+                   public Point3d(double x, double y, double z) { X = x; Y = y; Z = z; }
+
+                   public void Deconstruct(out double x, out System.Double y, out double z) { x = X; y = Y; z = Z; }
+               }", @"HEAD
 using System;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
@@ -194,9 +180,22 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             finally { accumulator.Dispose(); }
         }
     }
-}
-").Using(IgnoreNewLinesComparer.EqualityComparer));
+}")
+        }
+           .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
+               .SetName($"{i + 1:00}"));
 
+
+        [TestCaseSource(nameof(_endToEndCases))]
+        public void SimpleGeneratorTest(string source, string expectedCode)
+        {
+            var compilation = CreateCompilation(source);
+
+            var generatedTrees = GetGeneratedTreesOnly(compilation);
+            
+            var actual = ScrubGeneratorComments(generatedTrees.Single());
+            
+            Assert.That(actual, Is.EqualTo(expectedCode).Using(IgnoreNewLinesComparer.EqualityComparer));
         }
 
         [Test]

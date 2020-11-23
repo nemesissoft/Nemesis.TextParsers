@@ -87,7 +87,7 @@ namespace {namespaceName}
             RenderFormat(source, typeName, members);
 
             source.AppendLine("    }");
-            source.AppendLine("}");
+            source.Append("}");
             return source.ToString();
 
             static string Escape(char? c)
