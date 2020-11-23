@@ -15,8 +15,6 @@ using NUnit.Framework;
 
 using static Nemesis.TextParsers.CodeGen.Tests.Utils;
 
-// ReSharper disable once IdentifierTypo
-using DiagId = Nemesis.TextParsers.CodeGen.Deconstructable.AutoDeconstructableGenerator.DiagnosticsId;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -26,7 +24,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         //TODO test for missing start/end characters in DeconstructableSettings
         //TODO add tests with static using, + using Mnemonic = System.Double
         //TODO add tests with various modifiers + class/struct/record
-        //TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
         //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
         [Test]
@@ -156,15 +153,15 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             Assert.That(diagnostics, Is.Empty);
         }
 
-        private static readonly IEnumerable<TestCaseData> _negativeDiagnostics = new (string source, DiagId id, string expectedMessagePart)[]
+        private static readonly IEnumerable<TestCaseData> _negativeDiagnostics = new (string source, string rule, string expectedMessagePart)[]
         {
-            (@"[AutoDeconstructable] class NonPartial { }", DiagId.NonPartialType, "Type decorated with AutoDeconstructableAttribute must be also declared partial"),
+            (@"[AutoDeconstructable] class NonPartial { }", nameof(AutoDeconstructableGenerator.NonPartialTypeRule), "Type decorated with AutoDeconstructableAttribute must be also declared partial"),
 
             (@"[AutoDeconstructable]
               [DeconstructableSettings('1','2','3','4','5','6')]
-              partial class NonPrimitive { }", DiagId.InvalidSettingsAttribute, "DeconstructableSettingsAttribute must be constructed with 5 characters and bool type, or with default values"),
+              partial class NonPrimitive { }", nameof(AutoDeconstructableGenerator.InvalidSettingsAttributeRule), "DeconstructableSettingsAttribute must be constructed with 5 characters and bool type, or with default values"),
 
-            (@"[AutoDeconstructable] partial class NoMembers { }", DiagId.NoMatchingCtorAndDeconstruct, "NoMembers does not possess matching constructor and Deconstruct pair"),
+            (@"[AutoDeconstructable] partial class NoMembers { }", nameof(AutoDeconstructableGenerator.NoMatchingCtorAndDeconstructRule), "NoMembers: No matching constructor and Deconstruct pair found"),
 
             (@"[AutoDeconstructable]
               partial class Ctor1Deconstruct2
@@ -172,36 +169,35 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                   public int A { get; } public int B { get; }
                   public Ctor1Deconstruct2(int a) => A = a;
                   public void Deconstruct(out int a, out int b) { a = A; b = B; }
-              }", DiagId.NoMatchingCtorAndDeconstruct, "Ctor1Deconstruct2 does not possess matching constructor and Deconstruct pair"),
+              }", nameof(AutoDeconstructableGenerator.NoMatchingCtorAndDeconstructRule), "Ctor1Deconstruct2: No matching constructor and Deconstruct pair found"),
             
-            //(@"[AutoDeconstructable] partial class NoProperties { public NoProperties() {} public void Deconstruct() { }}", DiagId.NoContractMembers, "Cannot emulate test"),
+            //(@"[AutoDeconstructable] partial class NoProperties { public NoProperties() {} public void Deconstruct() { }}", AutoDeconstructableGenerator.NoContractMembersRule, "Cannot emulate test"),
             
-            (@"namespace Tests {
-    partial class Containing { [Auto.AutoDeconstructable] partial class Tests{} } 
-}", DiagId.NamespaceAndTypeNamesEqual, "Type 'Tests' cannot be equal to containing namespace: 'Nemesis.TextParsers.CodeGen.Tests.Tests"),
-        }.Select((t, i) => new TestCaseData($@"using Auto;
-using Nemesis.TextParsers.Settings;
-namespace Nemesis.TextParsers.CodeGen.Tests
-{{
-{t.source}
-}}
-", (byte)t.id, t.expectedMessagePart).SetName($"{(i + 1):00}_{t.id}"));
+            (@"namespace Test {
+    partial class ContainingType { [Auto.AutoDeconstructable] partial class Test{} } 
+}", nameof(AutoDeconstructableGenerator.NamespaceAndTypeNamesEqualRule), "Test: Type name cannot be equal to containing namespace: 'Nemesis.TextParsers.CodeGen.Tests.Test'"),
+        }
+            .Select((t, i) => new TestCaseData($@"using Auto; using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.rule, t.expectedMessagePart)
+                .SetName($"{(i + 1):00}_{t.rule}"));
 
         [TestCaseSource(nameof(_negativeDiagnostics))]
-        public void Diagnostics_CheckNegativeCases(in string source, in byte id, in string expectedMessagePart)
+        public void Diagnostics_CheckNegativeCases(in string source, in string ruleName, in string expectedMessagePart)
         {
+            var rule = (DiagnosticDescriptor)typeof(AutoDeconstructableGenerator)
+                .GetField(ruleName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                ?.GetValue(null) ?? throw new NotSupportedException($"Rule '{ruleName}' does not exist");
+
             var compilation = CreateCompilation(source);
 
             RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+
             var diagnosticsList = diagnostics.ToList();
-
-
             Assert.That(diagnosticsList, Has.Count.EqualTo(1));
 
-            var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
+            var diagnostic = diagnosticsList.Single();
 
-            Assert.That(diagnosticDescriptor.Id, Is.EqualTo($"AutoDeconstructable{id:00}"));
-            Assert.That(diagnosticDescriptor.MessageFormat.ToString(), Does.Contain(expectedMessagePart));
+            Assert.That(diagnostic.Descriptor.Id, Is.EqualTo(rule.Id));
+            Assert.That(diagnostic.ToString(), Does.Contain(expectedMessagePart));
         }
 
         [Test]
@@ -230,9 +226,12 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
             var diagnosticDescriptor = diagnosticsList.Single().Descriptor;
 
-            Assert.That(diagnosticDescriptor.Id, Is.EqualTo($"AutoDeconstructable{(byte)DiagId.NoSettingsAttribute:00}"));
+            Assert.That(diagnosticDescriptor.Id, Is.EqualTo($"AutoDeconstructable06"));
             Assert.That(diagnosticDescriptor.MessageFormat.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
         }
+
+
+        //TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
     }
 }
 

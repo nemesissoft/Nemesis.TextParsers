@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,31 +12,25 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     public partial class AutoDeconstructableGenerator
     {
-        internal enum DiagnosticsId : byte
-        {
-            NonPartialType = 1,
-            InvalidSettingsAttribute = 2,
-            NoMatchingCtorAndDeconstruct = 3,
-            NoContractMembers = 4,
-            NoAutoAttribute = 5,
-            NoSettingsAttribute = 6,
-            NamespaceAndTypeNamesEqual = 7,
-        }
+        // Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute
+        internal static readonly string DeconstructableSettingsAttributeName = typeof(LocalSettingsAttribute).FullName;
 
-        private static void ReportError(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string message) =>
-            ReportDiagnostics(context, id, symbol, message, DiagnosticSeverity.Error);
+        private static DiagnosticDescriptor GetDiagnosticDescriptor(byte id, string message,
+            DiagnosticSeverity diagnosticSeverity = DiagnosticSeverity.Error) =>
+            new DiagnosticDescriptor($"AutoDeconstructable{id:00}", "Couldn't generate automatic deconstructable pattern",
+                messageFormat: "{0}: " + message, category: "AutoGenerator", diagnosticSeverity, isEnabledByDefault: true);
 
-        private static void ReportWarning(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string message) =>
-            ReportDiagnostics(context, id, symbol, message, DiagnosticSeverity.Warning);
+        internal static readonly DiagnosticDescriptor NonPartialTypeRule = GetDiagnosticDescriptor(1, $"Type decorated with {ATTRIBUTE_NAME} must be also declared partial");
+        internal static readonly DiagnosticDescriptor InvalidSettingsAttributeRule = GetDiagnosticDescriptor(2, $"Attribute {DeconstructableSettingsAttributeName} must be constructed with 5 characters and bool type, or with default values");
+        internal static readonly DiagnosticDescriptor NoMatchingCtorAndDeconstructRule = GetDiagnosticDescriptor(3, "No matching constructor and Deconstruct pair found");
+        internal static readonly DiagnosticDescriptor NoContractMembersRule = GetDiagnosticDescriptor(4, "No members for serialization", DiagnosticSeverity.Warning);
+        internal static readonly DiagnosticDescriptor NoAutoAttributeRule = GetDiagnosticDescriptor(5, $"Internal error: Auto.{ATTRIBUTE_NAME} is not defined");
+        internal static readonly DiagnosticDescriptor NoSettingsAttributeRule = GetDiagnosticDescriptor(6, $"{DeconstructableSettingsAttributeName} is not recognized. Please reference Nemesis.TextParsers into your project");
+        internal static readonly DiagnosticDescriptor NamespaceAndTypeNamesEqualRule = GetDiagnosticDescriptor(7, "Type name cannot be equal to containing namespace: '{1}'");
 
-        private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticsId id, ISymbol? symbol, string message, DiagnosticSeverity diagnosticSeverity) =>
-            context.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor($"AutoDeconstructable{(byte)id:00}",
-                    $"Couldn't generate automatic deconstructable pattern for '{symbol?.Name}'",
-                    messageFormat: "{0}: "+ message,
-                    category: "AutoGenerator",
-                    diagnosticSeverity,
-                    isEnabledByDefault: true), symbol?.Locations[0], symbol?.Name));
+
+        private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticDescriptor rule, ISymbol? symbol) =>
+            context.ReportDiagnostic(Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.Name, symbol?.ContainingNamespace?.ToString()));
 
 
         private sealed class DeconstructableSyntaxReceiver : ISyntaxReceiver

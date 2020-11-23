@@ -17,8 +17,6 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
     [Generator]
     public partial class AutoDeconstructableGenerator : ISourceGenerator
     {
-        // ReSharper disable once RedundantNameQualifier
-        internal static readonly string DeconstructableSettingsAttributeName = typeof(Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute).FullName;
         internal const string DECONSTRUCT = "Deconstruct";
         internal const string ATTRIBUTE_NAME = @"AutoDeconstructableAttribute";
         private const string ATTRIBUTE_SOURCE = @"using System;
@@ -44,7 +42,7 @@ namespace Auto
             var autoAttributeSymbol = compilation.GetTypeByMetadataName($"Auto.{ATTRIBUTE_NAME}");
             if (autoAttributeSymbol is null)
             {
-                ReportError(context, DiagnosticsId.NoAutoAttribute, null, $"Internal error: Auto.{ATTRIBUTE_NAME} is not defined");
+                ReportDiagnostics(context, NoAutoAttributeRule, null);
                 return;
             }
 
@@ -56,7 +54,7 @@ namespace Auto
             var deconstructableSettingsAttributeSymbol = compilation.GetTypeByMetadataName(DeconstructableSettingsAttributeName);
             if (deconstructableSettingsAttributeSymbol is null)
             {
-                ReportError(context, DiagnosticsId.NoSettingsAttribute, null, $"{DeconstructableSettingsAttributeName} is not recognized. Please reference Nemesis.TextParsers into your project");
+                ReportDiagnostics(context, NoSettingsAttributeRule, null);
                 return;
             }
 
@@ -76,7 +74,7 @@ namespace Auto
                 {
                     if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
                     {
-                        ReportError(context, DiagnosticsId.NamespaceAndTypeNamesEqual, typeSymbol, $"Type '{typeSymbol.Name}' cannot be equal to containing namespace: '{typeSymbol.ContainingNamespace}'");
+                        ReportDiagnostics(context, NamespaceAndTypeNamesEqualRule, typeSymbol);
                         continue;
                     }
 
@@ -85,7 +83,7 @@ namespace Auto
                         //TODO get namespaces for some exotic member types 
                         var members = ctor.ParameterList.Parameters.Select(p => (p.Identifier.Text, model.GetTypeInfo(p.Type!).Type!.ToDisplayString())).ToList();
                         if (members.Count == 0)
-                            ReportWarning(context, DiagnosticsId.NoContractMembers, typeSymbol, $"{typeSymbol.Name} does not possess members for serialization");
+                            ReportDiagnostics(context, NoContractMembersRule, typeSymbol);
 
 
                         var settings = GeneratedDeconstructableSettings.FromDeconstructableSettingsAttribute(deconstructableSettingsAttributeData);
@@ -101,7 +99,7 @@ namespace Auto
                     }
                     else
                     {
-                        ReportError(context, DiagnosticsId.NoMatchingCtorAndDeconstruct, typeSymbol, $"{typeSymbol.Name} does not possess matching constructor and Deconstruct pair");
+                        ReportDiagnostics(context, NoMatchingCtorAndDeconstructRule, typeSymbol);
                     }
                 }
             }
@@ -141,7 +139,7 @@ namespace Auto
                             return true;
                         }
                         else
-                            ReportError(context, DiagnosticsId.InvalidSettingsAttribute, ts, $"Attribute {DeconstructableSettingsAttributeName} must be constructed with 5 characters and bool type, or with default values");
+                            ReportDiagnostics(context, InvalidSettingsAttributeRule, ts);
                     }
                     else
                     {
@@ -150,7 +148,7 @@ namespace Auto
                     }
                 }
                 else
-                    ReportError(context, DiagnosticsId.NonPartialType, ts, $"Type decorated with {ATTRIBUTE_NAME} must be also declared partial");
+                    ReportDiagnostics(context, NonPartialTypeRule, ts);
             }
             return false;
         }
