@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using ApprovalTests;
+using ApprovalTests.Maintenance;
 using ApprovalTests.Reporters;
 using ApprovalTests.Writers;
 
@@ -19,7 +20,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
         
         [Test] public void ApprovalTestsStruct() => RunCase(1);
 
-        
+
+        [Test]
+        public void HouseKeeping()
+        {
+            ApprovalMaintenance.VerifyNoAbandonedFiles();
+        }
+
         private static void RunCase(int index)
         {
             var compilation = CreateCompilation(EndToEndCases.AutoDeconstructableCases()[index].source);
