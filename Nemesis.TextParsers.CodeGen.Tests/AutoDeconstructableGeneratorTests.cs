@@ -230,8 +230,86 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             Assert.That(diagnosticDescriptor.MessageFormat.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
         }
 
+        private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
+       {
+            (@"[DeconstructableSettings(':', '␀', '/', '{', '}')]
+            readonly partial struct Child
+            {
+                public byte Age { get; }
+                public float Weight { get; }
+                public Child(byte age, float weight) { Age = age; Weight = weight; }
+                public void Deconstruct(out byte age, out float weight) { age = Age; weight = Weight; }                
+            }", "private readonly TupleHelper _helper = new TupleHelper(':', '␀', '/', '{', '}');"),
+            
+       }
+           .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
+               .SetName($"{(i + 1):00}"));
 
+        [TestCaseSource(nameof(_settingsCases))]
+        public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
+        {
+            //arrange
+            var compilation = CreateCompilation(source);
+            
+            //act
+            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
+            var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
+            var actual = root.ToFullString();
+
+            Assert.That(diagnostics, Is.Empty);
+
+            Assert.That(actual, Does.Contain(expectedCodePart));
+
+        }
         //TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
+        //+ for UseDeconstructableEmpty == true/false:  public override Child GetEmpty() => new Child(_transformer_age.GetEmpty(), _transformer_weight.GetEmpty());
+        //implement record support and add examples with that 
+
+        /*
+
+            [DeconstructableSettings(';', '␀', '/', '\0', '\0')]
+            internal class Kindergarten
+            {
+                public string Address { get; }
+                public Child[] Children { get; }
+
+                public Kindergarten(string address, Child[] children)
+                {
+                    Address = address;
+                    Children = children;
+                }
+
+                public void Deconstruct(out string address, out Child[] children)
+                {
+                    address = Address;
+                    children = Children;
+                }
+            }
+
+            [DeconstructableSettings('_')]
+            internal class UnderscoreSeparatedProperties
+            {
+                public string Data1 { get; }
+                public string Data2 { get; }
+                public string Data3 { get; }
+
+                public UnderscoreSeparatedProperties(string data1, string data2, string data3)
+                {
+                    Data1 = data1;
+                    Data2 = data2;
+                    Data3 = data3;
+                }
+
+                public void Deconstruct(out string data1, out string data2, out string data3)
+                {
+                    data1 = Data1;
+                    data2 = Data2;
+                    data3 = Data3;
+                }
+
+                public override string ToString() => $"{nameof(Data1)}: {Data1}, {nameof(Data2)}: {Data2}, {nameof(Data3)}: {Data3}";
+            }*/
     }
 }
 
