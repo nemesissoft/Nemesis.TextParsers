@@ -29,8 +29,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen.Sample", "Nemesis.TextParsers.CodeGen.Sample\Nemesis.TextParsers.CodeGen.Sample.csproj", "{7C32D596-6B5B-4E39-8C96-2FC8757E3213}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.CodeGen.ApprovalTests", "Nemesis.TextParsers.CodeGen.ApprovalTests\Nemesis.TextParsers.CodeGen.ApprovalTests.csproj", "{E857A8D4-D677-408F-81FA-53B2BB54C690}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,10 +59,6 @@ Global
 		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E857A8D4-D677-408F-81FA-53B2BB54C690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E857A8D4-D677-408F-81FA-53B2BB54C690}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E857A8D4-D677-408F-81FA-53B2BB54C690}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E857A8D4-D677-408F-81FA-53B2BB54C690}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
