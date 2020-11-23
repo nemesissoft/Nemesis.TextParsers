@@ -40,30 +40,19 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         private sealed class DeconstructableSyntaxReceiver : ISyntaxReceiver
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly List<RecordDeclarationSyntax> _candidateRecords = new List<RecordDeclarationSyntax>();
-
-            public IEnumerable<RecordDeclarationSyntax> CandidateRecords => _candidateRecords;
-
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private readonly List<TypeDeclarationSyntax> _candidateTypes = new List<TypeDeclarationSyntax>();
 
             public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
-                //TODO add to only 1 list 
                 if (syntaxNode is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0)
                     switch (tds)
                     {
-                        case RecordDeclarationSyntax rds:
-                            _candidateRecords.Add(rds);
-                            break;
-
-                        case StructDeclarationSyntax sds:
-                            _candidateTypes.Add(sds);
-                            break;
-                        case ClassDeclarationSyntax cds:
-                            _candidateTypes.Add(cds);
+                        case RecordDeclarationSyntax _:
+                        case StructDeclarationSyntax _:
+                        case ClassDeclarationSyntax _:
+                            _candidateTypes.Add(tds);
                             break;
                     }
             }
@@ -88,15 +77,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
                 UseDeconstructableEmpty = useDeconstructableEmpty;
             }
 
-            /*public void Deconstruct(out char delimiter, out char nullElementMarker, out char escapingSequenceStart, out char? start, out char? end, out bool useDeconstructableEmpty)
-            {
-                delimiter = Delimiter;
-                nullElementMarker = NullElementMarker;
-                escapingSequenceStart = EscapingSequenceStart;
-                start = Start;
-                end = End;
-                useDeconstructableEmpty = UseDeconstructableEmpty;
-            }*/
+            
 
             public override string ToString() =>
                 $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";

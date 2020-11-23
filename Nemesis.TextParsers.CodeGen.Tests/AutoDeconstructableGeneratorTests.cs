@@ -245,6 +245,10 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                 public void Deconstruct(out byte age, out float weight) { age = Age; weight = Weight; }                
             }", "private readonly TupleHelper _helper = new TupleHelper(':', '␀', '/', '{', '}');"),
             
+            
+            (@"[DeconstructableSettings(';', '␀', '*', '<', '>')]
+            partial record Child(byte Age, float Weight) { }", "private readonly TupleHelper _helper = new TupleHelper(';', '␀', '*', '<', '>');"),
+            
        }
            .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
                .SetName($"{(i + 1):00}"));
@@ -259,17 +263,16 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             
             //act
             var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            //TODO add helper for removing added AutoAttribute (and assert on list cardinality)
             var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
             var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
             var actual = root.ToFullString();
+            
 
+            //assert
             Assert.That(diagnostics, Is.Empty);
-
             Assert.That(actual, Does.Contain(expectedCodePart));
         }
-
-
-
 
         /*
 
@@ -277,19 +280,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             internal class Kindergarten
             {
                 public string Address { get; }
-                public Child[] Children { get; }
-
-                public Kindergarten(string address, Child[] children)
-                {
-                    Address = address;
-                    Children = children;
-                }
-
-                public void Deconstruct(out string address, out Child[] children)
-                {
-                    address = Address;
-                    children = Children;
-                }
+                public Child[] Children { get; }       
             }
 
             [DeconstructableSettings('_')]
@@ -298,22 +289,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                 public string Data1 { get; }
                 public string Data2 { get; }
                 public string Data3 { get; }
-
-                public UnderscoreSeparatedProperties(string data1, string data2, string data3)
-                {
-                    Data1 = data1;
-                    Data2 = data2;
-                    Data3 = data3;
-                }
-
-                public void Deconstruct(out string data1, out string data2, out string data3)
-                {
-                    data1 = Data1;
-                    data2 = Data2;
-                    data3 = Data3;
-                }
-
-                public override string ToString() => $"{nameof(Data1)}: {Data1}, {nameof(Data2)}: {Data2}, {nameof(Data3)}: {Data3}";
             }*/
     }
 }

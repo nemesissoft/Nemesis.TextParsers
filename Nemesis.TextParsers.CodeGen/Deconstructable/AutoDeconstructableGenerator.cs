@@ -58,13 +58,6 @@ namespace Auto
                 return;
             }
 
-            foreach (var record in receiver.CandidateRecords)
-            {
-                //var model = compilation.GetSemanticModel(record.SyntaxTree);
-                //var recordSymbol = model.GetDeclaredSymbol(record);
-                //TODO get meta using: recordSymbol.GetMembers() and recordSymbol.InstanceConstructors
-            }
-
             foreach (var type in receiver.CandidateTypes)
             {
                 var model = compilation.GetSemanticModel(type.SyntaxTree);
