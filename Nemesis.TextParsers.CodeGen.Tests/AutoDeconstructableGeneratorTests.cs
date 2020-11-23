@@ -170,11 +170,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                   public Ctor1Deconstruct2(int a) => A = a;
                   public void Deconstruct(out int a, out int b) { a = A; b = B; }
               }", nameof(AutoDeconstructableGenerator.NoMatchingCtorAndDeconstructRule), "Ctor1Deconstruct2: No matching constructor and Deconstruct pair found"),
-            
+
             (@"[AutoDeconstructable] partial class NoProperties { public NoProperties() {} public void Deconstruct() { }}", nameof(AutoDeconstructableGenerator.NoContractMembersRule), "warning AutoDeconstructable50: NoProperties: No members for serialization"),
-            
+
             (@"[AutoDeconstructable] partial class NoCtor { private NoCtor() {} public void Deconstruct() { }}", nameof(AutoDeconstructableGenerator.NoConstructor), "NoCtor: No constructor to support serialization. Only Record get constructors automatically. Private constructor is not enough - it cannot be called"),
-            
+
             (@"[AutoDeconstructable] partial class NoDeconstruct { public NoDeconstruct() {} }", nameof(AutoDeconstructableGenerator.NoDeconstruct), "NoDeconstruct: No Deconstruct to support serialization. Only Record get Deconstruct automatically. All Deconstruct parameters must have 'out' passing type"),
 
             (@"namespace Test {
@@ -235,7 +235,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
 
         private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
-       {
+        {
             (@"[DeconstructableSettings(':', '␀', '/', '{', '}')]
             readonly partial struct Child
             {
@@ -244,8 +244,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                 public Child(byte age, float weight) { Age = age; Weight = weight; }
                 public void Deconstruct(out byte age, out float weight) { age = Age; weight = Weight; }                
             }", "private readonly TupleHelper _helper = new TupleHelper(':', '␀', '/', '{', '}');"),
-            
-            
+
+
             (@"[DeconstructableSettings('_', '␀', '*', '<', '>')]
             partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '<', '>');"),
 
@@ -265,28 +265,38 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             partial record T(byte B) { }", @"new TupleHelper(';', '∅', '\\', '(', ')');"),
 
             (@"partial record T(byte B) { }", @"_helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();"),
-       }
+
+
+            (@"[DeconstructableSettings(useDeconstructableEmpty: true)]
+            partial record T(byte B) { }", @"public override T GetEmpty() => new T(_transformer_B.GetEmpty());"),
+
+            (@"[DeconstructableSettings(useDeconstructableEmpty: false)]
+            partial record T(byte B) { }", @"NOT CONTAIN:GetEmpty()"),
+        }
            .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
                .SetName($"{(i + 1):00}"));
-        //TODO case for UseDeconstructableEmpty == true/false(test for no GetEmpty):  public override Child GetEmpty() => new Child(_transformer_age.GetEmpty(), _transformer_weight.GetEmpty());
         
         [TestCaseSource(nameof(_settingsCases))]
         public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
         {
+            bool matchNotContain = expectedCodePart.StartsWith("NOT CONTAIN:");
+            if (matchNotContain)
+                expectedCodePart = expectedCodePart[12..];
+
             //arrange
             var compilation = CreateCompilation(source);
-            
+
             //act
             var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             //1 TODO add helper for removing added AutoAttribute (and assert on list cardinality)
             var generatedTrees = newComp.RemoveSyntaxTrees(compilation.SyntaxTrees).SyntaxTrees;
             var root = (CompilationUnitSyntax)generatedTrees.Last().GetRoot();
             var actual = root.ToFullString();
-            
+
 
             //assert
             Assert.That(diagnostics, Is.Empty);
-            Assert.That(actual, Does.Contain(expectedCodePart));
+            Assert.That(actual, matchNotContain ? Does.Not.Contain(expectedCodePart) : Does.Contain(expectedCodePart));
         }
 
         /*
