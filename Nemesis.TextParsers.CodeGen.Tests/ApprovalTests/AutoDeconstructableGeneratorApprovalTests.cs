@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-
 using ApprovalTests;
 using ApprovalTests.Maintenance;
 using ApprovalTests.Reporters;
@@ -19,6 +18,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
         
         
         [Test] public void ApprovalTestsStruct() => RunCase(1);
+        
+        [Test] public void ApprovalTestsLarge() => RunCase(2);
 
 
         [Test]
@@ -29,7 +30,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
 
         private static void RunCase(int index)
         {
-            var compilation = CreateCompilation(EndToEndCases.AutoDeconstructableCases()[index].source);
+            var compilation = CreateCompilation(
+                $@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {EndToEndCases.AutoDeconstructableCases()[index].source} }}");
 
             var generatedTrees = AutoDeconstructableGeneratorTests.GetGeneratedTreesOnly(compilation);
 

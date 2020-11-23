@@ -47,8 +47,7 @@ namespace Auto
             }
 
             /*var allTypes = compilation.References.Select(compilation.GetAssemblyOrModuleSymbol)
-                .OfType<IAssemblySymbol>().Select(assemblySymbol =>
-                    assemblySymbol.GetTypeByMetadataName("Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute"))
+                .OfType<IAssemblySymbol>().Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName("Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute"))
                 .Where(t => t != null).ToList();*/
 
             var deconstructableSettingsAttributeSymbol = compilation.GetTypeByMetadataName(DeconstructableSettingsAttributeName);
@@ -172,7 +171,7 @@ namespace Auto
                 {
                     foreach (var parameter in ctor.Parameters)
                     {
-                        //TODO for arrays ang generics - add element type and container type 
+                        //TODO for arrays ang generics - add element type and container type + add tests
                         namespaces.Add(parameter.Type.ContainingNamespace.ToDisplayString());
                     }
                     return true;

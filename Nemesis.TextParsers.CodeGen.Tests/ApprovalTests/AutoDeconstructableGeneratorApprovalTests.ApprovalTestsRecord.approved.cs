@@ -3,7 +3,7 @@ using System;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
-namespace <global namespace>
+namespace Nemesis.TextParsers.CodeGen.Tests
 {
     [Transformer(typeof(RecordPoint3dTransformer))]
     public partial record RecordPoint3d 
@@ -23,13 +23,9 @@ namespace <global namespace>
         private const int ARITY = 3;
 
 
-        private readonly TupleHelper _helper;
+        private readonly TupleHelper _helper = new TupleHelper(',', '∅', '\\', '[', ']');
 
-        public RecordPoint3dTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
-        {
-            _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
-
-        }
+        public override RecordPoint3d GetEmpty() => new RecordPoint3d(_transformer_X.GetEmpty(), _transformer_Y.GetEmpty(), _transformer_Z.GetEmpty());
         protected override RecordPoint3d ParseCore(in ReadOnlySpan<char> input)
         {
             var enumerator = _helper.ParseStart(input, ARITY);

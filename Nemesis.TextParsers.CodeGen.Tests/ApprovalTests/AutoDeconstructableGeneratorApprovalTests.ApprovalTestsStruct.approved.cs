@@ -3,7 +3,7 @@ using System;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
-namespace <global namespace>
+namespace Nemesis.TextParsers.CodeGen.Tests
 {
     [Transformer(typeof(Point3dTransformer))]
     public readonly partial struct Point3d 
@@ -23,13 +23,9 @@ namespace <global namespace>
         private const int ARITY = 3;
 
 
-        private readonly TupleHelper _helper;
+        private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
 
-        public Point3dTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
-        {
-            _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
-
-        }
+        public override Point3d GetEmpty() => new Point3d(_transformer_x.GetEmpty(), _transformer_y.GetEmpty(), _transformer_z.GetEmpty());
         protected override Point3d ParseCore(in ReadOnlySpan<char> input)
         {
             var enumerator = _helper.ParseStart(input, ARITY);

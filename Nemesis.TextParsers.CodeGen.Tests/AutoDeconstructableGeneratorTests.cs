@@ -20,11 +20,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     {
         //TODO test for missing start/end characters in DeconstructableSettings
         //TODO add tests with static using, + using Mnemonic = System.Double
-        //TODO add tests with various modifiers + class/struct/record
         //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
         private static IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
-           .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
+           .Select((t, i) => new TestCaseData($@"
+using Nemesis.TextParsers.Settings; 
+using System.Collections.Generic;
+namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
                .SetName($"E2E_{i + 1:00}"));
 
         [TestCaseSource(nameof(_endToEndCases))]
