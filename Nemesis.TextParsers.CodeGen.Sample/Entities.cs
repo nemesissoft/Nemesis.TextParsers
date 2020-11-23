@@ -17,9 +17,8 @@ namespace Nemesis.TextParsers.CodeGen.Sample
 
     //[Auto.AutoDeconstructable] public class BadPoint2d { }
 
-    [Auto.AutoDeconstructable]
     public record RecordPoint2d(double X, double Y) { }
-
+    
     [Auto.AutoDeconstructable]
     [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(',', '␀', '/', '⟪', '⟫')]
     public partial record RecordPoint3d(double X, double Y, double Z) : RecordPoint2d(X, Y)

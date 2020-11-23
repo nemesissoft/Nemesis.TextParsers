@@ -12,8 +12,6 @@ namespace Nemesis.TextParsers.CodeGen.Sample
 
             FormatAndParse(new RecordPoint3d(1.23, 4.56, 7.89), "⟪1.23,4.56,7.89⟫");
             FormatAndParse(new RecordPoint2d(1.23, 4.56), "(1.23;4.56)");
-
-            Console.WriteLine("Hello World!");
         }
 
         private static void FormatAndParse<T>(T instance, string text)
