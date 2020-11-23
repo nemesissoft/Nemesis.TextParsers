@@ -759,4 +759,15 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
 
         public override string ToString() => $"{nameof(Data1)}: {Data1}, {nameof(Data2)}: {Data2}, {nameof(Data3)}: {Data3}";
     }
+
+    internal class NoSettings
+    {
+        public string Data1 { get; }
+
+        public NoSettings(string data1) => Data1 = data1;
+
+        public void Deconstruct(out string data1) => data1 = Data1;
+
+        public override string ToString() => $"{nameof(Data1)}: {Data1}";
+    }
 }

@@ -55,6 +55,7 @@ namespace Nemesis.TextParsers.Parsers
         ProvidedDeconstructMethod = 1,
     }
 
+    //TODO rework as record + WithBorders + WithoutBorders methods
     public sealed class DeconstructionTransformerBuilder
     {
         private readonly ITransformerStore _transformerStore;
@@ -327,6 +328,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
 
         private readonly TupleHelper _helper;
+        internal TupleHelper Helper => _helper;
         private readonly ITransformer[] _transformers;
         private readonly ParserDelegate _parser;
         private readonly FormatterDelegate _formatter;

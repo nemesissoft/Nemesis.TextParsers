@@ -6,11 +6,11 @@ namespace Nemesis.TextParsers.Utils
     public sealed class TupleHelper : IEquatable<TupleHelper>
     {
         #region Init
-        private readonly char _tupleDelimiter;
-        private readonly char _nullElementMarker;
-        private readonly char _escapingSequenceStart;
-        private readonly char? _tupleStart;
-        private readonly char? _tupleEnd;
+        public char TupleDelimiter { get; }
+        public char NullElementMarker { get; }
+        public char EscapingSequenceStart { get; }
+        public char? TupleStart { get; }
+        public char? TupleEnd { get; }
 
         public TupleHelper(char tupleDelimiter, char nullElementMarker, char escapingSequenceStart, char? tupleStart, char? tupleEnd)
         {
@@ -34,11 +34,11 @@ Passed parameters:
 {nameof(tupleStart)} = '{tupleStart}'
 {nameof(tupleEnd)} = '{tupleEnd}'");
 
-            _tupleDelimiter = tupleDelimiter;
-            _nullElementMarker = nullElementMarker;
-            _escapingSequenceStart = escapingSequenceStart;
-            _tupleStart = tupleStart;
-            _tupleEnd = tupleEnd;
+            TupleDelimiter = tupleDelimiter;
+            NullElementMarker = nullElementMarker;
+            EscapingSequenceStart = escapingSequenceStart;
+            TupleStart = tupleStart;
+            TupleEnd = tupleEnd;
         }
         #endregion
 
@@ -47,32 +47,32 @@ Passed parameters:
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StartFormat(ref ValueSequenceBuilder<char> accumulator)
         {
-            if (_tupleStart is { } c)
+            if (TupleStart is { } c)
                 accumulator.Append(c);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void EndFormat(ref ValueSequenceBuilder<char> accumulator)
         {
-            if (_tupleEnd is { } c)
+            if (TupleEnd is { } c)
                 accumulator.Append(c);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) => accumulator.Append(_tupleDelimiter);
+        public void AddDelimiter(ref ValueSequenceBuilder<char> accumulator) => accumulator.Append(TupleDelimiter);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FormatElement<TElement>(IFormatter<TElement> formatter, TElement element, ref ValueSequenceBuilder<char> accumulator)
         {
             string elementText = formatter.Format(element);
             if (elementText == null)
-                accumulator.Append(_nullElementMarker);
+                accumulator.Append(NullElementMarker);
             else
             {
                 foreach (char c in elementText)
                 {
-                    if (c == _escapingSequenceStart || c == _nullElementMarker || c == _tupleDelimiter)
-                        accumulator.Append(_escapingSequenceStart);
+                    if (c == EscapingSequenceStart || c == NullElementMarker || c == TupleDelimiter)
+                        accumulator.Append(EscapingSequenceStart);
                     accumulator.Append(c);
                 }
             }
@@ -86,11 +86,11 @@ Passed parameters:
         {
             input = UnParenthesize(input);
 
-            var tokens = input.Tokenize(_tupleDelimiter, _escapingSequenceStart, false);
+            var tokens = input.Tokenize(TupleDelimiter, EscapingSequenceStart, false);
             var enumerator = tokens.GetEnumerator();
 
             if (!enumerator.MoveNext())
-                throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{_tupleDelimiter}' was not found");
+                throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{TupleDelimiter}' was not found");
 
             return enumerator;
         }
@@ -98,22 +98,22 @@ Passed parameters:
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ReadOnlySpan<char> UnParenthesize(ReadOnlySpan<char> span, string typeName = null)
         {
-            if (_tupleStart is null && _tupleEnd is null)
+            if (TupleStart is null && TupleEnd is null)
                 return span;
 
-            int minLength = (_tupleStart.HasValue ? 1 : 0) + (_tupleEnd.HasValue ? 1 : 0);
-            if (span.Length < minLength) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd, typeName);
+            int minLength = (TupleStart.HasValue ? 1 : 0) + (TupleEnd.HasValue ? 1 : 0);
+            if (span.Length < minLength) throw GetStateException(span.ToString(), TupleStart, TupleEnd, typeName);
 
             int start = 0;
 
-            if (_tupleStart.HasValue)
+            if (TupleStart.HasValue)
             {
                 for (; start < span.Length; start++)
                     if (!char.IsWhiteSpace(span[start]))
                         break;
 
-                bool startsWithChar = start < span.Length && span[start] == _tupleStart.Value;
-                if (!startsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd, typeName);
+                bool startsWithChar = start < span.Length && span[start] == TupleStart.Value;
+                if (!startsWithChar) throw GetStateException(span.ToString(), TupleStart, TupleEnd, typeName);
 
                 ++start;
             }
@@ -121,14 +121,14 @@ Passed parameters:
 
             int end = span.Length - 1;
 
-            if (_tupleEnd.HasValue)
+            if (TupleEnd.HasValue)
             {
                 for (; end > start; end--)
                     if (!char.IsWhiteSpace(span[end]))
                         break;
 
-                bool endsWithChar = end > 0 && span[end] == _tupleEnd.Value;
-                if (!endsWithChar) throw GetStateException(span.ToString(), _tupleStart, _tupleEnd, typeName);
+                bool endsWithChar = end > 0 && span[end] == TupleEnd.Value;
+                if (!endsWithChar) throw GetStateException(span.ToString(), TupleStart, TupleEnd, typeName);
 
                 --end;
             }
@@ -166,7 +166,7 @@ These requirements were not met in:
             if (enumerator.MoveNext())
             {
                 var remaining = enumerator.Current.ToString();
-                throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{_tupleDelimiter}' cannot have more than {arity} elements: '{remaining}'");
+                throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{TupleDelimiter}' cannot have more than {arity} elements: '{remaining}'");
             }
         }
 
@@ -174,14 +174,14 @@ These requirements were not met in:
         public TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser)
         {
             ReadOnlySpan<char> input = enumerator.Current;
-            var unescapedInput = input.UnescapeCharacter(_escapingSequenceStart, _tupleDelimiter);
+            var unescapedInput = input.UnescapeCharacter(EscapingSequenceStart, TupleDelimiter);
 
-            if (unescapedInput.Length == 1 && unescapedInput[0].Equals(_nullElementMarker))
+            if (unescapedInput.Length == 1 && unescapedInput[0].Equals(NullElementMarker))
                 return default;
             else
             {
                 unescapedInput = unescapedInput.UnescapeCharacter
-                        (_escapingSequenceStart, _nullElementMarker, _escapingSequenceStart);
+                        (EscapingSequenceStart, NullElementMarker, EscapingSequenceStart);
 
                 return parser.Parse(unescapedInput);
             }
@@ -192,26 +192,26 @@ These requirements were not met in:
 
         #region Object helpers
         public override string ToString() =>
-            $"{_tupleStart}Item1{_tupleDelimiter}Item2{_tupleDelimiter}…{_tupleDelimiter}ItemN{_tupleEnd} escaped by '{_escapingSequenceStart}', null marked by '{_nullElementMarker}'";
+            $"{TupleStart}Item1{TupleDelimiter}Item2{TupleDelimiter}…{TupleDelimiter}ItemN{TupleEnd} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
         public bool Equals(TupleHelper other) =>
-            !(other is null) && (ReferenceEquals(this, other) || 
-                _tupleDelimiter == other._tupleDelimiter && _nullElementMarker == other._nullElementMarker &&
-                _escapingSequenceStart == other._escapingSequenceStart &&
-                _tupleStart == other._tupleStart && _tupleEnd == other._tupleEnd);
+            !(other is null) && (ReferenceEquals(this, other) ||
+                TupleDelimiter == other.TupleDelimiter && NullElementMarker == other.NullElementMarker &&
+                EscapingSequenceStart == other.EscapingSequenceStart &&
+                TupleStart == other.TupleStart && TupleEnd == other.TupleEnd);
 
-        public override bool Equals(object obj) => 
+        public override bool Equals(object obj) =>
             ReferenceEquals(this, obj) || obj is TupleHelper other && Equals(other);
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int hashCode = _tupleDelimiter.GetHashCode();
-                hashCode = (hashCode * 397) ^ _nullElementMarker.GetHashCode();
-                hashCode = (hashCode * 397) ^ _escapingSequenceStart.GetHashCode();
-                hashCode = (hashCode * 397) ^ _tupleStart.GetHashCode();
-                hashCode = (hashCode * 397) ^ _tupleEnd.GetHashCode();
+                int hashCode = TupleDelimiter.GetHashCode();
+                hashCode = (hashCode * 397) ^ NullElementMarker.GetHashCode();
+                hashCode = (hashCode * 397) ^ EscapingSequenceStart.GetHashCode();
+                hashCode = (hashCode * 397) ^ TupleStart.GetHashCode();
+                hashCode = (hashCode * 397) ^ TupleEnd.GetHashCode();
                 return hashCode;
             }
         }

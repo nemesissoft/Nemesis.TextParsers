@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
 using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
@@ -240,8 +242,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         [Test]
         public void ParseAndFormat_AttributeProvidedSettings()
         {
-            var instance = new Kindergarten("Wrocław", new[] { new Child(3, 20.2f), new Child(5, 25.66f) });
-            var text = @"Wrocław;{3,20.2}|{5,25.66}";
+            var instance = new Kindergarten(null, new[] { new Child(3, 20.2f), new Child(5, 25.66f) });
+            var text = @"␀;{3,20.2}|{5,25.66}";
 
             var sut = Sut.GetTransformer<Kindergarten>();
             
@@ -273,6 +275,29 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             IsMutuallyEquivalent(actualParsed1, instance);
             IsMutuallyEquivalent(actualParsed2, instance);
             IsMutuallyEquivalent(actualParsed1, actualParsed2);
+        }
+        
+        [Test]
+        public void ParseAndFormat_AttributeProvidedSettings_NoAttribute()
+        {
+            var settings = new DeconstructableSettings('๑','๒','๓','๔','๕', false);
+            var storeStore = SettingsStoreBuilder.GetDefault()
+                .AddOrUpdate(settings)
+                .Build();
+            var sut = TextTransformer.GetDefaultStoreWith(storeStore);
+
+
+            var transformer= sut.GetTransformer<NoSettings>();
+            
+
+            Assert.That(transformer, Is.TypeOf<DeconstructionTransformer<NoSettings>>());
+            
+            var helper = ((DeconstructionTransformer<NoSettings>) transformer).Helper;
+            Assert.That(helper.TupleDelimiter, Is.EqualTo(settings.Delimiter));
+            Assert.That(helper.NullElementMarker, Is.EqualTo(settings.NullElementMarker));
+            Assert.That(helper.EscapingSequenceStart, Is.EqualTo(settings.EscapingSequenceStart));
+            Assert.That(helper.TupleStart, Is.EqualTo(settings.Start));
+            Assert.That(helper.TupleEnd, Is.EqualTo(settings.End));
         }
 
 
