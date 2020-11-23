@@ -66,7 +66,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 }", nameof(AutoDeconstructableGenerator.NamespaceAndTypeNamesEqualRule), "Test: Type name cannot be equal to containing namespace: 'Nemesis.TextParsers.CodeGen.Tests.Test'"),
         }
             .Select((t, i) => new TestCaseData($@"using Auto; using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.rule, t.expectedMessagePart)
-                .SetName($"{(i + 1):00}_{t.rule}"));
+                .SetName($"Negative{i + 1:00}_{t.rule}"));
 
         [TestCaseSource(nameof(_negativeDiagnostics))]
         public void Diagnostics_CheckNegativeCases(in string source, in string ruleName, in string expectedMessagePart)
@@ -91,7 +91,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         [Test]
         public void Diagnostics_RemoveSettingsAttribute()
         {
-            var source = @"[AutoDeconstructable] partial class DoeNotMatter { }";
+            var source = @"[AutoDeconstructable] partial class DoesNotMatter { }";
 
             var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
 
