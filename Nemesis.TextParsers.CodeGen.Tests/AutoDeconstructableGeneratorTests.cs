@@ -247,42 +247,29 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             
             
             (@"[DeconstructableSettings('_', '␀', '*', '<', '>')]
-            partial record T(byte B) { }", "new TupleHelper('_', '␀', '*', '<', '>');"),
+            partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '<', '>');"),
 
             (@"[DeconstructableSettings('_', '␀', '*', '<')]
-            partial record T(byte B) { }", "new TupleHelper('_', '␀', '*', '<', ')');"),
+            partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '<', ')');"),
 
             (@"[DeconstructableSettings('_', '␀', '*')]
-            partial record T(byte B) { }", "new TupleHelper('_', '␀', '*', '(', ')');"),
+            partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '(', ')');"),
 
             (@"[DeconstructableSettings('_', '␀')]
-            partial record T(byte B) { }", "new TupleHelper('_', '␀', '\\', '(', ')');"),
+            partial record T(byte B) { }", @"new TupleHelper('_', '␀', '\\', '(', ')');"),
 
             (@"[DeconstructableSettings('_')]
-            partial record T(byte B) { }", "new TupleHelper('_', '∅', '\\', '(', ')');"),
+            partial record T(byte B) { }", @"new TupleHelper('_', '∅', '\\', '(', ')');"),
 
             (@"[DeconstructableSettings]
-            partial record T(byte B) { }", "new TupleHelper(';', '∅', '\\', '(', ')');"),
+            partial record T(byte B) { }", @"new TupleHelper(';', '∅', '\\', '(', ')');"),
 
-
-
-/*public const char DEFAULT_DELIMITER = ';';
-        public const char DEFAULT_NULL_ELEMENT_MARKER = '∅';
-        public const char DEFAULT_ESCAPING_SEQUENCE_START = '\\';
-        public const char DEFAULT_START = '(';
-        public const char DEFAULT_END = ')';
-        public const bool DEFAULT_USE_DECONSTRUCTABLE_EMPTY = true;*/
-            
-            //TODO add cases for ommited default values for argument 
-
-            //TODO add case for not settings attribute
-            
+            (@"partial record T(byte B) { }", @"_helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();"),
        }
            .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
                .SetName($"{(i + 1):00}"));
-//TODO add test for default settings (no attribute - use Settings store) and attribute provided settings (both default and user provided)
         //TODO case for UseDeconstructableEmpty == true/false(test for no GetEmpty):  public override Child GetEmpty() => new Child(_transformer_age.GetEmpty(), _transformer_weight.GetEmpty());
-        //2 TODO implement record support and add examples with that 
+        
         [TestCaseSource(nameof(_settingsCases))]
         public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
         {
