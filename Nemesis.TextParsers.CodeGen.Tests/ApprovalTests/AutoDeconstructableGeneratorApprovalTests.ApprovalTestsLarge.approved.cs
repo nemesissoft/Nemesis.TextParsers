@@ -1,7 +1,8 @@
 ﻿//HEAD
-using System;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
+using System;
 using System.Numerics;
 
 namespace Nemesis.TextParsers.CodeGen.Tests

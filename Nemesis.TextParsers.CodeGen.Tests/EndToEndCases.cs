@@ -14,9 +14,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                {
                    public double Magnitude { get; init; } //will NOT be subject to deconstruction
                }", @"//HEAD
-using System;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
+using System;
+using System.Collections.Generic;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -91,9 +93,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
                    public void Deconstruct(out double x, out System.Double y, out double z) { x = X; y = Y; z = Z; }
                }", @"//HEAD
-using System;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
+using System;
+using System.Collections.Generic;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -184,9 +188,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                        n13 = N13;
                    }
                }",@"//HEAD
-using System;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
+using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace Nemesis.TextParsers.CodeGen.Tests

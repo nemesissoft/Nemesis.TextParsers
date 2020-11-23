@@ -70,8 +70,18 @@ namespace Auto
                         continue;
                     }
 
-                    //TODO GENERATE: append namespaces from source file
-                    var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
+                    var namespaces = new SortedSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
+                    if (type.SyntaxTree.GetRoot() is CompilationUnitSyntax compilationUnit)
+                    {
+                        var sourceNamespacesWithoutUsing = compilationUnit.Usings.Select(u => u
+                                .WithUsingKeyword(SyntaxFactory.MissingToken(SyntaxKind.UsingKeyword))
+                                .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken))
+                                .ToString())
+                            .ToList();
+
+                        foreach (var ns in sourceNamespacesWithoutUsing)
+                            namespaces.Add(ns);
+                    }
 
                     if (TryGetMembers(typeSymbol, context, namespaces, out var members) && members != null)
                     {
