@@ -122,7 +122,7 @@ namespace Auto
                 {
                     if (GetAttribute(ts, deconstructableSettingsAttributeSymbol) is { } settingsAttributeData)
                     {
-                        if (settingsAttributeData.ConstructorArguments.Length > 0 &&
+                        if (settingsAttributeData.ConstructorArguments.Length == 6 &&
                             settingsAttributeData.ConstructorArguments.All(a => a.Kind == TypedConstantKind.Primitive && (a.Value is char || a.Value is bool)))
                         {
                             deconstructableSettingsAttributeData = settingsAttributeData;

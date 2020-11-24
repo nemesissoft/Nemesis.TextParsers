@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-using LocalSettingsAttribute = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
 
 #nullable enable
 
@@ -12,8 +11,8 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     public partial class AutoDeconstructableGenerator
     {
-        // Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute
-        internal static readonly string DeconstructableSettingsAttributeName = typeof(LocalSettingsAttribute).FullName;
+        // ReSharper disable once RedundantNameQualifier
+        internal static readonly string DeconstructableSettingsAttributeName = typeof(Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute).FullName;
 
         private static DiagnosticDescriptor GetDiagnosticDescriptor(byte id, string message,
             DiagnosticSeverity diagnosticSeverity = DiagnosticSeverity.Error) =>
@@ -29,9 +28,9 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         internal static readonly DiagnosticDescriptor NoConstructor = GetDiagnosticDescriptor(7, "No constructor to support serialization. Only Record get constructors automatically. Private constructor is not enough - it cannot be called");
         internal static readonly DiagnosticDescriptor NoDeconstruct = GetDiagnosticDescriptor(8, "No Deconstruct to support serialization. Only Record get Deconstruct automatically. All Deconstruct parameters must have 'out' passing type");
 
-        
+
         internal static readonly DiagnosticDescriptor NoContractMembersRule = GetDiagnosticDescriptor(50, "No members for serialization", DiagnosticSeverity.Warning);
-        
+
 
         private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticDescriptor rule, ISymbol? symbol) =>
             context.ReportDiagnostic(Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.Name, symbol?.ContainingNamespace?.ToString()));
@@ -77,27 +76,26 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
                 UseDeconstructableEmpty = useDeconstructableEmpty;
             }
 
-            
+
 
             public override string ToString() =>
                 $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
 
-            //TODO get rid of that method - get all parameters from symbol analysis 
             public static GeneratedDeconstructableSettings? FromDeconstructableSettingsAttribute(AttributeData? deconstructableSettingsAttributeData)
             {
                 if (deconstructableSettingsAttributeData?.ConstructorArguments is { } args)
                 {
-                    char GetCharValue(int i, char @default) => args.Length > i ? (char)args[i].Value! : @default;
-                    bool GetBoolValue(int i, bool @default) => args.Length > i ? (bool)args[i].Value! : @default;
+                    char GetCharValue(int i) => args.Length > i ? (char)args[i].Value! : throw new ArgumentOutOfRangeException(nameof(args), $"Cannot obtain argument parameter no {i}");
+                    bool GetBoolValue(int i) => args.Length > i ? (bool)args[i].Value! : throw new ArgumentOutOfRangeException(nameof(args), $"Cannot obtain argument parameter no {i}");
 
                     return new GeneratedDeconstructableSettings(
-                        GetCharValue(0, LocalSettingsAttribute.DEFAULT_DELIMITER),
-                        GetCharValue(1, LocalSettingsAttribute.DEFAULT_NULL_ELEMENT_MARKER),
-                        GetCharValue(2, LocalSettingsAttribute.DEFAULT_ESCAPING_SEQUENCE_START),
-                        GetCharValue(3, LocalSettingsAttribute.DEFAULT_START),
-                        GetCharValue(4, LocalSettingsAttribute.DEFAULT_END),
-                        GetBoolValue(5, LocalSettingsAttribute.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
+                        GetCharValue(0),
+                        GetCharValue(1),
+                        GetCharValue(2),
+                        GetCharValue(3),
+                        GetCharValue(4),
+                        GetBoolValue(5)
                     );
                 }
                 else
