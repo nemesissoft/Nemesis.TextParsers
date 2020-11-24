@@ -21,6 +21,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
         [Test] public void ApprovalTestsLarge() => RunCase("Large");
         
         [Test] public void ApprovalTestsComplexTypes() => RunCase("ComplexType");
+        
+        [Test] public void ApprovalTestsSimpleWrapperStruct() => RunCase("SimpleWrapperStruct");
 
         
         
@@ -29,7 +31,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
 
         private static void RunCase(string index)
         {
-            var (_, source, _) = EndToEndCases.AutoDeconstructableCases().FirstOrDefault(t => t.name == index);
+            var (_, source, _) = EndToEndCases.AutoDeconstructableCases().SingleOrDefault(t => t.name == index);
             Assert.That(source, Is.Not.Null);
             Assert.That(source, Is.Not.Empty);
             

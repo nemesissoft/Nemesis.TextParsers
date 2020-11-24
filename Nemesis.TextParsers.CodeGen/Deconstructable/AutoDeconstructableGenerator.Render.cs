@@ -168,14 +168,25 @@ namespace {namespaceName}
             source.AppendLine("            {");
             source.AppendLine("                 _helper.StartFormat(ref accumulator);");
 
-            source.Append("                 var (");
-            for (int i = 0; i < members.Count; i++)
+            //Deconstruct
+            if (members.Count == 1)
             {
-                source.Append($"{members[i].Name}");
-                if (i < members.Count - 1)
-                    source.Append(", ");
+                var member = members[0];
+                source.AppendLine($"                 {member.Type} {member.Name};");
+                source.AppendLine($"                 element.Deconstruct(out {member.Name});").AppendLine();
             }
-            source.AppendLine(") = element;");
+            else
+            {
+                source.Append("                 var (");
+                for (int i = 0; i < members.Count; i++)
+                {
+                    source.Append($"{members[i].Name}");
+                    if (i < members.Count - 1)
+                        source.Append(", ");
+                }
+                source.AppendLine(") = element;");
+            }
+
 
             for (int i = 1; i <= members.Count; i++)
             {

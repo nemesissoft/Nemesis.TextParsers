@@ -18,8 +18,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [TestFixture]
     public partial class AutoDeconstructableGeneratorTests
     {
-        //TODO add test with single property and check Deconstruct/Ctor retrieval 
-
         private static IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
            .Select((t, i) => new TestCaseData($@"
 using Nemesis.TextParsers.Settings; 
