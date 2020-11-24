@@ -18,14 +18,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [TestFixture]
     public partial class AutoDeconstructableGeneratorTests
     {
-        [Test]
-        public void DiagnosticsRemoval_LackOfAutoAttribute()
+        [TestCase(@"namespace Tests { [Auto.AutoDeconstructable] public partial record RecordPoint2d(double X, double Y) { } }")]
+        public void DiagnosticsRemoval_LackOfAutoAttribute(string source)
         {
-            var source = @"namespace Tests
-{
-    [Auto.AutoDeconstructable]
-    public partial record RecordPoint2d(double X, double Y) { }  
-}";
             var compilation = CreateCompilation(source);
             var initialDiagnostics = GetCompilationIssues(compilation);
 
@@ -36,6 +31,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
         }
+
+        [TestCaseSource(nameof(_endToEndCases))]
+        public void DiagnosticsRemoval_LackOfAutoAttribute_EndToEnd(string source, string _) => DiagnosticsRemoval_LackOfAutoAttribute(source);
+
+
 
         private static readonly IEnumerable<TestCaseData> _negativeDiagnostics = new (string source, string rule, string expectedMessagePart)[]
         {
