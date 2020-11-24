@@ -70,7 +70,7 @@ namespace Auto
                         continue;
                     }
 
-                    var namespaces = new SortedSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils", "Nemesis.TextParsers" };
+                    var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils", "Nemesis.TextParsers" };
                     if (type.SyntaxTree.GetRoot() is CompilationUnitSyntax compilationUnit)
                     {
                         var sourceNamespacesWithoutUsing = compilationUnit.Usings.Select(u => u

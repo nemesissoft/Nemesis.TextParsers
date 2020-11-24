@@ -1,10 +1,10 @@
 ﻿//HEAD
+using System;
+using System.Numerics;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
-using System;
-using System.Numerics;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {

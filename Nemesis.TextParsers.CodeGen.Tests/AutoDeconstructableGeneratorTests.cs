@@ -155,14 +155,14 @@ namespace Tests3
             var actual = ScrubGeneratorComments(generatedTrees.Single());
 
             Assert.That(actual, Is.EqualTo(@"//HEAD
+using System;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
-using SD = System.Double;
-using static Tests3.ContainerClass3;
-using System;
 using Tests2;
 using Tests3;
+using static Tests3.ContainerClass3;
+using SD = System.Double;
 
 namespace Tests1
 {
