@@ -1,5 +1,4 @@
 ﻿//HEAD
-using Nemesis.TextParsers.CodeGen.Tests;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;

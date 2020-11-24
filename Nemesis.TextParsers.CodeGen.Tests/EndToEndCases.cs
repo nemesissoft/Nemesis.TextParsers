@@ -334,12 +334,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 }"),
 
 
-
+            //TODO treat warnings as errors and change accesibility to public
             (@" internal readonly struct Number{}
                 [Auto.AutoDeconstructable]               
                 public partial record ComplexTypes(double[] Doubles, Number? Nullable, System.Collections.Generic.List<Number> List) { }",
                 @"//HEAD
-using Nemesis.TextParsers.CodeGen.Tests;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
