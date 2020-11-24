@@ -16,10 +16,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
     {
         [Test] public void ApprovalTestsRecord() => RunCase(0);
         
-        
         [Test] public void ApprovalTestsStruct() => RunCase(1);
         
         [Test] public void ApprovalTestsLarge() => RunCase(2);
+        
+        [Test] public void ApprovalTestsComplexTypes() => RunCase(3);
 
 
         [Test]

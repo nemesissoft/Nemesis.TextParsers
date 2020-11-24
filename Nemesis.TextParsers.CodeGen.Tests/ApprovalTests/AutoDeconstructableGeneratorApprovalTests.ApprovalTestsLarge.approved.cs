@@ -30,8 +30,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         private readonly ITransformer<long> _transformer_n9 = TextTransformer.Default.GetTransformer<long>();
         private readonly ITransformer<ulong> _transformer_n10 = TextTransformer.Default.GetTransformer<ulong>();
         private readonly ITransformer<decimal> _transformer_n11 = TextTransformer.Default.GetTransformer<decimal>();
-        private readonly ITransformer<System.Numerics.BigInteger> _transformer_n12 = TextTransformer.Default.GetTransformer<System.Numerics.BigInteger>();
-        private readonly ITransformer<System.Numerics.Complex> _transformer_n13 = TextTransformer.Default.GetTransformer<System.Numerics.Complex>();
+        private readonly ITransformer<BigInteger> _transformer_n12 = TextTransformer.Default.GetTransformer<BigInteger>();
+        private readonly ITransformer<Complex> _transformer_n13 = TextTransformer.Default.GetTransformer<Complex>();
         private const int ARITY = 13;
 
 

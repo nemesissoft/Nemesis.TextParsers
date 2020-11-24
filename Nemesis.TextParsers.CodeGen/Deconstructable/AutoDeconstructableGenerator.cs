@@ -175,15 +175,12 @@ namespace Auto
                 var ctor = ctors.FirstOrDefault(c => IsCompatible(c.Parameters, @params));
                 if (ctor == null) continue;
 
-                members = ctor.Parameters.Select(p => (p.Name, p.Type.ToDisplayString())).ToList();
+                members = ctor.Parameters.Select(p => (p.Name, p.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat))).ToList();
 
                 if (members.Count > 0)
                 {
                     foreach (var parameter in ctor.Parameters)
-                    {
-                        //TODO for arrays ang generics - add element type and container type + add tests
-                        namespaces.Add(parameter.Type.ContainingNamespace.ToDisplayString());
-                    }
+                        CompilerUtils.ExtractNamespaces(parameter.Type, namespaces);
                     return true;
                 }
             }

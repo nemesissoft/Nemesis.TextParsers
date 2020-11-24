@@ -42,7 +42,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private readonly List<TypeDeclarationSyntax> _candidateTypes = new List<TypeDeclarationSyntax>();
 
-            public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
+            public IReadOnlyList<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
