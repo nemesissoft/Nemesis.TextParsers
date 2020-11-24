@@ -72,7 +72,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
         public static string ScrubGeneratorComments(string text)
         {
-            text = _generatorPattern.Replace(text, "\"\", \"\"");
+            text = _generatorPattern.Replace(text, "string.Empty, string.Empty");
             text = _headerPattern.Replace(text, "//HEAD");
 
             return text;

@@ -4,9 +4,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 {
     static class EndToEndCases
     {
-        public static IReadOnlyList<(string source, string expectedCode)> AutoDeconstructableCases() => new[]
+        public static IReadOnlyList<(string name, string source, string expectedCode)> AutoDeconstructableCases() => new[]
         {
-            (@"public record RecordPoint2d(double X, double Y) { }
+            ("Record", @"public record RecordPoint2d(double X, double Y) { }
 
                [Auto.AutoDeconstructable]
                [DeconstructableSettings(',', '∅', '\\', '[', ']')]
@@ -14,11 +14,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                {
                    public double Magnitude { get; init; } //will NOT be subject to deconstruction
                }", @"//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using System;
-using System.Collections.Generic;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -30,7 +30,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("""", """")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class RecordPoint3dTransformer : TransformerBase<RecordPoint3d>
     {
@@ -85,7 +85,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
 
 
-            (@"[Auto.AutoDeconstructable]
+            ("ReadOnlyStruct", @"[Auto.AutoDeconstructable]
                [DeconstructableSettings(';', '∅', '\\', '(', ')')]
                public readonly partial struct Point3d
                {
@@ -94,11 +94,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
                    public void Deconstruct(out double x, out System.Double y, out double z) { x = X; y = Y; z = Z; }
                }", @"//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using System;
-using System.Collections.Generic;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
 {
@@ -110,7 +110,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("""", """")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class Point3dTransformer : TransformerBase<Point3d>
     {
@@ -164,7 +164,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
 
 
-            (@"[Auto.AutoDeconstructable]
+            ("Large", @"[Auto.AutoDeconstructable]
                partial class Large
                {
                    public double N1 { get; } public float N2 { get; } public int N3 { get; } public uint N4 { get; }
@@ -189,12 +189,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                        n9 = N9; n10 = N10; n11 = N11; n12 = N12;
                        n13 = N13;
                    }
-               }",@"//HEAD
+               }",
+                @"//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 
 namespace Nemesis.TextParsers.CodeGen.Tests
@@ -207,7 +208,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("""", """")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class LargeTransformer : TransformerBase<Large>
     {
@@ -232,7 +233,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public LargeTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
         {
             _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
-
         }
         protected override Large ParseCore(in ReadOnlySpan<char> input)
         {
@@ -335,10 +335,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
 
             
-            (@" public readonly struct Number{}
+            ("ComplexType", @" public readonly struct Number{}
                 [Auto.AutoDeconstructable]               
                 public partial record ComplexTypes(double[] Doubles, Number? Nullable, System.Collections.Generic.List<Number> List) { }",
                 @"//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -355,7 +356,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("""", """")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class ComplexTypesTransformer : TransformerBase<ComplexTypes>
     {
@@ -370,7 +371,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public ComplexTypesTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
         {
             _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
-
         }
         protected override ComplexTypes ParseCore(in ReadOnlySpan<char> input)
         {

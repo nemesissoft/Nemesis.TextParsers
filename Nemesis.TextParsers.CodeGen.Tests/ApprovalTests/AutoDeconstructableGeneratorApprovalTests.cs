@@ -14,25 +14,27 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
     [UseReporter(typeof(TortoiseDiffReporter), typeof(ClipboardReporter))]
     internal class AutoDeconstructableGeneratorApprovalTests
     {
-        [Test] public void ApprovalTestsRecord() => RunCase(0);
+        [Test] public void ApprovalTestsRecord() => RunCase("Record");
         
-        [Test] public void ApprovalTestsStruct() => RunCase(1);
+        [Test] public void ApprovalTestsStruct() => RunCase("ReadOnlyStruct");
         
-        [Test] public void ApprovalTestsLarge() => RunCase(2);
+        [Test] public void ApprovalTestsLarge() => RunCase("Large");
         
-        [Test] public void ApprovalTestsComplexTypes() => RunCase(3);
+        [Test] public void ApprovalTestsComplexTypes() => RunCase("ComplexType");
 
-
+        
+        
         [Test]
-        public void HouseKeeping()
-        {
-            ApprovalMaintenance.VerifyNoAbandonedFiles();
-        }
+        public void HouseKeeping() => ApprovalMaintenance.VerifyNoAbandonedFiles();
 
-        private static void RunCase(int index)
+        private static void RunCase(string index)
         {
+            var (_, source, _) = EndToEndCases.AutoDeconstructableCases().FirstOrDefault(t => t.name == index);
+            Assert.That(source, Is.Not.Null);
+            Assert.That(source, Is.Not.Empty);
+            
             var compilation = CreateCompilation(
-                $@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {EndToEndCases.AutoDeconstructableCases()[index].source} }}");
+                $@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {source} }}");
 
             var generatedTrees = AutoDeconstructableGeneratorTests.GetGeneratedTreesOnly(compilation);
 

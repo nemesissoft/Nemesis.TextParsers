@@ -18,17 +18,14 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [TestFixture]
     public partial class AutoDeconstructableGeneratorTests
     {
-        //TODO test for missing start/end characters in DeconstructableSettings
-        //TODO add tests with static using, + using Mnemonic = System.Double
         //TODO add test with single property and check Deconstruct/Ctor retrieval 
 
         private static IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
            .Select((t, i) => new TestCaseData($@"
 using Nemesis.TextParsers.Settings; 
-using System.Collections.Generic;
 namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
-               .SetName($"E2E_{i + 1:00}"));
-
+               .SetName($"E2E_{i + 1:00}_{t.name}"));
+        
         [TestCaseSource(nameof(_endToEndCases))]
         public void EndToEndTests(string source, string expectedCode)
         {
@@ -129,6 +126,115 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
             return generatedTrees.Select(tree =>
                 ((CompilationUnitSyntax)tree.GetRoot())
                 .ToFullString()).ToList();
+        }
+
+        [Test]
+        public void Generate_When_StaticUsing_And_Mnemonics()
+        {
+            var compilation = CreateCompilation(@"using SD = System.Double;
+using static Tests3.ContainerClass3;
+
+namespace Tests1
+{
+    [Auto.AutoDeconstructable]
+    public partial record Numbers(System.Single FloatNumber, SD DoubleNumber, Tests2.ContainerClass2.NestedClass2 NestedFullyQualified, NestedClass3 NestedUsingStatic) { }
+}
+
+namespace Tests2
+{
+    public static class ContainerClass2 { public class NestedClass2 { } }
+}
+
+namespace Tests3
+{
+    public static class ContainerClass3 { public class NestedClass3 { } }
+}");
+
+            var generatedTrees = GetGeneratedTreesOnly(compilation);
+
+            var actual = ScrubGeneratorComments(generatedTrees.Single());
+
+            Assert.That(actual, Is.EqualTo(@"//HEAD
+using Nemesis.TextParsers;
+using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Utils;
+using SD = System.Double;
+using static Tests3.ContainerClass3;
+using System;
+using Tests2;
+using Tests3;
+
+namespace Tests1
+{
+    [Transformer(typeof(NumbersTransformer))]
+    public partial record Numbers 
+    {
+#if DEBUG
+        internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#endif
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
+    [System.Runtime.CompilerServices.CompilerGenerated]
+    sealed class NumbersTransformer : TransformerBase<Numbers>
+    {
+        private readonly ITransformer<float> _transformer_FloatNumber = TextTransformer.Default.GetTransformer<float>();
+        private readonly ITransformer<double> _transformer_DoubleNumber = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<ContainerClass2.NestedClass2> _transformer_NestedFullyQualified = TextTransformer.Default.GetTransformer<ContainerClass2.NestedClass2>();
+        private readonly ITransformer<ContainerClass3.NestedClass3> _transformer_NestedUsingStatic = TextTransformer.Default.GetTransformer<ContainerClass3.NestedClass3>();
+        private const int ARITY = 4;
+
+
+        private readonly TupleHelper _helper;
+
+        public NumbersTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
+        {
+            _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
+        }
+        protected override Numbers ParseCore(in ReadOnlySpan<char> input)
+        {
+            var enumerator = _helper.ParseStart(input, ARITY);
+            var t1 = _helper.ParseElement(ref enumerator, _transformer_FloatNumber);
+
+            _helper.ParseNext(ref enumerator, 2);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_DoubleNumber);
+
+            _helper.ParseNext(ref enumerator, 3);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_NestedFullyQualified);
+
+            _helper.ParseNext(ref enumerator, 4);
+            var t4 = _helper.ParseElement(ref enumerator, _transformer_NestedUsingStatic);
+
+            _helper.ParseEnd(ref enumerator, ARITY);
+            return new Numbers(t1, t2, t3, t4);
+        }
+
+        public override string Format(Numbers element)
+        {
+            Span<char> initialBuffer = stackalloc char[32];
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            try
+            {
+                 _helper.StartFormat(ref accumulator);
+                 var (FloatNumber, DoubleNumber, NestedFullyQualified, NestedUsingStatic) = element;
+                _helper.FormatElement(_transformer_FloatNumber, FloatNumber, ref accumulator);
+
+                _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer_DoubleNumber, DoubleNumber, ref accumulator);
+
+                _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer_NestedFullyQualified, NestedFullyQualified, ref accumulator);
+
+                _helper.AddDelimiter(ref accumulator);
+                _helper.FormatElement(_transformer_NestedUsingStatic, NestedUsingStatic, ref accumulator);
+
+                _helper.EndFormat(ref accumulator);
+                return accumulator.AsSpan().ToString();
+            }
+            finally { accumulator.Dispose(); }
+        }
+    }
+}").Using(IgnoreNewLinesComparer.EqualityComparer));
         }
     }
 }

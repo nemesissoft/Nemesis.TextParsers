@@ -1,4 +1,5 @@
 ﻿//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -14,7 +15,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("", "")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class Point3dTransformer : TransformerBase<Point3d>
     {

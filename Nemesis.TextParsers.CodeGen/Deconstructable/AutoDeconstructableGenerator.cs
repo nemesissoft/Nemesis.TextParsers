@@ -70,7 +70,7 @@ namespace Auto
                         continue;
                     }
 
-                    var namespaces = new SortedSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils" };
+                    var namespaces = new SortedSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils", "Nemesis.TextParsers" };
                     if (type.SyntaxTree.GetRoot() is CompilationUnitSyntax compilationUnit)
                     {
                         var sourceNamespacesWithoutUsing = compilationUnit.Usings.Select(u => u
@@ -175,7 +175,14 @@ namespace Auto
                 var ctor = ctors.FirstOrDefault(c => IsCompatible(c.Parameters, @params));
                 if (ctor == null) continue;
 
-                members = ctor.Parameters.Select(p => (p.Name, p.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat))).ToList();
+                static string GetTypeMinimalName(ITypeSymbol ts)
+                {
+                    return ts.ContainingType is { } containingType
+                        ? $"{containingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}.{ts.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}"
+                        : ts.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                }
+
+                members = ctor.Parameters.Select(p => (p.Name, GetTypeMinimalName(p.Type))).ToList();
 
                 if (members.Count > 0)
                 {

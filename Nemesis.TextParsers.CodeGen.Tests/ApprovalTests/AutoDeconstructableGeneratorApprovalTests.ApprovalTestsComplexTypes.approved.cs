@@ -1,4 +1,5 @@
 ﻿//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -15,7 +16,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("", "")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class ComplexTypesTransformer : TransformerBase<ComplexTypes>
     {
@@ -30,7 +31,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public ComplexTypesTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
         {
             _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
-
         }
         protected override ComplexTypes ParseCore(in ReadOnlySpan<char> input)
         {

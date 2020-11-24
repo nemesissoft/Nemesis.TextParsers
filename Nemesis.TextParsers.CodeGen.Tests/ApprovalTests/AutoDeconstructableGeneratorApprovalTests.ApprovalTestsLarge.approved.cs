@@ -1,4 +1,5 @@
 ﻿//HEAD
+using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -15,7 +16,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 #endif
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("", "")]
+    [System.CodeDom.Compiler.GeneratedCode(string.Empty, string.Empty)]
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class LargeTransformer : TransformerBase<Large>
     {
@@ -40,7 +41,6 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public LargeTransformer(Nemesis.TextParsers.ITransformerStore transformerStore)
         {
             _helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();
-
         }
         protected override Large ParseCore(in ReadOnlySpan<char> input)
         {
