@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
-#if PRE_NULLABLES
+#if !NET
 using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;

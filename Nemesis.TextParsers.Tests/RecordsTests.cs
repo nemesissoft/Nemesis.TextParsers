@@ -4,7 +4,7 @@ using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
 using NUnit.Framework;
-#if PRE_NULLABLES
+#if !NET
 using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;

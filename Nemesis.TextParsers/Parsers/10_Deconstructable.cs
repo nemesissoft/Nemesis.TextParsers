@@ -8,7 +8,7 @@ using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
 using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
-#if PRE_NULLABLES
+#if !NET
 using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
