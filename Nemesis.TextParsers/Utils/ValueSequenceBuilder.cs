@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
-    //TODO use using blocks for usages of this struct
     public ref struct ValueSequenceBuilder<T>
     {
         private Span<T> _current;

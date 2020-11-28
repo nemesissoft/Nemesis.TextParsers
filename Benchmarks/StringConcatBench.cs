@@ -75,7 +75,7 @@ namespace Benchmarks
             return sb.ToString();
         }
 
-        private readonly StringBuilder _builderCache = new StringBuilder(64);
+        private readonly StringBuilder _builderCache = new(64);
         [Benchmark]
         public string StringBuilderPool()
         {
@@ -86,7 +86,7 @@ namespace Benchmarks
             return sb.ToString();
         }
 
-        private readonly StringBuilder _builderCacheLarge = new StringBuilder(1030);
+        private readonly StringBuilder _builderCacheLarge = new(1030);
         [Benchmark]
         public string StringBuilderPoolLarge()
         {

@@ -25,7 +25,7 @@ namespace Nemesis.TextParsers.Tests
     [Transformer(typeof(AggressionBasedTransformer<>))]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
-    public interface IAggressionBased<TValue>: IAggressionBased
+    public interface IAggressionBased<TValue> : IAggressionBased
     {
         TValue PassiveValue { get; }
         TValue NormalValue { get; }
@@ -54,8 +54,9 @@ namespace Nemesis.TextParsers.Tests
                 case AggressionBased1<TValue> o1: return Equals1(o1);
                 case AggressionBased3<TValue> o3: return Equals3(o3);
                 case AggressionBased9<TValue> o9: return Equals9(o9);
-                default: throw new ArgumentException(
-                   $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
+                default:
+                    throw new ArgumentException(
+              $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
             }
         }
 
@@ -259,32 +260,28 @@ namespace Nemesis.TextParsers.Tests
             if (ab == null) return null;
 
             Span<char> initialBuffer = stackalloc char[32];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
-            try
+            var enumerator = ab.GetValues().GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                var enumerator = ab.GetValues().GetEnumerator();
-                while (enumerator.MoveNext())
+                string elementText = _elementTransformer.Format(enumerator.Current);
+                if (elementText == null)
+                    accumulator.Append(NULL_ELEMENT_MARKER);
+                else
                 {
-                    string elementText = _elementTransformer.Format(enumerator.Current);
-                    if (elementText == null)
-                        accumulator.Append(NULL_ELEMENT_MARKER);
-                    else
+                    foreach (char c in elementText)
                     {
-                        foreach (char c in elementText)
-                        {
-                            if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == LIST_DELIMITER)
-                                accumulator.Append(ESCAPING_SEQUENCE_START);
-                            accumulator.Append(c);
-                        }
+                        if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == LIST_DELIMITER)
+                            accumulator.Append(ESCAPING_SEQUENCE_START);
+                        accumulator.Append(c);
                     }
-                    accumulator.Append(LIST_DELIMITER);
                 }
-                accumulator.Shrink();
-
-                return accumulator.ToString();
+                accumulator.Append(LIST_DELIMITER);
             }
-            finally { accumulator.Dispose(); }
+            accumulator.Shrink();
+
+            return accumulator.ToString();
         }
 
 

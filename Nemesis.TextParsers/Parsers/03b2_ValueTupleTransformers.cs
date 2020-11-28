@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers
@@ -47,7 +46,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1> GetEmpty() =>
-            new ValueTuple<T1>(
+            new(
                 _transformer1.GetEmpty()
             );
     }
@@ -104,7 +103,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2> GetEmpty() =>
-            new ValueTuple<T1, T2>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty()
             );
@@ -168,7 +167,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2, T3> GetEmpty() =>
-            new ValueTuple<T1, T2, T3>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty(),
                 _transformer3.GetEmpty()
@@ -241,7 +240,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2, T3, T4> GetEmpty() =>
-            new ValueTuple<T1, T2, T3, T4>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty(),
                 _transformer3.GetEmpty(),
@@ -326,7 +325,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2, T3, T4, T5> GetEmpty() =>
-            new ValueTuple<T1, T2, T3, T4, T5>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty(),
                 _transformer3.GetEmpty(),
@@ -420,7 +419,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2, T3, T4, T5, T6> GetEmpty() =>
-            new ValueTuple<T1, T2, T3, T4, T5, T6>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty(),
                 _transformer3.GetEmpty(),
@@ -523,7 +522,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2, T3, T4, T5, T6, T7> GetEmpty() =>
-            new ValueTuple<T1, T2, T3, T4, T5, T6, T7>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty(),
                 _transformer3.GetEmpty(),
@@ -635,7 +634,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> GetEmpty() =>
-            new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(
+            new(
                 _transformer1.GetEmpty(),
                 _transformer2.GetEmpty(),
                 _transformer3.GetEmpty(),
