@@ -7,6 +7,8 @@ using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+
+using Nemesis.CodeAnalysis;
 using Nemesis.TextParsers.CodeGen.Deconstructable;
 
 using NUnit.Framework;
@@ -22,13 +24,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         public void DiagnosticsRemoval_LackOfAutoAttribute(string source)
         {
             var compilation = CreateCompilation(source);
-            var initialDiagnostics = GetCompilationIssues(compilation);
+            var initialDiagnostics = CompilationUtils.GetCompilationIssues(compilation).ToList();
 
             Assert.That(initialDiagnostics, Has.Count.EqualTo(1));
             Assert.That(initialDiagnostics, Has.All.Contain("The type or namespace name 'Auto' could not be found"));
 
 
-            RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
         }
 
@@ -77,7 +79,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
             var compilation = CreateCompilation(source);
 
-            RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
 
             var diagnosticsList = diagnostics.ToList();
             Assert.That(diagnosticsList, Has.Count.EqualTo(1));
@@ -106,7 +108,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
 
-            RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             var diagnosticsList = diagnostics.ToList();
 
 

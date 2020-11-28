@@ -5,7 +5,7 @@ using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-
+using Nemesis.CodeAnalysis;
 using Nemesis.TextParsers.CodeGen.Deconstructable;
 
 using NUnit.Framework;
@@ -100,7 +100,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
 
         public static IReadOnlyList<string> GetGeneratedTreesOnly(Compilation compilation, int requiredCardinality = 1)
         {
-            var newComp = RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+            var newComp = CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
             Assert.That(diagnostics, Is.Empty);
 
             SyntaxTree attributeTree = null;

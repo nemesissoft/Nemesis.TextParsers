@@ -16,6 +16,7 @@ using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
+    //TODO add documentation 
     public interface IAggressionBased
     {
         int Arity { get; }

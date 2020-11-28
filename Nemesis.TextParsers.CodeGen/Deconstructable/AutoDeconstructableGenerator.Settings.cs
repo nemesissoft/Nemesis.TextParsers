@@ -36,6 +36,34 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
             context.ReportDiagnostic(Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.Name, symbol?.ContainingNamespace?.ToString()));
 
 
+        private static void ExtractNamespaces(ITypeSymbol typeSymbol, ICollection<string> namespaces)
+        {
+            if (typeSymbol is INamedTypeSymbol { IsGenericType: true } namedType) //namedType.TypeParameters for unbound generics
+            {
+                namespaces.Add(namedType.ContainingNamespace.ToDisplayString());
+
+                foreach (var arg in namedType.TypeArguments)
+                    ExtractNamespaces(arg, namespaces);
+            }
+            else if (typeSymbol is IArrayTypeSymbol arraySymbol)
+            {
+                namespaces.Add("System");
+
+                ITypeSymbol elementSymbol = arraySymbol.ElementType;
+                while (elementSymbol is IArrayTypeSymbol innerArray)
+                    elementSymbol = innerArray.ElementType;
+
+                ExtractNamespaces(elementSymbol, namespaces);
+            }
+            /*else if (typeSymbol.TypeKind == TypeKind.Error || typeSymbol.TypeKind == TypeKind.Dynamic)
+            {
+                //add appropriate reference to your compilation 
+            }*/
+            else
+                namespaces.Add(typeSymbol.ContainingNamespace.ToDisplayString());
+        }
+
+
         private sealed class DeconstructableSyntaxReceiver : ISyntaxReceiver
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]

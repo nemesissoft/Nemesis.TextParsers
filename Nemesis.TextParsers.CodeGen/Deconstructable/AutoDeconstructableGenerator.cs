@@ -187,7 +187,7 @@ namespace Auto
                 if (members.Count > 0)
                 {
                     foreach (var parameter in ctor.Parameters)
-                        CompilerUtils.ExtractNamespaces(parameter.Type, namespaces);
+                        ExtractNamespaces(parameter.Type, namespaces);
                     return true;
                 }
             }
