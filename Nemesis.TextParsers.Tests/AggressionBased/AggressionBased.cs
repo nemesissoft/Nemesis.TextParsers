@@ -3,11 +3,10 @@ using System;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
-#if PRE_NULLABLES
+#if !NET
 using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
@@ -17,14 +16,14 @@ using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 namespace Nemesis.TextParsers.Tests
 {
     //TODO add documentation 
+    [PublicAPI]
     public interface IAggressionBased
     {
         int Arity { get; }
     }
 
     [Transformer(typeof(AggressionBasedTransformer<>))]
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
+    [PublicAPI]
     public interface IAggressionBased<TValue> : IAggressionBased
     {
         TValue PassiveValue { get; }
@@ -44,21 +43,16 @@ namespace Nemesis.TextParsers.Tests
 
         protected static bool IsStructurallyEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
-        public bool Equals(IAggressionBased<TValue> other)
-        {
-            // ReSharper disable once ConvertSwitchStatementToSwitchExpression
-            switch (other)
+        public bool Equals(IAggressionBased<TValue> other) =>
+            other switch
             {
-                case null: return false;
-                case var ab when ReferenceEquals(this, ab): return true;
-                case AggressionBased1<TValue> o1: return Equals1(o1);
-                case AggressionBased3<TValue> o3: return Equals3(o3);
-                case AggressionBased9<TValue> o9: return Equals9(o9);
-                default:
-                    throw new ArgumentException(
-              $@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other));
-            }
-        }
+                null => false,
+                var ab when ReferenceEquals(this, ab) => true,
+                AggressionBased1<TValue> o1 => Equals1(o1),
+                AggressionBased3<TValue> o3 => Equals3(o3),
+                AggressionBased9<TValue> o9 => Equals9(o9),
+                _ => throw new ArgumentException($@"'{nameof(other)}' argument has to be {nameof(IAggressionBased<TValue>)}", nameof(other)),
+            };
 
         protected abstract bool Equals1(in AggressionBased1<TValue> o1);
 
@@ -83,7 +77,7 @@ namespace Nemesis.TextParsers.Tests
         public int Arity => 1;
         public TValue One { get; }
 
-        public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(One);
+        public override LeanCollection<TValue> GetValues() => new(One);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public TValue PassiveValue => One;
@@ -115,7 +109,7 @@ namespace Nemesis.TextParsers.Tests
     {
         public int Arity => 3;
 
-        public override LeanCollection<TValue> GetValues() => new LeanCollection<TValue>(PassiveValue, NormalValue, AggressiveValue);
+        public override LeanCollection<TValue> GetValues() => new(PassiveValue, NormalValue, AggressiveValue);
 
         public TValue PassiveValue { get; }
         public TValue NormalValue { get; }
@@ -130,20 +124,14 @@ namespace Nemesis.TextParsers.Tests
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
 
-        public TValue GetValueFor(byte aggression)
-        {
-            // ReSharper disable once ConvertSwitchStatementToSwitchExpression
-            switch (aggression)
+        public TValue GetValueFor(byte aggression) =>
+            aggression switch
             {
-                case 1: case 2: case 3: return PassiveValue;
-
-                case 0: case 4: case 5: case 6: return NormalValue;
-
-                case 7: case 8: case 9: return AggressiveValue;
-
-                default: throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
-            }
-        }
+                1 or 2 or 3 => PassiveValue,
+                0 or 4 or 5 or 6 => NormalValue,
+                7 or 8 or 9 => AggressiveValue,
+                _ => throw new ArgumentOutOfRangeException(nameof(aggression), $@"{nameof(aggression)} should be value from 0 to 9"),
+            };
 
         protected override bool Equals1(in AggressionBased1<TValue> o1) =>
             IsStructurallyEqual(PassiveValue, o1.One) &&
@@ -191,14 +179,16 @@ namespace Nemesis.TextParsers.Tests
 
         public TValue GetValueFor(byte aggression)
         {
-            if (aggression > 9)
-                throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
-
-            if (aggression == 0) aggression = 5;
-
             if (_values == null || _values.Length != 9) throw new InvalidOperationException("Internal state of values is compromised");
-            else
-                return _values[aggression - 1];
+
+            aggression = aggression switch
+            {
+                > 9 => throw new ArgumentOutOfRangeException(nameof(aggression), $@"{nameof(aggression)} should be value from 0 to 9"),
+                0 => 5,
+                _ => aggression
+            };
+
+            return _values[aggression - 1];
         }
 
         protected override bool Equals1(in AggressionBased1<TValue> o1)
@@ -334,9 +324,9 @@ namespace Nemesis.TextParsers.Tests
                 v7.ParseWith(_elementTransformer), v8.ParseWith(_elementTransformer), v9.ParseWith(_elementTransformer)
             });
 
-            Exception GetException(int numberOfElements) => new ArgumentException(
+            static Exception GetException(int numberOfElements) => new ArgumentException(
                 // ReSharper disable once UseNameofExpression
-                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", "values");
+                $@"Sequence should contain either 0, 1, 3 or 9 elements, but contained {(numberOfElements > 9 ? "more than 9" : numberOfElements.ToString())} elements", nameof(values));
         }
     }
 
@@ -494,7 +484,7 @@ namespace Nemesis.TextParsers.Tests
         private static bool IsEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
     }
 
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [PublicAPI]
     public enum StrategyAggression : byte
     {
         [Description("Default")]

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -26,7 +25,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         internal static IEnumerable<(string text, string[] collection)> ValidListData() => new[]
         {
             (null, null),
-            ("", new string[0]),
+            ("", Array.Empty<string>()),
             //("", new []{""}), //not supported. Rare case 
             (@"AAA|BBB|CCC", new []{"AAA","BBB","CCC"}),
             (@"|BBB||CCC", new []{"","BBB","","CCC"}),
@@ -223,7 +222,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(float), @" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
 #endif
         };
-        private IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) =>
+        private static IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) =>
             _store.GetTransformer<IReadOnlyCollection<TElement>>().Parse(text);
 
         [TestCaseSource(nameof(Bad_ListParseData))]
@@ -246,7 +245,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                 AssertException(e, data.expectedException, null);
             }
             if (passed)
-                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? new string[0])}");
+                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? Array.Empty<string>())}");
         }
 
         private static IEnumerable<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
@@ -260,8 +259,6 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         }
 
-        [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
-        [SuppressMessage("ReSharper", "RedundantCast")]
         internal static IEnumerable<(Type elementType, IEnumerable expectedOutput, string input)> ListCompoundData() => new (Type, IEnumerable, string)[]
         {
             /*(typeof(int), new List<int>(), @""),
@@ -279,25 +276,25 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(ushort), GetTestNumbers<ushort>(ushort.MinValue, ushort.MaxValue-ushort.MaxValue/100, ushort.MaxValue/100, (n1, n2) => (ushort)(n1+n2)),
                 @"0|  655 | 1310 | 1965|2620 |3275|3930|4585|5240|5895|6550|7205|7860|8515|9170|9825|10480|11135|11790|12445|13100|13755|14410|15065|15720|16375|17030|17685|18340|18995|19650|20305|20960|21615|22270|22925|23580|24235|24890|25545|26200|26855|27510|28165|28820|29475|30130|30785|31440|32095|32750|33405|34060|34715|35370|36025|36680|37335|37990|38645|39300|39955|40610|41265|41920|42575|43230|43885|44540|45195|45850|46505|47160|47815|48470|49125|49780|50435|51090|51745|52400|53055|53710|54365|55020|55675|56330|56985|57640|58295|58950|59605|60260|60915|61570|62225|62880|63535|64190|64845" ),
 
-            (typeof(int), GetTestNumbers<int>(int.MinValue, int.MaxValue-int.MaxValue/10, int.MaxValue/10, (n1, n2) => (int)(n1+n2)),
+            (typeof(int), GetTestNumbers(int.MinValue, int.MaxValue-int.MaxValue/10, int.MaxValue/10, (n1, n2) => n1+n2),
                 @"-2147483648|  -1932735284 | -1717986920 | -1503238556|-1288490192 |-1073741828|-858993464|-644245100|-429496736|-214748372|-8|214748356|429496720|644245084|858993448|1073741812|1288490176|1503238540|1717986904|1932735268" ),
 
-            (typeof(uint), GetTestNumbers<uint>(uint.MinValue, uint.MaxValue-uint.MaxValue/10, uint.MaxValue/10, (n1, n2) => (uint)(n1+n2)),
+            (typeof(uint), GetTestNumbers(uint.MinValue, uint.MaxValue-uint.MaxValue/10, uint.MaxValue/10, (n1, n2) => n1+n2),
                 @"0|  429496729 | 858993458 | 1288490187|1717986916 |2147483645|2576980374|3006477103|3435973832|3865470561" ),
 
-            (typeof(long), GetTestNumbers<long>(long.MinValue, long.MaxValue-long.MaxValue/10, long.MaxValue/10, (n1, n2) => (long)(n1+n2)),
+            (typeof(long), GetTestNumbers(long.MinValue, long.MaxValue-long.MaxValue/10, long.MaxValue/10, (n1, n2) => n1+n2),
                 @"-9223372036854775808|  -8301034833169298228 | -7378697629483820648 | -6456360425798343068|-5534023222112865488 |-4611686018427387908|-3689348814741910328|-2767011611056432748|-1844674407370955168|-922337203685477588|-8|922337203685477572|1844674407370955152|2767011611056432732|3689348814741910312|4611686018427387892|5534023222112865472|6456360425798343052|7378697629483820632|8301034833169298212" ),
 
-            (typeof(ulong), GetTestNumbers<ulong>(ulong.MinValue, ulong.MaxValue-ulong.MaxValue/10, ulong.MaxValue/10, (n1, n2) => (ulong)(n1+n2)),
+            (typeof(ulong), GetTestNumbers(ulong.MinValue, ulong.MaxValue-ulong.MaxValue/10, ulong.MaxValue/10, (n1, n2) => n1+n2),
                 @"0|  1844674407370955161 | 3689348814741910322 | 5534023222112865483|7378697629483820644 |9223372036854775805|11068046444225730966|12912720851596686127|14757395258967641288|16602069666338596449" ),
 
 #if NET
-            (typeof(Half), GetTestNumbers<float>((float)Half.MinValue+(float)Half.MaxValue/10,
+            (typeof(Half), GetTestNumbers((float)Half.MinValue+(float)Half.MaxValue/10,
                 (float)Half.MaxValue-(float)Half.MaxValue/10,
-                (float)Half.MaxValue/10, (n1, n2) => (float)(n1+n2)).Select(f=>(Half)f).ToList(),
+                (float)Half.MaxValue/10, (n1, n2) => n1+n2).Select(f=>(Half)f).ToList(),
                 @"-58940|-52400|-45860|-39300|-32750|-26200|-19650|-13100|-6550|-0.004883|6550|13100|19650|26200|32750|39300|45860|52400|58940" ),
 
-            (typeof(Half), GetTestNumbers<int>(1, 0b11_1111_1111, 100, (n1, n2) => n1+n2).Select(i=>
+            (typeof(Half), GetTestNumbers(1, 0b11_1111_1111, 100, (n1, n2) => n1+n2).Select(i=>
                 {
                     ushort variable = (ushort)i;
                     return System.Runtime.CompilerServices.Unsafe.As<ushort, Half>(ref variable);
@@ -306,19 +303,19 @@ namespace Nemesis.TextParsers.Tests.Collections
                 @"5.9604644775390625E-08|6.0200691223144531E-06|1.1980533599853516E-05|1.7940998077392578E-05|2.3901462554931641E-05|2.9861927032470703E-05|3.5822391510009766E-05|4.1782855987548828E-05|4.7743320465087891E-05|5.3703784942626953E-05|5.9664249420166016E-05" ),
 #endif
 
-            (typeof(float), GetTestNumbers<float>(float.MinValue+float.MaxValue/10, float.MaxValue-float.MaxValue/10, float.MaxValue/10, (n1, n2) => (float)(n1+n2)),
+            (typeof(float), GetTestNumbers(float.MinValue+float.MaxValue/10, float.MaxValue-float.MaxValue/10, float.MaxValue/10, (n1, n2) => n1+n2),
                 @"-3.06254122E+38|-2.72225877E+38|-2.38197633E+38|-2.04169388E+38|-1.70141153E+38|-1.36112918E+38|-1.02084684E+38|-6.8056449E+37|-3.40282144E+37|2.02824096E+31|3.40282549E+37|6.80564896E+37|1.02084724E+38|1.36112959E+38|1.70141183E+38|2.04169428E+38|2.38197673E+38|2.72225918E+38" ),
 
-            (typeof(double), GetTestNumbers<double>(double.MinValue+double.MaxValue/10, double.MaxValue-double.MaxValue/10, double.MaxValue/10, (n1, n2) => (double)(n1+n2)),
+            (typeof(double), GetTestNumbers(double.MinValue+double.MaxValue/10, double.MaxValue-double.MaxValue/10, double.MaxValue/10, (n1, n2) => n1+n2),
                 @"-1.6179238213760842E+308|-1.4381545078898526E+308|-1.2583851944036211E+308|-1.0786158809173895E+308|-8.9884656743115795E+307|-7.190772539449264E+307|-5.3930794045869485E+307|-3.595386269724633E+307|-1.7976931348623173E+307|-1.4968802321510399E+292|1.7976931348623143E+307|3.59538626972463E+307|5.3930794045869455E+307|7.190772539449261E+307|8.9884656743115765E+307|1.0786158809173893E+308|1.2583851944036209E+308|1.4381545078898524E+308|1.617923821376084E+308" ),
 
-            (typeof(decimal), GetTestNumbers<decimal>(decimal.MinValue+(decimal)0.123456789, decimal.MaxValue-decimal.MaxValue/10, decimal.MaxValue/5, (n1, n2) => (decimal)(n1+n2)),
+            (typeof(decimal), GetTestNumbers(decimal.MinValue+(decimal)0.123456789, decimal.MaxValue-decimal.MaxValue/10, decimal.MaxValue/5, (n1, n2) => n1+n2),
                 @"-79228162514264337593543950335|-63382530011411470074835160268|-47536897508558602556126370201|-31691265005705735037417580134|-15845632502852867518708790067|0|15845632502852867518708790067|31691265005705735037417580134|47536897508558602556126370201|63382530011411470074835160268" ),
 
-            (typeof(BigInteger), GetTestNumbers<BigInteger>(BigInteger.Parse("-12345678901234567890"), BigInteger.Parse("12345678901234567890"), BigInteger.Parse("2469135780246913578"), (n1, n2) => (BigInteger)(n1+n2)),
+            (typeof(BigInteger), GetTestNumbers(BigInteger.Parse("-12345678901234567890"), BigInteger.Parse("12345678901234567890"), BigInteger.Parse("2469135780246913578"), (n1, n2) => n1+n2),
                 @"-12345678901234567890|-9876543120987654312|-7407407340740740734|-4938271560493827156|-2469135780246913578|0|2469135780246913578|4938271560493827156|7407407340740740734|9876543120987654312|12345678901234567890" ),
 
-            (typeof(TimeSpan), GetTestNumbers<TimeSpan>(TimeSpan.MinValue, TimeSpan.MaxValue-Divide(TimeSpan.MaxValue,10), Divide(TimeSpan.MaxValue,10), (n1, n2) => (TimeSpan)(n1+n2)),
+            (typeof(TimeSpan), GetTestNumbers(TimeSpan.MinValue, TimeSpan.MaxValue-Divide(TimeSpan.MaxValue,10), Divide(TimeSpan.MaxValue,10), (n1, n2) => n1+n2),
                 @"-10675199.02:48:05.4775808|-9607679.04:55:16.9298176|-8540159.07:02:28.3820544|-7472639.09:09:39.8342912|-6405119.11:16:51.2865280|-5337599.13:24:02.7387648|-4270079.15:31:14.1910016|-3202559.17:38:25.6432384|-2135039.19:45:37.0954752|-1067519.21:52:48.5477120|00:00:00.0000512|1067519.21:52:48.5478144|2135039.19:45:37.0955776|3202559.17:38:25.6433408|4270079.15:31:14.1911040|5337599.13:24:02.7388672|6405119.11:16:51.2866304|7472639.09:09:39.8343936|8540159.07:02:28.3821568" ),
 
             (typeof(TimeSpan), Enumerable.Range(1, 7).Select(i => new TimeSpan(i, i + 1, i + 2, i + 3)).ToList(),
@@ -648,8 +645,8 @@ namespace Nemesis.TextParsers.Tests.Collections
             }, @"[[A\|B\|C]|[D\|E\|F]]"),
             new TCD("05", new List<string[]>
             {
-                new string[0],
-                new string[0],
+                Array.Empty<string>(),
+                Array.Empty<string>()
             }, @"[|]"),
             new TCD("06", new List<string[]>(), @""),
 
@@ -670,7 +667,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                 new List<string>{"1","2","3"},
                 new List<string>(),
             }, @"[|[1\|2\|3]|]"),
-            new TCD("10", new List<string>[0], @""),
+            new TCD("10", Array.Empty<List<string>>(), @""),
 
 
             new TCD("11", AggressionBasedFactory<List<string>>.FromOneValue(null) , @"∅"), //null

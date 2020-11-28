@@ -5,7 +5,7 @@ namespace Nemesis.TextParsers.CodeGen.Sample
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             //new StructPoint3d(1.23, 4.56, 7.89).DebuggerHook();
             FormatAndParse(new StructPoint3d(1.23, 4.56, 7.89), "〈1.23_4.56_7.89〉");

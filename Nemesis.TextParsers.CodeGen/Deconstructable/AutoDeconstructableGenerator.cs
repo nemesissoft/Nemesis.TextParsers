@@ -34,7 +34,7 @@ namespace Auto
 
             context.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8));
 
-            if (!(context.SyntaxReceiver is DeconstructableSyntaxReceiver receiver) || !(context.Compilation is CSharpCompilation cSharpCompilation)) return;
+            if (context.SyntaxReceiver is not DeconstructableSyntaxReceiver receiver || context.Compilation is not CSharpCompilation cSharpCompilation) return;
 
             var options = cSharpCompilation.SyntaxTrees[0].Options as CSharpParseOptions;
             var compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8), options));

@@ -239,7 +239,6 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return new DeconstructionTransformer<TDeconstructable>(helper, transformers, parser, formatter, emptyGenerator);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static void CheckCtorAndDeconstruct<TDeconstructable>(ConstructorInfo ctor, MethodInfo deconstruct, ITransformerStore transformerStore)
         {
             if (deconstruct is null || ctor is null)
@@ -269,10 +268,12 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                     )
                 ).Where(sp => !sp.IsSupported);
 
+                // ReSharper disable PossibleMultipleEnumeration
                 if (notSupportedParams.Any())
                     throw new NotSupportedException(
                         $@"Static {DECONSTRUCT} method must have all parameter types be recognizable by TransformerStore. Not supported types:
 {string.Join(", ", notSupportedParams.Select(sp => FlattenRef(sp.Type).GetFriendlyName()))}");
+                // ReSharper restore PossibleMultipleEnumeration
             }
             else
             {
@@ -293,10 +294,12 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                         )
                     ).Where(sp => !sp.IsSupported);
 
+                // ReSharper disable PossibleMultipleEnumeration
                 if (notSupportedParams.Any())
                     throw new NotSupportedException(
                         $@"Instance {DECONSTRUCT} method must have all parameter types be recognizable by TransformerStore. Not supported types:
 {string.Join(", ", notSupportedParams.Select(sp => FlattenRef(sp.Type).GetFriendlyName()))}");
+                // ReSharper restore PossibleMultipleEnumeration
             }
         }
 
@@ -327,8 +330,8 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         public delegate TDeconstructable EmptyGenerator(ITransformer[] transformers);
 
 
-        private readonly TupleHelper _helper;
-        internal TupleHelper Helper => _helper;
+        internal TupleHelper Helper { get; }
+
         private readonly ITransformer[] _transformers;
         private readonly ParserDelegate _parser;
         private readonly FormatterDelegate _formatter;
@@ -337,7 +340,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         internal DeconstructionTransformer([NotNull] TupleHelper helper, [NotNull] ITransformer[] transformers,
             [NotNull] ParserDelegate parser, [NotNull] FormatterDelegate formatter, EmptyGenerator emptyGenerator)
         {
-            _helper = helper ?? throw new ArgumentNullException(nameof(helper));
+            Helper = helper ?? throw new ArgumentNullException(nameof(helper));
 
             _transformers = transformers ?? throw new ArgumentNullException(nameof(transformers));
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));
@@ -573,7 +576,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
 
         protected override TDeconstructable ParseCore(in ReadOnlySpan<char> input) =>
-            _parser(input, _helper, _transformers);
+            _parser(input, Helper, _transformers);
 
         public override string Format(TDeconstructable element)
         {
@@ -584,7 +587,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
                 try
                 {
-                    return _formatter(element, ref accumulator, _helper, _transformers);
+                    return _formatter(element, ref accumulator, Helper, _transformers);
                 }
                 finally { accumulator.Dispose(); }
             }
@@ -607,7 +610,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             }
 
             return
-                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()}) formatted as {_helper}.";
+                $"Transform {typeof(TDeconstructable).GetFriendlyName()} by deconstruction into ({GetTupleDefinition()}) formatted as {Helper}.";
         }
     }
 

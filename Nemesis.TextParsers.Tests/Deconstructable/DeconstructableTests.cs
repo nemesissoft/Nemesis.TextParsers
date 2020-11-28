@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
@@ -192,17 +191,16 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
         }
 
         [Test]
-        [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public void ParseAndFormat_Recursive()
         {
             //currently cyclic dependencies are not supported but have a look at the following deconstructable 
+            // ReSharper disable StringLiteralTypo
             FormatAndParseHelper(new King("Mieszko I", new King("Bolesław I Chrobry", new King("Mieszko II Lambert", new King("Kazimierz I Odnowiciel", new King("Bolesław II Szczodry", (King)null))))),
                 @"Mieszko I>Bolesław I Chrobry|Mieszko II Lambert|Kazimierz I Odnowiciel|Bolesław II Szczodry",
                 s => s
                     .WithoutBorders()
                     .WithDelimiter('>')
             );
-
 
             //it is possible to influence only top type for automatic deconstructable aspect...
             FormatAndParseHelper(
@@ -237,6 +235,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
                     .WithDelimiter('⸗')
                     .WithEscapingSequenceStart('/')
             );
+
+            // ReSharper restore StringLiteralTypo
         }
 
         [Test]
@@ -307,12 +307,12 @@ namespace Nemesis.TextParsers.Tests.Deconstructable
             new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, new decimal[] {10, 20, 30}),
                 @"{3.14_False_10|20|30}"),
             new TCD(new DataWithCustomDeconstructableTransformer(666, true, new decimal[] {6, 7, 8, 9}), null), //overriden by custom transformer 
-            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), ""), //overriden by deconstructable aspect convention
+            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, Array.Empty<decimal>()), ""), //overriden by deconstructable aspect convention
 
             new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, null), @"{3.14_False_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_False_␀}"),
             new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_␀_␀}"),
-            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, new decimal[0]), @"{__}"),
+            new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, Array.Empty<decimal>()), @"{__}"),
         };
 
         [TestCaseSource(nameof(CustomDeconstructable_Data))]

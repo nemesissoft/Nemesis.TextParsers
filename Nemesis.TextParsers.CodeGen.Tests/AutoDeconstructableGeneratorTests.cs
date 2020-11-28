@@ -18,7 +18,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [TestFixture]
     public partial class AutoDeconstructableGeneratorTests
     {
-        private static IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
+        private static readonly IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
            .Select((t, i) => new TestCaseData($@"
 using Nemesis.TextParsers.Settings; 
 namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)

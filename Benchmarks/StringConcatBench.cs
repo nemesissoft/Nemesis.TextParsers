@@ -191,7 +191,7 @@ namespace Benchmarks
 
         public readonly ReadOnlySpan<char> AsSpanTo(int length) => _current.Slice(0, length);
 
-        public readonly ReadOnlySpan<char> AsSpanFrom(int start) => _current.Slice(start, Length - start);
+        public readonly ReadOnlySpan<char> AsSpanFrom(int start) => _current[start..Length];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()

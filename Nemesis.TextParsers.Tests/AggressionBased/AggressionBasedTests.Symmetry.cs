@@ -222,7 +222,7 @@ namespace Nemesis.TextParsers.Tests
         private static IEnumerable<TCD> EmptyData() => new[]
         {
             new TCD(typeof(string), ""),
-            new TCD(typeof(int[]), new int[0]),
+            new TCD(typeof(int[]), Array.Empty<int>()),
             new TCD(typeof(ICollection<int>), new List<int>()),
             new TCD(typeof(ICollection<KeyValuePair<int, string>>), new List<KeyValuePair<int, string>>()),
         };
