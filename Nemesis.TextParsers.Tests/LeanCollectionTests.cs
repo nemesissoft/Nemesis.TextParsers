@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
+
 using Nemesis.TextParsers.Utils;
+
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -53,25 +56,25 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f }));
         }
 
-        [TestCase(null, 0)]
-        [TestCase(new float[0], 0)]
-        [TestCase(new[] { 15.5f }, 1)]
-        [TestCase(new[] { 15.5f, 25.6f }, 2)]
-        [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, 5)]
-        public void Iterate_ArrayElement(float[] elements, int expectedLength)
+        [TestCase(null, new float[0])]
+        [TestCase(new float[0], new float[0])]
+        [TestCase(new[] { 15.5f }, new[] { 15.5f })]
+        [TestCase(new[] { 15.5f, 25.6f }, new[] { 15.5f, 25.6f })]
+        [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, new[] { 15.5f, 25.6f, 35.99f, 50, 999 })]
+        public void Iterate_ArrayElement(float[] elements, float[] expected)
         {
             var coll = LeanCollectionFactory.FromArray(elements);
-            Assert.That(coll.Size, Is.EqualTo(expectedLength));
+            Assert.That(coll.Size, Is.EqualTo(expected.Length));
 
             var actual = coll.ToList();
-            Assert.That(actual, Has.Count.EqualTo(expectedLength));
+            Assert.That(actual, Is.EqualTo(expected));
 
             if (elements != null)
                 Assert.That(actual, Is.EqualTo(elements));
         }
 
         [Test]
-        public void Conversions()
+        public void ImplicitConversions()
         {
             LeanCollection<float> coll0 = default;
             Assert.That(coll0.Size, Is.EqualTo(0));
@@ -93,9 +96,115 @@ namespace Nemesis.TextParsers.Tests
 
 
             var array = new[] { 15.5f, 25.6f, 35.99f, 50, 999 };
-            LeanCollection<float> collMore = array;
+            var collMore = LeanCollectionFactory.FromArray(array);
             Assert.That(collMore.Size, Is.EqualTo(5));
             Assert.That(collMore.ToList(), Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }));
+        }
+
+        [Test]
+        public void ExplicitConversions_T()
+        {
+            var zero = (double)default(LeanCollection<double>);
+            Assert.That(zero, Is.EqualTo(0.0));
+
+            var one = (double)new LeanCollection<double>(3.14);
+            Assert.That(one, Is.EqualTo(3.14));
+
+            var two = (double)new LeanCollection<double>(123, 456);
+            Assert.That(two, Is.EqualTo(123));
+
+            var three = (double)new LeanCollection<double>(11, 22, 33);
+            Assert.That(three, Is.EqualTo(11));
+
+            var many = (double)new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            Assert.That(many, Is.EqualTo(1.1));
+        }
+
+        [Test]
+        public void ExplicitConversions_T_T()
+        {
+            var zero = ((double, double))default(LeanCollection<double>);
+            Assert.That(zero, Is.EqualTo(
+                (0.0, 0.0)
+            ));
+
+            var one = ((double, double))new LeanCollection<double>(3.14);
+            Assert.That(one, Is.EqualTo(
+                (3.14, 0.0)
+            ));
+
+            var two = ((double, double))new LeanCollection<double>(123, 456);
+            Assert.That(two, Is.EqualTo(
+                (123, 456)
+            ));
+
+            var three = ((double, double))new LeanCollection<double>(11, 22, 33);
+            Assert.That(three, Is.EqualTo(
+                (11, 22)
+            ));
+
+            var many = ((double, double))new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            Assert.That(many, Is.EqualTo(
+                (1.1, 2.2)
+            ));
+        }
+
+        [Test]
+        public void ExplicitConversions_T_T_T()
+        {
+            var zero = ((double, double, double))default(LeanCollection<double>);
+            Assert.That(zero, Is.EqualTo(
+                (0.0, 0.0, 0.0)
+            ));
+
+            var one = ((double, double, double))new LeanCollection<double>(3.14);
+            Assert.That(one, Is.EqualTo(
+                (3.14, 0.0, 0.0)
+            ));
+
+            var two = ((double, double, double))new LeanCollection<double>(123, 456);
+            Assert.That(two, Is.EqualTo(
+                (123, 456, 0.0)
+            ));
+
+            var three = ((double, double, double))new LeanCollection<double>(11, 22, 33);
+            Assert.That(three, Is.EqualTo(
+                (11, 22, 33)
+            ));
+
+            var many = ((double, double, double))new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            Assert.That(many, Is.EqualTo(
+                (1.1, 2.2, 3.3)
+            ));
+        }
+
+        [Test]
+        public void ExplicitConversions_ArrayT()
+        {
+            var zero = (double[])default(LeanCollection<double>);
+            Assert.That(zero, Is.EqualTo(
+                Array.Empty<double>()
+                ));
+
+            var one = (double[])new LeanCollection<double>(3.14);
+            Assert.That(one, Is.EqualTo(
+                new[] { 3.14 }
+                ));
+
+            var two = (double[])new LeanCollection<double>(123.5, 456);
+            Assert.That(two, Is.EqualTo(
+                new[] { 123.5, 456 }
+                ));
+
+            var three = (double[])new LeanCollection<double>(11.0, 22, 33);
+            Assert.That(three, Is.EqualTo(
+                new[] { 11.0, 22, 33 }
+                ));
+
+            var many = (double[])new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            Assert.That(many, Is.EqualTo(
+                new[] { 1.1, 2.2, 3.3, 4.4, 5.5 }
+                ));
         }
 
         [TestCase(null)]
@@ -133,8 +242,11 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new[] { 2f, 2, 2 }, new[] { 2f, 2, 2 })]
 
         [TestCase(new[] { 1f, 8, 9, 5, 3, 4 }, new[] { 1.0f, 3.0f, 4.0f, 5.0f, 8.0f, 9.0f })]
+        [TestCase(new[] { 1000f, 80, 90, 50, 3, 4 }, new[] { 3f, 4, 50, 80, 90, 1000 })]
         public void SortTest(float[] elements, float[] expectedElements)
         {
+            var copy = elements.ToArray();
+
             var test = LeanCollectionFactory.FromArray(elements);
 
             var actual = test.Sort().ToList();
@@ -142,6 +254,8 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Is.EqualTo(expectedElements));
 
             Assert.That(actual, Is.Ordered);
+
+            Assert.That(elements, Is.EqualTo(copy), "Post condition - do NOT mutate array");
         }
     }
 }

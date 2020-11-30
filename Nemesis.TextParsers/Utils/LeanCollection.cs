@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+
 using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Utils
@@ -7,7 +9,7 @@ namespace Nemesis.TextParsers.Utils
     [PublicAPI]
     public static class LeanCollectionFactory
     {
-        public static LeanCollection<T> FromArrayChecked<T>(T[] items) => new LeanCollection<T>(items);
+        public static LeanCollection<T> FromArrayChecked<T>(T[] items) => new(items);
 
         public static LeanCollection<T> FromArray<T>(T[] items) =>
             items?.Length switch
@@ -19,16 +21,6 @@ namespace Nemesis.TextParsers.Utils
                 3 => new LeanCollection<T>(items[0], items[1], items[2]),
                 _ => new LeanCollection<T>(items)
             };
-
-        public static LeanCollection<T> ToLeanCollection<T>(T one) => new LeanCollection<T>(one);
-        public static LeanCollection<T> ToLeanCollection<T>((T, T) pair) => new LeanCollection<T>(pair.Item1, pair.Item2);
-        public static LeanCollection<T> ToLeanCollection<T>((T, T, T) triple) => new LeanCollection<T>(triple.Item1, triple.Item2, triple.Item3);
-        public static LeanCollection<T> ToLeanCollection<T>(T[] span) => new LeanCollection<T>(span);
-
-        public static T ToSingleValue<T>(LeanCollection<T> one) => one._item1;
-        public static (T, T) ToPair<T>(LeanCollection<T> pair) => (pair._item1, pair._item2);
-        public static (T, T, T) ToTriple<T>(LeanCollection<T> triple) => (triple._item1, triple._item2, triple._item3);
-        public static T[] ToArray<T>(LeanCollection<T> more) => more._items;
     }
 
     /// <summary>
@@ -37,17 +29,16 @@ namespace Nemesis.TextParsers.Utils
     public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>
     {
         #region Fields
-        enum CollectionSize : sbyte { More = -1, [UsedImplicitly] Zero = 0, One = 1, Two = 2, Three = 3 }
+        enum CollectionSize : sbyte { More = -1, Zero = 0, One = 1, Two = 2, Three = 3 }
 
         private readonly CollectionSize _size;
         public int Size => _size == CollectionSize.More ? _items.Length : (int)_size;
 
-        // ReSharper disable InconsistentNaming
-        internal readonly T _item1;
-        internal readonly T _item2;
-        internal readonly T _item3;
-        internal readonly T[] _items;
-        // ReSharper restore InconsistentNaming
+        private readonly T _item1;
+        private readonly T _item2;
+        private readonly T _item3;
+        private readonly T[] _items;
+
         #endregion
 
         #region Constructors
@@ -90,11 +81,12 @@ namespace Nemesis.TextParsers.Utils
             _size = CollectionSize.More;
             _items = items;
         }
-        
+
         #endregion
 
         #region Enumerations
-        public LeanCollectionEnumerator GetEnumerator() => new LeanCollectionEnumerator(this);
+        //TODO this does not need Dispose upon call site
+        public LeanCollectionEnumerator GetEnumerator() => new(this);
 
         public ref struct LeanCollectionEnumerator
         {
@@ -157,6 +149,8 @@ namespace Nemesis.TextParsers.Utils
         /// </summary>
         public IReadOnlyList<T> ToList()
         {
+            if (_size == CollectionSize.More) return _items;
+
             var list = new List<T>(Size);
             foreach (T element in this)
                 list.Add(element);
@@ -165,17 +159,30 @@ namespace Nemesis.TextParsers.Utils
         #endregion
 
         #region Conversions
-#pragma warning disable CA2225 // Operator overloads have named alternates
-        public static implicit operator LeanCollection<T>(T one) => new LeanCollection<T>(one);
-        public static implicit operator LeanCollection<T>((T, T) pair) => new LeanCollection<T>(pair.Item1, pair.Item2);
-        public static implicit operator LeanCollection<T>((T, T, T) triple) => new LeanCollection<T>(triple.Item1, triple.Item2, triple.Item3);
-        public static implicit operator LeanCollection<T>(T[] span) => new LeanCollection<T>(span);
 
-        public static implicit operator T(LeanCollection<T> one) => one._item1;
-        public static implicit operator (T, T)(LeanCollection<T> pair) => (pair._item1, pair._item2);
-        public static implicit operator (T, T, T)(LeanCollection<T> triple) => (triple._item1, triple._item2, triple._item3);
-        public static implicit operator T[](LeanCollection<T> more) => more._items;
-#pragma warning restore CA2225 // Operator overloads have named alternates
+        public static implicit operator LeanCollection<T>(T one) => new(one);
+        public static implicit operator LeanCollection<T>((T, T) pair) => new(pair.Item1, pair.Item2);
+        public static implicit operator LeanCollection<T>((T, T, T) triple) => new(triple.Item1, triple.Item2, triple.Item3);
+        //public static implicit operator LeanCollection<T>(T[] span) => new(span);
+
+        private bool IsMore(int expectedSize) => _size == CollectionSize.More && _items?.Length >= expectedSize;
+
+        public static explicit operator T(LeanCollection<T> one) => one.IsMore(1) ? one._items[0] : one._item1;
+
+        public static explicit operator (T, T)(LeanCollection<T> pair) => pair.IsMore(2) ? (pair._items[0], pair._items[1]) : (pair._item1, pair._item2);
+
+        public static explicit operator (T, T, T)(LeanCollection<T> triple) => triple.IsMore(3) ? (triple._items[0], triple._items[1], triple._items[2]) : (triple._item1, triple._item2, triple._item3);
+
+        public static explicit operator T[](LeanCollection<T> more) => more.IsMore(0)
+                ? more._items
+                : more._size switch
+                {
+                    CollectionSize.Zero => Array.Empty<T>(),
+                    CollectionSize.One => new[] { more._item1 },
+                    CollectionSize.Two => new[] { more._item1, more._item2 },
+                    CollectionSize.Three => new[] { more._item1, more._item2, more._item3 },
+                    _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised")
+                };
 
         #endregion
 
@@ -253,8 +260,9 @@ namespace Nemesis.TextParsers.Utils
                     }
                 default:
                     comparer ??= Comparer<T>.Default;
-                    Array.Sort(_items, comparer);
-                    return new LeanCollection<T>(_items);
+                    var copy = _items.ToArray();
+                    Array.Sort(copy, comparer);
+                    return new LeanCollection<T>(copy);
             }
         }
     }

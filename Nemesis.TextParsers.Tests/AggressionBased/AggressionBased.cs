@@ -16,6 +16,8 @@ using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 namespace Nemesis.TextParsers.Tests
 {
     //TODO add documentation 
+    //TODO remove LeanCollection<TValue> GetValues();
+    //TODO remove AB9<>
     [PublicAPI]
     public interface IAggressionBased
     {
