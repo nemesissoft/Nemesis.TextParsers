@@ -3,13 +3,20 @@ image: Visual Studio 2019
 configuration: Release
 init:
 - pwsh: >-
+    $env:CI = $true
+
     if ($env:APPVEYOR_REPO_TAG -eq "true")
     {
         $newVersion = "$($env:APPVEYOR_REPO_TAG_NAME.TrimStart("v"))"
+        Add-AppveyorMessage -Message ("CI_RELEASE = " + $env:CI_RELEASE)
+        $env:CI_RELEASE = $true    
+        Add-AppveyorMessage -Message ("CI_RELEASE = " + $env:CI_RELEASE)
+
+        Add-AppveyorMessage -Message ("Running release build")
     }
     else
     {
-        $newVersion = "0.0.$env:APPVEYOR_BUILD_NUMBER+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"        
+        $newVersion = "0.0.$env:APPVEYOR_BUILD_NUMBER+dev-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 7))"                
     }
     Add-AppveyorMessage -Message ("Change build version to " + $newVersion)
     
