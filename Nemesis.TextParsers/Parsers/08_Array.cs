@@ -141,7 +141,7 @@ namespace Nemesis.TextParsers.Parsers
 
     internal class ArraySegmentTransformer
     {
-        internal static readonly TupleHelper Helper = new TupleHelper('@', '∅', '~', '{', '}');
+        internal static readonly TupleHelper Helper = new('@', '∅', '~', '{', '}');
     }
     public class ArraySegmentTransformer<TElement> : SimpleTransformer<ArraySegment<TElement>>
     {
@@ -161,7 +161,7 @@ namespace Nemesis.TextParsers.Parsers
 
             int offset = helper.ParseElement(ref enumerator, Int32Transformer.Instance);
 
-            helper.ParseNext(ref enumerator, 3, TYPE_NAME);
+            helper.ParseNext(ref enumerator, 2, TYPE_NAME);
             int count = helper.ParseElement(ref enumerator, Int32Transformer.Instance);
 
             helper.ParseNext(ref enumerator, 3, TYPE_NAME);
@@ -198,5 +198,7 @@ namespace Nemesis.TextParsers.Parsers
             }
             finally { accumulator.Dispose(); }
         }
+
+        //public override ArraySegment<TElement> GetEmpty() => new(Array.Empty<TElement>());
     }
 }

@@ -61,7 +61,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.AssignableTo<IAggressionBased<TElement>>());
 
-            var values = actual.GetValues().ToList();
+            var values = actual.ToList();
             Assert.That(values, Is.EqualTo(expectedOutput));
         }
 
@@ -90,7 +90,7 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(trans.Format(actual), Is.EqualTo(data.expectedOutput));
 
-            Assert.That(actual.GetValues().ToList(),
+            Assert.That(actual.ToList(),
                 Is.EqualTo(data.expectedValuesCompacted));
         }
 
@@ -102,7 +102,7 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(actual, Is.Not.Null);
 
-            Assert.That(actual.GetValues().ToList(),
+            Assert.That(actual.ToList(),
                 Is.EqualTo(data.expectedValues));
         }
 

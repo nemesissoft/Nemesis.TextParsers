@@ -85,7 +85,7 @@ namespace Nemesis.TextParsers.Utils
         #endregion
 
         #region Enumerations
-        //TODO this does not need Dispose upon call site
+        
         public LeanCollectionEnumerator GetEnumerator() => new(this);
 
         public ref struct LeanCollectionEnumerator

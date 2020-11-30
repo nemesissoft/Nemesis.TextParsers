@@ -1,9 +1,12 @@
 ﻿using JetBrains.Annotations;
 using System;
+using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 #if !NET
@@ -15,18 +18,22 @@ using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
 {
-    //TODO add documentation 
-    //TODO remove LeanCollection<TValue> GetValues();
-    //TODO remove AB9<>
+    /// <summary>
+    /// Helper interface for <see cref="IAggressionBased{T}"/>. 
+    /// </summary>
     [PublicAPI]
     public interface IAggressionBased
     {
         int Arity { get; }
     }
 
+    /// <summary>
+    /// Encompasses multiple values dependent on aggression parameter
+    /// </summary>
+    /// <typeparam name="TValue">Type of container elements</typeparam>
     [Transformer(typeof(AggressionBasedTransformer<>))]
     [PublicAPI]
-    public interface IAggressionBased<TValue> : IAggressionBased
+    public interface IAggressionBased<out TValue> : IAggressionBased
     {
         TValue PassiveValue { get; }
         TValue NormalValue { get; }
@@ -34,15 +41,27 @@ namespace Nemesis.TextParsers.Tests
 
         TValue GetValueFor(StrategyAggression aggression);
         TValue GetValueFor(byte aggression);
+    }
 
-        LeanCollection<TValue> GetValues();
+    internal static class AggressionBasedExtensions
+    {
+        /// <summary>
+        /// Convert <see cref="IAggressionBased{T}"/> to <see cref="List{T}"/>. This obviously allocates. For tests ONLY
+        /// </summary>
+        internal static IReadOnlyList<TValue> ToList<TValue>(this IAggressionBased<TValue> ab) =>
+            ab switch
+            {
+                null => Array.Empty<TValue>(),
+                AggressionBased1<TValue> ab1 => new[] { ab1.One },
+                AggressionBased3<TValue> ab3 => new[] { ab3.PassiveValue, ab3.NormalValue, ab3.AggressiveValue },
+                AggressionBased9<TValue> ab9 => ab9.Values,
+                _ => throw new NotSupportedException($"Type {ab.GetType().GetFriendlyName()} is not supported by {nameof(AggressionBasedExtensions)}.{nameof(ToList)}"),
+            };
     }
 
     [Transformer(typeof(AggressionBasedTransformer<>))]
     internal abstract class AggressionBasedBase<TValue> : IEquatable<IAggressionBased<TValue>>
     {
-        public abstract LeanCollection<TValue> GetValues();
-
         protected static bool IsStructurallyEqual(TValue left, TValue right) => StructuralEquality.Equals(left, right);
 
         public bool Equals(IAggressionBased<TValue> other) =>
@@ -69,17 +88,31 @@ namespace Nemesis.TextParsers.Tests
         protected abstract int GetHashCodeCore();
 
         /// <summary>
-        /// Text representation. For debugging purposes only
+        /// Text representation. For debugging purposes only. Does not support escaping characters. For formatting use <see cref="AggressionBasedTransformer{TValue}.Format"/>
         /// </summary>
-        public sealed override string ToString() => string.Join(" # ", GetValues().ToList());
+        public sealed override string ToString() => string.Join(" # ",
+            ((IAggressionBased<TValue>)this).ToList().Select(element => FormatValue(element))
+        );
+
+        private static string FormatValue(object value) =>
+              value switch
+              {
+                  null => "∅",
+                  bool b => b ? "true" : "false",
+                  string s => $"\"{s}\"",
+                  char c => $"\'{c}\'",
+                  DateTime dt => dt.ToString("o", CultureInfo.InvariantCulture),
+                  IFormattable @if => @if.ToString(null, CultureInfo.InvariantCulture),
+                  IEnumerable ie when !(ie.GetType() is { IsGenericType: true } t && t.GetGenericTypeDefinition() == typeof(ArraySegment<>))
+                      => "[" + string.Join(", ", ie.Cast<object>().Select(FormatValue)) + "]",
+                  _ => value.ToString()
+              };
     }
 
     internal sealed class AggressionBased1<TValue> : AggressionBasedBase<TValue>, IAggressionBased<TValue>
     {
         public int Arity => 1;
         public TValue One { get; }
-
-        public override LeanCollection<TValue> GetValues() => new(One);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public TValue PassiveValue => One;
@@ -111,8 +144,6 @@ namespace Nemesis.TextParsers.Tests
     {
         public int Arity => 3;
 
-        public override LeanCollection<TValue> GetValues() => new(PassiveValue, NormalValue, AggressiveValue);
-
         public TValue PassiveValue { get; }
         public TValue NormalValue { get; }
         public TValue AggressiveValue { get; }
@@ -126,14 +157,27 @@ namespace Nemesis.TextParsers.Tests
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
 
-        public TValue GetValueFor(byte aggression) =>
+        /*public TValue GetValueFor(byte aggression) =>
             aggression switch
             {
                 1 or 2 or 3 => PassiveValue,
                 0 or 4 or 5 or 6 => NormalValue,
                 7 or 8 or 9 => AggressiveValue,
                 _ => throw new ArgumentOutOfRangeException(nameof(aggression), $@"{nameof(aggression)} should be value from 0 to 9"),
-            };
+            };*/
+        public TValue GetValueFor(byte aggression)
+        {
+            switch (aggression)
+            {
+                case 1: case 2: case 3: return PassiveValue;
+
+                case 0: case 4: case 5: case 6: return NormalValue;
+
+                case 7: case 8: case 9: return AggressiveValue;
+
+                default: throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
+            }
+        }
 
         protected override bool Equals1(in AggressionBased1<TValue> o1) =>
             IsStructurallyEqual(PassiveValue, o1.One) &&
@@ -166,20 +210,18 @@ namespace Nemesis.TextParsers.Tests
     {
         public int Arity => 9;
 
-        private readonly TValue[] _values;
-
-        public override LeanCollection<TValue> GetValues() => LeanCollectionFactory.FromArrayChecked(_values);
+        internal readonly TValue[] Values;
 
         public TValue PassiveValue => GetValueFor(StrategyAggression.Passive);
         public TValue NormalValue => GetValueFor(StrategyAggression.Normal);
         public TValue AggressiveValue => GetValueFor(StrategyAggression.Aggressive);
 
         // ReSharper disable once RedundantVerbatimPrefix
-        public AggressionBased9([@NotNull] TValue[] values) => _values = values ?? throw new ArgumentNullException(nameof(values));
+        public AggressionBased9([@NotNull] TValue[] values) => Values = values ?? throw new ArgumentNullException(nameof(values));
 
         public TValue GetValueFor(StrategyAggression aggression) => GetValueFor((byte)aggression);
 
-        public TValue GetValueFor(byte aggression)
+        /*public TValue GetValueFor(byte aggression)
         {
             if (_values == null || _values.Length != 9) throw new InvalidOperationException("Internal state of values is compromised");
 
@@ -191,12 +233,24 @@ namespace Nemesis.TextParsers.Tests
             };
 
             return _values[aggression - 1];
+        }*/
+
+        public TValue GetValueFor(byte aggression)
+        {
+            if (aggression > 9)
+                throw new ArgumentOutOfRangeException($@"{nameof(aggression)} should be value from 0 to 9", nameof(aggression));
+
+            if (Values == null || Values.Length != 9) throw new InvalidOperationException("Internal state of values is compromised");
+
+            if (aggression == 0) aggression = 5;
+
+            return Values[aggression - 1];
         }
 
         protected override bool Equals1(in AggressionBased1<TValue> o1)
         {
             var thisOne = o1.One;
-            return _values?.All(v => IsStructurallyEqual(v, thisOne)) == true;
+            return Values?.All(v => IsStructurallyEqual(v, thisOne)) == true;
         }
 
         protected override bool Equals3(in AggressionBased3<TValue> o3) =>
@@ -207,11 +261,11 @@ namespace Nemesis.TextParsers.Tests
 
         protected override bool Equals9(in AggressionBased9<TValue> o9)
         {
-            var o9Values = o9._values;
+            var o9Values = o9.Values;
 
-            if (ReferenceEquals(_values, o9Values)) return true;
+            if (ReferenceEquals(Values, o9Values)) return true;
 
-            using var enumerator = ((IReadOnlyList<TValue>)_values).GetEnumerator();
+            using var enumerator = ((IReadOnlyList<TValue>)Values).GetEnumerator();
             using var enumerator2 = ((IReadOnlyList<TValue>)o9Values).GetEnumerator();
             while (enumerator.MoveNext())
                 if (!enumerator2.MoveNext() || !IsStructurallyEqual(enumerator.Current, enumerator2.Current))
@@ -220,7 +274,7 @@ namespace Nemesis.TextParsers.Tests
             return !enumerator2.MoveNext();
         }
 
-        protected override int GetHashCodeCore() => _values?.GetHashCode() ?? 0;
+        protected override int GetHashCodeCore() => Values?.GetHashCode() ?? 0;
     }
 
 
@@ -252,30 +306,60 @@ namespace Nemesis.TextParsers.Tests
             if (ab == null) return null;
 
             Span<char> initialBuffer = stackalloc char[32];
-            using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
-            var enumerator = ab.GetValues().GetEnumerator();
-            while (enumerator.MoveNext())
+
+            try
             {
-                string elementText = _elementTransformer.Format(enumerator.Current);
-                if (elementText == null)
-                    accumulator.Append(NULL_ELEMENT_MARKER);
-                else
+                switch (ab)
                 {
-                    foreach (char c in elementText)
-                    {
-                        if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == LIST_DELIMITER)
-                            accumulator.Append(ESCAPING_SEQUENCE_START);
-                        accumulator.Append(c);
-                    }
-                }
-                accumulator.Append(LIST_DELIMITER);
-            }
-            accumulator.Shrink();
+                    case AggressionBased1<TValue> ab1:
+                        FormatElement(ref accumulator, ab1.One);
+                        break;
 
-            return accumulator.ToString();
+                    case AggressionBased3<TValue> ab3:
+                        FormatElement(ref accumulator, ab3.PassiveValue);
+                        accumulator.Append(LIST_DELIMITER);
+                        FormatElement(ref accumulator, ab3.NormalValue);
+                        accumulator.Append(LIST_DELIMITER);
+                        FormatElement(ref accumulator, ab3.AggressiveValue);
+                        break;
+
+                    case AggressionBased9<TValue> ab9:
+                        foreach (var value in ab9.Values)
+                        {
+                            FormatElement(ref accumulator, value);
+                            accumulator.Append(LIST_DELIMITER);
+                        }
+                        accumulator.Shrink();
+                        break;
+
+                    default:
+                        throw new NotSupportedException(
+                            $"Type {ab.GetType().GetFriendlyName()} is not supported by {nameof(AggressionBasedTransformer<object>)}.{nameof(Format)}");
+
+                }
+
+                return accumulator.ToString();
+            }
+            finally { accumulator.Dispose(); }
         }
 
+        private void FormatElement(ref ValueSequenceBuilder<char> accumulator, TValue element)
+        {
+            string elementText = _elementTransformer.Format(element);
+            if (elementText == null)
+                accumulator.Append(NULL_ELEMENT_MARKER);
+            else
+            {
+                foreach (char c in elementText)
+                {
+                    if (c == ESCAPING_SEQUENCE_START || c == NULL_ELEMENT_MARKER || c == LIST_DELIMITER)
+                        accumulator.Append(ESCAPING_SEQUENCE_START);
+                    accumulator.Append(c);
+                }
+            }
+        }
 
 
         //this should not be cached. Nobody wants to expose globally available i.e. empty collection just for people to be able to add elements to it ;-)

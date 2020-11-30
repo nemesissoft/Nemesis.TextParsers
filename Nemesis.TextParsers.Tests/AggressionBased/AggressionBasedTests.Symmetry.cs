@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(ab, Is.AssignableTo<IAggressionBased<TElement>>());
                 Assert.That(ab, Is.TypeOf(aggBasedType), $"CheckType_{stage}");
 
-                var actualValues = ab.GetValues().ToList();
+                var actualValues = ab.ToList();
 
                 CheckEquivalence(actualValues, inputValues);
             }
@@ -133,8 +133,8 @@ namespace Nemesis.TextParsers.Tests
 
             static void CheckEquivalenceAb(IAggressionBased<TElement> ab1, IAggressionBased<TElement> ab2, string stage)
             {
-                var v1 = ab1.GetValues().ToList();
-                var v2 = ab2.GetValues().ToList();
+                var v1 = ab1.ToList();
+                var v2 = ab2.ToList();
 
                 Assert.That(v1, Is.EqualTo(v2).Using(StructuralEqualityComparer<TElement>.Instance), $"CheckEquivalenceAb_{stage}");
             }

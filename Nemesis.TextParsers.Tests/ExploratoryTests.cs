@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -34,8 +33,8 @@ namespace Nemesis.TextParsers.Tests
                 ?? throw new InvalidOperationException("TransformerStore cannot be null");
         }
 
-        private readonly Fixture _fixture = new Fixture();
-        private readonly RandomSource _randomSource = new RandomSource();
+        private readonly Fixture _fixture = new();
+        private readonly RandomSource _randomSource = new();
 
 
         private static IReadOnlyCollection<(ExploratoryTestCategory category, Type type)> _allTestCases;
@@ -76,7 +75,6 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [OneTimeSetUp]
-        [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeAnyTest()
         {
             int seed = _randomSource.UseNewSeed();
@@ -106,31 +104,31 @@ namespace Nemesis.TextParsers.Tests
                 );
             }
 
-            _fixture.Register<string>(GetRandomString);
-            _fixture.Register<Uri>(GetRandomUri);
+            _fixture.Register(GetRandomString);
+            _fixture.Register(GetRandomUri);
 
-            _fixture.Register<bool>(() => _randomSource.NextDouble() < 0.5);
-            _fixture.Register<double>(() => _randomSource.NextFloatingNumber());
-            _fixture.Register<float>(() => (float)_randomSource.NextFloatingNumber());
-            _fixture.Register<decimal>(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
-            _fixture.Register<Complex>(() => new Complex(
+            _fixture.Register(() => _randomSource.NextDouble() < 0.5);
+            _fixture.Register(() => _randomSource.NextFloatingNumber());
+            _fixture.Register(() => (float)_randomSource.NextFloatingNumber());
+            _fixture.Register(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
+            _fixture.Register(() => new Complex(
                 _randomSource.NextFloatingNumber(1000, false),
                 _randomSource.NextFloatingNumber(1000, false)
             ));
-            _fixture.Register<BigInteger>(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
+            _fixture.Register(() => BigInteger.Parse(_randomSource.NextString('0', '9', 30)));
 
-            _fixture.Register<BasisPoint>(() => BasisPoint.FromBps(
+            _fixture.Register(() => BasisPoint.FromBps(
                 ((_randomSource.NextDouble() - 0.5) * 2 + 0.1) * (_randomSource.NextDouble() < 0.5 ? 100 : 10)
             ));
 
-            _fixture.Register<LotsOfDeconstructableData>(() => new LotsOfDeconstructableData(
+            _fixture.Register(() => new LotsOfDeconstructableData(
                 _fixture.Create<string>(), _fixture.Create<bool>(), _fixture.Create<int>(), _fixture.Create<uint?>(),
                 _fixture.Create<float>(), _fixture.Create<double?>(), _fixture.Create<FileMode>(), _fixture.Create<List<string>>(),
                 _fixture.Create<IReadOnlyList<int>>(), _fixture.Create<Dictionary<string, float?>>(), _fixture.Create<decimal[]>(),
                 _fixture.Create<BigInteger[][]>(), _fixture.Create<Complex>()
             ));
 
-            _fixture.Register<TimeSpan>(() => new TimeSpan(
+            _fixture.Register(() => new TimeSpan(
                 _randomSource.Next(2), _randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(100))
             );
 
@@ -181,7 +179,7 @@ namespace Nemesis.TextParsers.Tests
 
                 return new Regex(pattern, options);
             }
-            _fixture.Register<Regex>(GetRandomRegex);
+            _fixture.Register(GetRandomRegex);
 
             _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
             _fixture.Register(() => new IPAddress(new[] { (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255) }));
@@ -247,7 +245,6 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [SetUp]
-        [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
         public void BeforeEachTest()
         {
             int seed = _randomSource.UseNewSeed();
@@ -300,7 +297,7 @@ namespace Nemesis.TextParsers.Tests
                 }
                 catch (Exception e)
                 {
-                    var ex = e is TargetInvocationException tie && tie.InnerException is { } inner
+                    var ex = e is TargetInvocationException {InnerException: { } inner}
                         ? inner
                         : e;
 
@@ -482,7 +479,7 @@ namespace Nemesis.TextParsers.Tests
             Type GetRandomTupleType(int arity, Type tupleType) =>
                 tupleType.MakeGenericType(
                     Enumerable.Repeat(0, arity)
-                        .Select(i => GetRandomSimpleType()).ToArray());
+                        .Select(_ => GetRandomSimpleType()).ToArray());
 
             var valueTuples = new List<(int arity, Type tupleType)>
             {
@@ -493,7 +490,7 @@ namespace Nemesis.TextParsers.Tests
                 (5, typeof(ValueTuple<,,,,>)),
                 (6, typeof(ValueTuple<,,,,,>)),
                 (7, typeof(ValueTuple<,,,,,,>)),
-            }.SelectMany(pair => Enumerable.Repeat(0, 6).Select(i => GetRandomTupleType(pair.arity, pair.tupleType))
+            }.SelectMany(pair => Enumerable.Repeat(0, 6).Select(_ => GetRandomTupleType(pair.arity, pair.tupleType))
             ).ToList();
 
             static Type GetNullableCounterpart(Type t) => t.IsNullable(out var underlyingType)
@@ -601,7 +598,7 @@ namespace Nemesis.TextParsers.Tests
 
         private static void RegisterAggressionBased<TElement>(IFixture fixture, RandomSource randomSource)
         {
-            AggressionBased1<TElement> Creator1() => new AggressionBased1<TElement>(fixture.Create<TElement>());
+            AggressionBased1<TElement> Creator1() => new(fixture.Create<TElement>());
 
             AggressionBased3<TElement> Creator3()
             {
@@ -683,9 +680,9 @@ namespace Nemesis.TextParsers.Tests
             }
 
             TElement[] ArrayCreator() => ListCreator().ToArray();
-            LinkedList<TElement> LinkedListCreator() => new LinkedList<TElement>(ListCreator());
-            Stack<TElement> StackCreator() => new Stack<TElement>(ListCreator());
-            Queue<TElement> QueueCreator() => new Queue<TElement>(ListCreator());
+            LinkedList<TElement> LinkedListCreator() => new(ListCreator());
+            Stack<TElement> StackCreator() => new(ListCreator());
+            Queue<TElement> QueueCreator() => new(ListCreator());
 
             fixture.Register(ArrayCreator);
             fixture.Register(ListCreator);
@@ -705,7 +702,7 @@ namespace Nemesis.TextParsers.Tests
                 return array;
             }
 
-            fixture.Register<ArraySegment<TElement>>(() => new ArraySegment<TElement>(ArrayCreator(10), randomSource.Next(4), randomSource.Next(1, 5)));
+            fixture.Register(() => new ArraySegment<TElement>(ArrayCreator(10), randomSource.Next(4), randomSource.Next(1, 5)));
         }
 
         #region Value Tuple
@@ -731,7 +728,7 @@ namespace Nemesis.TextParsers.Tests
         [UsedImplicitly]
         private static void RegisterValueTuple1<T1>(IFixture fixture)
         {
-            ValueTuple<T1> TupleCreator() => new ValueTuple<T1>(fixture.Create<T1>());
+            ValueTuple<T1> TupleCreator() => new(fixture.Create<T1>());
 
             fixture.Register(TupleCreator);
         }

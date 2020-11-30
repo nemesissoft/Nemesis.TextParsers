@@ -627,7 +627,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             var trans = Sut.GetTransformer<IAggressionBased<int?[]>>();
             var parsed3 = trans.Parse(@"3000|\∅|\∅|4000");
             Assert.That(
-                parsed3.GetValues().ToList().SingleOrDefault(),
+                parsed3.ToList().SingleOrDefault(),
                 Is.EqualTo(new int?[] { 3000, null, null, 4000 }));
         }
 
