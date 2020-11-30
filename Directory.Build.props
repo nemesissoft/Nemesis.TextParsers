@@ -19,12 +19,10 @@
 		<AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
-	<PropertyGroup>
+	<!--<PropertyGroup>
 		<BuildMode>LOCAL</BuildMode>
 		<BuildMode Condition=" '$(CI)' == 'true' ">CI</BuildMode>
 		<BuildMode Condition=" '$(CI_RELEASE)' == 'true' ">CI_RELEASE</BuildMode>
-
-		<!--<DefineConstants>$(DefineConstants);$(BuildMode)</DefineConstants>-->
-	</PropertyGroup>
+	</PropertyGroup>-->
 
 </Project>
