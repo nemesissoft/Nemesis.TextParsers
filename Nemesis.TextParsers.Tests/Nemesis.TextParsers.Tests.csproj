@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
-
+		<TargetFrameworks>net5.0;netcoreapp3.1;net48;net461</TargetFrameworks>
+		
+		<!--<TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
 		<TargetFrameworks Condition=" '$(BuildMode)' == 'LOCAL' ">net5.0;netcoreapp3.1;net48;net461</TargetFrameworks>
-
-		<TargetFrameworks Condition=" '$(BuildMode)' == 'CI_RELEASE' ">net5.0;netcoreapp3.1;netcoreapp2.2;net48;net47;net461</TargetFrameworks>
+		<TargetFrameworks Condition=" '$(BuildMode)' == 'CI_RELEASE' ">net5.0;netcoreapp3.1;netcoreapp2.2;net48;net47;net461</TargetFrameworks>-->
 
 	</PropertyGroup>
 
