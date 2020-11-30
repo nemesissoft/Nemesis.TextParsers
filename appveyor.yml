@@ -8,10 +8,7 @@ init:
     if ($env:APPVEYOR_REPO_TAG -eq "true")
     {
         $newVersion = "$($env:APPVEYOR_REPO_TAG_NAME.TrimStart("v"))"
-        Add-AppveyorMessage -Message ("CI_RELEASE = " + $env:CI_RELEASE)
         $env:CI_RELEASE = $true    
-        Add-AppveyorMessage -Message ("CI_RELEASE = " + $env:CI_RELEASE)
-
         Add-AppveyorMessage -Message ("Running release build")
     }
     else
