@@ -26,6 +26,8 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="3.17.*" />
 
 		<PackageReference Include="System.Memory" Version="4.*" />
+
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.*" />
 	</ItemGroup>
 
 	<ItemGroup>

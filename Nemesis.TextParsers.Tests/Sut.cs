@@ -47,7 +47,7 @@ namespace Nemesis.TextParsers.Tests
                 Console.WriteLine($"Seed for {reason} = {seed}");
                 var rand = new Random(seed);
                 var result = new HashSet<char>(
-#if !NET461
+#if !NET461 && !NET47
                     length
 #endif
                     );
