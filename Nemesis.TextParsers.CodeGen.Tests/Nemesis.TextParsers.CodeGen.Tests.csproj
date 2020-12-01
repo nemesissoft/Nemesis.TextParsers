@@ -1,37 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);NU1603</NoWarn>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<NoWarn>$(NoWarn);NU1603</NoWarn>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ApprovalTests" Version="5.4.3" />
+	<ItemGroup>
+		<PackageReference Include="ApprovalTests" Version="5.4.3" />
 
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.*" />
-    <PackageReference Include="NUnit" Version="3.12.*" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.*" />
-    
-    <PackageReference Include="Nemesis.CodeAnalysis" Version="1.0.0" />
-  </ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.*" />
+		<PackageReference Include="NUnit" Version="3.12.*" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.17.*" />
 
-  <ItemGroup>
-    <Compile Remove="**\ApprovalTests\*.approved.cs" />
-    <Compile Remove="**\ApprovalTests\*.received.cs" />
-  </ItemGroup>
+		<PackageReference Include="Nemesis.CodeAnalysis" Version="1.0.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <CompilerVisibleProperty Include="DebugAutoDeconstructableGenerator" />
-  </ItemGroup>
-  
+	<ItemGroup>
+		<Compile Remove="**\ApprovalTests\*.approved.cs" />
+		<Compile Remove="**\ApprovalTests\*.received.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj" />
-    <ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj">
-      <Aliases>original</Aliases>
-    </ProjectReference>
-  </ItemGroup>
+	<PropertyGroup>
+		<DebugAutoDeconstructableGenerator>false</DebugAutoDeconstructableGenerator>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<CompilerVisibleProperty Include="DebugAutoDeconstructableGenerator" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<ProjectReference Include="..\Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj" />
+		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj">
+			<Aliases>original</Aliases>
+		</ProjectReference>
+	</ItemGroup>
 
 
 </Project>

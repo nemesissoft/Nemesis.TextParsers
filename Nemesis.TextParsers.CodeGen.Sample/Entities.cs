@@ -1,4 +1,5 @@
-﻿using Nemesis.TextParsers.Settings;
+﻿using System;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.CodeGen.Sample
 {
@@ -24,6 +25,12 @@ namespace Nemesis.TextParsers.CodeGen.Sample
     public partial record RecordPoint3d(double X, double Y, double Z) : RecordPoint2d(X, Y)
     {
         public double Magnitude { get; init; } //will NOT be subject to deconstruction
+    }
+    
+    [Auto.AutoDeconstructable]
+    [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(',', '␀', '/', '⟪', '⟫')]
+    public partial record SpaceAndTime(double X, double Y, double Z, TimeSpan Time) : RecordPoint2d(X, Y)
+    {
     }
 
     //generated
