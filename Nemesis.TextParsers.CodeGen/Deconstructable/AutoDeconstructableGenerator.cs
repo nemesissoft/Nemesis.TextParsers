@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -100,9 +99,9 @@ namespace Auto
         private static string GetTypeModifiers(TypeDeclarationSyntax type) =>
             type.Modifiers + " " + type switch
             {
-                ClassDeclarationSyntax _ => "class",
-                StructDeclarationSyntax _ => "struct",
-                RecordDeclarationSyntax _ => "record",
+                ClassDeclarationSyntax => "class",
+                StructDeclarationSyntax => "struct",
+                RecordDeclarationSyntax => "record",
                 _ => throw new NotSupportedException("Only class, struct or record types are allowed")
             };
 
@@ -111,8 +110,8 @@ namespace Auto
         {
             static AttributeData? GetAttribute(ISymbol typeSymbol, ISymbol attributeSymbol) =>
                 typeSymbol.GetAttributes().FirstOrDefault(ad =>
-                    ad != null && ad.AttributeClass is { } @class &&
-                    @class.Equals(attributeSymbol, SymbolEqualityComparer.Default));
+                    ad?.AttributeClass is { } @class && @class.Equals(attributeSymbol, SymbolEqualityComparer.Default));
+            
 
             deconstructableSettingsAttributeData = null;
             typeSymbol = null;

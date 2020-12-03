@@ -12,12 +12,12 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
     public partial class AutoDeconstructableGenerator
     {
         // ReSharper disable once RedundantNameQualifier
-        internal static readonly string DeconstructableSettingsAttributeName = typeof(Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute).FullName;
+        internal static readonly string DeconstructableSettingsAttributeName = "Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute";
 
         private static DiagnosticDescriptor GetDiagnosticDescriptor(byte id, string message,
             DiagnosticSeverity diagnosticSeverity = DiagnosticSeverity.Error) =>
-            new DiagnosticDescriptor($"AutoDeconstructable{id:00}", "Couldn't generate automatic deconstructable pattern",
-                messageFormat: "{0}: " + message, category: "AutoGenerator", diagnosticSeverity, isEnabledByDefault: true);
+            new($"AutoDeconstructable{id:00}", "Couldn't generate automatic deconstructable pattern",
+                "{0}: " + message, "AutoGenerator", diagnosticSeverity, true);
 
         internal static readonly DiagnosticDescriptor NonPartialTypeRule = GetDiagnosticDescriptor(1, $"Type decorated with {ATTRIBUTE_NAME} must be also declared partial");
         internal static readonly DiagnosticDescriptor InvalidSettingsAttributeRule = GetDiagnosticDescriptor(2, $"Attribute {DeconstructableSettingsAttributeName} must be constructed with 5 characters and bool type, or with default values");
@@ -67,21 +67,21 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         private sealed class DeconstructableSyntaxReceiver : ISyntaxReceiver
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly List<TypeDeclarationSyntax> _candidateTypes = new List<TypeDeclarationSyntax>();
-
-            public IReadOnlyList<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
+            private readonly List<TypeDeclarationSyntax> _candidateTypes = new();
+            public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
-                if (syntaxNode is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0)
-                    switch (tds)
-                    {
-                        case RecordDeclarationSyntax _:
-                        case StructDeclarationSyntax _:
-                        case ClassDeclarationSyntax _:
-                            _candidateTypes.Add(tds);
-                            break;
-                    }
+                if (syntaxNode is not TypeDeclarationSyntax tds || tds.AttributeLists.Count == 0) return;
+
+                switch (tds)
+                {
+                    case RecordDeclarationSyntax _:
+                    case StructDeclarationSyntax _:
+                    case ClassDeclarationSyntax _:
+                        _candidateTypes.Add(tds);
+                        break;
+                }
             }
         }
 

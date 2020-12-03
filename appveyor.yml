@@ -2,13 +2,10 @@ version: '{build}'
 image: Visual Studio 2019
 configuration: Release
 init:
-- pwsh: >-
-    $env:CI = $true
-
+- pwsh: >-    
     if ($env:APPVEYOR_REPO_TAG -eq "true")
     {
         $newVersion = "$($env:APPVEYOR_REPO_TAG_NAME.TrimStart("v"))"
-        $env:CI_RELEASE = $true    
         Add-AppveyorMessage -Message ("Running release build")
     }
     else
