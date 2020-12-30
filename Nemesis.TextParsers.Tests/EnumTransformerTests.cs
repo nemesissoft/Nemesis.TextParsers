@@ -78,14 +78,13 @@ namespace Nemesis.TextParsers.Tests
         private static readonly TNumberHandler _numberHandler =
             (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
 
-        private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
-            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default);
+        private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut = new(_numberHandler, EnumSettings.Default);
 
         private static readonly ITransformer<TEnum> _sutCaseSensitive =
-            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.CaseInsensitive, false));
+            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default with { CaseInsensitive = false });
 
         private static readonly ITransformer<TEnum> _sutOnlyEnumNames =
-            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.AllowParsingNumerics, false));
+            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default with { AllowParsingNumerics = false });
 
 
         private static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
@@ -199,7 +198,7 @@ namespace Nemesis.TextParsers.Tests
 
                 var actual = _sut.Parse(text.AsSpan());
                 //var native1 = (TEnum)Enum.Parse(typeof(TEnum), text, true);
-                var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
+                var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString() ?? "", true);
                 bool pass = Equals(actual, native);
 
                 string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number} ({text})";
@@ -221,7 +220,7 @@ namespace Nemesis.TextParsers.Tests
             {
                 var actual = _sut.Parse(number.ToString().AsSpan());
 
-                var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
+                var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString() ?? "", true);
 
                 // ReSharper disable once PossibleInvalidCastException
                 var cast = (TEnum)(object)number;
@@ -372,10 +371,12 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public static void CaseSensitive_Weird()
         {
-            var sut = new EnumTransformer<Casing, int, Int32Transformer>((Int32Transformer)Int32Transformer.Instance, EnumSettings.Default.With(s => s.CaseInsensitive, false));
+            var sut = new EnumTransformer<Casing, int, Int32Transformer>((Int32Transformer)Int32Transformer.Instance, new EnumSettings(false, true));
 
             var enumValues = typeof(Casing).GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(enumField => (enumField.Name, Value: (Casing)(int)enumField.GetValue(null))).ToList();
+                .Select(enumField => 
+                    (enumField.Name, Value: (Casing)(int)enumField.GetValue(null)!)
+                ).ToList();
 
             foreach (var (name, value) in enumValues)
             {

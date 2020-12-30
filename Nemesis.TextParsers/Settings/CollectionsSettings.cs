@@ -1,55 +1,42 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace Nemesis.TextParsers.Settings
 {
-    public abstract class CollectionSettingsBase : ISettings
+    /// <summary>
+    /// Collection parsing settings
+    /// </summary>
+    /// <remarks><![CDATA[
+    /// For performance reasons, all delimiters and escaped characters are single chars. This makes a parsing grammar to conform LL1 rules and is very beneficial to overall parsing performance. 
+    /// Capacity used for creating initial collection/list/array. Use no value (null) to calculate capacity each time based on input
+    /// ]]> </remarks>
+    public abstract record CollectionSettingsBase(char ListDelimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End, byte? DefaultCapacity) : ISettings
     {
-        //for performance reasons, all delimiters and escaped characters are single chars.
-        //this makes a parsing grammar to conform LL1 rules and is very beneficial to overall parsing performance 
-        public char ListDelimiter { get; }
-        public char NullElementMarker { get; }
-        public char EscapingSequenceStart { get; }
-        public char? Start { get; }
-        public char? End { get; }
-        /// <summary>
-        /// Capacity used for creating initial collection/list/array. Use no value (null) to calculate capacity each time based on input  
-        /// </summary>
-        public byte? DefaultCapacity { get; }
+        public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
-        protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, byte? defaultCapacity)
+        public void Validate()
         {
-            if (listDelimiter == nullElementMarker ||
-                listDelimiter == escapingSequenceStart ||
-                listDelimiter == start ||
-                listDelimiter == end ||
+            if (ListDelimiter == NullElementMarker ||
+                ListDelimiter == EscapingSequenceStart ||
+                ListDelimiter == Start ||
+                ListDelimiter == End ||
 
-                nullElementMarker == escapingSequenceStart ||
-                nullElementMarker == start ||
-                nullElementMarker == end ||
+                NullElementMarker == EscapingSequenceStart ||
+                NullElementMarker == Start ||
+                NullElementMarker == End ||
 
-                escapingSequenceStart == start ||
-                escapingSequenceStart == end
+                EscapingSequenceStart == Start ||
+                EscapingSequenceStart == End
 
             )
                 throw new ArgumentException($@"{nameof(CollectionSettingsBase)} requires unique characters to be used for parsing/formatting purposes. 
-Start ('{start}') and end ('{end}') can be equal to each other");
-
-
-            ListDelimiter = listDelimiter;
-            NullElementMarker = nullElementMarker;
-            EscapingSequenceStart = escapingSequenceStart;
-            Start = start;
-            End = end;
-            DefaultCapacity = defaultCapacity;
+Start ('{Start}') and end ('{End}') can be equal to each other");
         }
-
-        public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
-
 
         public int GetCapacity(in ReadOnlySpan<char> input)
             => DefaultCapacity ?? CountCharacters(input, ListDelimiter) + 1;
 
-        private static int CountCharacters(in ReadOnlySpan<char> input, char character)
+        internal static int CountCharacters(in ReadOnlySpan<char> input, char character)
         {
             var count = 0;
             for (int i = input.Length - 1; i >= 0; i--)
@@ -58,81 +45,69 @@ Start ('{start}') and end ('{end}') can be equal to each other");
         }
     }
 
-    public class CollectionSettings : CollectionSettingsBase
+    /// <inheritdoc cref="CollectionSettingsBase" />
+    public sealed record CollectionSettings(char ListDelimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End, byte? DefaultCapacity)
+                       : CollectionSettingsBase(ListDelimiter, NullElementMarker, EscapingSequenceStart, Start, End, DefaultCapacity)
     {
-        public static CollectionSettings Default { get; } =
-            new CollectionSettings('|', '∅', '\\', null, null, null);
+        public static CollectionSettings Default { get; } = new('|', '∅', '\\', null, null, null);
 
-        public CollectionSettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
-            char? start, char? end, byte? defaultCapacity)
-            : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
+        // ReSharper disable once RedundantOverriddenMember
+        public override string ToString() => base.ToString();
     }
 
-    public class ArraySettings : CollectionSettingsBase
+    /// <inheritdoc cref="CollectionSettingsBase" />
+    public sealed record ArraySettings(char ListDelimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End, byte? DefaultCapacity)
+                   : CollectionSettingsBase(ListDelimiter, NullElementMarker, EscapingSequenceStart, Start, End, DefaultCapacity)
     {
-        public static ArraySettings Default { get; } =
-            new ArraySettings('|', '∅', '\\', null, null, null);
+        public static ArraySettings Default { get; } = new('|', '∅', '\\', null, null, null);
 
-        public ArraySettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
-            char? start, char? end, byte? defaultCapacity)
-            : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
+        // ReSharper disable once RedundantOverriddenMember
+        public override string ToString() => base.ToString();
     }
 
 
 
 
-    public class DictionarySettings : ISettings
+    /// <summary>
+    /// Dictionary parsing settings
+    /// </summary>
+    /// <remarks><![CDATA[
+    /// For performance reasons, all delimiters and escaped characters are single chars. This makes a parsing grammar to conform LL1 rules and is very beneficial to overall parsing performance. 
+    /// Capacity used for creating initial collection/list/array. Use no value (null) to calculate capacity each time based on input
+    /// ]]> </remarks>
+    public sealed record DictionarySettings(char DictionaryPairsDelimiter, char DictionaryKeyValueDelimiter, char NullElementMarker, char EscapingSequenceStart, char? Start,
+            char? End, DictionaryBehaviour Behaviour, byte? DefaultCapacity) : ISettings
     {
-        public char DictionaryPairsDelimiter { get; }
-        public char DictionaryKeyValueDelimiter { get; }
-        public char NullElementMarker { get; }
-        public char EscapingSequenceStart { get; }
-        public char? Start { get; }
-        public char? End { get; }
-        public DictionaryBehaviour Behaviour { get; }
-        /// <summary>
-        /// Capacity used for creating initial dictionary. Use no value (null) to calculate capacity each time based on input  
-        /// </summary>
-        public byte? DefaultCapacity { get; }
-
-        public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour, byte? defaultCapacity)
+        public void Validate()
         {
-            if (dictionaryPairsDelimiter == dictionaryKeyValueDelimiter ||
-                dictionaryPairsDelimiter == nullElementMarker ||
-                dictionaryPairsDelimiter == escapingSequenceStart ||
-                dictionaryPairsDelimiter == start ||
-                dictionaryPairsDelimiter == end ||
+            if (DictionaryPairsDelimiter == DictionaryKeyValueDelimiter ||
+                DictionaryPairsDelimiter == NullElementMarker ||
+                DictionaryPairsDelimiter == EscapingSequenceStart ||
+                DictionaryPairsDelimiter == Start ||
+                DictionaryPairsDelimiter == End ||
 
-                dictionaryKeyValueDelimiter == nullElementMarker ||
-                dictionaryKeyValueDelimiter == escapingSequenceStart ||
-                dictionaryKeyValueDelimiter == start ||
-                dictionaryKeyValueDelimiter == end ||
+                DictionaryKeyValueDelimiter == NullElementMarker ||
+                DictionaryKeyValueDelimiter == EscapingSequenceStart ||
+                DictionaryKeyValueDelimiter == Start ||
+                DictionaryKeyValueDelimiter == End ||
 
-                nullElementMarker == escapingSequenceStart ||
-                nullElementMarker == start ||
-                nullElementMarker == end ||
+                NullElementMarker == EscapingSequenceStart ||
+                NullElementMarker == Start ||
+                NullElementMarker == End ||
 
-                escapingSequenceStart == start ||
-                escapingSequenceStart == end
+                EscapingSequenceStart == Start ||
+                EscapingSequenceStart == End
             )
                 throw new ArgumentException(
                     $@"{nameof(DictionarySettings)} requires unique characters to be used for parsing/formatting purposes. 
-Start ('{start}') and end ('{end}') can be equal to each other");
+Start ('{Start}') and end ('{End}') can be equal to each other");
 
 
-
-            DictionaryPairsDelimiter = dictionaryPairsDelimiter;
-            DictionaryKeyValueDelimiter = dictionaryKeyValueDelimiter;
-            NullElementMarker = nullElementMarker;
-            EscapingSequenceStart = escapingSequenceStart;
-            Start = start;
-            End = end;
-            Behaviour = behaviour;
-            DefaultCapacity = defaultCapacity;
+            if (!Enum.IsDefined(typeof(DictionaryBehaviour), Behaviour))
+                throw new InvalidEnumArgumentException(nameof(Behaviour), (int)Behaviour, typeof(DictionaryBehaviour));
         }
 
-        public static DictionarySettings Default { get; } =
-            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, null);
+        public static DictionarySettings Default { get; } = new(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, null);
 
 
         public override string ToString() =>
@@ -140,17 +115,11 @@ Start ('{start}') and end ('{end}') can be equal to each other");
 
 
         public int GetCapacity(in ReadOnlySpan<char> input)
-            => DefaultCapacity ?? CountCharacters(input, DictionaryPairsDelimiter) + 1;
+            => DefaultCapacity ?? CollectionSettingsBase.CountCharacters(input, DictionaryPairsDelimiter) + 1;
 
-        private static int CountCharacters(in ReadOnlySpan<char> input, char character)
-        {
-            var count = 0;
-            for (int i = input.Length - 1; i >= 0; i--)
-                if (input[i] == character) count++;
-            return count;
-        }
+        
     }
-
+    
     public enum DictionaryBehaviour : byte
     {
         OverrideKeys,

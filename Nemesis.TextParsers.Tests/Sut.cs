@@ -19,8 +19,7 @@ namespace Nemesis.TextParsers.Tests
             ThrowOnDuplicateStore = TextTransformer.GetDefaultStoreWith(
                 SettingsStoreBuilder.GetDefault()
                 .AddOrUpdate(
-                    DictionarySettings.Default
-                        .With(s => s.Behaviour, DictionaryBehaviour.ThrowOnDuplicate)
+                    DictionarySettings.Default with { Behaviour = DictionaryBehaviour.ThrowOnDuplicate }
                 ).Build());
 
 
@@ -93,27 +92,34 @@ namespace Nemesis.TextParsers.Tests
         private static ITransformerStore BuildBorderedStore()
         {
             //F# influenced settings 
-            var borderedDictionary = DictionarySettings.Default
-                    .With(s => s.Start, '{')
-                    .With(s => s.End, '}')
-                    .With(s => s.DictionaryKeyValueDelimiter, ',')
-                ;
-            var borderedCollection = CollectionSettings.Default
-                    .With(s => s.Start, '[')
-                    .With(s => s.End, ']')
-                    .With(s => s.ListDelimiter, ';')
-                ;
-            var borderedArray = ArraySettings.Default
-                    .With(s => s.ListDelimiter, ',')
-                    .With(s => s.Start, '|')
-                    .With(s => s.End, '|')
-                ;
-            var weirdTuple = ValueTupleSettings.Default
-                    .With(s => s.NullElementMarker, '␀')
-                    .With(s => s.Delimiter, '⮿')
-                    .With(s => s.Start, '/')
-                    .With(s => s.End, '/')
-                ;
+            var borderedDictionary = DictionarySettings.Default with
+            {
+                Start = '{',
+                End = '}',
+                DictionaryKeyValueDelimiter = ','
+            };
+
+            var borderedCollection = CollectionSettings.Default with
+            {
+                Start = '[',
+                End = ']',
+                ListDelimiter = ';'
+            };
+
+            var borderedArray = ArraySettings.Default with
+            {
+                Start = '|',
+                End = '|',
+                ListDelimiter = ','
+            };
+
+            var weirdTuple = ValueTupleSettings.Default with
+            {
+                NullElementMarker = '␀',
+                Delimiter = '⮿',
+                Start = '/',
+                End = '/'
+            };
             var borderedStore = SettingsStoreBuilder.GetDefault()
                 .AddOrUpdate(borderedArray)
                 .AddOrUpdate(borderedCollection)
