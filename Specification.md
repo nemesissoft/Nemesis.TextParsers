@@ -234,7 +234,7 @@ internal readonly struct Child
 ```
 
 ## Settings
-User can use default parsing/formatting settings or opt-in with own settings instances or overridden ones. Settings need to extend ```ISettings``` marker interface. Entry point is ```SettingsStore``` class that can be constructed easily using ```SettingsStoreBuilder```:
+User can use default parsing/formatting settings or opt-in with own settings instances or overridden ones. Settings need to extend ```ISettings``` interface. Entry point is ```SettingsStore``` class that can be constructed easily using ```SettingsStoreBuilder```:
 
 ```csharp 
 var customStore = SettingsStoreBuilder.GetDefault()
@@ -242,27 +242,20 @@ var customStore = SettingsStoreBuilder.GetDefault()
     .Build();
 ```
 
-Settings class instances can be instantiated using normal constructors or, especially if changing only couple of settings from default ones is desired - user can choose to use .With pattern (example for DictionarySettings):
+Settings class instances can be instantiated using normal constructors or, especially if changing only couple of settings from default ones is desired - user can choose to use "with pattern" (example for DictionarySettings):
 ```csharp 
-var borderedDictionary = DictionarySettings.Default
-    .With(s => s.Start, '{')
-    .With(s => s.End, '}')
-    .With(s => s.DictionaryKeyValueDelimiter, ',')
-    .With(s => s.NullElementMarker, '␀') //'␀' is special Unicode character. Difficult to insert from normal keyboard, but unlikely to be part of normal message - so no need to use escaping sequences in most cases 
-    ;
+var borderedDictionary = DictionarySettings.Default with
+{
+    Start = '{',
+    End = '}',
+    DictionaryKeyValueDelimiter = ',',
+    NullElementMarker = '␀' //'␀' is special Unicode character. Difficult to insert from normal keyboard, but unlikely to be part of normal message - so no need to use escaping sequences in most cases 
+};
 ```
 
-"With" extension method is analogous to With-pattern known from functional languages:
+__with__ keyword is analogous to With-pattern known from functional languages:
 [Copy and Update Record Expressions](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/copy-and-update-record-expressions)
 
-Here however a With is merely an extension method that works due to convention - new instance is created using types largest (number of parameter-wise) constructor. A property that user wishes to change will be used from method's second parameter, while all remaining parameters will be taken from already existing instance. Immutability of settings is not hindered this way. Property and constructor parameter names need to be equal in name using case insensitive comparison. See an example:
-```csharp 
-var tupleSettings = new ValueTupleSettings(',', '∅', '\\', '(', ')');
-var newSettings = tupleSettings.With(s => s.Delimiter, '_');
-
-Assert.That(tupleSettings.Delimiter, Is.EqualTo(',')); //not modified, Delimiter property is get-only by the way 
-Assert.That(newSettings.Delimiter, Is.EqualTo('_'));
-```
 
 ## C# 9.0 Records
 With introduction of [Records](https://devblogs.microsoft.com/dotnet/welcome-to-c-9-0/#records) in C# 9.0 one may wonder how they might be serialized to flat text formats. As a matter of fact, Records are merely a syntax sugar for C# - they stand for a class with automatically implemented structural equality(along with IEquatable and operators), positional deconstruction and printing/formatting. Hence, as such they are supported in NTP out-of-the-box - via Deconstructable pattern. Caution is advised when employing this pattern for derived positional records:
@@ -302,6 +295,69 @@ class PersonTransformer : CustomDeconstructionTransformer<Person>
 
 Finally, you can implement own _`Nemesis.TextParsers.ITransformer<TElement>`_ or (if you really have no other option) _`System.ComponentModel.TypeConverter`_ class
 
+
+## C# 9.0 Code generation
+With introduction of new code-gen engine, you can opt to have your transformer generated automatically without any imperative code.
+```csharp 
+//1. use specially provided (via code-gen) Auto.AutoDeconstructable attribute
+[Auto.AutoDeconstructable]
+//2. provide deconstructable aspect options or leave this attribute out - default options will be engaged 
+[DeconstructableSettings('_', '∅', '%', '〈', '〉')]
+readonly partial /*3. partial modifier is VERY important - you need this cause generated code is placed in different file*/ struct StructPoint3d
+{
+    public double X { get; }
+    public double Y { get; }
+    public double Z { get; }
+
+    //4. specify constructor and matching deconstructor 
+    public StructPoint3d(double x, double y, double z) { X = x; Y = y; Z = z; }
+
+    public void Deconstruct(out double x, out double y, out double z) { x = X; y = Y; z = Z; }
+}
+
+//5. sit back, relax and enjoy - code-gen will do the job for you :-)
+``` 
+
+This in turn might generate the following (parts of code ommited for brevity)
+```csharp 
+using /* ... */;
+[Transformer(typeof(StructPoint3dTransformer))]
+readonly partial struct StructPoint3d { }
+
+sealed class StructPoint3dTransformer : TransformerBase<StructPoint3d>
+{
+    private readonly ITransformer<double> _transformer_x = TextTransformer.Default.GetTransformer<double>();
+    /* specify remaining transformers... */
+    private const int ARITY = 3;
+    private readonly TupleHelper _helper = new TupleHelper('_', '∅', '%', '〈', '〉');
+
+    protected override StructPoint3d ParseCore(in ReadOnlySpan<char> input)
+    {
+        var enumerator = _helper.ParseStart(input, ARITY);
+        var t1 = _helper.ParseElement(ref enumerator, _transformer_x);        
+        /* parse Y and Z... */
+        _helper.ParseEnd(ref enumerator, ARITY);
+        return new StructPoint3d(t1, t2, t3);
+    }
+
+    public override string Format(StructPoint3d element)
+    {
+        Span<char> initialBuffer = stackalloc char[32];
+        var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+        try
+        {
+             _helper.StartFormat(ref accumulator);
+             var (x, y, z) = element;
+            _helper.FormatElement(_transformer_x, x, ref accumulator);
+            /* format Y and Z... */
+            _helper.EndFormat(ref accumulator);
+            return accumulator.AsSpan().ToString();
+        }
+        finally { accumulator.Dispose(); }
+    }
+}
+
+``` 
 
 ## TBA
  - [ ] ILookup<,>

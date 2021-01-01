@@ -135,6 +135,8 @@ using (var enumerator = coll.GetEnumerator())
         FormatElement(formatter, enumerator.Current, ref accumulator);
 return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
 ```
+11. use C# 9.0 code-gen to provive sevaral transformers (currently automatic generation of deconstructable pattern, more to follow in future)
+
 
 ## Funding
 Open source software is free but creating it is not. Should you wish to support us in our noble endeavour, please consider the following donation methods:
