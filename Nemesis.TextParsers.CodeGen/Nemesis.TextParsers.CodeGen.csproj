@@ -20,7 +20,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\review-icon.png" Pack="true" PackagePath="\" />
+		<None Include="..\images\review-icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>

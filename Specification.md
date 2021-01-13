@@ -356,8 +356,16 @@ sealed class StructPoint3dTransformer : TransformerBase<StructPoint3d>
         finally { accumulator.Dispose(); }
     }
 }
-
 ``` 
+### Code gen diagnositcs
+Various diagnositcs exist to guide end user in creation of proper types that can be consumed by automatic generation. They might for example:
+1. check if types decorated with Auto* attributes are declared partial (prerequisite for additive code generation)
+2. validate settings passed via declarative syntax
+3. validate internal structure of type (i.e. check if constructor has matching Deconstruct method)
+4. check if external dependencies are included 
+
+
+[![Demo](images/CodeGenDiagnostics.jpg)](images/CodeGenDiagnostics.jpg)
 
 ## TBA
  - [ ] ILookup<,>
