@@ -1,63 +1,64 @@
-﻿using System;
-
-using Nemesis.TextParsers.Utils;
+﻿using Nemesis.TextParsers.Utils;
 
 using Dsa = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
 
 namespace Nemesis.TextParsers.Settings
 {
-    public abstract record TupleSettingsBase(char Delimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End) : ISettings
+    public abstract class TupleSettings : ISettings
     {
+        public char Delimiter { get; }
+        public char NullElementMarker { get; }
+        public char EscapingSequenceStart { get; }
+        public char? Start { get; }
+        public char? End { get; }
+
+        protected TupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+        {
+            Delimiter = delimiter;
+            NullElementMarker = nullElementMarker;
+            EscapingSequenceStart = escapingSequenceStart;
+            Start = start;
+            End = end;
+        }
+
         public override string ToString() =>
             $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
-        public void Validate()
-        {
-            if (Delimiter == NullElementMarker ||
-                Delimiter == EscapingSequenceStart ||
-                Delimiter == Start ||
-                Delimiter == End ||
-
-                NullElementMarker == EscapingSequenceStart ||
-                NullElementMarker == Start ||
-                NullElementMarker == End ||
-
-                EscapingSequenceStart == Start ||
-                EscapingSequenceStart == End
-
-            )
-                throw new ArgumentException($@"{nameof(TupleSettingsBase)} requires unique characters to be used for parsing/formatting purposes. 
-Start ('{Start}') and end ('{End}') can be equal to each other");
-        }
-
-        public TupleHelper ToTupleHelper() => new(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
+        public TupleHelper ToTupleHelper() =>
+            new TupleHelper(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
     }
 
-    public sealed record ValueTupleSettings(char Delimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End)
-        : TupleSettingsBase(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End)
+    public sealed class ValueTupleSettings : TupleSettings
     {
-        public static ValueTupleSettings Default { get; } = new(',', '∅', '\\', '(', ')');
+        public ValueTupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+            : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
 
-        // ReSharper disable once RedundantOverriddenMember
-        public override string ToString() => base.ToString();
+        public static ValueTupleSettings Default { get; } = new ValueTupleSettings(',', '∅', '\\', '(', ')');
     }
 
-    public sealed record KeyValuePairSettings(char Delimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End)
-        : TupleSettingsBase(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End)
+    public sealed class KeyValuePairSettings : TupleSettings
     {
-        public static KeyValuePairSettings Default { get; } = new('=', '∅', '\\', null, null);
+        public KeyValuePairSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+            : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
+
+        public static KeyValuePairSettings Default { get; } = new KeyValuePairSettings('=', '∅', '\\', null, null);
 
         public override string ToString() =>
             $"{Start}Key{Delimiter}Value{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
     }
 
-    public sealed record DeconstructableSettings(char Delimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End, bool UseDeconstructableEmpty)
-        : TupleSettingsBase(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End)
+    public sealed class DeconstructableSettings : TupleSettings
     {
-        public static DeconstructableSettings Default { get; } = new(Dsa.DEFAULT_DELIMITER,
-            Dsa.DEFAULT_NULL_ELEMENT_MARKER,
-            Dsa.DEFAULT_ESCAPING_SEQUENCE_START, Dsa.DEFAULT_START, Dsa.DEFAULT_END,
-            Dsa.DEFAULT_USE_DECONSTRUCTABLE_EMPTY);
+        public bool UseDeconstructableEmpty { get; }
+        public DeconstructableSettings(char delimiter = Dsa.DEFAULT_DELIMITER,
+                char nullElementMarker = Dsa.DEFAULT_NULL_ELEMENT_MARKER,
+                char escapingSequenceStart = Dsa.DEFAULT_ESCAPING_SEQUENCE_START,
+                char? start = Dsa.DEFAULT_START, char? end = Dsa.DEFAULT_END,
+                bool useDeconstructableEmpty = Dsa.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
+            : base(delimiter, nullElementMarker, escapingSequenceStart, start, end)
+            => UseDeconstructableEmpty = useDeconstructableEmpty;
+
+        public static DeconstructableSettings Default { get; } = new DeconstructableSettings();
 
         public override string ToString() =>
             $@"{base.ToString()}. {(UseDeconstructableEmpty ? "With" : "Without")} deconstructable empty generator.";
@@ -65,7 +66,7 @@ Start ('{Start}') and end ('{End}') can be equal to each other");
 
     public static class DeconstructableSettingsAttributeExtensions
     {
-        public static DeconstructableSettings ToSettings(this Dsa attr) => new(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
+        public static DeconstructableSettings ToSettings(this Dsa attr) => new DeconstructableSettings(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
             attr.Start == '\0' ? (char?)null : attr.Start,
             attr.End == '\0' ? (char?)null : attr.End,
             attr.UseDeconstructableEmpty);

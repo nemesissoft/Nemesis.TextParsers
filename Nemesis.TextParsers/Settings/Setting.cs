@@ -1,47 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-
 using JetBrains.Annotations;
-
 using Nemesis.TextParsers.Runtime;
-
-#if !NET
-namespace System.Runtime.CompilerServices
-{
-    // ReSharper disable RedundantNameQualifier
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    // ReSharper restore RedundantNameQualifier
-    // ReSharper disable once UnusedMember.Global
-    internal static class IsExternalInit { }
-}
-#endif
 
 namespace Nemesis.TextParsers.Settings
 {
-    public interface ISettings
-    {
-        void Validate();
-    }
+    //marker interface
+    public interface ISettings { }
 
-    [PublicAPI]
+    //TODO rework settings as records
     public sealed class SettingsStoreBuilder
     {
         private readonly IDictionary<Type, ISettings> _settings;
 
         public SettingsStoreBuilder() => _settings = new Dictionary<Type, ISettings>();
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        public SettingsStoreBuilder(IEnumerable<ISettings> settings)
-        {
-            if (settings is not null)
-                foreach (var s in settings) s.Validate();
-
+        public SettingsStoreBuilder(IEnumerable<ISettings> settings) =>
             _settings = settings?.ToDictionary(s => s.GetType()) ?? new Dictionary<Type, ISettings>();
-        }
 
         public static SettingsStoreBuilder GetDefault(Assembly fromAssembly = null)
         {
@@ -69,27 +48,22 @@ namespace Nemesis.TextParsers.Settings
                 ? (TSettings)s
                 : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
 
-        public SettingsStoreBuilder AddOrUpdate<TSettings>(TSettings settings) where TSettings : ISettings
+        public SettingsStoreBuilder AddOrUpdate<TSettings>([NotNull] TSettings settings) where TSettings : ISettings
         {
-            settings.Validate();
-
-            _settings[settings.GetType()] = settings;
+            _settings[settings.GetType()] =
+                settings ?? throw new ArgumentNullException(nameof(settings));
             return this;
         }
 
-        public SettingsStore Build() => new(new ReadOnlyDictionary<Type, ISettings>(_settings));
+        public SettingsStore Build() =>
+            new SettingsStore(new ReadOnlyDictionary<Type, ISettings>(_settings));
     }
 
     public sealed class SettingsStore
     {
         private readonly IReadOnlyDictionary<Type, ISettings> _settings;
 
-        public SettingsStore(IReadOnlyDictionary<Type, ISettings> settings)
-        {
-            foreach (var s in settings.Values) s.Validate();
-
-            _settings = settings;
-        }
+        public SettingsStore(IReadOnlyDictionary<Type, ISettings> settings) => _settings = settings;
 
         public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings =>
             (TSettings)GetSettingsFor(typeof(TSettings));
@@ -98,5 +72,44 @@ namespace Nemesis.TextParsers.Settings
             _settings.TryGetValue(settingsType, out var s)
                 ? s
                 : throw new NotSupportedException($"No settings registered for {settingsType.GetFriendlyName()}");
+    }
+
+    public static class SettingsHelper
+    {
+        public static TSettings With<TSettings, TProp>(this TSettings settings, Expression<Func<TSettings, TProp>> propertyExpression, TProp newValue)
+            where TSettings : ISettings
+        {
+            static bool EqualNames(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
+
+            var property = Property.Of(propertyExpression);
+            var ctor = typeof(TSettings).GetConstructors().Select(c => (Ctor: c, Params: c.GetParameters()))
+                .Where(pair =>
+                    pair.Params.Length > 0 &&
+                    pair.Params.Any(p => EqualNames(p.Name, property.Name))
+                )
+                .OrderByDescending(p => p.Params.Length)
+                .FirstOrDefault().Ctor ?? throw new NotSupportedException("No suitable constructor found");
+
+            var allProperties =
+                typeof(TSettings).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            object GetArg(string paramName)
+            {
+                if (EqualNames(paramName, property.Name))
+                    return newValue;
+                else
+                {
+                    var prop = allProperties.FirstOrDefault(p => EqualNames(paramName, p.Name))
+                        ?? throw new NotSupportedException($"No suitable property found: {paramName} +/- letter casing");
+                    var value = prop.GetValue(settings);
+                    return value;
+                }
+            }
+
+            var arguments = ctor.GetParameters()
+                .Select(p => GetArg(p.Name)).ToArray();
+
+            return (TSettings)ctor.Invoke(arguments);
+        }
     }
 }

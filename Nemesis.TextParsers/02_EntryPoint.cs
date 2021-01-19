@@ -35,7 +35,7 @@ namespace Nemesis.TextParsers
         public SettingsStore SettingsStore { get; }
 
 
-        private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache = new();
+        private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache = new ConcurrentDictionary<Type, ITransformer>();
 
         public StandardTransformerStore([NotNull] IEnumerable<ICanCreateTransformer> transformerCreators,
             [NotNull] SettingsStore settingsStore)
@@ -107,7 +107,7 @@ namespace Nemesis.TextParsers
         #region GetTransformer
 
         public ITransformer<TElement> GetTransformer<TElement>() =>
-            (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), _ => GetTransformerCore<TElement>());
+            (ITransformer<TElement>)_transformerCache.GetOrAdd(typeof(TElement), t => GetTransformerCore<TElement>());
 
         public ITransformer GetTransformer(Type elementType) =>
             _transformerCache.GetOrAdd(elementType, type =>
@@ -140,7 +140,7 @@ namespace Nemesis.TextParsers
 
         #region IsSupported
 
-        private readonly ConcurrentDictionary<Type, bool> _isSupportedCache = new();
+        private readonly ConcurrentDictionary<Type, bool> _isSupportedCache = new ConcurrentDictionary<Type, bool>();
 
         public bool IsSupportedForTransformation(Type type) =>
             type != null &&
