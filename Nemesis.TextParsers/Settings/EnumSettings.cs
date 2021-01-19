@@ -11,8 +11,7 @@
             AllowParsingNumerics = allowParsingNumerics;
         }
 
-        public static EnumSettings Default { get; } =
-            new EnumSettings(true, true);
+        public static EnumSettings Default { get; } = new(true, true);
 
         public override string ToString() => $"Value{(CaseInsensitive ? "≡" : "≠")}vAluE ; Text {(AllowParsingNumerics ? "and" : "but no")} №";
     }

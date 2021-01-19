@@ -13,8 +13,7 @@
             NullPropertyName = nullPropertyName;
         }
 
-        public static FactoryMethodSettings Default { get; } =
-            new FactoryMethodSettings("FromText", "Empty", "Null");
+        public static FactoryMethodSettings Default { get; } = new("FromText", "Empty", "Null");
 
         public override string ToString() =>
             $"Parsed by {FactoryMethodName} Empty: {EmptyPropertyName} Null: {NullPropertyName}";

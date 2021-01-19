@@ -46,8 +46,7 @@ Start ('{start}') and end ('{end}') can be equal to each other");
         public override string ToString() => $"{Start}Item1{ListDelimiter}Item2{ListDelimiter}…{ListDelimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
 
-        public int GetCapacity(in ReadOnlySpan<char> input)
-            => DefaultCapacity ?? CountCharacters(input, ListDelimiter) + 1;
+        public int GetCapacity(in ReadOnlySpan<char> input) => DefaultCapacity ?? CountCharacters(input, ListDelimiter) + 1;
 
         private static int CountCharacters(in ReadOnlySpan<char> input, char character)
         {
@@ -60,8 +59,7 @@ Start ('{start}') and end ('{end}') can be equal to each other");
 
     public class CollectionSettings : CollectionSettingsBase
     {
-        public static CollectionSettings Default { get; } =
-            new CollectionSettings('|', '∅', '\\', null, null, null);
+        public static CollectionSettings Default { get; } = new('|', '∅', '\\', null, null, null);
 
         public CollectionSettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
             char? start, char? end, byte? defaultCapacity)
@@ -70,8 +68,7 @@ Start ('{start}') and end ('{end}') can be equal to each other");
 
     public class ArraySettings : CollectionSettingsBase
     {
-        public static ArraySettings Default { get; } =
-            new ArraySettings('|', '∅', '\\', null, null, null);
+        public static ArraySettings Default { get; } = new('|', '∅', '\\', null, null, null);
 
         public ArraySettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
             char? start, char? end, byte? defaultCapacity)
@@ -131,8 +128,7 @@ Start ('{start}') and end ('{end}') can be equal to each other");
             DefaultCapacity = defaultCapacity;
         }
 
-        public static DictionarySettings Default { get; } =
-            new DictionarySettings(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, null);
+        public static DictionarySettings Default { get; } = new(';', '=', '∅', '\\', null, null, DictionaryBehaviour.OverrideKeys, null);
 
 
         public override string ToString() =>

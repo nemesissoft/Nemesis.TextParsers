@@ -12,7 +12,7 @@ namespace Nemesis.TextParsers.Settings
     //marker interface
     public interface ISettings { }
 
-    //TODO rework settings as records
+    [PublicAPI]
     public sealed class SettingsStoreBuilder
     {
         private readonly IDictionary<Type, ISettings> _settings;
@@ -55,8 +55,7 @@ namespace Nemesis.TextParsers.Settings
             return this;
         }
 
-        public SettingsStore Build() =>
-            new SettingsStore(new ReadOnlyDictionary<Type, ISettings>(_settings));
+        public SettingsStore Build() => new(new ReadOnlyDictionary<Type, ISettings>(_settings));
     }
 
     public sealed class SettingsStore

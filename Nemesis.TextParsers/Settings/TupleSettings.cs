@@ -24,8 +24,7 @@ namespace Nemesis.TextParsers.Settings
         public override string ToString() =>
             $"{Start}Item1{Delimiter}Item2{Delimiter}…{Delimiter}ItemN{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 
-        public TupleHelper ToTupleHelper() =>
-            new TupleHelper(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
+        public TupleHelper ToTupleHelper() => new(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
     }
 
     public sealed class ValueTupleSettings : TupleSettings
@@ -33,7 +32,7 @@ namespace Nemesis.TextParsers.Settings
         public ValueTupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
             : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
 
-        public static ValueTupleSettings Default { get; } = new ValueTupleSettings(',', '∅', '\\', '(', ')');
+        public static ValueTupleSettings Default { get; } = new(',', '∅', '\\', '(', ')');
     }
 
     public sealed class KeyValuePairSettings : TupleSettings
@@ -41,7 +40,7 @@ namespace Nemesis.TextParsers.Settings
         public KeyValuePairSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
             : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
 
-        public static KeyValuePairSettings Default { get; } = new KeyValuePairSettings('=', '∅', '\\', null, null);
+        public static KeyValuePairSettings Default { get; } = new('=', '∅', '\\', null, null);
 
         public override string ToString() =>
             $"{Start}Key{Delimiter}Value{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
@@ -58,7 +57,7 @@ namespace Nemesis.TextParsers.Settings
             : base(delimiter, nullElementMarker, escapingSequenceStart, start, end)
             => UseDeconstructableEmpty = useDeconstructableEmpty;
 
-        public static DeconstructableSettings Default { get; } = new DeconstructableSettings();
+        public static DeconstructableSettings Default { get; } = new();
 
         public override string ToString() =>
             $@"{base.ToString()}. {(UseDeconstructableEmpty ? "With" : "Without")} deconstructable empty generator.";
@@ -66,7 +65,7 @@ namespace Nemesis.TextParsers.Settings
 
     public static class DeconstructableSettingsAttributeExtensions
     {
-        public static DeconstructableSettings ToSettings(this Dsa attr) => new DeconstructableSettings(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
+        public static DeconstructableSettings ToSettings(this Dsa attr) => new(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
             attr.Start == '\0' ? (char?)null : attr.Start,
             attr.End == '\0' ? (char?)null : attr.End,
             attr.UseDeconstructableEmpty);
