@@ -30,9 +30,10 @@ namespace Nemesis.TextParsers.Parsers
             var simpleTransformers = new Dictionary<Type, ITransformer>(30);
 
             foreach (var type in types)
+            {
                 if (type.DerivesOrImplementsGeneric(typeof(ITransformer<>)) &&
                     TypeMeta.TryGetGenericRealization(type, typeof(SimpleTransformer<>), out var simpleType)
-                )
+                  )
                 {
                     var elementType = simpleType.GenericTypeArguments[0];
                     var transformerElementType = typeof(ITransformer<>).MakeGenericType(elementType);
@@ -43,15 +44,18 @@ namespace Nemesis.TextParsers.Parsers
 
                     simpleTransformers[elementType] = (ITransformer)ReflectionUtils.GetInstanceOrCreate(type, transformerElementType);
                 }
+            }
 
             return simpleTransformers;
         }
 
-        public ITransformer<TSimpleType> CreateTransformer<TSimpleType>() =>
-            _simpleTransformers.TryGetValue(typeof(TSimpleType), out var transformer)
-                ? (ITransformer<TSimpleType>)transformer
+        public ITransformer<TSimpleType> CreateTransformer<TSimpleType>()
+        {
+            return _simpleTransformers.TryGetValue(typeof(TSimpleType), out var transformer)
+                ? (ITransformer<TSimpleType>) transformer
                 : throw new InvalidOperationException(
                     $"Internal state of {nameof(SimpleTransformerCreator)} was compromised");
+        }
 
         public bool CanHandle(Type type) => _simpleTransformers.ContainsKey(type);
 

@@ -41,7 +41,7 @@ namespace Nemesis.TextParsers.Utils
 
             double mean = 0;
             // ReSharper disable once InconsistentNaming
-            double Σ = 0;
+            double sum = 0;
             uint i = 0;
 
             double current;
@@ -50,16 +50,16 @@ namespace Nemesis.TextParsers.Utils
                 current = enumerator.Current.ParseWith(transformer);
                 i++;
 
-                var δ = current - mean;
+                var delta = current - mean;
 
-                mean += δ / i;
-                Σ += δ * (current - mean);
+                mean += delta / i;
+                sum += delta * (current - mean);
             } while (enumerator.MoveNext());
 
             return (true,
                 i == 1 ?
                     current :
-                    Σ / (i - 1)
+                    sum / (i - 1)
                 );
         }
 

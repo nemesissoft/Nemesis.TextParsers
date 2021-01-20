@@ -56,10 +56,10 @@ namespace Nemesis.TextParsers.Utils
             this = default;
         }
 
-        public void Shrink(uint by = 1)
+        public void Shrink(byte by = 1)
         {
             if (Length > 0)
-                Length -= (int)by;
+                Length -= by;
         }
 
         /// <summary>

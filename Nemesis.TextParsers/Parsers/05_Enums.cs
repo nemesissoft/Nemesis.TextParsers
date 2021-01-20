@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 using JetBrains.Annotations;
+
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 #if !NET
@@ -67,7 +68,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         }
 
         public sbyte Priority => 30;
-        
+
         public override string ToString() =>
             $"Create transformer for any Enum with settings:{_settings}";
     }
@@ -85,7 +86,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser;
 
         // ReSharper disable once RedundantVerbatimPrefix
-        public EnumTransformer([@NotNull]TNumberHandler numberHandler, EnumSettings settings)
+        public EnumTransformer([@NotNull] TNumberHandler numberHandler, EnumSettings settings)
         {
             _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
             _settings = settings;
@@ -157,7 +158,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
                   $"Enum of type '{typeof(TEnum).Name}' cannot be parsed. " +
                   $"Valid values are: {string.Join(" or ", enumValues.Select(ev => ev.Name))}" +
                   (settings.AllowParsingNumerics ? $" or number within {typeof(TUnderlying).Name} range. " : ". ") +
-                  (settings.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.") 
+                  (settings.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.")
                 )));
 
             var conditionToValue = new List<(Expression Condition, TUnderlying value)>();
@@ -207,17 +208,16 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
                 Expression.Label(returnTarget, Expression.Default(typeof(TUnderlying)))
                 );
 
-            var λ = Expression.Lambda<ParserDelegate<TUnderlying>>(body, inputParam);
-            return λ.Compile();
+            var lambda = Expression.Lambda<ParserDelegate<TUnderlying>>(body, inputParam);
+            return lambda.Compile();
         }
 
         private static MethodInfo GetCharEqMethod(string charEqMethodName) =>
             typeof(EnumTransformerHelper).GetMethod(charEqMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
             ?? throw new MissingMethodException(nameof(EnumTransformerHelper), charEqMethodName);
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        private static Expression AndAlsoJoin(IEnumerable<Expression> expressionList) => expressionList != null && expressionList.Any() ?
-            expressionList.Aggregate<Expression, Expression>(null, (current, element) => current == null ? element : Expression.AndAlso(current, element))
+        private static Expression AndAlsoJoin(IReadOnlyCollection<Expression> expressionList) => expressionList?.Count > 0 
+            ? expressionList.Aggregate<Expression, Expression>(null, (current, element) => current == null ? element : Expression.AndAlso(current, element))
             : Expression.Constant(false);
 
         private static Expression IfThenElseJoin<TResult>(IReadOnlyList<(Expression Condition, TResult value)> expressionList, Expression lastElse, LabelTarget exitTarget)

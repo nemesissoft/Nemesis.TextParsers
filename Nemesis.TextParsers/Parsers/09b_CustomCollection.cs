@@ -190,7 +190,7 @@ namespace Nemesis.TextParsers.Parsers
             return result;
         }
 
-        public override TCollection GetEmpty() => new TCollection();
+        public override TCollection GetEmpty() => new();
     }
 
     public sealed class ReadOnlyCollectionTransformer<TElement, TCollection> : CustomCollectionTransformerBase<TElement, TCollection>
@@ -211,8 +211,8 @@ namespace Nemesis.TextParsers.Parsers
             var param = Expression.Parameter(iListType, "list");
             var ctor = Expression.New(ctorInfo, param);
 
-            var λ = Expression.Lambda<Func<IList<TElement>, TCollection>>(ctor, param);
-            return λ.Compile();
+            var lambda = Expression.Lambda<Func<IList<TElement>, TCollection>>(ctor, param);
+            return lambda.Compile();
         }
 
         protected override TCollection GetCollection(in ParsingSequence stream)

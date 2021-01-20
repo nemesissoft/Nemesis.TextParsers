@@ -11,7 +11,7 @@ namespace Nemesis.TextParsers.Utils
     {
         public static LeanCollection<T> FromArrayChecked<T>(T[] items) => new(items);
 
-        public static LeanCollection<T> FromArray<T>(T[] items) =>
+        public static LeanCollection<T> FromArray<T>(T[] items, bool cloneBuffer = false) =>
             items?.Length switch
             {
                 null => new LeanCollection<T>(),
@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers.Utils
                 1 => new LeanCollection<T>(items[0]),
                 2 => new LeanCollection<T>(items[0], items[1]),
                 3 => new LeanCollection<T>(items[0], items[1], items[2]),
-                _ => new LeanCollection<T>(items)
+                _ => new LeanCollection<T>(cloneBuffer ? items.ToArray() : items)
             };
     }
 
@@ -85,7 +85,7 @@ namespace Nemesis.TextParsers.Utils
         #endregion
 
         #region Enumerations
-        
+
         public LeanCollectionEnumerator GetEnumerator() => new(this);
 
         public ref struct LeanCollectionEnumerator
@@ -174,7 +174,7 @@ namespace Nemesis.TextParsers.Utils
         public static explicit operator (T, T, T)(LeanCollection<T> triple) => triple.IsMore(3) ? (triple._items[0], triple._items[1], triple._items[2]) : (triple._item1, triple._item2, triple._item3);
 
         public static explicit operator T[](LeanCollection<T> more) => more.IsMore(0)
-                ? more._items
+                ? more._items.ToArray()
                 : more._size switch
                 {
                     CollectionSize.Zero => Array.Empty<T>(),
@@ -206,9 +206,23 @@ namespace Nemesis.TextParsers.Utils
             return true;
         }
 
-        public override bool Equals(object obj) => !(obj is null) && obj is LeanCollection<T> other && Equals(other);
+        public override bool Equals(object obj) => obj is LeanCollection<T> other && Equals(other);
 
-        public override int GetHashCode() => unchecked((int)_size * 397); //size is enough for GetHashCode. After all LeanCollection is not supposed to be used as dictionary key 
+        public override int GetHashCode()
+        {
+            const int PRIME = 397;
+            return _size switch
+            {
+                CollectionSize.Zero => 0,
+                CollectionSize.One => _item1?.GetHashCode() ?? 0,
+                CollectionSize.Two => unchecked(((_item1?.GetHashCode() ?? 0) * PRIME) ^ (_item2?.GetHashCode() ?? 0)),
+                CollectionSize.Three => unchecked(
+                    ((((_item1?.GetHashCode() ?? 0) * PRIME) ^ (_item2?.GetHashCode() ?? 0)) * PRIME) ^ (_item3?.GetHashCode() ?? 0)
+                    ),
+                CollectionSize.More => _items?.GetHashCode() ?? 0,
+                _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised")
+            };
+        }
 
         public static bool operator ==(LeanCollection<T> left, LeanCollection<T> right) => left.Equals(right);
 
