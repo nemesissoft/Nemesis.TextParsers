@@ -11,6 +11,8 @@ namespace Benchmarks
         private static void Main(string[] args)
         {
 #if DEBUG
+            //new LeanCollectionSum() {Source = new BenchmarkInput<int[]>(new[] {1, 2, 3})}.LeanSumIEnumerable();
+
             var d = new DeconstructablesBench() { N = 10 };
             d.GlobalSetup();
             d.Standard();

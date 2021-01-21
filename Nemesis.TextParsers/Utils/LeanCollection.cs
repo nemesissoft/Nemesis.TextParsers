@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
 using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Utils
@@ -36,7 +35,7 @@ namespace Nemesis.TextParsers.Utils
     }
 
     /// <summary>
-    /// Stores up to 3 elements or an array
+    /// Stores up to 3 elements or an array in memory-efficient way. Implements <see cref="IEnumerable{T}"/> for convenience (LINQ, tests...) but ref-struct based <see cref="GetEnumerator()"/> methods should be preferred
     /// </summary>
     public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnumerable<T>
     {
@@ -98,38 +97,7 @@ namespace Nemesis.TextParsers.Utils
 
         #region Enumerations
 
-        //TODO rework using struct enumerator 
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            switch (_size)
-            {
-                case CollectionSize.Zero:
-                    yield break;
-
-                case CollectionSize.One:
-                    yield return _item1;
-                    break;
-
-                case CollectionSize.Two:
-                    yield return _item1;
-                    yield return _item2;
-                    break;
-
-                case CollectionSize.Three:
-                    yield return _item1;
-                    yield return _item2;
-                    yield return _item3;
-                    break;
-
-                case CollectionSize.More:
-                    foreach (var item in _items)
-                        yield return item;
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised");
-            }
-        }
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => new LeanCollectionEnumeratorNonRef(this);
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 
@@ -189,6 +157,72 @@ namespace Nemesis.TextParsers.Utils
                 }
                 return canMove;
             }
+        }
+
+        public struct LeanCollectionEnumeratorNonRef : IEnumerator<T>
+        {
+            private readonly LeanCollection<T> _leanCollection;
+            private int _index;
+
+            public T Current { get; private set; }
+
+            object IEnumerator.Current => Current;
+
+            public LeanCollectionEnumeratorNonRef(in LeanCollection<T> leanCollection)
+            {
+                _leanCollection = leanCollection;
+                Current = default;
+                _index = leanCollection._size == CollectionSize.More ? 0 : -1;
+            }
+
+            public bool MoveNext()
+            {
+                var canMove = false;
+                if (_index >= 0)
+                {
+                    var items = _leanCollection._items;
+                    if (_index < items.Length)
+                    {
+                        Current = items[_index++];
+                        canMove = true;
+                    }
+                    else
+                        Current = default;
+                }
+                else
+                {
+                    switch (_index)
+                    {
+                        case -1 when _leanCollection._size >= CollectionSize.One:
+                            Current = _leanCollection._item1;
+                            canMove = true;
+                            --_index;
+                            break;
+                        case -2 when _leanCollection._size >= CollectionSize.Two:
+                            Current = _leanCollection._item2;
+                            canMove = true;
+                            --_index;
+                            break;
+                        case -3 when _leanCollection._size >= CollectionSize.Three:
+                            Current = _leanCollection._item3;
+                            canMove = true;
+                            --_index;
+                            break;
+                        default:
+                            Current = default;
+                            break;
+                    }
+                }
+                return canMove;
+            }
+
+            public void Reset()
+            {
+                Current = default;
+                _index = _leanCollection._size == CollectionSize.More ? 0 : -1;
+            }
+
+            public void Dispose() { }
         }
 
         /// <summary>

@@ -119,7 +119,7 @@ namespace Nemesis.TextParsers.Utils
                     _ => (TDest)TypeMeta.GetDefault(typeof(TDest))
                 };
             }
-            catch (Exception) { return default; }
+            catch (FormatException) { return default; }
         }
     }
 
