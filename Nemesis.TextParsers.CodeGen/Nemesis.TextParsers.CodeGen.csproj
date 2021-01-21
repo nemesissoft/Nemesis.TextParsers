@@ -8,6 +8,7 @@
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
         <!--TODO-->
+        <!--<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>-->
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
 		<PackageIcon>review-icon.png</PackageIcon>
