@@ -1,4 +1,4 @@
-﻿#nullable disable
+﻿#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +6,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Utils
@@ -17,55 +19,39 @@ namespace Nemesis.TextParsers.Utils
     [PublicAPI]
     public readonly struct CollectionMeta : IEquatable<CollectionMeta>
     {
-        public bool IsArray { get; }
         public CollectionKind Kind { get; }
         public Type ElementType { get; }
 
-        public bool IsValid => (IsArray || Kind != CollectionKind.Unknown) && ElementType != null;
+        public bool IsValid => Kind != CollectionKind.Unknown && ElementType != null;
 
-        internal CollectionMeta(bool isArray, CollectionKind kind, Type elementType)
+        internal CollectionMeta(CollectionKind kind, Type elementType)
         {
             if (!Enum.IsDefined(typeof(CollectionKind), kind))
                 throw new InvalidEnumArgumentException(nameof(kind), (int)kind, typeof(CollectionKind));
 
-            IsArray = isArray;
             Kind = kind;
             ElementType = elementType;
         }
 
-        public void Deconstruct(out bool isArray, out CollectionKind kind, out Type elementType)
-        {
-            isArray = IsArray;
-            kind = Kind;
-            elementType = ElementType;
-        }
+        public void Deconstruct(out CollectionKind kind, out Type elementType) { kind = Kind; elementType = ElementType; }
 
-        public override string ToString() => $"Array:{IsArray}, {Kind}, {ElementType?.GetFriendlyName() ?? "<NoType>"}";
+        public override string ToString() => $"{Kind}, {ElementType.GetFriendlyName() ?? "<NoType>"}";
 
         #region Equals
-        public bool Equals(CollectionMeta other) =>
-            IsArray == other.IsArray && Kind == other.Kind && ElementType == other.ElementType;
 
-        public override bool Equals(object obj) =>
-            !(obj is null) && obj is CollectionMeta other && Equals(other);
+        public bool Equals(CollectionMeta other) => Kind == other.Kind && ElementType == other.ElementType;
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = IsArray.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int)Kind;
-                hashCode = (hashCode * 397) ^ (ElementType?.GetHashCode() ?? 0);
-                return hashCode;
-            }
-        }
+        public override bool Equals(object? obj) => obj is CollectionMeta other && Equals(other);
+
+        public override int GetHashCode() => unchecked(((int) Kind * 397) ^ ElementType.GetHashCode());
 
         public static bool operator ==(CollectionMeta left, CollectionMeta right) => left.Equals(right);
 
         public static bool operator !=(CollectionMeta left, CollectionMeta right) => !left.Equals(right);
+
         #endregion
 
-        public object CreateCollection(IList sourceElements)
+        public object? CreateCollection(IEnumerable sourceElements)
         {
             if (!IsValid) return null;
 
@@ -76,101 +62,51 @@ namespace Nemesis.TextParsers.Utils
             return createCollMethod.Invoke(this, new object[] { sourceElements });
         }
 
-        public IReadOnlyCollection<TDestElem> CreateCollectionGeneric<TDestElem>(IList sourceElements)
+        public IReadOnlyCollection<TDestElem?>? CreateCollectionGeneric<TDestElem>(IEnumerable sourceElements)
         {
             if (!IsValid) return null;
-            int count = sourceElements?.Count ?? 0;
+            int? count = (sourceElements as ICollection)?.Count;
 
-            if (IsArray)
-            {
-                var result = new TDestElem[count];
+            var input = new List<TDestElem?>(count ?? 8);
+            foreach (var element in sourceElements) 
+                input.Add(ConvertElement<TDestElem>(element));
 
-                for (int i = 0; i < count; i++)
-                    // ReSharper disable once PossibleNullReferenceException
-                    result[i] = ConvertElement<TDestElem>(sourceElements[i]);
-
-                return result;
-            }
             switch (Kind)
             {
+                case CollectionKind.Array:
+                    return input.ToArray();
+
                 case CollectionKind.List:
+                    return input;
+
                 case CollectionKind.ReadOnlyCollection:
-                    {
-                        var result = new List<TDestElem>(count);
+                    return input.AsReadOnly();
 
-                        for (int i = 0; i < count; i++)
-                            // ReSharper disable once PossibleNullReferenceException
-                            result.Add(ConvertElement<TDestElem>(sourceElements[i]));
-
-                        return Kind == CollectionKind.List ?
-                            (IReadOnlyCollection<TDestElem>)result :
-                            result.AsReadOnly();
-                    }
                 case CollectionKind.HashSet:
+                    return new HashSet<TDestElem?>(input);
+
                 case CollectionKind.SortedSet:
-                    {
-                        ISet<TDestElem> result = Kind == CollectionKind.HashSet
-                            ? (ISet<TDestElem>)new HashSet<TDestElem>(
-#if NETSTANDARD2_0 || NETFRAMEWORK
-                
-#else
-                                count
-#endif
-                        )
-                            : new SortedSet<TDestElem>();
+                    return new SortedSet<TDestElem?>(input);
 
-                        for (int i = 0; i < count; i++)
-                            // ReSharper disable once PossibleNullReferenceException
-                            result.Add(ConvertElement<TDestElem>(sourceElements[i]));
-
-                        return (IReadOnlyCollection<TDestElem>)result;
-                    }
                 case CollectionKind.LinkedList:
-                    {
-                        var result = new LinkedList<TDestElem>();
+                    return new LinkedList<TDestElem?>(input);
 
-                        for (int i = 0; i < count; i++)
-                            // ReSharper disable once PossibleNullReferenceException
-                            result.AddLast(ConvertElement<TDestElem>(sourceElements[i]));
-
-                        return result;
-                    }
                 case CollectionKind.Stack:
-                    {
-                        var result = new Stack<TDestElem>(count);
+                    return new Stack<TDestElem?>(input);
 
-                        for (int i = 0; i < count; i++)
-                            // ReSharper disable once PossibleNullReferenceException
-                            result.Push(ConvertElement<TDestElem>(sourceElements[i]));
-
-                        return result;
-                    }
                 case CollectionKind.Queue:
-                    {
-                        var result = new Queue<TDestElem>(count);
+                    return new Queue<TDestElem?>(input);
 
-                        for (int i = 0; i < count; i++)
-                            // ReSharper disable once PossibleNullReferenceException
-                            result.Enqueue(ConvertElement<TDestElem>(sourceElements[i]));
-
-                        return result;
-                    }
                 case CollectionKind.ObservableCollection:
-                    {
-                        var result = new ObservableCollection<TDestElem>();
+                    return new ObservableCollection<TDestElem?>(input);
 
-                        for (int i = 0; i < count; i++)
-                            // ReSharper disable once PossibleNullReferenceException
-                            result.Add(ConvertElement<TDestElem>(sourceElements[i]));
-
-                        return result;
-                    }
+                //case CollectionKind.Unknown:
                 default:
                     throw new NotSupportedException($@"{nameof(Kind)} = '{Kind}' is not supported");
             }
         }
 
-        private static TDest ConvertElement<TDest>(object element)
+        private static TDest? ConvertElement<TDest>(object? element)
         {
             try
             {
@@ -194,14 +130,14 @@ namespace Nemesis.TextParsers.Utils
             if (collectionType != null)
             {
                 if (collectionType.IsArray && collectionType.GetElementType() is { } arrayElementType)
-                    return new CollectionMeta(true, CollectionKind.Unknown, arrayElementType);
+                    return new CollectionMeta(CollectionKind.Array, arrayElementType);
                 else if (IsTypeSupported(collectionType) &&
                          GetCollectionKind(collectionType) is { } kind &&
                          kind != CollectionKind.Unknown
                         )
                 {
                     Type elementType = GetElementType(collectionType);
-                    return new CollectionMeta(false, kind, elementType);
+                    return new CollectionMeta(kind, elementType);
                 }
             }
 
@@ -210,6 +146,9 @@ namespace Nemesis.TextParsers.Utils
 
         private static CollectionKind GetCollectionKind(Type collectionType)
         {
+            if (collectionType.IsArray)
+                return CollectionKind.Array;
+
             if (collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() is { } definition)
             {
                 if (definition == typeof(IEnumerable<>) ||
@@ -288,6 +227,8 @@ namespace Nemesis.TextParsers.Utils
     {
         Unknown,
 
+        Array,
+
         List,
         ReadOnlyCollection,
 
@@ -301,4 +242,3 @@ namespace Nemesis.TextParsers.Utils
         ObservableCollection
     }
 }
-#nullable restore

@@ -1,38 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net5.0</TargetFrameworks>
-    
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
 
-  <ItemGroup>
-    <Compile Remove="CodeGen\**" />
-    <EmbeddedResource Remove="CodeGen\**" />
-    <None Remove="CodeGen\**" />
-  </ItemGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-  <ItemGroup>
-    <PackageReference Include="morelinq" Version="3.2.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.*" />
-    <PackageReference Include="Enums.NET" Version="3.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />    
-    <PackageReference Include="System.Text.Json" Version="4.6.0" />
-  </ItemGroup>
+		<LangVersion>9.0</LangVersion>
 
-  <ItemGroup>    
-    <ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
-  </ItemGroup>
+		<SignAssembly>false</SignAssembly>
+		<DelaySign>false</DelaySign>
+		<PublicSign>false</PublicSign>
+	</PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-    <PackageReference Include="System.Memory" Version="4.5.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="CodeGen\**" />
+		<EmbeddedResource Remove="CodeGen\**" />
+		<None Remove="CodeGen\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="EnumConverter">
-      <HintPath>CodeGen\EnumConverter.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+	  <None Include="..\Nemesis.TextParsers.Public.snk" Link="Nemesis.TextParsers.Public.snk">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="morelinq" Version="3.2.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.*" />
+		<PackageReference Include="Enums.NET" Version="3.0.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+		<PackageReference Include="System.Text.Json" Version="4.6.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+		<PackageReference Include="System.Memory" Version="4.5.3" />
+	</ItemGroup>
 
 </Project>

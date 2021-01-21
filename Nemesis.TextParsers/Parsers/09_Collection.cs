@@ -24,7 +24,7 @@ namespace Nemesis.TextParsers.Parsers
         {
             var collectionType = typeof(TCollection);
 
-            if (!TryGetElements(collectionType, out _, out var kind, out var elementType) || elementType == null)
+            if (!TryGetElements(collectionType, out var kind, out var elementType) || elementType == null)
                 throw new NotSupportedException($"Type {collectionType.GetFriendlyName()} is not supported by {GetType().Name}");
 
 
@@ -46,21 +46,21 @@ namespace Nemesis.TextParsers.Parsers
             );
 
         public bool CanHandle(Type type) =>
-            TryGetElements(type, out bool isArray, out var kind, out var elementType) &&
-            !isArray &&
+            TryGetElements(type, out var kind, out var elementType) &&
+            kind != CollectionKind.Array &&
             kind != CollectionKind.Unknown &&
             _transformerStore.IsSupportedForTransformation(elementType);
 
-        private static bool TryGetElements(Type type, out bool isArray, out CollectionKind kind, out Type elementType)
+        private static bool TryGetElements(Type type, out CollectionKind kind, out Type elementType)
         {
             if (CollectionMetaHelper.IsTypeSupported(type))
             {
-                (isArray, kind, elementType) = CollectionMetaHelper.GetCollectionMeta(type);
+                (kind, elementType) = CollectionMetaHelper.GetCollectionMeta(type);
                 return true;
             }
             else
             {
-                (isArray, kind, elementType) = (default, default, default);
+                (kind, elementType) = (default, default);
                 return false;
             }
         }

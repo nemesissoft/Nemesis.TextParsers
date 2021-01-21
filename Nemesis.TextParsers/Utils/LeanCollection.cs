@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,8 +10,19 @@ namespace Nemesis.TextParsers.Utils
     [PublicAPI]
     public static class LeanCollectionFactory
     {
+        /// <summary>
+        /// Creates LeanCollection instance from array buffer. Caller needs to ensure that array has appropriate size (>3) - otherwise performance will be deteriorated 
+        /// </summary>
+        /// <param name="items">Buffer to create instance from</param>
+        /// <returns>Array-based LeanCollection instance</returns>
         public static LeanCollection<T> FromArrayChecked<T>(T[] items) => new(items);
 
+        /// <summary>
+        /// Creates LeanCollection instance from array buffer. Takes care of checking array sizes and initializes instance in appropriate state  
+        /// </summary>
+        /// <param name="items">Buffer to create instance from</param>
+        /// <param name="cloneBuffer">if left to default (<c>false</c>), LeanCollection takes ownership of this array buffer, otherwise it's copied</param>
+        /// <returns>Valid LeanCollection instance</returns>
         public static LeanCollection<T> FromArray<T>(T[] items, bool cloneBuffer = false) =>
             items?.Length switch
             {
@@ -26,7 +38,7 @@ namespace Nemesis.TextParsers.Utils
     /// <summary>
     /// Stores up to 3 elements or an array
     /// </summary>
-    public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>
+    public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnumerable<T>
     {
         #region Fields
         enum CollectionSize : sbyte { More = -1, Zero = 0, One = 1, Two = 2, Three = 3 }
@@ -85,6 +97,41 @@ namespace Nemesis.TextParsers.Utils
         #endregion
 
         #region Enumerations
+
+        //TODO rework using struct enumerator 
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            switch (_size)
+            {
+                case CollectionSize.Zero:
+                    yield break;
+
+                case CollectionSize.One:
+                    yield return _item1;
+                    break;
+
+                case CollectionSize.Two:
+                    yield return _item1;
+                    yield return _item2;
+                    break;
+
+                case CollectionSize.Three:
+                    yield return _item1;
+                    yield return _item2;
+                    yield return _item3;
+                    break;
+
+                case CollectionSize.More:
+                    foreach (var item in _items)
+                        yield return item;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised");
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 
         public LeanCollectionEnumerator GetEnumerator() => new(this);
 
@@ -219,10 +266,14 @@ namespace Nemesis.TextParsers.Utils
                 CollectionSize.Three => unchecked(
                     ((((_item1?.GetHashCode() ?? 0) * PRIME) ^ (_item2?.GetHashCode() ?? 0)) * PRIME) ^ (_item3?.GetHashCode() ?? 0)
                     ),
-                CollectionSize.More => _items?.GetHashCode() ?? 0,
+                CollectionSize.More => GetHashCode(_items),
                 _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised")
             };
         }
+
+        private static int GetHashCode(IEnumerable<T> enumerable)
+            => enumerable is null ? 0 :
+                unchecked(enumerable.Aggregate(0, (current, element) => (current * 397) ^ (element?.GetHashCode() ?? 0)));
 
         public static bool operator ==(LeanCollection<T> left, LeanCollection<T> right) => left.Equals(right);
 
@@ -274,9 +325,8 @@ namespace Nemesis.TextParsers.Utils
                     }
                 default:
                     comparer ??= Comparer<T>.Default;
-                    var copy = _items.ToArray();
-                    Array.Sort(copy, comparer);
-                    return new LeanCollection<T>(copy);
+                    Array.Sort(_items, comparer);
+                    return new LeanCollection<T>(_items);
             }
         }
     }

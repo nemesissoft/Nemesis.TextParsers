@@ -1,78 +1,87 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+
 using Nemesis.TextParsers.Utils;
 
+using Input = Benchmarks.BenchmarkInput<int[]>;
 // ReSharper disable CommentTypo
 
 namespace Benchmarks
 {
-    /*|    Method |         Source |        Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-   |---------- |--------------- |------------:|----------:|----------:|-------:|--------:|-------:|------:|------:|----------:|
-   | NativeSum | System.Int32[] |   0.4192 ns | 0.0347 ns | 0.0325 ns |   1.00 |    0.00 |      - |     - |     - |         - |
-   | NativeSum | System.Int32[] |   1.3393 ns | 0.0255 ns | 0.0238 ns |   3.21 |    0.23 |      - |     - |     - |         - |
-   | NativeSum | System.Int32[] |   1.9145 ns | 0.0265 ns | 0.0235 ns |   4.61 |    0.34 |      - |     - |     - |         - |
-   | NativeSum | System.Int32[] |   6.7011 ns | 0.1056 ns | 0.0988 ns |  16.08 |    1.29 |      - |     - |     - |         - |
-
-   |   LeanSum | System.Int32[] |  38.2319 ns | 0.4710 ns | 0.4406 ns |  91.68 |    6.75 |      - |     - |     - |         - |
-   |   LeanSum | System.Int32[] |  40.9513 ns | 0.3505 ns | 0.3278 ns |  98.23 |    7.58 |      - |     - |     - |         - |
-   |   LeanSum | System.Int32[] |  43.5412 ns | 0.5777 ns | 0.4824 ns | 104.33 |    8.11 |      - |     - |     - |         - |
-   |   LeanSum | System.Int32[] |  54.4123 ns | 0.3606 ns | 0.3373 ns | 130.54 |   10.32 |      - |     - |     - |         - |
-
-   |   ListSum | System.Int32[] |  54.2327 ns | 0.8438 ns | 0.7481 ns | 130.62 |   10.27 | 0.0171 |     - |     - |      72 B |
-   |   ListSum | System.Int32[] |  56.5301 ns | 0.9924 ns | 0.8797 ns | 136.10 |   10.05 | 0.0171 |     - |     - |      72 B |
-   |   ListSum | System.Int32[] |  59.9531 ns | 1.0717 ns | 1.0025 ns | 143.68 |    9.44 | 0.0190 |     - |     - |      80 B |
-   |   ListSum | System.Int32[] |  74.7951 ns | 0.8450 ns | 0.7057 ns | 179.22 |   13.78 | 0.0247 |     - |     - |     104 B |
-
-
-   |  LeanSort | System.Int32[] |  37.6782 ns | 0.7066 ns | 0.6263 ns |  90.73 |    6.93 |      - |     - |     - |         - |
-   |  LeanSort | System.Int32[] |  42.8604 ns | 0.6790 ns | 0.6019 ns | 103.27 |    8.63 |      - |     - |     - |         - |
-   |  LeanSort | System.Int32[] |  51.7633 ns | 0.9994 ns | 1.0263 ns | 124.17 |    9.12 |      - |     - |     - |         - |
-   |  LeanSort | System.Int32[] |  89.5636 ns | 1.4138 ns | 1.3224 ns | 214.91 |   17.83 |      - |     - |     - |         - |
-
-   |  ListSort | System.Int32[] |  45.3207 ns | 0.9718 ns | 1.1191 ns | 108.48 |    9.15 | 0.0171 |     - |     - |      72 B |
-   |  ListSort | System.Int32[] |  72.7966 ns | 1.4664 ns | 1.8009 ns | 174.16 |   14.27 | 0.0170 |     - |     - |      72 B |
-   |  ListSort | System.Int32[] |  76.2438 ns | 1.4923 ns | 1.7185 ns | 182.79 |   16.10 | 0.0190 |     - |     - |      80 B |
-   |  ListSort | System.Int32[] | 122.7672 ns | 2.4729 ns | 2.6460 ns | 294.28 |   17.75 | 0.0246 |     - |     - |     104 B |*/
-    [MemoryDiagnoser]
-    public class LeanCollectionBench
+    /*
+|       Method |               Source |      Mean |    Error |   StdDev |    Median | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------- |--------------------- |----------:|---------:|---------:|----------:|------:|--------:|-------:|------:|------:|----------:|
+|      LeanSum |                 [10] |  31.98 ns | 0.236 ns | 0.221 ns |  31.94 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+|      ListSum |                 [10] |  41.58 ns | 0.378 ns | 0.353 ns |  41.69 ns |  1.30 |    0.01 | 0.0102 |     - |     - |      64 B |
+| LINQ_LeanSum |                 [10] |  43.40 ns | 0.425 ns | 0.377 ns |  43.40 ns |  1.36 |    0.01 | 0.0166 |     - |     - |     104 B |
+| LINQ_ListSum |                 [10] |  62.02 ns | 0.481 ns | 0.449 ns |  62.02 ns |  1.94 |    0.02 | 0.0166 |     - |     - |     104 B |
+|              |                      |           |          |          |           |       |         |        |       |       |           |
+|      LeanSum |             [20, 10] |  36.08 ns | 0.741 ns | 1.580 ns |  35.14 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+|      ListSum |             [20, 10] |  43.50 ns | 0.523 ns | 0.489 ns |  43.55 ns |  1.21 |    0.05 | 0.0102 |     - |     - |      64 B |
+| LINQ_LeanSum |             [20, 10] |  48.90 ns | 0.743 ns | 0.658 ns |  48.98 ns |  1.36 |    0.06 | 0.0166 |     - |     - |     104 B |
+| LINQ_ListSum |             [20, 10] |  66.69 ns | 0.956 ns | 0.894 ns |  66.37 ns |  1.86 |    0.07 | 0.0166 |     - |     - |     104 B |
+|              |                      |           |          |          |           |       |         |        |       |       |           |
+|      LeanSum |         [30, 20, 10] |  36.84 ns | 0.373 ns | 0.349 ns |  36.73 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+|      ListSum |         [30, 20, 10] |  45.82 ns | 0.260 ns | 0.231 ns |  45.78 ns |  1.24 |    0.01 | 0.0114 |     - |     - |      72 B |
+| LINQ_LeanSum |         [30, 20, 10] |  54.24 ns | 0.626 ns | 0.522 ns |  54.32 ns |  1.47 |    0.02 | 0.0166 |     - |     - |     104 B |
+| LINQ_ListSum |         [30, 20, 10] |  77.78 ns | 1.558 ns | 1.457 ns |  77.47 ns |  2.11 |    0.04 | 0.0178 |     - |     - |     112 B |
+|              |                      |           |          |          |           |       |         |        |       |       |           |
+|      LeanSum | [90, (...), 10] [36] |  48.62 ns | 0.417 ns | 0.370 ns |  48.60 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+|      ListSum | [90, (...), 10] [36] |  64.53 ns | 0.833 ns | 0.738 ns |  64.57 ns |  1.33 |    0.02 | 0.0153 |     - |     - |      96 B |
+| LINQ_LeanSum | [90, (...), 10] [36] |  84.96 ns | 1.711 ns | 4.196 ns |  83.00 ns |  1.78 |    0.09 | 0.0166 |     - |     - |     104 B |
+| LINQ_ListSum | [90, (...), 10] [36] | 123.98 ns | 2.495 ns | 6.829 ns | 122.07 ns |  2.64 |    0.15 | 0.0215 |     - |     - |     136 B |
+|              |                      |           |          |          |           |       |         |        |       |       |           |
+|      LeanSum | [140,(...), 10] [61] |  60.61 ns | 1.226 ns | 1.412 ns |  60.02 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+|      ListSum | [140,(...), 10] [61] |  76.78 ns | 0.737 ns | 0.653 ns |  76.70 ns |  1.26 |    0.03 | 0.0178 |     - |     - |     112 B |
+| LINQ_LeanSum | [140,(...), 10] [61] | 109.93 ns | 1.053 ns | 0.985 ns | 109.40 ns |  1.81 |    0.05 | 0.0166 |     - |     - |     104 B |
+| LINQ_ListSum | [140,(...), 10] [61] | 151.92 ns | 1.581 ns | 1.320 ns | 151.91 ns |  2.49 |    0.07 | 0.0241 |     - |     - |     152 B |
+*/
+    [MemoryDiagnoser/*, GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)*/]
+    public class LeanCollectionSum
     {
-        //  [BenchmarkCategory("Slow"), Benchmark(Baseline = true)]
-        // alloc+enumeration+operation, Sort
         [ParamsSource(nameof(Sources))]
-        public int[] Source { get; set; }
+        public Input Source { get; set; }
 
-        public IEnumerable<int[]> Sources => new[]
+        public IEnumerable<Input> Sources => new[]
         {
-            new[] {10},
-            new[] {20, 10},
-            new[] {30, 20, 10},
-            new[] {90, 80, 70, 60, 50, 40, 30, 20, 10},
+            new Input(new[] {10}),
+            new Input(new[] {20, 10}),
+            new Input(new[] {30, 20, 10}),
+            new Input(new[] {90, 80, 70, 60, 50, 40, 30, 20, 10}),
+            new Input(new[] {140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10}),
         };
 
 
-        [BenchmarkCategory("Sum"), Benchmark(Baseline = true)]
+        /*[BenchmarkCategory("Sum"), Benchmark]
         public int NativeSum()
         {
             int sum = 0;
             // ReSharper disable once LoopCanBeConvertedToQuery
             // ReSharper disable once ForCanBeConvertedToForeach
-            for (int i = 0; i < Source.Length; i++)
+            for (int i = 0; i < Source.Value.Length; i++)
                 sum += Source[i];
             return sum;
-        }
+        }*/
 
-        [BenchmarkCategory("Sum"), Benchmark]
+        [BenchmarkCategory("Sum"), Benchmark(Baseline = true)]
         public int LeanSum()
         {
-            var coll = LeanCollectionFactory.FromArray(Source);
+            var coll = LeanCollectionFactory.FromArray(Source.Value);
 
-            var enumerator = coll.GetEnumerator();
+            var sum = 0;
+            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var i in coll)
+                sum += i;
+
+            /*var enumerator = coll.GetEnumerator();
             if (!enumerator.MoveNext()) return 0;
 
             int sum = 0;
             do
                 sum += enumerator.Current;
-            while (enumerator.MoveNext());
+            while (enumerator.MoveNext());*/
 
             return sum;
         }
@@ -80,7 +89,7 @@ namespace Benchmarks
         [BenchmarkCategory("Sum"), Benchmark]
         public int ListSum()
         {
-            var coll = new List<int>(Source);
+            var coll = new List<int>(Source.Value);
 
             int sum = 0;
             foreach (int i in coll)
@@ -89,12 +98,63 @@ namespace Benchmarks
             return sum;
         }
 
-        [BenchmarkCategory("Sort"), Benchmark]
+        [BenchmarkCategory("Sum"), Benchmark]
+        public int LINQ_LeanSum()
+        {
+            var coll = LeanCollectionFactory.FromArray(Source.Value);
+
+            return coll.Sum();
+        }
+
+        [BenchmarkCategory("Sum"), Benchmark]
+        public int LINQ_ListSum()
+        {
+            var coll = new List<int>(Source.Value);
+
+            return coll.Sum();
+        }
+    }
+
+    /*
+|   Method |               Source |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|--------- |--------------------- |----------:|---------:|---------:|------:|--------:|-------:|------:|------:|----------:|
+| LeanSort |                 [10] |  24.58 ns | 0.148 ns | 0.138 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ListSort |                 [10] |  37.50 ns | 0.327 ns | 0.306 ns |  1.53 |    0.01 | 0.0102 |     - |     - |      64 B |
+|          |                      |           |          |          |       |         |        |       |       |           |
+| LeanSort |             [20, 10] |  28.85 ns | 0.138 ns | 0.129 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ListSort |             [20, 10] |  56.42 ns | 0.252 ns | 0.210 ns |  1.96 |    0.01 | 0.0102 |     - |     - |      64 B |
+|          |                      |           |          |          |       |         |        |       |       |           |
+| LeanSort |         [30, 20, 10] |  34.90 ns | 0.158 ns | 0.132 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ListSort |         [30, 20, 10] |  60.11 ns | 0.407 ns | 0.381 ns |  1.72 |    0.01 | 0.0114 |     - |     - |      72 B |
+|          |                      |           |          |          |       |         |        |       |       |           |
+| LeanSort | [90, (...), 10] [36] |  64.10 ns | 0.938 ns | 1.042 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ListSort | [90, (...), 10] [36] | 108.40 ns | 2.187 ns | 2.246 ns |  1.69 |    0.05 | 0.0153 |     - |     - |      96 B |
+|          |                      |           |          |          |       |         |        |       |       |           |
+| LeanSort | [140,(...), 10] [61] |  70.24 ns | 0.662 ns | 0.587 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ListSort | [140,(...), 10] [61] | 150.32 ns | 1.558 ns | 1.458 ns |  2.14 |    0.03 | 0.0176 |     - |     - |     112 B |
+     */
+    [MemoryDiagnoser]
+    public class LeanCollectionSort
+    {
+        [ParamsSource(nameof(Sources))]
+        public Input Source { get; set; }
+
+        public IEnumerable<Input> Sources => new[]
+        {
+            new Input(new[] {10}),
+            new Input(new[] {20, 10}),
+            new Input(new[] {30, 20, 10}),
+            new Input(new[] {90, 80, 70, 60, 50, 40, 30, 20, 10}),
+            new Input(new[] {140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10}),
+        };
+
+
+        [BenchmarkCategory("Sort"), Benchmark(Baseline = true)]
         public int LeanSort()
         {
-            var coll = LeanCollectionFactory.FromArray(Source);
+            var coll = LeanCollectionFactory.FromArray(Source.Value);
 
-            coll.Sort();
+            coll = coll.Sort();
 
             return coll.Size;
         }
@@ -102,7 +162,7 @@ namespace Benchmarks
         [BenchmarkCategory("Sort"), Benchmark]
         public int ListSort()
         {
-            var coll = new List<int>(Source);
+            var coll = new List<int>(Source.Value);
 
             coll.Sort();
 

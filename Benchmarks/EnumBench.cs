@@ -9,8 +9,6 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using EnumsNET;
 using Nemesis.TextParsers;
-using Nemesis.TextParsers.Parsers;
-using Nemesis.TextParsers.Utils;
 
 // ReSharper disable CommentTypo
 
@@ -623,7 +621,7 @@ namespace Benchmarks
             return current;
         }
 
-        [Benchmark]
+        /*[Benchmark]
         public DaysOfWeek IlGenericTest()
         {
             DaysOfWeek current = default;
@@ -642,7 +640,7 @@ namespace Benchmarks
                 current |= EnumConverter.Convert.ToEnumIlConcrete(AllEnumValues[i]);
 
             return current;
-        }
+        }*/
 
         internal static TEnum ToEnum<TEnum, TUnderlying>(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
