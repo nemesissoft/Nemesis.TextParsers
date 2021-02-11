@@ -222,9 +222,9 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(coll1, Is.EqualTo(coll2), "1 != 2");
 
 
-            var coll2a = LeanCollectionFactory.FromArray(elements?.ToArray());
-            Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2a.GetHashCode()), "#1 != #2a");
-            Assert.That(coll1, Is.EqualTo(coll2a), "1 != 2a");
+            var coll2A = LeanCollectionFactory.FromArray(elements?.ToArray());
+            Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2A.GetHashCode()), "#1 != #2a");
+            Assert.That(coll1, Is.EqualTo(coll2A), "1 != 2a");
 
 
             var coll3 = LeanCollectionFactory.FromArray(new[] { 15.5f, 25.6f, 35.99f, 50, 999, 1555555 });
@@ -284,7 +284,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Is.Ordered);
             Assert.That(elements, Is.Ordered); //original buffer get's mutated
 
-            Assert.That(elements, Is.Not.EqualTo(copy), "Post condition - do NOT mutate array");
+            Assert.That(elements, Is.Not.EqualTo(copy), "Post condition - DO mutate array");
         }
 
         [TestCase(null, new float[0])]

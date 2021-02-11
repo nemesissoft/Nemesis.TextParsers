@@ -44,8 +44,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (@"\;key1\;=\;value1\;;\;key2\;=\;value2\;", new Dss{[";key1;"]=";value1;",[";key2;"]=";value2;"}),
             (@"\;key1\=\;=\;val\=ue1\;;\;key2\;=\;value\=2\;", new Dss{[";key1=;"]=";val=ue1;",[";key2;"]=";value=2;"}),
 
-
-            (@"key\∅= \∅ ;key\∅2= \\\∅ ;key1=\∅;key2=∅", new Dss{["key1"]="∅",["key2"]=null,["key∅"]=" ∅ ",["key∅2"]=@" \∅ ", }),
+            (@"key1=\∅;key2=∅;key\∅= \∅ ;key\∅2= \\\∅ ", new Dss(StringComparer.Ordinal){["key1"]="∅",["key2"]=null,["key∅"]=" ∅ ",["key∅2"]=@" \∅ ", }),
             (@"key1=\=\;", new Dss{["key1"]="=;"} ),
             (@"key\;\=1=\=\;", new Dss{["key;=1"]="=;"} ),
             (@"\\\;\\\==\\\;\\\=;k\\\=ey2=\;\\\=A\\BC;key\;\=1=\=\;", new Dss{[@"\;\="]=@"\;\=", [@"k\=ey2"]=@";\=A\BC", ["key;=1"]="=;"}),
@@ -119,7 +118,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                 Assert.That(result, Is.Null);
             else
                 Assert.That(result, Is.EqualTo(data.expectedDict));
-
+            
             /*if (data.expectedDict == null)
                 Console.WriteLine(@"NULL dictionary");
             else if (!data.expectedDict.Any())
