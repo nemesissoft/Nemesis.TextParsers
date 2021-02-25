@@ -1,4 +1,5 @@
 ﻿using System;
+
 using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.CodeGen.Sample
@@ -9,7 +10,7 @@ namespace Nemesis.TextParsers.CodeGen.Sample
     {
         public double X { get; }
         public double Y { get; }
-        public double Z { get; }
+        public double Z { get; }       
 
         public StructPoint3d(double x, double y, double z) { X = x; Y = y; Z = z; }
 
@@ -19,17 +20,17 @@ namespace Nemesis.TextParsers.CodeGen.Sample
     //[Auto.AutoDeconstructable] public class BadPoint2d { }
 
     public record RecordPoint2d(double X, double Y) { }
-    
+
     [Auto.AutoDeconstructable]
     [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(',', '␀', '/', '⟪', '⟫')]
     public partial record RecordPoint3d(double X, double Y, double Z) : RecordPoint2d(X, Y)
     {
         public double Magnitude { get; init; } //will NOT be subject to deconstruction
     }
-    
+
     [Auto.AutoDeconstructable]
     [Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute(',', '␀', '/', '⟪', '⟫')]
-    public partial record SpaceAndTime(double X, double Y, double Z, TimeSpan Time) : RecordPoint2d(X, Y)
+    public partial record SpaceAndTime(double X, double Y, double Z, DateTime Time) : RecordPoint3d(X, Y, Z)
     {
     }
 

@@ -31,5 +31,5 @@ namespace Nemesis.TextParsers.CodeGen.Sample
 
             Console.WriteLine();
         }
-    }
+    }    
 }

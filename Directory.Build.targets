@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
-  <!--
-    Append source information to PackageDescription.
-  -->
+  <!--Append source information to PackageDescription.-->
   <Target Name="_AppendCommonPackageDescription" 
           BeforeTargets="InitializeStandardNuspecProperties;GenerateNuspec" 
           DependsOnTargets="InitializeSourceControlInformation"

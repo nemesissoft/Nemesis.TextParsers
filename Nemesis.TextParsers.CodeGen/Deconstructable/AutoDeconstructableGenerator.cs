@@ -32,6 +32,10 @@ namespace Auto
         {
             context.CheckDebugger(nameof(AutoDeconstructableGenerator));
 
+            // TODO check if NTP is referenced + change NoSettingsAttributeRule diagnostics
+            /*if (!context.Compilation.ReferencedAssemblyNames.Any(ai => ai.Name.Equals("Nemesis.TextParsers", StringComparison.OrdinalIgnoreCase)))
+                context.ReportDiagnostic(); */
+
             context.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8));
 
             if (context.SyntaxReceiver is not DeconstructableSyntaxReceiver receiver || context.Compilation is not CSharpCompilation cSharpCompilation) return;

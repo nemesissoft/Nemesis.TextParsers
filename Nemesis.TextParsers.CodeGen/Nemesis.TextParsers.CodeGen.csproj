@@ -3,13 +3,22 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 
-		
+
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <!--TODO-->
-        <!--<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>-->
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
+		<PackageTags>codegen codegeneration generation trnasformer parse ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
+		<Description>Contains various parser optimized for speed and no allocation</Description>
+
+		<PackageReleaseNotes>
+			RELEASE_NOTES_PLACEHOLDER<!--starts with "RELEASE_NOTES_PLACEHOLDER" == this will be patched by AppVeyor-->
+		</PackageReleaseNotes>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<!-- Do not include the generator as a lib dependency -->
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
 		<PackageIcon>review-icon.png</PackageIcon>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -18,7 +27,14 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+		<DebugType>embedded</DebugType>
+		<DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Release'">
+		<!-- Package the generator in the analyzer directory of the nuget package -->
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\images\review-icon.png" Pack="true" PackagePath="\" />
@@ -29,7 +45,7 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.1" PrivateAssets="all" />
 
 
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+		<!--<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />-->
 	</ItemGroup>
 
 
