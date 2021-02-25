@@ -6,7 +6,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     {
         public static IReadOnlyList<(string name, string source, string expectedCode)> AutoDeconstructableCases() => new[]
         {
-            ("SimpleWrapperRecord", @"[Auto.AutoDeconstructable] partial record eDoubleRecord(double Value) { }", 
+            ("SimpleWrapperRecord", @"[Auto.AutoDeconstructable] partial record eDoubleRecord(double Value) { }",
                 @"//HEAD
 using System;
 using Nemesis.TextParsers;
@@ -20,7 +20,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     partial record eDoubleRecord 
     {
 #if DEBUG
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
 #endif
     }
 
@@ -85,7 +87,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     readonly partial struct eDoubleStruct 
     {
 #if DEBUG
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
 #endif
     }
 
@@ -153,7 +157,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     public partial record RecordPoint3d 
     {
 #if DEBUG
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
 #endif
     }
 
@@ -233,7 +239,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     public readonly partial struct Point3d 
     {
 #if DEBUG
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
 #endif
     }
 
@@ -331,7 +339,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     partial class Large 
     {
 #if DEBUG
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
 #endif
     }
 
@@ -479,7 +489,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     public partial record ComplexTypes 
     {
 #if DEBUG
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
 #endif
     }
 
