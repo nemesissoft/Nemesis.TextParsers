@@ -7,6 +7,7 @@ using Nemesis.TextParsers.Utils;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 using static Nemesis.TextParsers.Tests.TestHelper;
 using TCD = NUnit.Framework.TestCaseData;
+using System.Linq;
 
 // ReSharper disable once CheckNamespace
 namespace Nemesis.TextParsers.Tests
@@ -65,60 +66,46 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(values, Is.EqualTo(expectedOutput));
         }
 
-        private static IEnumerable<(string inputText, IEnumerable<int> inputValues, string expectedOutput, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues)> ValidValuesForFactory()
-            => new (string, IEnumerable<int>, string, IEnumerable<int>, IEnumerable<int>)[]
+        private static IEnumerable<TCD> ValidParsingData()
+            => new (string, IEnumerable<int>)[]
             {
-                (null,          null, "0", new []{0}, new []{0}),
-                ("",            new int [0], @"0",new []{0},new []{0}),
-                ("123",         new []{123}, @"123",new []{123},new []{123}),
-                ("123#456#789", new []{123,456,789}, @"123#456#789",new []{123,456,789},new []{123,456,789}),
-                ("123#123#123", new []{123,123,123}, @"123",new []{123},new []{123, 123, 123}),
+                (null,           new []{0}),
+                ("",            new []{0}),
+                ("123",         new []{123}),
+                ("123#456#789", new []{123,456,789}),
+                ("123#123#123", new []{123, 123, 123}),
 
-                ("1#1#1#1#1#1#1#1#1", new []{1,1,1,1,1,1,1,1,1}, @"1",new []{1},new []{1,1,1,1,1,1,1,1,1}),
-                ("1#1#1#4#4#4#7#7#7", new []{1,1,1,4,4,4,7,7,7}, @"1#4#7",new []{1,4,7},new []{1,1,1,4,4,4,7,7,7}),
-                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, @"1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}, new []{1,2,3,4,5,6,7,8,9}),
-            };
+                ("1#22#333#4444#55555", new []{123, 123, 123}),
 
-        [TestCaseSource(nameof(ValidValuesForFactory))]
-        public void AggressionBasedFactory_FromValues_ShouldCreateAndCompactValues((string _, IEnumerable<int> inputValues, string expectedOutput, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
-        {
-            var actual = FacInt.FromValuesCompact(data.inputValues);
+                ("1#1#1#1#1#1#1#1#1", new []{1,1,1,1,1,1,1,1,1}),
+                ("1#1#1#4#4#4#7#7#7", new []{1,1,1,4,4,4,7,7,7}),
+                ("1#2#3#4#5#6#7#8#9", new []{1,2,3,4,5,6,7,8,9}),
+            }.Select((t, i) => new TCD(t.Item1, t.Item2).SetName($"Parse{i:00}"));
 
-            Assert.That(actual, Is.Not.Null);
-
-            var trans = Sut.GetTransformer<IAggressionBased<int>>();
-
-            Assert.That(trans.Format(actual), Is.EqualTo(data.expectedOutput));
-
-            Assert.That(actual.ToList(),
-                Is.EqualTo(data.expectedValuesCompacted));
-        }
-
-        [TestCaseSource(nameof(ValidValuesForFactory))]
-        public void AggressionBasedFactory_ShouldParse((string inputText, IEnumerable<int> _, string _s, IEnumerable<int> expectedValuesCompacted, IEnumerable<int> expectedValues) data)
+        [TestCaseSource(nameof(ValidParsingData))]
+        public void AggressionBasedFactory_ShouldParse(string inputText, IEnumerable<int> expectedValues)
         {
             var transformer = Sut.GetTransformer<IAggressionBased<int>>();
-            var actual = transformer.Parse(data.inputText);
+            var actual = transformer.Parse(inputText);
 
             Assert.That(actual, Is.Not.Null);
 
             Assert.That(actual.ToList(),
-                Is.EqualTo(data.expectedValues));
+                Is.EqualTo(expectedValues));
         }
 
-        private static IEnumerable<TCD> FromValues_Invalid() => new[]
+        private static IEnumerable<TCD> InvalidParsingData() => new[]
         {
-            new TCD("1#2", "0, 1, 3 or 9 elements, but contained 2"),
-            new TCD("1#2#3#4", "0, 1, 3 or 9 elements, but contained 4"),
-            new TCD("1#2#3#4#5", "0, 1, 3 or 9 elements, but contained 5"),
-            new TCD("1#2#3#4#5#6", "0, 1, 3 or 9 elements, but contained 6"),
-            new TCD("1#2#3#4#5#6#7", "0, 1, 3 or 9 elements, but contained 7"),
-            new TCD("1#2#3#4#5#6#7#8", "0, 1, 3 or 9 elements, but contained 8"),
-            new TCD("1#2#3#4#5#6#7#8#9#10", "0, 1, 3 or 9 elements, but contained more than 9"),
-            new TCD("1#2#3#4#5#6#7#8#9#10#11", "0, 1, 3 or 9 elements, but contained more than 9"),
+            new TCD("1#2", "0, 1, 3, 5 or 9 elements, but contained 2"),
+            new TCD("1#2#3#4", "0, 1, 3, 5 or 9 elements, but contained 4"),
+            new TCD("1#2#3#4#5#6", "0, 1, 3, 5 or 9 elements, but contained 6"),
+            new TCD("1#2#3#4#5#6#7", "0, 1, 3, 5 or 9 elements, but contained 7"),
+            new TCD("1#2#3#4#5#6#7#8", "0, 1, 3, 5 or 9 elements, but contained 8"),
+            new TCD("1#2#3#4#5#6#7#8#9#10", "0, 1, 3, 5 or 9 elements, but contained more than 9"),
+            new TCD("1#2#3#4#5#6#7#8#9#10#11", "0, 1, 3, 5 or 9 elements, but contained more than 9"),
         };
 
-        [TestCaseSource(nameof(FromValues_Invalid))]
+        [TestCaseSource(nameof(InvalidParsingData))]
         public void AggressionBasedTransformer_Parse_NegativeTests(string input, string expectedMessagePart)
         {
             var transformer = Sut.GetTransformer<IAggressionBased<int>>();
@@ -133,7 +120,7 @@ escape '#' with ""\#"" and '\' by doubling it ""\\""
 
 IAggressionBased`1 elements syntax:
 	UTF-16 character string";
-        
+
         private const string AGG_BASED_DICT = @"Hash ('#') delimited list with 1 or 3 (passive, normal, aggressive) elements i.e. 1#2#3
 escape '#' with ""\#"" and '\' by doubling it ""\\""
 

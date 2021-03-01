@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
@@ -50,7 +51,15 @@ namespace Nemesis.TextParsers.Tests
             new TestCaseData(@"ABC\;", @"ABC;", ';'),
             new TestCaseData(@"\\ABC\\\;", @"\\ABC\\;", ';'),
 
+            new TestCaseData(@"\\ABC\;", @"\ABC\;", '\\'),
+            new TestCaseData(@"\\ABC\\;", @"\ABC\;", '\\'),
             new TestCaseData(@"\\ABC\\\;", @"\ABC\\;", '\\'),
+            new TestCaseData(@"\\ABC\\\\;", @"\ABC\\;", '\\'),
+
+            new TestCaseData(@"\\ABC\", @"\ABC\", '\\'),
+            new TestCaseData(@"\\ABC\\", @"\ABC\", '\\'),
+            new TestCaseData(@"\\ABC\\\", @"\ABC\\", '\\'),
+            new TestCaseData(@"\\ABC\\\\", @"\ABC\\", '\\'),
         };
 
         [TestCaseSource(nameof(ValidValuesFor1))]
@@ -120,14 +129,14 @@ namespace Nemesis.TextParsers.Tests
             new TestCaseData(@"\A\B\C", @"AB\C", 'A', 'B'),
             new TestCaseData(@"\A\B\C", @"\ABC", 'C', 'B'),
             new TestCaseData(@"\A\B\C", @"A\BC", 'A', 'C'),
-            
+
 
             new TestCaseData(@"\,ABC\;", @",ABC;", ';', ','),
             new TestCaseData(@"\\,ABC\\;", @"\\,ABC\\;", ';', ','),
             new TestCaseData(@"\\\,ABC\\\;", @"\\,ABC\\;", ';', ','),
             new TestCaseData(@"\\\,ABC\\\;", @"\,ABC\\;", '\\', ','),
             new TestCaseData(@"\\\,ABC\\\;", @"\\,ABC\;", '\\', ';'),
-            
+
             new TestCaseData(@"\\ABC\\\;", @"\ABC\;", '\\', ';'),
         });
 
