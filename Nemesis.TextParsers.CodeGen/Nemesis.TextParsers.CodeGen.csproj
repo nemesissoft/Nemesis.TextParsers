@@ -11,9 +11,8 @@
 		<PackageTags>codegen codegeneration generation trnasformer parse ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
 		<Description>Contains various parser optimized for speed and no allocation</Description>
 
-		<PackageReleaseNotes>
-			RELEASE_NOTES_PLACEHOLDER<!--starts with "RELEASE_NOTES_PLACEHOLDER" == this will be patched by AppVeyor-->
-		</PackageReleaseNotes>
+		<!--this will be patched by build system-->
+		<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>
 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
