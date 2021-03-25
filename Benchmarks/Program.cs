@@ -12,7 +12,7 @@ namespace Benchmarks
         {
 #if DEBUG
             //new LeanCollectionSum() {Source = new BenchmarkInput<int[]>(new[] {1, 2, 3})}.LeanSumIEnumerable();
-            new MultiKeyDictionaryBench();
+          var tt =  new MultiKeyDictionaryBench();
 
             var d = new DeconstructablesBench() { N = 10 };
             d.GlobalSetup();
