@@ -11,7 +11,7 @@ namespace Benchmarks
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     public class MultiKeyDictionaryBench
     {
-        private const int COUNT = 500;
+        private const int COUNT = 700;
 
         private static readonly Dictionary<string, int> _string = GetStringDict();
         private static readonly Dictionary<Tuple<string, string, string>, int> _tuple = GetTupleDict();
