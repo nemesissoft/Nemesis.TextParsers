@@ -258,7 +258,7 @@ namespace Nemesis.TextParsers.Tests
 
             var test = LeanCollectionFactory.FromArray(elements, true);
 
-            var actual = test.Sort().ToList();
+            var actual = ((IListOperations<float>)test).Sort().ToList();
 
             Assert.That(actual, Is.EqualTo(expectedElements));
 
@@ -266,18 +266,18 @@ namespace Nemesis.TextParsers.Tests
 
             Assert.That(elements, Is.EqualTo(copy), "Post condition - do NOT mutate array");
         }
-        
+
         [TestCase(new[] { 1f, 8, 9, 5, 3, 4 }, new[] { 1.0f, 3.0f, 4.0f, 5.0f, 8.0f, 9.0f })]
         [TestCase(new[] { 1000f, 80, 90, 50, 3, 4 }, new[] { 3f, 4, 50, 80, 90, 1000 })]
         public void SortTest_OriginalBufferIsModified(float[] elements, float[] expectedElements)
         {
-            Assert.That(elements, Is.Not.Ordered); 
+            Assert.That(elements, Is.Not.Ordered);
 
             var copy = elements.ToArray();
 
             var test = LeanCollectionFactory.FromArray(elements);
 
-            var actual = test.Sort().ToList();
+            var actual = ((IListOperations<float>)test).Sort().ToList();
 
             Assert.That(actual, Is.EqualTo(expectedElements));
 
@@ -291,6 +291,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(new float[0], new float[0])]
         [TestCase(new[] { 15.5f }, new[] { 15.5f })]
         [TestCase(new[] { 15.5f, 25.6f }, new[] { 15.5f, 25.6f })]
+        [TestCase(new[] { 15.5f, 25.6f, 35.99f }, new[] { 15.5f, 25.6f, 35.99f })]
         [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, new[] { 15.5f, 25.6f, 35.99f, 50, 999 })]
         public void Enumerators_CheckEnumeration(float[] elements, float[] expected)
         {
@@ -303,21 +304,21 @@ namespace Nemesis.TextParsers.Tests
 
 
             var actual = new List<float>();
-            while (structEnumerator.MoveNext()) 
+            while (structEnumerator.MoveNext())
                 actual.Add(structEnumerator.Current);
-            Assert.That(actual,Is.EqualTo(expected));
+            Assert.That(actual, Is.EqualTo(expected), "structEnumerator");
 
 
-            actual = new List<float>();
+            actual = new();
             while (iEnumerator.MoveNext())
-                actual.Add( (iEnumerator.Current as float?) ?? float.NaN);
-            Assert.That(actual, Is.EqualTo(expected));
+                actual.Add((iEnumerator.Current as float?) ?? float.NaN);
+            Assert.That(actual, Is.EqualTo(expected), "iEnumerator");
 
 
-            actual = new List<float>();
+            actual = new();
             while (iEnumeratorT.MoveNext())
                 actual.Add(iEnumeratorT.Current);
-            Assert.That(actual, Is.EqualTo(expected));
+            Assert.That(actual, Is.EqualTo(expected), "iEnumeratorT");
         }
     }
 }

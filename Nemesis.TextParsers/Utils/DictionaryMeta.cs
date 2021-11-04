@@ -79,21 +79,21 @@ namespace Nemesis.TextParsers.Utils
             int capacity = sourceElements?.Count ?? 0;
 
             IDictionary<TKey, TValue> result =
-                Kind == DictionaryKind.SortedDictionary ? new SortedDictionary<TKey, TValue>() :
-                    (
-                        Kind == DictionaryKind.SortedList
-                            ? new SortedList<TKey, TValue>(capacity)
-                            : (IDictionary<TKey, TValue>)new Dictionary<TKey, TValue>(capacity)
-                    );
+                Kind switch
+                {
+                    DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
+                    DictionaryKind.SortedList => new SortedList<TKey, TValue>(capacity),
+                    _ => new Dictionary<TKey, TValue>(capacity)
+                };
 
             for (int i = 0; i < capacity; i++)
             {
                 // ReSharper disable once PossibleNullReferenceException
-                var (oKey, oValue) = sourceElements[i];
-                TKey key = ConvertElement<TKey>(oKey);
-                TValue value = ConvertElement<TValue>(oValue);
+                (object oKey, object oValue) = sourceElements[i];
+                var key = ConvertElement<TKey>(oKey);
+                var value = ConvertElement<TValue>(oValue);
 
-                if (key == null) key = GetQuiteUniqueNotNullKey();
+                key ??= GetQuiteUniqueNotNullKey();
 
                 result[key] = value;
             }
@@ -146,12 +146,12 @@ namespace Nemesis.TextParsers.Utils
         public static DictionaryMeta GetDictionaryMeta(Type dictType)
         {
             if (IsTypeSupported(dictType) &&
-                GetDictionaryKind(dictType) is { } kind &&
+                GetDictionaryKind(dictType) is var kind &&
                 kind != DictionaryKind.Unknown
                )
             {
-                var (keyType, valueType) = GetPairType(dictType);
-                return new DictionaryMeta(kind, keyType, valueType);
+                (Type keyType, Type valueType) = GetPairType(dictType);
+                return new(kind, keyType, valueType);
             }
 
             return default;
@@ -190,7 +190,7 @@ namespace Nemesis.TextParsers.Utils
             return (genType.GenericTypeArguments[0], genType.GenericTypeArguments[1]);
         }
 
-        private static readonly HashSet<Type> _supportedDictionaryTypes = new HashSet<Type>()
+        private static readonly HashSet<Type> _supportedDictionaryTypes = new()
         {
             typeof(Dictionary<,>),
             typeof(IDictionary<,>),
@@ -203,9 +203,7 @@ namespace Nemesis.TextParsers.Utils
         };
 
         public static bool IsTypeSupported(Type dictType) =>
-            dictType != null &&
-            dictType.IsGenericType &&
-            dictType.GetGenericTypeDefinition() is { } definition &&
+            dictType is {IsGenericType: true} && dictType.GetGenericTypeDefinition() is { } definition &&
             _supportedDictionaryTypes.Contains(definition);
     }
 

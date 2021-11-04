@@ -130,14 +130,14 @@ namespace Nemesis.TextParsers.Utils
             if (collectionType != null)
             {
                 if (collectionType.IsArray && collectionType.GetElementType() is { } arrayElementType)
-                    return new CollectionMeta(CollectionKind.Array, arrayElementType);
+                    return new(CollectionKind.Array, arrayElementType);
                 else if (IsTypeSupported(collectionType) &&
                          GetCollectionKind(collectionType) is { } kind &&
                          kind != CollectionKind.Unknown
                         )
                 {
                     Type elementType = GetElementType(collectionType);
-                    return new CollectionMeta(kind, elementType);
+                    return new(kind, elementType);
                 }
             }
 
@@ -217,10 +217,7 @@ namespace Nemesis.TextParsers.Utils
         };
 
         public static bool IsTypeSupported(Type collectionType) =>
-            collectionType != null &&
-            collectionType.IsGenericType &&
-            collectionType.GetGenericTypeDefinition() is { } definition &&
-            _supportedCollectionTypes.Contains(definition);
+            collectionType is {IsGenericType: true} && collectionType.GetGenericTypeDefinition() is { } definition && _supportedCollectionTypes.Contains(definition);
     }
 
     public enum CollectionKind : byte

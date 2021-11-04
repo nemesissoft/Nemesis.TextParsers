@@ -89,7 +89,7 @@ namespace Nemesis.TextParsers.Utils
         private readonly SettingsStore _settingsStore;
         public TextSyntaxProvider([NotNull] SettingsStore settingsStore) => _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
 
-        public static TextSyntaxProvider Default { get; } = new TextSyntaxProvider(TextTransformer.Default.SettingsStore);
+        public static TextSyntaxProvider Default { get; } = new(TextTransformer.Default.SettingsStore);
 
         [UsedImplicitly]
         public string GetSyntaxFor([NotNull] Type type)
@@ -215,7 +215,7 @@ namespace Nemesis.TextParsers.Utils
 
             string elementsSyntax =
                 originalType.IsGenericType && !originalType.IsGenericTypeDefinition &&
-                originalType.GenericTypeArguments is { } genArgs && genArgs.Length > 0
+                originalType.GenericTypeArguments is {Length: > 0} genArgs
                     ? string.Join(NL, genArgs.Select(GetSyntaxFor))
                     : "";
 
@@ -232,8 +232,8 @@ namespace Nemesis.TextParsers.Utils
             string fromType = GetSyntaxFromAttribute(type, type);
 
             string fromConverter =
-                type.GetCustomAttribute<TypeConverterAttribute>(true)?.ConverterTypeName is var converterTypeName &&
-                converterTypeName != null && Type.GetType(converterTypeName, false) is { } converterType
+                type.GetCustomAttribute<TypeConverterAttribute>(true)?.ConverterTypeName is { } converterTypeName &&
+                Type.GetType(converterTypeName, false) is { } converterType
                     ? GetSyntaxFromAttribute(converterType, type)
                     : null;
 

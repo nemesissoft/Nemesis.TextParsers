@@ -162,7 +162,7 @@ namespace Benchmarks
         {
             var coll = LeanCollectionFactory.FromArray(Source.Value);
 
-            coll = coll.Sort();
+            coll = ((IListOperations<int>)coll).Sort();
 
             return coll.Size;
         }

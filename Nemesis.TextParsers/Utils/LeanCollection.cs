@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Utils
@@ -9,6 +10,12 @@ namespace Nemesis.TextParsers.Utils
     [PublicAPI]
     public static class LeanCollectionFactory
     {
+        public static LeanCollection<T> FromOne<T>(T item1) => new(item1);
+
+        public static LeanCollection<T> FromTwo<T>(T item1, T item2) => new(item1, item2);
+
+        public static LeanCollection<T> FromThree<T>(T item1, T item2, T item3) => new(item1, item2, item3);
+
         /// <summary>
         /// Creates LeanCollection instance from array buffer. Caller needs to ensure that array has appropriate size (>3) - otherwise performance will be deteriorated 
         /// </summary>
@@ -25,19 +32,32 @@ namespace Nemesis.TextParsers.Utils
         public static LeanCollection<T> FromArray<T>(T[] items, bool cloneBuffer = false) =>
             items?.Length switch
             {
-                null => new LeanCollection<T>(),
-                0 => new LeanCollection<T>(),
-                1 => new LeanCollection<T>(items[0]),
-                2 => new LeanCollection<T>(items[0], items[1]),
-                3 => new LeanCollection<T>(items[0], items[1], items[2]),
-                _ => new LeanCollection<T>(cloneBuffer ? items.ToArray() : items)
+                null => new(),
+                0 => new(),
+                1 => new(items[0]),
+                2 => new(items[0], items[1]),
+                3 => new(items[0], items[1], items[2]),
+                _ => new(cloneBuffer ? items.ToArray() : items)
             };
+    }
+
+    /// <summary>
+    /// <![CDATA[Groups List<T> like operations for convenience]]>
+    /// </summary>
+    public interface IListOperations<T>
+    {
+        /// <summary>
+        /// Convert <see cref="LeanCollection{T}"/> to <see cref="List{T}"/>. This obviously allocates. For tests only
+        /// </summary>
+        IReadOnlyList<T> ToList();
+
+        LeanCollection<T> Sort(IComparer<T> comparer = null);
     }
 
     /// <summary>
     /// Stores up to 3 elements or an array in memory-efficient way. Implements <see cref="IEnumerable{T}"/> for convenience (LINQ, tests...) but ref-struct based <see cref="GetEnumerator()"/> methods should be preferred
     /// </summary>
-    public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnumerable<T>
+    public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnumerable<T>, IListOperations<T>
     {
         #region Fields
         enum CollectionSize : sbyte { More = -1, Zero = 0, One = 1, Two = 2, Three = 3 }
@@ -53,7 +73,7 @@ namespace Nemesis.TextParsers.Utils
         #endregion
 
         #region Constructors
-        public LeanCollection(T item1)
+        internal LeanCollection(T item1)
         {
             _item1 = item1;
             _item2 = default;
@@ -63,7 +83,7 @@ namespace Nemesis.TextParsers.Utils
             _size = CollectionSize.One;
         }
 
-        public LeanCollection(T item1, T item2)
+        internal LeanCollection(T item1, T item2)
         {
             _item1 = item1;
             _item2 = item2;
@@ -73,7 +93,7 @@ namespace Nemesis.TextParsers.Utils
             _size = CollectionSize.Two;
         }
 
-        public LeanCollection(T item1, T item2, T item3)
+        internal LeanCollection(T item1, T item2, T item3)
         {
             _item1 = item1;
             _item2 = item2;
@@ -225,18 +245,6 @@ namespace Nemesis.TextParsers.Utils
             public void Dispose() { }
         }
 
-        /// <summary>
-        /// Convert <see cref="LeanCollection{T}"/> to <see cref="List{T}"/>. This obviously allocates. For tests only
-        /// </summary>
-        public IReadOnlyList<T> ToList()
-        {
-            if (_size == CollectionSize.More) return _items;
-
-            var list = new List<T>(Size);
-            foreach (T element in this)
-                list.Add(element);
-            return list;
-        }
         #endregion
 
         #region Conversions
@@ -244,7 +252,7 @@ namespace Nemesis.TextParsers.Utils
         public static implicit operator LeanCollection<T>(T one) => new(one);
         public static implicit operator LeanCollection<T>((T, T) pair) => new(pair.Item1, pair.Item2);
         public static implicit operator LeanCollection<T>((T, T, T) triple) => new(triple.Item1, triple.Item2, triple.Item3);
-        //public static implicit operator LeanCollection<T>(T[] span) => new(span);
+
 
         private bool IsMore(int expectedSize) => _size == CollectionSize.More && _items?.Length >= expectedSize;
 
@@ -262,6 +270,7 @@ namespace Nemesis.TextParsers.Utils
                     CollectionSize.One => new[] { more._item1 },
                     CollectionSize.Two => new[] { more._item1, more._item2 },
                     CollectionSize.Three => new[] { more._item1, more._item2, more._item3 },
+                    //this is already covered above: CollectionSize.More => more._items.ToArray(),
                     _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised")
                 };
 
@@ -314,13 +323,22 @@ namespace Nemesis.TextParsers.Utils
         public static bool operator !=(LeanCollection<T> left, LeanCollection<T> right) => !left.Equals(right);
         #endregion
 
-        /// <summary>
-        /// Text representation. For debugging purposes only
-        /// </summary>
-        public override string ToString() => string.Join(" | ", ToList());
+        /// <summary>Text representation. For debugging purposes only</summary>
+        public override string ToString() => string.Join(" | ", ((IListOperations<T>)this).ToList());
 
-        [Pure]
-        public LeanCollection<T> Sort(IComparer<T> comparer = null)
+
+        #region IListOperations
+        IReadOnlyList<T> IListOperations<T>.ToList()
+        {
+            if (_size == CollectionSize.More) return _items;
+
+            var list = new List<T>(Size);
+            foreach (T element in this)
+                list.Add(element);
+            return list;
+        }
+
+        LeanCollection<T> IListOperations<T>.Sort(IComparer<T> comparer)
         {
             var size = _size;
             switch (size)
@@ -331,7 +349,7 @@ namespace Nemesis.TextParsers.Utils
 
                 case CollectionSize.Two:
                     comparer ??= Comparer<T>.Default;
-                    return comparer.Compare(_item1, _item2) <= 0 ? this : new LeanCollection<T>(_item2, _item1);
+                    return comparer.Compare(_item1, _item2) <= 0 ? this : new(_item2, _item1);
 
                 case CollectionSize.Three:
                     static void Swap(ref T t1, ref T t2)
@@ -355,13 +373,14 @@ namespace Nemesis.TextParsers.Utils
 
                         if (comparer.Compare(b, c) > 0)
                             Swap(ref b, ref c);
-                        return new LeanCollection<T>(a, b, c);
+                        return new(a, b, c);
                     }
                 default:
                     comparer ??= Comparer<T>.Default;
                     Array.Sort(_items, comparer);
-                    return new LeanCollection<T>(_items);
+                    return new(_items);
             }
-        }
+        } 
+        #endregion
     }
 }

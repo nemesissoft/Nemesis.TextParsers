@@ -66,8 +66,8 @@ namespace Nemesis.TextParsers.Settings
     public static class DeconstructableSettingsAttributeExtensions
     {
         public static DeconstructableSettings ToSettings(this Dsa attr) => new(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
-            attr.Start == '\0' ? (char?)null : attr.Start,
-            attr.End == '\0' ? (char?)null : attr.End,
+            attr.Start == '\0' ? null : attr.Start,
+            attr.End == '\0' ? null : attr.End,
             attr.UseDeconstructableEmpty);
     }
 }

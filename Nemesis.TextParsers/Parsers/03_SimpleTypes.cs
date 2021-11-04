@@ -838,7 +838,7 @@ namespace Nemesis.TextParsers.Parsers
 
         private VersionTransformer() { }
 
-        public override Version GetEmpty() => new Version(0, 0, 0, 0);
+        public override Version GetEmpty() => new(0, 0, 0, 0);
     }
 
     [UsedImplicitly]
@@ -858,14 +858,14 @@ namespace Nemesis.TextParsers.Parsers
 
         private IpAddressTransformer() { }
 
-        public override IPAddress GetEmpty() => new IPAddress(0);
+        public override IPAddress GetEmpty() => new(0);
     }
 
     [UsedImplicitly]
     public sealed class RegexTransformer : SimpleTransformer<Regex>
     {
         private const string TYPE_NAME = "Regex";
-        private static readonly TupleHelper _helper = new TupleHelper(';', '∅', '~', '{', '}');
+        private static readonly TupleHelper _helper = new(';', '∅', '~', '{', '}');
 
         protected override Regex ParseCore(in ReadOnlySpan<char> input)
         {
@@ -907,7 +907,7 @@ namespace Nemesis.TextParsers.Parsers
 
         private RegexTransformer() { }
 
-        public override Regex GetEmpty() => new Regex("", RegexOptions.None);
+        public override Regex GetEmpty() => new("", RegexOptions.None);
     }
 
     internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
@@ -1018,7 +1018,7 @@ namespace Nemesis.TextParsers.Parsers
     {
         private const string TYPE_NAME = "Complex number";
 
-        private static readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
+        private static readonly TupleHelper _helper = new(';', '∅', '\\', '(', ')');
 
         protected override Complex ParseCore(in ReadOnlySpan<char> input)
         {

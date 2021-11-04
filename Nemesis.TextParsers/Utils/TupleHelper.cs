@@ -145,7 +145,7 @@ These requirements were not met in:
         public void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index, string typeName = null)
         {
             static string ToOrdinal(byte number) =>
-                number % 100 is { } rem && rem >= 11 && rem <= 13
+                number % 100 is <= 13 and >= 11
                     ? $"{number}th"
                     : (number % 10) switch
                     {
