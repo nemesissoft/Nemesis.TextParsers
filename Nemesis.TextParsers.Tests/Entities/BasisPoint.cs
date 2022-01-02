@@ -55,8 +55,8 @@ namespace Nemesis.TextParsers.Tests.Entities
             bool IsCharEqual(ReadOnlySpan<char> t, int fromEnd, char upperExpectedChar)
             {
 #if DEBUG
-                Debug.Assert(char.IsUpper(upperExpectedChar), $"'{upperExpectedChar}' is not in upper case");
-                Debug.Assert(fromEnd <= length, $"NOT fromEnd<=length for {fromEnd} <= {length}");
+                System.Diagnostics.Debug.Assert(char.IsUpper(upperExpectedChar), $"'{upperExpectedChar}' is not in upper case");
+                System.Diagnostics.Debug.Assert(fromEnd <= length, $"NOT fromEnd<=length for {fromEnd} <= {length}");
 #endif
                 return t[length - fromEnd] is { } c &&
                        char.ToUpperInvariant(c) == upperExpectedChar;
