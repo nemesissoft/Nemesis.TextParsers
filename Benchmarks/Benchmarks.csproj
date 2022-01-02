@@ -5,9 +5,7 @@
 		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
-		<LangVersion>9.0</LangVersion>
-
+		
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<PublicSign>false</PublicSign>

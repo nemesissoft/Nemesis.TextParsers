@@ -52,7 +52,7 @@ namespace Nemesis.TextParsers.Parsers
         public ITransformer<TSimpleType> CreateTransformer<TSimpleType>()
         {
             return _simpleTransformers.TryGetValue(typeof(TSimpleType), out var transformer)
-                ? (ITransformer<TSimpleType>) transformer
+                ? (ITransformer<TSimpleType>)transformer
                 : throw new InvalidOperationException(
                     $"Internal state of {nameof(SimpleTransformerCreator)} was compromised");
         }
@@ -1063,6 +1063,36 @@ namespace Nemesis.TextParsers.Parsers
 
         private ComplexTransformer() { }
     }
+
+#if NET6_0
+
+    [UsedImplicitly]
+    public sealed class DateOnlyTransformer : SimpleFormattableTransformer<DateOnly>
+    {
+        protected override DateOnly ParseCore(in ReadOnlySpan<char> input) =>
+            DateOnly.Parse(input, Culture.InvCult, DateTimeStyles.RoundtripKind);
+
+        protected override string FormatString { get; } = "o";
+
+        public static readonly ITransformer<DateOnly> Instance = new DateOnlyTransformer();
+
+        private DateOnlyTransformer() { }
+    }
+
+    [UsedImplicitly]
+    public sealed class TimeOnlyTransformer : SimpleFormattableTransformer<TimeOnly>
+    {
+        protected override TimeOnly ParseCore(in ReadOnlySpan<char> input) =>
+            TimeOnly.Parse(input, Culture.InvCult, DateTimeStyles.RoundtripKind);
+
+        protected override string FormatString { get; } = "o";
+
+        public static readonly ITransformer<TimeOnly> Instance = new TimeOnlyTransformer();
+
+        private TimeOnlyTransformer() { }
+    }
+
+#endif
 
     #endregion
 }

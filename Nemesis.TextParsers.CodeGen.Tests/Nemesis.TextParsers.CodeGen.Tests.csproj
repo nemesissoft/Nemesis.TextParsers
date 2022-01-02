@@ -9,9 +9,9 @@
 	<ItemGroup>
 		<PackageReference Include="ApprovalTests" Version="5.4.3" />
 
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.*" />
-		<PackageReference Include="NUnit" Version="3.12.*" />
-		<PackageReference Include="NUnit3TestAdapter" Version="3.17.*" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+		<PackageReference Include="NUnit" Version="3.13.2" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
 
 		<PackageReference Include="Nemesis.CodeAnalysis" Version="1.0.0" />
 	</ItemGroup>
