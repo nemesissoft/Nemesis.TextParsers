@@ -14,14 +14,14 @@ namespace Nemesis.TextParsers.Tests
         {
             Type tupleType = typeof(TTuple);
 
-            bool isValueTuple = 
-                tupleType.IsValueType && tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition && 
-                tupleType.Namespace == "System" && tupleType.Name.StartsWith("ValueTuple`") ;
+            bool isValueTuple =
+                tupleType.IsValueType && tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
+                tupleType.Namespace == "System" && tupleType.Name.StartsWith("ValueTuple`");
             bool isKvp = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
                          tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
 
             Assert.IsTrue(isValueTuple || isKvp, "isValueTuple || isKvp");
-            
+
             var transformer = Sut.GetTransformer<TTuple>();
 
             return transformer;
@@ -162,7 +162,7 @@ namespace Nemesis.TextParsers.Tests
 
 
             (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
-#if !(NET5_0 || NETCOREAPP3_1)
+#if !(NET6_0 || NET5_0 || NETCOREAPP3_1)
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
 #else
             (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String ' ' was not recognized as a valid TimeSpan."),            
@@ -180,7 +180,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof(ValueTuple<TimeSpan>), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             
-#if !(NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent wit IEEE
+#if !(NET6_0 || NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent with IEEE
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
             (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
 #else
@@ -193,7 +193,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09)",typeof(ArgumentException), @"2nd element was not found after"),
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi,3.14,MorePie)",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
             
-#if !(NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent wit IEEE
+#if !(NET6_0 || NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent with IEEE
             (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999=OK", typeof(OverflowException), @"Value was either too large or too small for a Single"),
 
 #endif
