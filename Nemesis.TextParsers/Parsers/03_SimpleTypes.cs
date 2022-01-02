@@ -1070,7 +1070,7 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class DateOnlyTransformer : SimpleFormattableTransformer<DateOnly>
     {
         protected override DateOnly ParseCore(in ReadOnlySpan<char> input) =>
-            DateOnly.Parse(input, Culture.InvCult, DateTimeStyles.RoundtripKind);
+            DateOnly.Parse(input, Culture.InvCult, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowInnerWhite);
 
         protected override string FormatString { get; } = "o";
 
@@ -1083,7 +1083,7 @@ namespace Nemesis.TextParsers.Parsers
     public sealed class TimeOnlyTransformer : SimpleFormattableTransformer<TimeOnly>
     {
         protected override TimeOnly ParseCore(in ReadOnlySpan<char> input) =>
-            TimeOnly.Parse(input, Culture.InvCult, DateTimeStyles.RoundtripKind);
+            TimeOnly.Parse(input, Culture.InvCult, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowInnerWhite);
 
         protected override string FormatString { get; } = "o";
 

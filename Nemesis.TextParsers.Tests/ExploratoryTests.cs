@@ -7,13 +7,18 @@ using System.Net;
 using System.Numerics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+
 using AutoFixture;
+
 using JetBrains.Annotations;
+
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
 using Nemesis.TextParsers.Tests.Infrastructure;
+
 using NUnit.Framework;
+
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
@@ -132,6 +137,11 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.Next(2), _randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(100))
             );
 
+#if NET6_0
+            _fixture.Register(() => new DateOnly(_randomSource.Next(1, 9999), _randomSource.Next(1, 13), _randomSource.Next(1, 29)));
+            _fixture.Register(() => new TimeOnly(_randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(1000)));
+#endif
+
             Regex GetRandomRegex()
             {
                 var rs = _randomSource;
@@ -248,7 +258,7 @@ namespace Nemesis.TextParsers.Tests
         public void BeforeEachTest()
         {
             int seed = _randomSource.UseNewSeed();
-            Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext?.Test?.Name ?? "<no name>"} - seed = {seed}");
+            Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext.Test.Name} - seed = {seed}");
         }
 
 
@@ -297,7 +307,7 @@ namespace Nemesis.TextParsers.Tests
                 }
                 catch (Exception e)
                 {
-                    var ex = e is TargetInvocationException {InnerException: { } inner}
+                    var ex = e is TargetInvocationException { InnerException: { } inner }
                         ? inner
                         : e;
 
@@ -560,6 +570,9 @@ namespace Nemesis.TextParsers.Tests
             typeof(long), typeof(ulong),
             typeof(BigInteger), typeof(Complex),
             typeof(DateTime), typeof(TimeSpan), typeof(DateTimeOffset),
+#if NET6_0
+            typeof(DateOnly), typeof(TimeOnly), 
+#endif
             typeof(Guid), typeof(Guid?),
 
             //special system types
@@ -624,7 +637,7 @@ namespace Nemesis.TextParsers.Tests
             fixture.Register(Creator3);
 
             IAggressionBased<TElement> InterfaceCreator() =>
-                randomSource.NextDouble() < 0.33 ? (IAggressionBased<TElement>)Creator1() : Creator3();
+                randomSource.NextDouble() < 0.33 ? Creator1() : Creator3();
 
             fixture.Register(InterfaceCreator);
         }
@@ -646,9 +659,7 @@ namespace Nemesis.TextParsers.Tests
         private static void RegisterNullable<TUnderlyingType>(IFixture fixture, RandomSource randomSource)
             where TUnderlyingType : struct
         {
-            TUnderlyingType? Creator() => randomSource.NextDouble() < 0.1
-                ? (TUnderlyingType?)null
-                : fixture.Create<TUnderlyingType>();
+            TUnderlyingType? Creator() => randomSource.NextDouble() < 0.1 ? null : fixture.Create<TUnderlyingType>();
 
             fixture.Register(Creator);
         }

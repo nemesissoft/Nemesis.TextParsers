@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
@@ -22,7 +21,7 @@ namespace Nemesis.TextParsers.Tests.Entities
 
         public BasisPoint(double realValue) => RealValue = realValue;
 
-        public static BasisPoint FromBps(double bps) => new BasisPoint(bps / BPS_FACTOR);
+        public static BasisPoint FromBps(double bps) => new(bps / BPS_FACTOR);
 
 
         #region Equals
@@ -39,6 +38,10 @@ namespace Nemesis.TextParsers.Tests.Entities
         #endregion
 
         public override string ToString() => FormattableString.Invariant($"{BpsValue} bps");
+
+        public static bool operator ==(BasisPoint left, BasisPoint right) => left.Equals(right);
+
+        public static bool operator !=(BasisPoint left, BasisPoint right) => !(left == right);
     }
 
     [TextConverterSyntax("Number followed by optional 'bps' letters. BasisPoint - 1bs is 1/100th of 1%")]
