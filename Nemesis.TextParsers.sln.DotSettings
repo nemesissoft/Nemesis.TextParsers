@@ -11,8 +11,10 @@
 	<s:String x:Key="/Default/PatternsAndTemplates/Todo/TodoPatterns/=0DA8C152F064324C8597A9B42F677253/Pattern/@EntryValue">(?&lt;=\W|^)(?&lt;TAG&gt;GH \#(?&lt;ISSUE_ID&gt;\d+))(\W|$)(.*)</s:String>
 	<s:String x:Key="/Default/PatternsAndTemplates/Todo/TodoPatterns/=0DA8C152F064324C8597A9B42F677253/TodoIconStyle/@EntryValue">Error</s:String>
 	<s:String x:Key="/Default/PatternsAndTemplates/Todo/TodoPatterns/=0DA8C152F064324C8597A9B42F677253/UrlPattern/@EntryValue">https://github.com/nemesissoft/Nemesis.TextParsers/issues/${ISSUE_ID}</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Agama/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=aggr/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Borderable/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Comodo/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Contravariance/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=ctors/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Deconstructable/@EntryIndexedValue">True</s:Boolean>
@@ -21,6 +23,9 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Escapable/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Formattable/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=imag/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Janusz/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Korwin/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Mikke/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Msil/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Multiplicator/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Na_00EFve/@EntryIndexedValue">True</s:Boolean>

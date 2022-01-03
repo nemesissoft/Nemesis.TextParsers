@@ -1,5 +1,4 @@
 ﻿using System;
-
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
@@ -8,13 +7,14 @@ using NUnit.Framework;
 using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+// ReSharper disable NotAccessedPositionalProperty.Local
 #endif
 
 
 namespace Nemesis.TextParsers.Tests
 {
     [TestFixture]
-    class Records_AutomaticTransformation
+    class RecordsAutomaticTransformation
     {
         [TestCase(typeof(Vertebrate), "(Agama)")]
         [TestCase(typeof(ReptileWithName), "(Agama;Terrestrial)")]
@@ -32,7 +32,7 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void ShouldBeAbleToReparseComplexRecords()
         {
-            var collector = new AnimalCollector("Mike", 36, new[]
+            var collector = new AnimalCollector("Mike", 36, new Vertebrate[]
             {
                 new ReptileWithName("Comodo Dragon", Habitat.Terrestrial),
                 new TerrestrialLizard(Diet.Carnivorous)
@@ -51,8 +51,9 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(parsed.Animals[1].Name, Is.EqualTo("Lizard"));
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnusedMember.Local")]
         enum Habitat { Terrestrial, Aquatic, Amphibian }
-
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnusedMember.Local")]
         enum Diet { Carnivorous, Herbivorous, Omnivorous }
 
         record Vertebrate(string Name)
@@ -61,18 +62,18 @@ namespace Nemesis.TextParsers.Tests
         }
 
         //repeat Name property to become part of contract
-        record ReptileWithName(string Name, Habitat Habitat) : Vertebrate(Name) { }
+        record ReptileWithName(string Name, Habitat Habitat) : Vertebrate(Name);
 
-        record ReptileWithoutName(Habitat Habitat) : Vertebrate { }
+        //record ReptileWithoutName(Habitat Habitat) : Vertebrate; //this will loose Name property
 
         //omit repetitions in case you want to fix them - but pass fixed values as argument list for base class specification 
-        record TerrestrialLizard(Diet Diet) : ReptileWithName("Lizard", Habitat.Terrestrial) { }
+        record TerrestrialLizard(Diet Diet) : ReptileWithName("Lizard", Habitat.Terrestrial);
 
-        record AnimalCollector(string Name, byte Age, Vertebrate[] Animals/*serialization of this array will loose data not available on Vertebrate level*/) { }
+        record AnimalCollector(string Name, byte Age, Vertebrate[] Animals/*serialization of this array will loose data not available on Vertebrate level*/);
     }
 
     [TestFixture]
-    class Records_Transformables
+    class RecordsTransformersTests
     {
         [Test]
         public void ShouldBeAbleToReparse()
@@ -93,7 +94,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [Transformer(typeof(PersonTransformer))]
-        record Person(string FirstName, string FamilyName, int Age) { }
+        record Person(string FirstName, string FamilyName, int Age);
 
         class PersonTransformer : CustomDeconstructionTransformer<Person>
         {
@@ -109,7 +110,7 @@ namespace Nemesis.TextParsers.Tests
     }
 
     [TestFixture]
-    class Records_CustomTransformer
+    class RecordsCustomTransformerTests
     {
         [TestCase(null, double.NaN, double.NaN, double.NaN)]
         [TestCase("", 0.0, 0.0, 0.0)]
@@ -125,8 +126,8 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(parsed?.Third ?? double.NaN, Is.EqualTo(expectedThird));
 
 
-            var formated = sut.Format(parsed);
-            var parsed2 = sut.Parse(formated);
+            var formatted = sut.Format(parsed);
+            var parsed2 = sut.Parse(formatted);
             Assert.That(parsed, Is.EqualTo(parsed2));
         }
 
@@ -141,7 +142,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [Transformer(typeof(TripletTransformer<>))]
-        record Triplet<T>(T First, T Second, T Third) where T : struct { }
+        record Triplet<T>(T First, T Second, T Third) where T : struct;
 
         class TripletTransformer<TValue> : TransformerBase<Triplet<TValue>> where TValue : struct
         {
@@ -153,7 +154,7 @@ namespace Nemesis.TextParsers.Tests
             private const char ELEMENT_DELIMITER = '#';
             private const char ESCAPING_SEQUENCE_START = '\\';
 
-            public override Triplet<TValue> GetEmpty() => new Triplet<TValue>(default, default, default);
+            public override Triplet<TValue> GetEmpty() => new(default, default, default);
 
             protected override Triplet<TValue> ParseCore(in ReadOnlySpan<char> input)
             {

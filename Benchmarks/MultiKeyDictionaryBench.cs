@@ -42,8 +42,8 @@ namespace Benchmarks
         {
             var dict = new Dictionary<string, int>(COUNT);
             int i = 0;
-            foreach (var key in _keys)
-                dict["Client=" + key.Client + " Username=" + key.Username + " Token=" + key.Token] = i++;
+            foreach (var (client, username, token) in _keys)
+                dict["Client=" + client + " Username=" + username + " Token=" + token] = i++;
 
             return dict;
         }
