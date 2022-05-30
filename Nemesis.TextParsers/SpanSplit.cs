@@ -19,7 +19,7 @@ namespace Nemesis.TextParsers
             private readonly T _separator;
             private readonly bool _emptySequenceYieldsEmpty;
 
-            public Enumerator1<T> GetEnumerator() => new Enumerator1<T>(_sequence, _separator, _emptySequenceYieldsEmpty);
+            public Enumerator1<T> GetEnumerator() => new(_sequence, _separator, _emptySequenceYieldsEmpty);
         }
 
         public readonly ref struct Enumerable2<T> where T : IEquatable<T>
@@ -37,7 +37,7 @@ namespace Nemesis.TextParsers
             private readonly T _separator2;
             private readonly bool _emptySequenceYieldsEmpty;
 
-            public Enumerator2<T> GetEnumerator() => new Enumerator2<T>(_sequence, _separator1, _separator2, _emptySequenceYieldsEmpty);
+            public Enumerator2<T> GetEnumerator() => new(_sequence, _separator1, _separator2, _emptySequenceYieldsEmpty);
         }
 
         public readonly ref struct Enumerable3<T> where T : IEquatable<T>
@@ -57,7 +57,7 @@ namespace Nemesis.TextParsers
             private readonly T _separator3;
             private readonly bool _emptySequenceYieldsEmpty;
 
-            public Enumerator3<T> GetEnumerator() => new Enumerator3<T>(_sequence, _separator1, _separator2, _separator3, _emptySequenceYieldsEmpty);
+            public Enumerator3<T> GetEnumerator() => new(_sequence, _separator1, _separator2, _separator3, _emptySequenceYieldsEmpty);
         }
 
         public readonly ref struct EnumerableN<T> where T : IEquatable<T>
@@ -73,7 +73,7 @@ namespace Nemesis.TextParsers
             private readonly ReadOnlySpan<T> _separators;
             private readonly bool _emptySequenceYieldsEmpty;
 
-            public EnumeratorN<T> GetEnumerator() => new EnumeratorN<T>(_sequence, _separators, _emptySequenceYieldsEmpty);
+            public EnumeratorN<T> GetEnumerator() => new(_sequence, _separators, _emptySequenceYieldsEmpty);
         }
 
 
@@ -288,19 +288,19 @@ namespace Nemesis.TextParsers
         #region Extensions
         [PureMethod]
         public static Enumerable1<T> Split<T>(this ReadOnlySpan<T> span, T separator, bool emptySequenceYieldsEmpty = false)
-            where T : IEquatable<T> => new Enumerable1<T>(span, separator, emptySequenceYieldsEmpty);
+            where T : IEquatable<T> => new(span, separator, emptySequenceYieldsEmpty);
 
         [PureMethod]
         public static Enumerable2<T> Split<T>(this ReadOnlySpan<T> span, T separator1, T separator2, bool emptySequenceYieldsEmpty = false)
-            where T : IEquatable<T> => new Enumerable2<T>(span, separator1, separator2, emptySequenceYieldsEmpty);
+            where T : IEquatable<T> => new(span, separator1, separator2, emptySequenceYieldsEmpty);
 
         [PureMethod]
         public static Enumerable3<T> Split<T>(this ReadOnlySpan<T> span, T separator1, T separator2, T separator3, bool emptySequenceYieldsEmpty = false)
-            where T : IEquatable<T> => new Enumerable3<T>(span, separator1, separator2, separator3, emptySequenceYieldsEmpty);
+            where T : IEquatable<T> => new(span, separator1, separator2, separator3, emptySequenceYieldsEmpty);
 
         [PureMethod]
         public static EnumerableN<T> Split<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> values, bool emptySequenceYieldsEmpty = false)
-            where T : IEquatable<T> => new EnumerableN<T>(span, values, emptySequenceYieldsEmpty);
+            where T : IEquatable<T> => new(span, values, emptySequenceYieldsEmpty);
         #endregion
     }
 }

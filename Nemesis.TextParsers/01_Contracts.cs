@@ -6,6 +6,7 @@ using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers
 {
+    //TODO support nullable NRT
     [PublicAPI]
     public interface ITransformer
     {

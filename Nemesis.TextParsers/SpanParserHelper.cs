@@ -10,12 +10,12 @@ namespace Nemesis.TextParsers
         public static TokenSequence<T> Tokenize<T>(this in ReadOnlySpan<T> sequence, T separator, T escapingElement,
             bool emptySequenceYieldsEmpty)
             where T : IEquatable<T> =>
-            new TokenSequence<T>(sequence, separator, escapingElement, emptySequenceYieldsEmpty);
+            new(sequence, separator, escapingElement, emptySequenceYieldsEmpty);
 
         [PureMethod]
         public static ParsingSequence PreParse(this in TokenSequence<char> tokenSource, char escapingElement,
             char nullElement, char sequenceDelimiter) =>
-            new ParsingSequence(tokenSource, escapingElement, nullElement, sequenceDelimiter);
+            new(tokenSource, escapingElement, nullElement, sequenceDelimiter);
 
         
 

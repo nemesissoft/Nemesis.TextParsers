@@ -26,7 +26,7 @@ namespace Nemesis.TextParsers
         }
         #endregion
 
-        public ParsingPairSequenceEnumerator GetEnumerator() => new ParsingPairSequenceEnumerator(_tokenSource,
+        public ParsingPairSequenceEnumerator GetEnumerator() => new(_tokenSource,
             _escapingSequenceStart, _nullElementMarker, _dictionaryPairsDelimiter, _dictionaryKeyValueDelimiter);
 
         public ref struct ParsingPairSequenceEnumerator

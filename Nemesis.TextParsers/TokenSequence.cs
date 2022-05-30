@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers
         private readonly TElement _escapingElement;
         private readonly bool _emptySequenceYieldsEmpty;
 
-        public TokenSequenceEnumerator GetEnumerator() => new TokenSequenceEnumerator(_sequence, _separator, _escapingElement, _emptySequenceYieldsEmpty);
+        public TokenSequenceEnumerator GetEnumerator() => new(_sequence, _separator, _escapingElement, _emptySequenceYieldsEmpty);
 
         public ref struct TokenSequenceEnumerator
         {

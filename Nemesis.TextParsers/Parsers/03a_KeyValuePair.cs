@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -29,7 +31,7 @@ namespace Nemesis.TextParsers.Parsers
 
             var m = _createTransformerCoreMethod.MakeGenericMethod(keyType, valueType);
 
-            return (ITransformer<TPair>) m.Invoke(this, null);
+            return (ITransformer<TPair>)m.Invoke(this, null);
         }
 
         private static readonly MethodInfo _createTransformerCoreMethod = Method.OfExpression<
@@ -95,11 +97,7 @@ namespace Nemesis.TextParsers.Parsers
                 }
             }
 
-            public override KeyValuePair<TKey, TValue> GetEmpty() =>
-                new KeyValuePair<TKey, TValue>(
-                    _keyTransformer.GetEmpty(),
-                    _valueTransformer.GetEmpty()
-                );
+            public override KeyValuePair<TKey, TValue> GetEmpty() => new(_keyTransformer.GetEmpty(), _valueTransformer.GetEmpty());
         }
 
         public bool CanHandle(Type type) =>

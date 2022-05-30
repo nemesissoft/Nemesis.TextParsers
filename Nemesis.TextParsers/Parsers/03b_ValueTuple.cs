@@ -76,8 +76,7 @@ namespace Nemesis.TextParsers.Parsers
 
         private bool IsSupported(Type type, out Type[] elementTypes) =>
             TypeMeta.TryGetValueTupleElements(type, out elementTypes) &&
-            elementTypes != null &&
-            elementTypes.Length is { } arity && arity <= MAX_ARITY && arity >= 1 &&
+            elementTypes is {Length: <= MAX_ARITY and >= 1} &&
             elementTypes.All(t => _transformerStore.IsSupportedForTransformation(t));
         
         public sbyte Priority => 12;

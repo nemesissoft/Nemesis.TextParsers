@@ -105,13 +105,13 @@ namespace Nemesis.TextParsers.Parsers
                 case CollectionKind.SortedSet:
                     {
                         ISet<TElement> result = _kind == CollectionKind.HashSet
-                            ? (ISet<TElement>)new HashSet<TElement>(
+                            ? new HashSet<TElement>(
 #if NETSTANDARD2_0 || NETFRAMEWORK
 
 #else
-                            capacity
+                                capacity
 #endif
-                        )
+                            )
                             : new SortedSet<TElement>();
 
                         foreach (var part in stream)

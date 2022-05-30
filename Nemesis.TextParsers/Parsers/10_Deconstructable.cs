@@ -9,9 +9,9 @@ using Nemesis.TextParsers.Utils;
 using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
 using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
 #if !NET
-using NotNull = JetBrains.Annotations.NotNullAttribute;
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
 
 
@@ -33,8 +33,7 @@ namespace Nemesis.TextParsers.Parsers
 
         public bool CanHandle(Type type) =>
             Builder.TryGetDefaultDeconstruct(type, out _, out var ctor) &&
-            ctor.GetParameters() is { } cp && cp.Length > 0 &&
-            cp.All(pi => _transformerStore.IsSupportedForTransformation(pi.ParameterType))
+            ctor.GetParameters() is {Length: > 0} cp && cp.All(pi => _transformerStore.IsSupportedForTransformation(pi.ParameterType))
         ;
 
         public sbyte Priority => 110;
@@ -55,7 +54,6 @@ namespace Nemesis.TextParsers.Parsers
         ProvidedDeconstructMethod = 1,
     }
 
-    //TODO rework as record + WithBorders + WithoutBorders methods
     public sealed class DeconstructionTransformerBuilder
     {
         private readonly ITransformerStore _transformerStore;
@@ -88,7 +86,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
         }
 
         public static Builder FromSettings(DeconstructableSettings settings, ITransformerStore transformerStore) =>
-            new Builder(transformerStore,
+            new(transformerStore,
                 settings.Delimiter,
                 settings.NullElementMarker,
                 settings.EscapingSequenceStart,
@@ -470,9 +468,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             {
                 var decoSourceType = deconstruct.GetParameters()[0].ParameterType;
 
-                return element.Type == decoSourceType
-                    ? (Expression)element
-                    : Expression.Convert(element, decoSourceType);
+                return element.Type == decoSourceType ? element : Expression.Convert(element, decoSourceType);
             }
 
             var expressions = new List<Expression>(7 + 2 * arity)

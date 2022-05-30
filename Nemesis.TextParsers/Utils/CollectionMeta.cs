@@ -194,7 +194,7 @@ namespace Nemesis.TextParsers.Utils
             return genericInterfaceType.GenericTypeArguments[0];
         }
 
-        private static readonly HashSet<Type> _supportedCollectionTypes = new HashSet<Type>()
+        private static readonly HashSet<Type> _supportedCollectionTypes = new()
         {
             typeof(IEnumerable<>),
             typeof(ICollection<>),

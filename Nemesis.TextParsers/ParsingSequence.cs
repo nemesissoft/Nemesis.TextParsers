@@ -22,7 +22,7 @@ namespace Nemesis.TextParsers
             _sequenceDelimiter = sequenceDelimiter;
         }
         
-        public ParsingSequenceEnumerator GetEnumerator() => new ParsingSequenceEnumerator(_tokenSource, _escapingSequenceStart, _nullElementMarker, _sequenceDelimiter);
+        public ParsingSequenceEnumerator GetEnumerator() => new(_tokenSource, _escapingSequenceStart, _nullElementMarker, _sequenceDelimiter);
 
         public ref struct ParsingSequenceEnumerator
         {
@@ -121,12 +121,11 @@ Only ['{_escapingSequenceStart}','{_nullElementMarker}','{_sequenceDelimiter}'] 
             text = Text;
         }
 
-        public static ParserInput FromDefault() => new ParserInput(true, default);
+        public static ParserInput FromDefault() => new(true, default);
 
-        public static ParserInput FromText(ReadOnlySpan<char> text) => new ParserInput(false, text);
+        public static ParserInput FromText(ReadOnlySpan<char> text) => new(false, text);
 
-        public T ParseWith<T>(ITransformer<T> transformer)
-            => IsDefault ? default : transformer.Parse(Text);
+        public T ParseWith<T>(ITransformer<T> transformer) => IsDefault ? default : transformer.Parse(Text);
 
         public override string ToString() => IsDefault ? "<DEFAULT>" : Text.ToString();
     }

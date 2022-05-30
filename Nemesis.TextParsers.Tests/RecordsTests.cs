@@ -4,12 +4,12 @@ using Nemesis.TextParsers.Utils;
 
 using NUnit.Framework;
 #if !NET
-using NotNull = JetBrains.Annotations.NotNullAttribute;
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
-// ReSharper disable NotAccessedPositionalProperty.Local
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
 
+// ReSharper disable NotAccessedPositionalProperty.Local
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -51,13 +51,12 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(parsed.Animals[1].Name, Is.EqualTo("Lizard"));
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnusedMember.Local")]
-        enum Habitat { Terrestrial, Aquatic, Amphibian }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnusedMember.Local")]
-        enum Diet { Carnivorous, Herbivorous, Omnivorous }
+        enum Habitat { Terrestrial/*, Aquatic, Amphibian*/ }
+        enum Diet { Carnivorous/*, Herbivorous, Omnivorous*/ }
 
         record Vertebrate(string Name)
         {
+            [JetBrains.Annotations.UsedImplicitly]
             public Vertebrate() : this("") { }
         }
 

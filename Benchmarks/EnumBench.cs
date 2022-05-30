@@ -463,6 +463,77 @@ namespace Benchmarks
             return current;
         }
     }
+    
+    /* .NET Core 3.1.22 (CoreCLR 4.700.21.56803, CoreFX 4.700.21.57101), X64 RyuJIT
+|          Method |     Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|---------------- |---------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
+| EnumTransformer | 2.859 us | 0.0462 us | 0.0409 us |  1.00 |    0.00 |     - |     - |     - |         - |
+|       Generated | 3.161 us | 0.0523 us | 0.0489 us |  1.11 |    0.02 |     - |     - |     - |         - |
+
+    .NET Core 6.0.1 (CoreCLR 6.0.121.56705, CoreFX 6.0.121.56705), X64 RyuJIT
+|          Method |     Mean |     Error |    StdDev | Ratio | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|---------------- |---------:|----------:|----------:|------:|------:|------:|------:|----------:|
+| EnumTransformer | 2.648 us | 0.0419 us | 0.0392 us |  1.00 |     - |     - |     - |         - |
+|       Generated | 2.226 us | 0.0144 us | 0.0128 us |  0.84 |     - |     - |     - |         - |*/
+    [MemoryDiagnoser]
+    public class EnumParserBenchNonFlagGenerated
+    {
+        public enum DayOfWeek : byte
+        {
+            None ,
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday,
+            Sunday,
+        }
+
+        public static string[] AllEnums =
+            Enumerable.Range(0, 50).Select(i => ((DayOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
+
+        private static readonly ITransformer<DayOfWeek> _parser = TextTransformer.Default.GetTransformer<DayOfWeek>();
+
+
+        [Benchmark(Baseline = true)]
+        public DayOfWeek EnumTransformer()
+        {
+            DayOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = _parser.Parse(text.AsSpan());
+            }
+            return current;
+        }
+        
+        [Benchmark]
+        public DayOfWeek Generated()
+        {
+            DayOfWeek current = default;
+            for (int i = AllEnums.Length - 1; i >= 0; i--)
+            {
+                var text = AllEnums[i];
+                current = ParseIgnoreCase(text);
+            }
+            return current;
+        }
+
+        private static DayOfWeek ParseIgnoreCase(string text) =>
+            text switch
+            {
+                { } s when s.Equals(nameof(DayOfWeek.None), StringComparison.OrdinalIgnoreCase) => DayOfWeek.None,
+                { } s when s.Equals(nameof(DayOfWeek.Monday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Monday,
+                { } s when s.Equals(nameof(DayOfWeek.Tuesday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Tuesday,
+                { } s when s.Equals(nameof(DayOfWeek.Wednesday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Wednesday,
+                { } s when s.Equals(nameof(DayOfWeek.Thursday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Thursday,
+                { } s when s.Equals(nameof(DayOfWeek.Friday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Friday,
+                { } s when s.Equals(nameof(DayOfWeek.Saturday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Saturday,
+                { } s when s.Equals(nameof(DayOfWeek.Sunday), StringComparison.OrdinalIgnoreCase) => DayOfWeek.Sunday,
+                _ => Enum.Parse<DayOfWeek>(text, true)
+            };
+    }
 
     [MemoryDiagnoser]
     public class ToEnumBench
@@ -665,6 +736,12 @@ namespace Benchmarks
         }*/
     }
 
+    /* NET Core 3.1
+|           Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|----------------- |----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
+|   HasFlag_Native | 0.2376 ns | 0.0026 ns | 0.0023 ns |  0.98 |    0.03 |     - |     - |     - |         - |
+| HasFlags_Dynamic | 5.4291 ns | 0.1069 ns | 0.2183 ns | 22.68 |    1.01 |     - |     - |     - |         - |
+| HasFlags_Bitwise | 0.2407 ns | 0.0043 ns | 0.0059 ns |  1.00 |    0.00 |     - |     - |     - |         - | */
     [MemoryDiagnoser]
     [SimpleJob(RuntimeMoniker.Net47)]
     [SimpleJob(RuntimeMoniker.NetCoreApp31)]

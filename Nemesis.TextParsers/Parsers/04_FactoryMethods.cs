@@ -96,27 +96,19 @@ namespace Nemesis.TextParsers.Parsers
 
             return methodInputType == typeof(string)
                 ? new StringFactoryTransformer<TElement>(body, inputParameter, formatter, emptyValueProvider, nullValueProvider)
-                : (ITransformer<TElement>)
-                  new SpanFactoryTransformer<TElement>(body, inputParameter, formatter, emptyValueProvider, nullValueProvider);
+                : new SpanFactoryTransformer<TElement>(body, inputParameter, formatter, emptyValueProvider, nullValueProvider);
 
 
             MethodInfo FindMethodWithParameterType(Type paramType) =>
                 conversionMethods.FirstOrDefault(m =>
-                    m.GetParameters() is { } @params && @params.Length == 1 &&
-                    @params[0].ParameterType == paramType);
+                    m.GetParameters() is {Length: 1} @params && @params[0].ParameterType == paramType);
         }
-
         
         private static bool FactoryMethodPredicate(MethodInfo m, Type returnType, string factoryMethodName) =>
             m.Name == factoryMethodName &&
-            m.GetParameters() is { } @params && @params.Length == 1 &&
-            @params[0].ParameterType is { } firstParamType &&
-            (
-                firstParamType == typeof(string)
-                ||
-                firstParamType == typeof(ReadOnlySpan<char>)
-            )
-            &&
+            m.GetParameters() is {Length: 1} @params &&
+            @params[0].ParameterType is { } firstParamType && 
+            (firstParamType == typeof(string) || firstParamType == typeof(ReadOnlySpan<char>)) &&
             (
                 m.ReturnType == returnType
                 ||

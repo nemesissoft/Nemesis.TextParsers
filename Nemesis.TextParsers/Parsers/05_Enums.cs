@@ -5,20 +5,18 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using JetBrains.Annotations;
-
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 #if !NET
-using NotNull = JetBrains.Annotations.NotNullAttribute;
+    using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
 
 
 namespace Nemesis.TextParsers.Parsers
 {
-    [UsedImplicitly]
+    [JetBrains.Annotations.UsedImplicitly]
     public sealed class EnumTransformerCreator : ICanCreateTransformer
     {
         private readonly EnumSettings _settings;
@@ -86,7 +84,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
         private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser;
 
         // ReSharper disable once RedundantVerbatimPrefix
-        public EnumTransformer([@NotNull] TNumberHandler numberHandler, EnumSettings settings)
+        public EnumTransformer([NotNull] TNumberHandler numberHandler, EnumSettings settings)
         {
             _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
             _settings = settings;
@@ -124,8 +122,8 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
             if (_settings.AllowParsingNumerics)
             {
-                bool isNumeric = input.Length > 0 && input[0] is { } first &&
-                                 (char.IsDigit(first) || first == '-' || first == '+');
+                bool isNumeric = input.Length > 0 && input[0] is var first &&
+                                 (char.IsDigit(first) || first is '-' or '+');
 
                 return isNumeric && _numberHandler.TryParse(in input, out var number)
                     ? number
@@ -222,7 +220,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
         private static Expression IfThenElseJoin<TResult>(IReadOnlyList<(Expression Condition, TResult value)> expressionList, Expression lastElse, LabelTarget exitTarget)
         {
-            if (expressionList != null && expressionList.Count > 0)
+            if (expressionList is {Count: > 0})
             {
                 Expression @else = lastElse;
 

@@ -8,7 +8,7 @@ namespace Nemesis.TextParsers.Utils
         public static object GetInstanceOrCreate(Type type, Type returnType)
         {
             const BindingFlags PUB_STAT_FLAGS = BindingFlags.Public | BindingFlags.Static;
-
+            
             if (type.GetProperty("Instance", PUB_STAT_FLAGS) is { } singletonProperty &&
                 singletonProperty.GetMethod != null &&
                 returnType.IsAssignableFrom(singletonProperty.PropertyType)

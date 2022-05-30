@@ -6,7 +6,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
+
 using JetBrains.Annotations;
+
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Utils
@@ -150,7 +152,7 @@ namespace Nemesis.TextParsers.Utils
                 kind != DictionaryKind.Unknown
                )
             {
-                (Type keyType, Type valueType) = GetPairType(dictType);
+                var (keyType, valueType) = GetPairType(dictType);
                 return new(kind, keyType, valueType);
             }
 
@@ -203,7 +205,7 @@ namespace Nemesis.TextParsers.Utils
         };
 
         public static bool IsTypeSupported(Type dictType) =>
-            dictType is {IsGenericType: true} && dictType.GetGenericTypeDefinition() is { } definition &&
+            dictType is { IsGenericType: true } && dictType.GetGenericTypeDefinition() is { } definition &&
             _supportedDictionaryTypes.Contains(definition);
     }
 
