@@ -1,4 +1,4 @@
-﻿# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
+# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
 
 [![Build status - master](https://img.shields.io/appveyor/ci/Nemesis/nemesis-textparsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master)
 [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message&style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests)
@@ -52,22 +52,22 @@ or even create similar constructs to be in line with object oriented design:
 ```csharp
 public abstract class TextTypeConverter : TypeConverter
 {
-    public sealed override bool CanConvertFrom(ITypeDescriptorContextcontext, Type sourceType) =>
-        sourceType == typeof(string) || base.CanConvertFrom(context, ourceType);
+    public sealed override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
+        sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
 
-    public sealed override bool CanConvertTo(ITypeDescriptorContext ontext, Type destinationType) =>
-        destinationType == typeof(string) || base.CanConvertTocontext, destinationType);
+    public sealed override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
+        destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
 }
 
 public abstract class BaseTextConverter<TValue> : TextTypeConverter
 {
-    public sealed override object ConvertFrom(ITypeDescriptorContext ontext, CultureInfo culture, object value) =>
+    public sealed override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
         value is string text ? ParseString(text) : default;
 
     public abstract TValue ParseString(string text);
     
 
-    public sealed override object ConvertTo(ITypeDescriptorContext ontext, CultureInfo culture, object value, Type estinationType) =>
+    public sealed override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
         destinationType == typeof(string) ?
             FormatToString((TValue)value) :
             base.ConvertTo(context, culture, value, destinationType);
@@ -82,7 +82,7 @@ TypeConverter was designed 15+ years ago when processing power tended to double 
 But imagine a service application like exchange trading suite that has to perform multiple operations per second and in such cases processor has more important thing to do than parsing strings. 
 
 ### Features
-0. as concise as possible - both JSON or XML exist but thay are not ready to be created from hand by human support
+0. as concise as possible - both JSON or XML exist but they are not ready to be created from hand by human support
 1. works in various architectures supporting .Net Core and .Net Standard and is culture independent 
 2. support for basic system types (C#-like type names):
    * string
@@ -104,7 +104,7 @@ But imagine a service application like exchange trading suite that has to perfor
    * User defined collections 
    * everything mentioned above but combined with inner elements properly escaped in final string i.e. **SortedDictionary&lt;char?, IList&lt;float[][]&gt;&gt;**
 5. ability to fallback to TypeConverter if no parsing/formatting strategy was found 
-6. parsing is **fast** to while allocating as little memory as possible upon parsing. The follwing benchmark illustrates this speed via parsing 1000 element array 
+6. parsing is **fast** to while allocating as little memory as possible upon parsing. The following benchmark illustrates this speed via parsing 1000 element array 
 
 |                     Method |        Mean | Ratio |    Gen 0 |  Gen 1 | Allocated | Remarks |
 |--------------------------- |-------------|-------|----------|--------|-----------|-----------|
@@ -116,7 +116,7 @@ But imagine a service application like exchange trading suite that has to perfor
 
 7. provides basic building blocks for parser's callers to be able to create their own transformers/factories 
     * LeanCollection that can store 1,2,3 or more elements 
-    * [SpanSplit](Nemesis.TextParsers/SpanSplit.cs) - string.Split equivalent is provided to accept faster representaion of string - ReadOnlySpan&lt;char&gt;. Supports both standard and custom escaping sequences
+    * [SpanSplit](Nemesis.TextParsers/SpanSplit.cs) - string.Split equivalent is provided to accept faster representation of string - ReadOnlySpan&lt;char&gt;. Supports both standard and custom escaping sequences
     * access to every implemented parser/formatter
 8. basic LINQ support 
 ```csharp
@@ -135,7 +135,7 @@ using (var enumerator = coll.GetEnumerator())
         FormatElement(formatter, enumerator.Current, ref accumulator);
 return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
 ```
-11. use C# 9.0 code-gen to provive sevaral transformers (currently automatic generation of deconstructable pattern, more to follow in future)
+11. use C# 9.0 code-gen to provide several transformers (currently automatic generation of deconstructable pattern, more to follow in future)
 
 
 ## Funding
