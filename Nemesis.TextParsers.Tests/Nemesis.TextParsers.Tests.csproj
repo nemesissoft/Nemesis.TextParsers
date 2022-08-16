@@ -11,19 +11,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Nemesis.Essentials" Version="1.*" />
+		<PackageReference Include="Nemesis.Essentials" />
 
-		<PackageReference Include="AutoFixture" Version="4.*" />
-		<PackageReference Include="FluentAssertions" Version="5.*" />
+		<PackageReference Include="AutoFixture" />
+		<PackageReference Include="FluentAssertions" />
 
 
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-		<PackageReference Include="NUnit" Version="3.13.2" />
-		<PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
 
-		<PackageReference Include="System.Memory" Version="4.*" />
+		<PackageReference Include="System.Memory" />
 
-		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.*" />
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
 	</ItemGroup>
 
 	<ItemGroup>

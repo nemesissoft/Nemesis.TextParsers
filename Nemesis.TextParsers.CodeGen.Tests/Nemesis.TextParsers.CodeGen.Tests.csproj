@@ -7,13 +7,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ApprovalTests" Version="5.4.3" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
 
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-		<PackageReference Include="NUnit" Version="3.13.2" />
-		<PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
+		<PackageReference Include="Nemesis.CodeAnalysis" />
 
-		<PackageReference Include="Nemesis.CodeAnalysis" Version="1.0.0" />
+		<PackageReference Include="ApprovalTests" />
 	</ItemGroup>
 
 	<ItemGroup>

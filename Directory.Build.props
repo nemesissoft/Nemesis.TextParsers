@@ -3,7 +3,8 @@
 		<Version>1.0.0</Version>
 		<!--This will get replaced by Build System-->
 		<LangVersion>10.0</LangVersion>
-		<!--<NullableContextOptions>enable</NullableContextOptions>-->
+		
+		<!--TODO <Nullable>enable</Nullable>-->
 
 		<Authors>Michał Bryłka, Leszek Kowalski</Authors>
 		<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>

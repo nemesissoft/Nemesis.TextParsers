@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
-  <!--Append source information to PackageDescription.-->
-  <Target Name="_AppendCommonPackageDescription" 
-          BeforeTargets="InitializeStandardNuspecProperties;GenerateNuspec" 
-          DependsOnTargets="InitializeSourceControlInformation"
-          Condition="'$(IsPackable)' == 'true'">
-    <PropertyGroup>
-      <PackageDescription>
-      $(PackageDescription)
-      This package was built from the source at $(RepositoryUrl.TrimEnd('.git'))/tree/$(SourceRevisionId)
-      </PackageDescription>
-    </PropertyGroup>
-  </Target>
+	<Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.1.3" />
+
+	<!--Append source information to PackageDescription.-->
+	<Target Name="_AppendCommonPackageDescription"
+			BeforeTargets="InitializeStandardNuspecProperties;GenerateNuspec"
+			DependsOnTargets="InitializeSourceControlInformation"
+			Condition="'$(IsPackable)' == 'true'">
+		<PropertyGroup>
+			<PackageDescription>
+				$(PackageDescription)
+				This package was built from the source at $(RepositoryUrl.TrimEnd('.git'))/tree/$(SourceRevisionId)
+			</PackageDescription>
+		</PropertyGroup>
+	</Target>
 </Project>
