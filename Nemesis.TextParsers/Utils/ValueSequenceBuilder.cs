@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemesis.TextParsers.Utils
 {
+    //TODO rework + add Append(ROS<>) + add ValueStringBuilder 
     public ref struct ValueSequenceBuilder<T>
     {
         private Span<T> _current;

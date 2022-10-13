@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Utils
 {
+    //TODO rework
     [PublicAPI]
     public static class LeanCollectionFactory
     {

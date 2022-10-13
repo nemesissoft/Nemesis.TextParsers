@@ -50,7 +50,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(
                 Sut.GetTransformer<PointWithBadConverter>,
                 Throws.TypeOf<NotSupportedException>()
-                    .With.Message.EqualTo("PointWithBadConverter is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+                    .With.Message.EqualTo("Type 'PointWithBadConverter' is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
                 );
         }
 
@@ -62,13 +62,13 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(
                 () => sut.CreateTransformer<PointWithoutConverter>(),
                 Throws.TypeOf<NotSupportedException>()
-                    .With.Message.EqualTo(@"PointWithoutConverter is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
+                    .With.Message.EqualTo(@"Type 'PointWithoutConverter' is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
                 );
 
             Assert.That(
                 () => sut.CreateTransformer<object>(),
                 Throws.TypeOf<NotSupportedException>()
-                    .With.Message.EqualTo(@"object is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
+                    .With.Message.EqualTo(@"Type 'object' is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
                 );
         }
 
@@ -89,13 +89,13 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(
                 Sut.GetTransformer<PointWithoutConverter>,
                 Throws.TypeOf<NotSupportedException>()
-                    .With.Message.EqualTo(@"PointWithoutConverter is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+                    .With.Message.EqualTo(@"Type 'PointWithoutConverter' is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
             );
 
             Assert.That(
                 Sut.GetTransformer<object>,
                 Throws.TypeOf<NotSupportedException>()
-                    .With.Message.EqualTo(@"object is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+                    .With.Message.EqualTo(@"Type 'object' is not supported for text transformation. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
             );
         }
     }
