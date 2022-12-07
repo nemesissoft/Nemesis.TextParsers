@@ -6,7 +6,7 @@ using NUnit.Framework;
 #if !NET
     using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
-    using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
 
 // ReSharper disable NotAccessedPositionalProperty.Local
@@ -25,7 +25,7 @@ namespace Nemesis.TextParsers.Tests
             reptile = reptile with { Name = "Agama" };
 
             var actual = Sut.GetTransformer(contractType).FormatObject(reptile);
-            
+
             Assert.That(actual, Is.EqualTo(expectedResult));
         }
 
@@ -132,7 +132,14 @@ namespace Nemesis.TextParsers.Tests
 
         [TestCase("1.5#2.6", typeof(FormatException), "Cannot parse triples from 2 values only")]
         [TestCase("1.5#2.6#3.7#4.8", typeof(FormatException), "Cannot parse triples from more than 3 values")]
-        [TestCase("3#ABC", typeof(FormatException), "Input string was not in a correct format.")]
+        [TestCase("3#ABC", typeof(FormatException),
+#if NET7_0_OR_GREATER
+            "The input string 'ABC' was not in a correct format."
+#else
+            "Input string was not in a correct format."
+#endif
+
+            )]
         public void ShouldBeAbleToParse_Negative(string input, Type expectedException, string expectedMessage)
         {
             var sut = Sut.GetTransformer<Triplet<double>>();

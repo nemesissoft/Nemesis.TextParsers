@@ -67,7 +67,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
         public sbyte Priority => 50;
-        
+
         public override string ToString() =>
             $"Create transformer for Dictionary-like structures with settings:{_settings}";
     }
@@ -88,7 +88,7 @@ namespace Nemesis.TextParsers.Parsers
         }
 
 
-        protected ParsingPairSequence ParsePairsStream(in ReadOnlySpan<char> text)
+        protected ParsingPairSequence ParsePairsStream(scoped in ReadOnlySpan<char> text)
         {
             var toParse = text;
 

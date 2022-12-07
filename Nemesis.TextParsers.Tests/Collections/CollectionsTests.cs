@@ -7,8 +7,8 @@ using System.Numerics;
 using System.Reflection;
 using Nemesis.TextParsers.Settings;
 using NUnit.Framework;
-using TCD = NUnit.Framework.TestCaseData;
 using static Nemesis.TextParsers.Tests.TestHelper;
+using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Collections
 {
@@ -217,7 +217,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(ulong), @"-1|0", typeof(OverflowException)),
             (typeof(ulong), @"18446744073709551615|18446744073709551616", typeof(OverflowException)),
 
-#if !(NET6_0 || NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent with IEEE
+#if !NETCOREAPP3_1_OR_GREATER //core 3.1 removed overflow errors for float to be consistent with IEEE
             (typeof(float), @"-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", typeof(OverflowException)),
             (typeof(float), @" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
 #endif
@@ -330,7 +330,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(DateTime?), Enumerable.Range(1, 7).Select(i => i % 3 == 0 ? (DateTime?) null : new DateTime(2000+i, i, i * 2, i*3, i*4, i*5, i*111)).ToList(),
                 @"2001-01-02T03:04:05.1110000|2002-02-04T06:08:10.2220000|∅|2004-04-08T12:16:20.4440000|2005-05-10T15:20:25.5550000|∅|2007-07-14T21:28:35.7770000" ),
 
-#if NET6_0
+#if NET6_0_OR_GREATER
             (typeof(DateOnly), Enumerable.Range(1, 7).Select(i => new DateOnly(2000+i, i, i * 2)).ToList(),
                 @"2001-01-02|2002-02-04|2003-03-06|2004-04-08|2005-05-10|2006-06-12|2007-07-14" ),
 
@@ -462,33 +462,16 @@ namespace Nemesis.TextParsers.Tests.Collections
                 Enumerable.Range(0, 10).Select(i => new Option((OptionEnum)(i *9 % 10))).ToList(),
                 @" None |  9 |  8 |  7 |  6 |  5 |  4 |  Option3 |  Option2 |  Option1"),
 
-            (typeof(IAggressionBased<int>), Enumerable.Range(1, 5).Select(i => AggressionBasedFactory<int>.FromPassiveNormalAggressive(i, i * 10 + 1, i * 20)).ToList(),
-                @"1#11#20|2#21#40|3#31#60|4#41#80|5#51#100" ),
 
-            (typeof(IAggressionBased<List<float>>), Enumerable.Range(1, 5).Select(
-                    i => i == 2 ? null
-                        : AggressionBasedFactory<List<float>>.FromPassiveNormalAggressive(
-                            new List<float> { 10 * i, 10 * i + 1, 10 * i + 2, 10 * i + 3 },
-                            null,
-                            new List<float> { 100 * i, 100 * i + 1, 100 * i + 2 })).ToList(),
-                @"10\|11\|12\|13#\∅#100\|101\|102|∅|30\|31\|32\|33#\∅#300\|301\|302|40\|41\|42\|43#\∅#400\|401\|402|50\|51\|52\|53#\∅#500\|501\|502" ),
-
-            (typeof(SortedDictionary<char, IAggressionBased<float[]>>),
+            (typeof(SortedDictionary<char, float[]>),
                 Enumerable.Range(1, 3).Select(i =>
-                    new SortedDictionary<char, IAggressionBased<float[]>>()
+                    new SortedDictionary<char, float[]>()
                     {
-                        [(char)(65+(i-1)*3+0)]=AggressionBasedFactory<float[]>.FromPassiveNormalAggressive(
-                            new[]{i*10 + 0.5f,i*10 + 1.5f},
-                            new[]{i*10 + 2.5f},
-                            new[]{i*10 + 3.5f}),
-                        [(char)(65+(i-1)*3+1)]=AggressionBasedFactory<float[]>.FromPassiveNormalAggressive(
-                            new[]{i*100 + 0.5f,i*100 + 1.5f},
-                            new[]{i*100 + 2.5f},
-                            new[]{i*100 + 3.5f}),
-
+                        [(char)(65+(i-1)*3+0)] = new[]{ i*10 + 0.5f, i*10 + 1.5f, i*10 + 2.5f, i*10 + 3.5f},
+                        [(char)(65+(i-1)*3+1)] = new[]{ i*100 + 0.5f, i*100 + 1.5f, i*100 + 2.5f, i*100 + 3.5f},
                     }
                 ).ToList(),
-                @"A=10.5\|11.5#12.5#13.5;B=100.5\|101.5#102.5#103.5|D=20.5\|21.5#22.5#23.5;E=200.5\|201.5#202.5#203.5|G=30.5\|31.5#32.5#33.5;H=300.5\|301.5#302.5#303.5"),
+                @"A=10.5\|11.5\|12.5\|13.5;B=100.5\|101.5\|102.5\|103.5|D=20.5\|21.5\|22.5\|23.5;E=200.5\|201.5\|202.5\|203.5|G=30.5\|31.5\|32.5\|33.5;H=300.5\|301.5\|302.5\|303.5"),
 
             (typeof(KeyValuePair<string, float?>),
                 new[]
@@ -601,23 +584,6 @@ namespace Nemesis.TextParsers.Tests.Collections
         }
 
         [Test]
-        public void AggressionBased_OfList_Tests()
-        {
-            var input = AggressionBasedFactory<List<float?>>.FromPassiveNormalAggressive(
-                        Enumerable.Range(1, 3).Select(i => i == 2 ? (float?)null : 10 * i).ToList(),
-                        null,
-                        Enumerable.Range(10, 6).Select(i => i % 2 == 0 ? (float?)null : 10 * i).ToList()
-                );
-
-            var transformer = Sut.GetTransformer<IAggressionBased<List<float?>>>();
-
-            string text = transformer.Format(input);
-            Assert.That(text, Is.EqualTo(@"10|\∅|30#∅#\∅|110|\∅|130|\∅|150"));
-            var deser = transformer.Parse(text.AsSpan());
-            Assert.That(deser, Is.EqualTo(input));
-        }
-
-        [Test]
         public void Complex_List_Roundtrip_Test()
         {
             var arrayTrans = _store.GetTransformer<int?[]>();
@@ -633,21 +599,14 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             var parsed2 = arrayTrans.Parse(@"300|||400");
             Assert.That(parsed2, Is.EqualTo(new int?[] { 300, null, null, 400 }));
-
-
-            var trans = Sut.GetTransformer<IAggressionBased<int?[]>>();
-            var parsed3 = trans.Parse(@"3000|\∅|\∅|4000");
-            Assert.That(
-                parsed3.ToList().SingleOrDefault(),
-                Is.EqualTo(new int?[] { 3000, null, null, 4000 }));
         }
 
 
         private static IEnumerable<TCD> InnerCollectionsData() => new[]
         {
-            new TCD("01", new List<string>{null}, @"[∅]"),
-            new TCD("02", new List<string>(), @""),
-            new TCD("03", new List<string>{""}, @"[]"),
+            new TCD("01", new List<string>{null}, @"[∅]"),//one null element
+            new TCD("02", new List<string>(), @""),//empty list
+            new TCD("03", new List<string>{""}, @"[]"),//one empty element
 
             new TCD("04", new List<string[]>
             {
@@ -680,22 +639,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             }, @"[|[1\|2\|3]|]"),
             new TCD("10", Array.Empty<List<string>>(), @""),
 
-
-            new TCD("11", AggressionBasedFactory<List<string>>.FromOneValue(null) , @"∅"), //null
-            new TCD("12", AggressionBasedFactory<List<string>>.FromOneValue(new List<string>()) , @""), //empty
-            new TCD("13", AggressionBasedFactory<List<string>>.FromOneValue(new List<string>{""}) , @"[]"), //one empty element
-            new TCD("14", AggressionBasedFactory<List<string>>.FromOneValue(new List<string>{null}) , @"[∅]"), //one null element
-            
-            new TCD("15", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
-                    new List<string>{""}, new List<string>{""}, new List<string>{""}
-                   ), @"[]#[]#[]"),
-
-            new TCD("16", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
-                null, new List<string>(), new List<string>{""}
-            ), @"∅##[]"), //null # empty # one empty element
-            new TCD("17", AggressionBasedFactory<List<string>>.FromPassiveNormalAggressiveChecked(
-                null, new List<string>{null}, new List<string>{""}
-            ), @"∅#[∅]#[]"), //null # empty # one empty element
+            new TCD("11", new List<string[]>{null, Array.Empty<string>(), new[] {""} }, @"[∅||[]]"),//null # empty # one empty element
         };
 
         [TestCaseSource(nameof(InnerCollectionsData))]

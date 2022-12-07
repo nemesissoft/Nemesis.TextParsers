@@ -61,18 +61,6 @@ namespace Nemesis.TextParsers.Tests
                     typeof(Fruits[]), typeof(Dictionary<Fruits, double>),
                     typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
                     typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
-
-                    typeof(IAggressionBased<int>), typeof(IAggressionBased<string>),
-                    typeof(IAggressionBased<LowPrecisionFloat>), typeof(IAggressionBased<bool>),
-                    typeof(IAggressionBased<float?>),
-                    typeof(IAggressionBased<int[]>),
-                    typeof(IAggressionBased<ValueTuple<bool, bool>>),
-                    typeof(IAggressionBased<List<string>>), typeof(List<IAggressionBased<string>>),
-                    typeof(IAggressionBased<List<float>>), typeof(List<IAggressionBased<float>>),
-                    typeof(IAggressionBased<List<TimeSpan>>), typeof(List<IAggressionBased<TimeSpan>>),
-                    typeof(IAggressionBased<List<IAggressionBased<TimeSpan[]>>>),
-
-                    typeof(IAggressionBased<TimeSpan[]>), typeof(IAggressionBased<TimeSpan>), typeof(IAggressionBased<float>), typeof(IAggressionBased<string>),
                 }
             ).ToList();
 
@@ -137,7 +125,7 @@ namespace Nemesis.TextParsers.Tests
                 _randomSource.Next(2), _randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(100))
             );
 
-#if NET6_0
+#if NET6_0_OR_GREATER
             _fixture.Register(() => new DateOnly(_randomSource.Next(1, 9999), _randomSource.Next(1, 13), _randomSource.Next(1, 29)));
             _fixture.Register(() => new TimeOnly(_randomSource.Next(24), _randomSource.Next(60), _randomSource.Next(60), _randomSource.Next(1000)));
 #endif
@@ -186,7 +174,10 @@ namespace Nemesis.TextParsers.Tests
                 } while ((options & RegexOptions.ECMAScript) != 0
                          && (options & ~(RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.Multiline |
                                          RegexOptions.Compiled | RegexOptions.CultureInvariant)) != 0);
-
+#if NET7_0_OR_GREATER
+                if ((options & RegexOptions.NonBacktracking) != 0)
+                    options &= ~(RegexOptions.ECMAScript | RegexOptions.RightToLeft);
+#endif
                 return new Regex(pattern, options);
             }
             _fixture.Register(GetRandomRegex);
@@ -232,14 +223,6 @@ namespace Nemesis.TextParsers.Tests
 
             FixtureUtils.RegisterAllValueTuples(_fixture, valueTuples);
 
-            var aggBasedElements = _allTestCases
-                .Where(d => d.category == ExploratoryTestCategory.AggressionBased)
-                .Select(d => d.type)
-                .Where(t => TypeMeta.TryGetGenericRealization(t, typeof(IAggressionBased<>), out _))
-                .Select(t => TypeMeta.GetGenericRealization(t, typeof(IAggressionBased<>)).GenericTypeArguments[0])
-                .ToList();
-            FixtureUtils.RegisterAllAggressionBased(_fixture, _randomSource, aggBasedElements);
-
 
             var nonNullableStructs = structs
                 .Where(t => t.IsValueType && Nullable.GetUnderlyingType(t) == null);
@@ -282,9 +265,6 @@ namespace Nemesis.TextParsers.Tests
 
         [Test]
         public void Collections() => ShouldParseAndFormat(ExploratoryTestCategory.Collections);
-
-        [Test]
-        public void AggressionBased() => ShouldParseAndFormat(ExploratoryTestCategory.AggressionBased);
 
         [Test]
         public void Classes() => ShouldParseAndFormat(ExploratoryTestCategory.Classes);
@@ -403,8 +383,6 @@ namespace Nemesis.TextParsers.Tests
 
                     if (Nullable.GetUnderlyingType(testType) is { } underlyingType)
                         Assert.That(parsed, Is.TypeOf(underlyingType));
-                    else if (testType.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)))
-                        Assert.That(parsed.GetType().DerivesOrImplementsGeneric(typeof(IAggressionBased<>)), $"{parsed} != {testType.GetFriendlyName()}");
                     else if (testType.IsInterface)
                         Assert.That(parsed, Is.AssignableTo(testType));
                     else
@@ -433,8 +411,6 @@ namespace Nemesis.TextParsers.Tests
         Arrays,
         Dictionaries,
         Collections,
-
-        AggressionBased,
 
         Classes,
         Remaining
@@ -473,7 +449,6 @@ namespace Nemesis.TextParsers.Tests
 
             var dictionaries = Carve(t => t.DerivesOrImplementsGeneric(typeof(IDictionary<,>)));
             var collections = Carve(t => t.DerivesOrImplementsGeneric(typeof(IEnumerable<>)) && t != typeof(string));
-            var aggressionBased = Carve(t => t.DerivesOrImplementsGeneric(typeof(IAggressionBased<>)));
 
             var classes = Carve(t => !t.IsValueType && !t.IsArray);
             var remaining = allTypes;
@@ -509,14 +484,6 @@ namespace Nemesis.TextParsers.Tests
 
             structs.UnionWith(structs.Select(GetNullableCounterpart).ToList());
 
-            var originalAggressionBased = aggressionBased.ToList();
-
-            aggressionBased.UnionWith(
-                simpleTypes.Union(valueTuples)
-                    .Select(t => typeof(IAggressionBased<>).MakeGenericType(t))
-                );
-
-            simpleTypes = simpleTypes.Concat(originalAggressionBased).ToList();
 
             arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType()));
             arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType().MakeArrayType()));
@@ -532,11 +499,6 @@ namespace Nemesis.TextParsers.Tests
                 );
 
 
-            var ab = typeof(IAggressionBased<>);
-            foreach (var type in allTypesCopy)
-                if (!type.DerivesOrImplementsGeneric(ab))
-                    aggressionBased.Add(ab.MakeGenericType(type));
-
             var @return = new List<(ExploratoryTestCategory category, Type type)>();
 
             void ProjectAndAdd(ExploratoryTestCategory category, IEnumerable<Type> types) =>
@@ -549,7 +511,6 @@ namespace Nemesis.TextParsers.Tests
             ProjectAndAdd(ExploratoryTestCategory.Arrays, arrays);
             ProjectAndAdd(ExploratoryTestCategory.Dictionaries, dictionaries);
             ProjectAndAdd(ExploratoryTestCategory.Collections, collections);
-            ProjectAndAdd(ExploratoryTestCategory.AggressionBased, aggressionBased);
             ProjectAndAdd(ExploratoryTestCategory.Classes, classes);
             ProjectAndAdd(ExploratoryTestCategory.Remaining, remaining);
 
@@ -570,7 +531,7 @@ namespace Nemesis.TextParsers.Tests
             typeof(long), typeof(ulong),
             typeof(BigInteger), typeof(Complex),
             typeof(DateTime), typeof(TimeSpan), typeof(DateTimeOffset),
-#if NET6_0
+#if NET6_0_OR_GREATER
             typeof(DateOnly), typeof(TimeOnly), 
 #endif
             typeof(Guid), typeof(Guid?),
@@ -597,52 +558,6 @@ namespace Nemesis.TextParsers.Tests
 
     internal static class FixtureUtils
     {
-        public static void RegisterAllAggressionBased(Fixture fixture, RandomSource randomSource, IEnumerable<Type> elementTypes)
-        {
-            foreach (var elementType in elementTypes)
-            {
-                var register = MakeDelegate<Action<IFixture, RandomSource>>(
-                    (fix, rs) => RegisterAggressionBased<int>(fix, rs), elementType
-                );
-
-                register(fixture, randomSource);
-            }
-        }
-
-        private static void RegisterAggressionBased<TElement>(IFixture fixture, RandomSource randomSource)
-        {
-            AggressionBased1<TElement> Creator1() => new(fixture.Create<TElement>());
-
-            AggressionBased3<TElement> Creator3()
-            {
-                TElement pass = fixture.Create<TElement>(),
-                    norm = fixture.Create<TElement>(),
-                    aggr = fixture.Create<TElement>();
-
-                int i = 0;
-                while (StructuralEquality.Equals(pass, norm) && StructuralEquality.Equals(pass, aggr))
-                {
-                    norm = fixture.Create<TElement>();
-                    aggr = fixture.Create<TElement>();
-
-                    if (i++ > 100)
-                        throw new InvalidOperationException($"Cannot create instance for {typeof(TElement).GetFriendlyName()}");
-                }
-
-                return new AggressionBased3<TElement>(pass, norm, aggr);
-            }
-
-            fixture.Register(Creator1);
-
-            fixture.Register(Creator3);
-
-            IAggressionBased<TElement> InterfaceCreator() =>
-                randomSource.NextDouble() < 0.33 ? Creator1() : Creator3();
-
-            fixture.Register(InterfaceCreator);
-        }
-
-
         public static void RegisterAllNullable(Fixture fixture, RandomSource randomSource, IEnumerable<Type> structs)
         {
             var registerMethod = Method

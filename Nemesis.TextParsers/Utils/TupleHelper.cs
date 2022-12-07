@@ -30,7 +30,7 @@ namespace Nemesis.TextParsers.Utils
 Passed parameters: 
 {nameof(tupleDelimiter)} = '{tupleDelimiter}'
 {nameof(nullElementMarker)} = '{nullElementMarker}'
-{nameof(escapingSequenceStart)} = '{escapingSequenceStart }'
+{nameof(escapingSequenceStart)} = '{escapingSequenceStart}'
 {nameof(tupleStart)} = '{tupleStart}'
 {nameof(tupleEnd)} = '{tupleEnd}'");
 
@@ -136,7 +136,7 @@ Passed parameters:
             return span.Slice(start, end - start + 1);
 
             static Exception GetStateException(string text, char? start, char? end, string typeName) => new ArgumentException(
-                     $@"{typeName ?? "Tuple" } representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
+                     $@"{typeName ?? "Tuple"} representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
 These requirements were not met in:
 '{text ?? "<NULL>"}'");
         }

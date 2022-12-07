@@ -45,21 +45,7 @@ namespace Nemesis.TextParsers.Tests
 
         public static void IsMutuallyEquivalent(object o1, object o2, string because = "")
         {
-            if (
-                o1 != null && TypeMeta.TryGetGenericRealization(o1.GetType(), typeof(IAggressionBased<>), out var ab1) &&
-                ab1.GenericTypeArguments[0] is var elem1 &&
-                o2 != null && TypeMeta.TryGetGenericRealization(o2.GetType(), typeof(IAggressionBased<>), out var ab2) &&
-                ab2.GenericTypeArguments[0] is var elem2 &&
-                elem1 == elem2
-            )
-            {
-                var abEquivalent = MakeDelegate<Action<object, object>>(
-                    (a1, a2) => IsMutuallyEquivalentAggressionBased<int>(a1, a2), elem1
-                );
-
-                abEquivalent(o1, o2);
-            }
-            else if (o1 is Regex re1 && o2 is Regex re2)
+            if (o1 is Regex re1 && o2 is Regex re2)
             {
                 Assert.That(re1.Options, Is.EqualTo(re2.Options));
                 Assert.That(re1.ToString(), Is.EqualTo(re2.ToString()));
@@ -90,15 +76,6 @@ namespace Nemesis.TextParsers.Tests
             o1.Offset == o2.Offset &&
             o1.Count == o2.Count;
 
-        private static void IsMutuallyEquivalentAggressionBased<T>(object o1, object o2)
-        {
-            var ab1 = (IAggressionBased<T>)o1;
-            var ab2 = (IAggressionBased<T>)o2;
-
-            IsMutuallyEquivalent(ab1.PassiveValue, ab2.PassiveValue);
-            IsMutuallyEquivalent(ab1.NormalValue, ab2.NormalValue);
-            IsMutuallyEquivalent(ab1.AggressiveValue, ab2.AggressiveValue);
-        }
 
         public static TDelegate MakeDelegate<TDelegate>(Expression<TDelegate> expression, params Type[] typeArguments)
             where TDelegate : Delegate
@@ -150,19 +127,14 @@ namespace Nemesis.TextParsers.Tests
 
             store ??= Sut.DefaultStore;
 
-            Type transType =
-                TypeMeta.TryGetGenericRealization(instance.GetType(), typeof(IAggressionBased<>), out var realization) &&
-                        realization.GenericTypeArguments.Length == 1 &&
-                        realization.GenericTypeArguments[0] is { } elementType
-                ? typeof(IAggressionBased<>).MakeGenericType(elementType)
-                : instance.GetType();
-
+            Type transType = instance.GetType();
 
             var sut = store.GetTransformer(transType);
 
+            string formattedInstance = sut.FormatObject(instance);
+
             var actualParsed1 = sut.ParseObject(text);
 
-            string formattedInstance = sut.FormatObject(instance);
             string formattedActualParsed = sut.FormatObject(actualParsed1);
             Assert.That(formattedInstance, Is.EqualTo(formattedActualParsed));
 

@@ -16,7 +16,7 @@ namespace Nemesis.TextParsers
 
         #region Ctors/factories
 
-        public ParsingPairSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter)
+        public ParsingPairSequence(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter)
         {
             _tokenSource = tokenSource;
             _escapingSequenceStart = escapingSequenceStart;
@@ -59,7 +59,7 @@ namespace Nemesis.TextParsers
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private PairParserInput ParsePair(in ReadOnlySpan<char> input)
+            private PairParserInput ParsePair(scoped in ReadOnlySpan<char> input)
             {
                 var delimiter = _dictionaryKeyValueDelimiter;
                 var unescapedKvp = input.UnescapeCharacter(_escapingSequenceStart, _dictionaryPairsDelimiter);
@@ -70,11 +70,11 @@ namespace Nemesis.TextParsers
 
                 if (!kvpEnumerator.MoveNext())
                     throw new ArgumentException($@"Key{delimiter}Value part was not found");
-                var key = ProcessElement(kvpEnumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
+                var key = ProcessElement(kvpEnumerator.Current, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
                 if (!kvpEnumerator.MoveNext())
                     throw new ArgumentException($"'{key.ToString()}' has no matching value");
-                var value = ProcessElement(kvpEnumerator.Current,  _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
+                var value = ProcessElement(kvpEnumerator.Current, _escapingSequenceStart, _dictionaryKeyValueDelimiter, _nullElementMarker);
 
                 if (kvpEnumerator.MoveNext())
                 {
@@ -83,11 +83,11 @@ namespace Nemesis.TextParsers
                 }
                 //if (key == null) throw new ArgumentException("Key equal to NULL is not supported");
 
-                return new PairParserInput(key, value);
+                return PairParserInput.FromKvp(key, value);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static ParserInput ProcessElement(in ReadOnlySpan<char> input, 
+            private static ParserInput ProcessElement(scoped in ReadOnlySpan<char> input,
                 char escapingSequenceStart, char dictionaryKeyValueDelimiter, char nullElementMarker)
             {
                 var unescapedInput = input.UnescapeCharacter(escapingSequenceStart, dictionaryKeyValueDelimiter);
@@ -124,6 +124,8 @@ namespace Nemesis.TextParsers
             key = Key;
             value = Value;
         }
+
+        public static PairParserInput FromKvp(scoped ParserInput key, scoped ParserInput value) => new(key, value);
 
         public override string ToString() => $"{Key.ToString()}={Value.ToString()}";
     }

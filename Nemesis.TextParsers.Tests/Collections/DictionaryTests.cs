@@ -1,17 +1,10 @@
 ﻿// ReSharper disable RedundantUsingDirective
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
-using Nemesis.TextParsers.Settings;
 using NUnit.Framework;
-using Dss = System.Collections.Generic.SortedDictionary<string, string>;
-using Nemesis.TextParsers.Utils;
 using static Nemesis.TextParsers.Tests.TestHelper;
+using Dss = System.Collections.Generic.SortedDictionary<string, string>;
 // ReSharper restore RedundantUsingDirective
 
 namespace Nemesis.TextParsers.Tests.Collections
@@ -87,21 +80,21 @@ namespace Nemesis.TextParsers.Tests.Collections
         }
 
         [Test]
-        public void Dict_CompoundTestsAggBasedAndList()
+        public void Dict_CompoundTestsArrayAndList()
         {
-            var sut = Sut.GetTransformer<Dictionary<IAggressionBased<float>, List<TimeSpan>>>();
+            var sut = Sut.GetTransformer<Dictionary<float[], List<TimeSpan>>>();
 
             var dict = Enumerable.Range(0, 4).ToDictionary(
-                i => AggressionBasedFactory<float>.FromPassiveNormalAggressive(10 * i, 10 * i + 1, 10 * i + 2),
+                i => new float[] { 10.1f * i, 10.2f * i + 1, 10.3f * i + 2 },
                 i => new List<TimeSpan> { new TimeSpan(i, i + 1, i + 2, i + 3), new TimeSpan(10 * i, 10 * i + 1, 10 * i + 2, 10 * i + 3) });
 
             var text = sut.Format(dict);
-            Assert.That(text, Is.EqualTo("0#1#2=01:02:03|01:02:03;10#11#12=1.02:03:04|10.11:12:13;20#21#22=2.03:04:05|20.21:22:23;30#31#32=3.04:05:06|31.07:32:33"));
+            Assert.That(text, Is.EqualTo(@"0|1|2=01:02:03|01:02:03;10.1|11.2|12.3=1.02:03:04|10.11:12:13;20.2|21.4|22.6=2.03:04:05|20.21:22:23;30.300001|31.599998|32.9=3.04:05:06|31.07:32:33"));
 
             //dict.Remove(dict.First().Key);
 
             var deser = sut.Parse(text);
-            Assert.That(deser, Is.EqualTo(dict));
+            Assert.That(deser, Is.EquivalentTo(dict));
         }
 
 
@@ -118,7 +111,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                 Assert.That(result, Is.Null);
             else
                 Assert.That(result, Is.EqualTo(data.expectedDict));
-            
+
             /*if (data.expectedDict == null)
                 Console.WriteLine(@"NULL dictionary");
             else if (!data.expectedDict.Any())

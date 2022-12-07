@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
 using Nemesis.Essentials.Runtime;
+using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.TestHelper;
 
 namespace Nemesis.TextParsers.Tests
@@ -151,9 +151,27 @@ namespace Nemesis.TextParsers.Tests
         internal static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)>
             Bad_Tuple_Data() => new[]
         {
-            (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException), @"Input string was not in a correct format"),
-            (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), @"Input string was not in a correct format"),
-            (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException), @"Input string was not in a correct format"),
+            (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException),
+#if NET7_0_OR_GREATER
+                @"The input string 'abc' was not in a correct format."
+#else
+                @"Input string was not in a correct format"
+#endif
+            ),
+            (typeof(KeyValuePair<float?, string>), @" ", typeof(FormatException), 
+#if NET7_0_OR_GREATER
+                @"The input string ' ' was not in a correct format."
+#else
+                @"Input string was not in a correct format"
+#endif
+            ),
+            (typeof(KeyValuePair<float?, string>), @" =", typeof(FormatException), 
+#if NET7_0_OR_GREATER
+                @"The input string ' ' was not in a correct format."
+#else
+                @"Input string was not in a correct format"
+#endif
+            ),
 
             (typeof(KeyValuePair<float?, string>), @"15=ABC=TooMuch", typeof(ArgumentException), @"Key-value pair of arity=2 separated by '=' cannot have more than 2 elements: 'TooMuch'"),
             (typeof(KeyValuePair<float?, string>), @"15", typeof(ArgumentException), @"2nd element was not found after '15'"),
@@ -162,10 +180,10 @@ namespace Nemesis.TextParsers.Tests
 
 
             (typeof((TimeSpan, int, float, string, decimal)), @" ",typeof(ArgumentException), NO_PARENTHESES_ERROR),
-#if !(NET6_0 || NET5_0 || NETCOREAPP3_1)
-            (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
+#if NETCOREAPP3_1_OR_GREATER
+            (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String ' ' was not recognized as a valid TimeSpan."),                        
 #else
-            (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String ' ' was not recognized as a valid TimeSpan."),            
+            (typeof((TimeSpan, int, float, string, decimal)), @"( )",typeof(FormatException), @"String was not recognized as a valid TimeSpan"),
 #endif
 
             (typeof((TimeSpan, int, float, string, decimal, bool, byte, FileMode, int)), @"3.14:15:09,3,3.14,Pi,3.14,True,15,(CreateNew\,89)", typeof(ArgumentException), NO_PARENTHESES_ERROR),
@@ -180,12 +198,12 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"3.14:15:09,3,3.14,Pi,3.14,MorePie",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             (typeof(ValueTuple<TimeSpan>), @"3.14:15:09",typeof(ArgumentException), NO_PARENTHESES_ERROR),
             
-#if !(NET6_0 || NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent with IEEE
+#if NETCOREAPP3_1_OR_GREATER
+            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),
+            (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),                  
+#else
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
             (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan could not be parsed because at least one of the numeric components is out of range or contains too many digits"),
-#else
-            (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:99,3,3.14,Pi,3.14)",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),
-            (typeof((TimeSpan, int, float, string, decimal)), @" (3.14:15:99,3,3.14,Pi,3.14) ",typeof(OverflowException), @"The TimeSpan string '3.14:15:99' could not be parsed because at least one of the numeric components is out of range or contains too many digits."),      
 #endif
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi)",typeof(ArgumentException), @"5th element was not found after"),
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14)",typeof(ArgumentException), @"4th element was not found after"),
@@ -193,7 +211,7 @@ namespace Nemesis.TextParsers.Tests
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09)",typeof(ArgumentException), @"2nd element was not found after"),
             (typeof((TimeSpan, int, float, string, decimal)), @"(3.14:15:09,3,3.14,Pi,3.14,MorePie)",typeof(ArgumentException), @"Tuple of arity=5 separated by ',' cannot have more than 5 elements: 'MorePie'"),
             
-#if !(NET6_0 || NET5_0 || NETCOREAPP3_1) //core 3.1 removed overflow errors for float to be consistent with IEEE
+#if !NETCOREAPP3_1_OR_GREATER //core 3.1 removed overflow errors for float to be consistent with IEEE
             (typeof(KeyValuePair<float?, string>), @"9999999999999999999999999999999999999999999999999999=OK", typeof(OverflowException), @"Value was either too large or too small for a Single"),
 
 #endif

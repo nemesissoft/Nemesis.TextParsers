@@ -5,8 +5,8 @@ using System.Linq;
 using System.Numerics;
 using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
-using TCD = NUnit.Framework.TestCaseData;
 using static Nemesis.TextParsers.Tests.TestHelper;
+using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Infrastructure
 {
@@ -251,19 +251,6 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         //type, input, expectedOutput
         internal static IEnumerable<TCD> EmptyNullParsingData() => new[]
         {
-            new TCD(typeof(IAggressionBased<string>), "", new AggressionBased1<string>("")),
-            new TCD(typeof(IAggressionBased<string>), null, new AggressionBased1<string>(null)),
-
-            new TCD(typeof(IAggressionBased<string[]>), "", new AggressionBased1<string[]>(new string[0])),
-            new TCD(typeof(IAggressionBased<string[]>), null, new AggressionBased1<string[]>(null)),
-
-            new TCD(typeof(IAggressionBased<int>), "", new AggressionBased1<int>(0)),
-            new TCD(typeof(IAggressionBased<int>), null, new AggressionBased1<int>(0)),
-
-            new TCD(typeof(IAggressionBased<int?>), "", new AggressionBased1<int?>(null)),
-            new TCD(typeof(IAggressionBased<int?>), null, new AggressionBased1<int?>(null)),
-
-
             new TCD(typeof(ValueTuple<int, int>), "", (0, 0)),
             new TCD(typeof(ValueTuple<int, int>), null, (0, 0)),
             new TCD(typeof(ValueTuple<int, int>), "(,)", (0, 0)),

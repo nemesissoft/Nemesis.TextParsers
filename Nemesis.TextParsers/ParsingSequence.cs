@@ -13,7 +13,7 @@ namespace Nemesis.TextParsers
         private readonly char _sequenceDelimiter;
         #endregion
 
-        public ParsingSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart, 
+        public ParsingSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart,
             char nullElementMarker, char sequenceDelimiter)
         {
             _tokenSource = tokenSource;
@@ -21,7 +21,7 @@ namespace Nemesis.TextParsers
             _nullElementMarker = nullElementMarker;
             _sequenceDelimiter = sequenceDelimiter;
         }
-        
+
         public ParsingSequenceEnumerator GetEnumerator() => new(_tokenSource, _escapingSequenceStart, _nullElementMarker, _sequenceDelimiter);
 
         public ref struct ParsingSequenceEnumerator
@@ -42,7 +42,7 @@ namespace Nemesis.TextParsers
 
                 Current = default;
             }
-            
+
 
             public bool MoveNext()
             {
@@ -52,7 +52,7 @@ namespace Nemesis.TextParsers
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ParserInput ParseElement(in ReadOnlySpan<char> input)
+            private ParserInput ParseElement(scoped in ReadOnlySpan<char> input)
             {
                 if (input.Length == 1 && input[0].Equals(_nullElementMarker))
                     return ParserInput.FromDefault();
@@ -71,7 +71,7 @@ namespace Nemesis.TextParsers
                         char current = input[i];
                         if (escaped)
                         {
-                            if (current == _escapingSequenceStart || 
+                            if (current == _escapingSequenceStart ||
                                 current == _nullElementMarker ||
                                 current == _sequenceDelimiter)
                                 accumulator.Append(current);
@@ -123,7 +123,7 @@ Only ['{_escapingSequenceStart}','{_nullElementMarker}','{_sequenceDelimiter}'] 
 
         public static ParserInput FromDefault() => new(true, default);
 
-        public static ParserInput FromText(ReadOnlySpan<char> text) => new(false, text);
+        public static ParserInput FromText(scoped ReadOnlySpan<char> text) => new(false, text);
 
         public T ParseWith<T>(ITransformer<T> transformer) => IsDefault ? default : transformer.Parse(Text);
 

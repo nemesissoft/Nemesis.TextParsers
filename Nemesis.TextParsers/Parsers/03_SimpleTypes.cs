@@ -934,8 +934,11 @@ namespace Nemesis.TextParsers.Parsers
                 RegexOptions.RightToLeft,
                 (RegexOptions)128,
                 RegexOptions.ECMAScript,
-                RegexOptions.CultureInvariant
-            };
+                RegexOptions.CultureInvariant,
+#if NET7_0_OR_GREATER
+                RegexOptions.NonBacktracking
+#endif
+        };
 
         public override string Format(RegexOptions element)
         {
@@ -974,6 +977,9 @@ namespace Nemesis.TextParsers.Parsers
 
                 'e' => RegexOptions.ECMAScript,
                 'v' => RegexOptions.CultureInvariant,
+#if NET7_0_OR_GREATER
+                'b' => RegexOptions.NonBacktracking,
+#endif
                 _ => throw new ArgumentException($"'{element}' is not supported for parsing RegexOptions")
             };
 
@@ -993,6 +999,10 @@ namespace Nemesis.TextParsers.Parsers
 
                 RegexOptions.ECMAScript => 'e',
                 RegexOptions.CultureInvariant => 'v',
+
+#if NET7_0_OR_GREATER
+                RegexOptions.NonBacktracking => 'b',
+#endif
                 _ => throw new ArgumentException($"'{option}' is not supported for formatting RegexOptions")
             };
 
@@ -1010,6 +1020,7 @@ namespace Nemesis.TextParsers.Parsers
 
             ECMAScript              = 0x0100, // 'e'
             CultureInvariant        = 0x0200, // 'v'
+            NonBacktracking         = 0x0400, // 'b'
         }*/
     }
 
@@ -1064,7 +1075,7 @@ namespace Nemesis.TextParsers.Parsers
         private ComplexTransformer() { }
     }
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 
     [UsedImplicitly]
     public sealed class DateOnlyTransformer : SimpleFormattableTransformer<DateOnly>

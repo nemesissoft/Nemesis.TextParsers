@@ -7,17 +7,17 @@ namespace Nemesis.TextParsers
     public static class SpanParserHelper
     {
         [PureMethod]
-        public static TokenSequence<T> Tokenize<T>(this in ReadOnlySpan<T> sequence, T separator, T escapingElement,
+        public static TokenSequence<T> Tokenize<T>(this scoped in ReadOnlySpan<T> sequence, T separator, T escapingElement,
             bool emptySequenceYieldsEmpty)
             where T : IEquatable<T> =>
             new(sequence, separator, escapingElement, emptySequenceYieldsEmpty);
 
         [PureMethod]
-        public static ParsingSequence PreParse(this in TokenSequence<char> tokenSource, char escapingElement,
+        public static ParsingSequence PreParse(this scoped in TokenSequence<char> tokenSource, char escapingElement,
             char nullElement, char sequenceDelimiter) =>
             new(tokenSource, escapingElement, nullElement, sequenceDelimiter);
 
-        
+
 
         [PureMethod]
         public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
@@ -67,7 +67,7 @@ namespace Nemesis.TextParsers
          private ParserInput ParseElement(in ReadOnlySpan<char> input)*/
 
         [PureMethod]
-        public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character1, char character2)
+        public static ReadOnlySpan<char> UnescapeCharacter(this scoped in ReadOnlySpan<char> input, char escapingSequenceStart, char character1, char character2)
         {
             int length = input.Length;
             if (length < 2) return input;
@@ -105,15 +105,15 @@ namespace Nemesis.TextParsers
                     else
                         accumulator.Append(current);
                 }
-                
+
                 return accumulator.AsSpan().ToArray();
             }
             else return input;
         }
-        
-        
+
+
         [PureMethod]
-        public static ReadOnlySpan<char> UnParenthesize(this in ReadOnlySpan<char> span, char? startChar, char? endChar, string typeName = null)
+        public static ReadOnlySpan<char> UnParenthesize(this scoped in ReadOnlySpan<char> span, char? startChar, char? endChar, string typeName = null)
         {
             if (startChar is null && endChar is null)
                 return span;
@@ -153,7 +153,7 @@ namespace Nemesis.TextParsers
             return span.Slice(start, end - start + 1);
 
             static Exception GetStateException(string text, char? start, char? end, string typeName) => new ArgumentException(
-                $@"{typeName ?? "Object" } representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
+                $@"{typeName ?? "Object"} representation has to start with '{(start is { } c1 ? c1.ToString() : "<nothing>")}' and end with '{(end is { } c2 ? c2.ToString() : "<nothing>")}' optionally lead in the beginning or trailed in the end by whitespace.
 These requirements were not met in:
 '{text ?? "<NULL>"}'");
         }
