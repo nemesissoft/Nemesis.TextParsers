@@ -180,23 +180,23 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
 
 
             new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>),
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger?, bool>(0, null, false)),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger?, bool>(0, null, false)),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger?, bool>(0, null, false))
             ),
             new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>),
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger>(0, 0)),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger>(0, 0)),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger>(0, 0))
             ),
             new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>),
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>(), new ValueTuple<FileMode>(0)),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>(), new ValueTuple<FileMode>(0)),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode>(0))
             ),
             new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>),
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, new List<byte>(), new sbyte[0], new Dictionary<string, int>()),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>()),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>(null, 0, 0M, null, null, null, null)
             ),
             new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>),
-                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, new List<byte>(), new sbyte[0]),
+                new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>()),
                 new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>(null, 0, 0M, null, null, null)
             ),
             new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>>),
@@ -225,8 +225,8 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
             new TCD(typeof(List<string>), new List<string>(), null),
             new TCD(typeof(IReadOnlyList<int>), new List<int>(), null),
             new TCD(typeof(Dictionary<string, float?>), new Dictionary<string, float?>(), null),
-            new TCD(typeof(decimal[]), new decimal[0], null),
-            new TCD(typeof(BigInteger[][]), new BigInteger[0][], null),
+            new TCD(typeof(decimal[]), Array.Empty<decimal>(), null),
+            new TCD(typeof(BigInteger[][]), Array.Empty<BigInteger[]>(), null),
             new TCD(typeof(Complex), new Complex(0.0, 0.0), new Complex(0.0, 0.0)),
 
 

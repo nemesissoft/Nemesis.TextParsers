@@ -41,7 +41,7 @@ namespace Benchmarks
             All = Weekdays | Weekends
         }
 
-        public static string[] AllEnums =
+        public static readonly string[] AllEnums =
             //Enumerable.Range(0, 130).Select(i => i.ToString()).ToArray();
             Enumerable.Range(0, 130).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
 
@@ -50,7 +50,7 @@ namespace Benchmarks
         static EnumParserBench() => _parser.Parse("10".AsSpan());
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetGenericIgnoreCase()
+        public static DaysOfWeek EnumsDotNetGenericIgnoreCase()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -62,7 +62,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetGenericObserveCase()
+        public static DaysOfWeek EnumsDotNetGenericObserveCase()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -75,7 +75,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetUnsafe()
+        public static DaysOfWeek EnumsDotNetUnsafe()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -87,7 +87,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetNonGenericIgnoreCase()
+        public static DaysOfWeek EnumsDotNetNonGenericIgnoreCase()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -97,9 +97,9 @@ namespace Benchmarks
             }
             return current;
         }
-        
+
         [Benchmark]
-        public DaysOfWeek EnumsDotNetNonGenericObserveCase()
+        public static DaysOfWeek EnumsDotNetNonGenericObserveCase()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -112,7 +112,7 @@ namespace Benchmarks
 
 
         [Benchmark(Baseline = true)]
-        public DaysOfWeek EnumTransformer()
+        public static DaysOfWeek EnumTransformer()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -124,7 +124,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek DedicatedCode()
+        public static DaysOfWeek DedicatedCode()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -264,7 +264,7 @@ namespace Benchmarks
 
 
         [Benchmark]
-        public DaysOfWeek NativeEnumIgnoreCaseGeneric()
+        public static DaysOfWeek NativeEnumIgnoreCaseGeneric()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -276,7 +276,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek NativeEnumIgnoreCase()
+        public static DaysOfWeek NativeEnumIgnoreCase()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -289,7 +289,7 @@ namespace Benchmarks
 
 #if !NET48
         [Benchmark]
-        public DaysOfWeek NativeEnumObserveCase()
+        public static DaysOfWeek NativeEnumObserveCase()
         {
             DaysOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -331,7 +331,7 @@ namespace Benchmarks
 
         private static readonly (int Start, int Length)[] _sliceData;
         private static readonly string _toParse;
-        
+
         private static readonly ITransformer<DaysOfWeek> _parser = TextTransformer.Default.GetTransformer<DaysOfWeek>();
 
         static EnumParserBenchEdn()
@@ -367,7 +367,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetGenericIgnoreCase()
+        public static DaysOfWeek EnumsDotNetGenericIgnoreCase()
         {
             DaysOfWeek current = default;
             var toParse = _toParse.AsSpan();
@@ -383,7 +383,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetGenericObserveCase()
+        public static DaysOfWeek EnumsDotNetGenericObserveCase()
         {
             DaysOfWeek current = default;
             var toParse = _toParse.AsSpan();
@@ -399,7 +399,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetUnsafe()
+        public static DaysOfWeek EnumsDotNetUnsafe()
         {
             DaysOfWeek current = default;
             var toParse = _toParse.AsSpan();
@@ -415,7 +415,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetNonGenericIgnoreCase()
+        public static DaysOfWeek EnumsDotNetNonGenericIgnoreCase()
         {
             DaysOfWeek current = default;
             var toParse = _toParse.AsSpan();
@@ -425,13 +425,13 @@ namespace Benchmarks
             {
                 var (start, length) = sliceData[i];
                 var span = toParse.Slice(start, length);
-                current = (DaysOfWeek)Enums.Parse(typeof(DaysOfWeek),span, true);
+                current = (DaysOfWeek)Enums.Parse(typeof(DaysOfWeek), span, true);
             }
             return current;
         }
 
         [Benchmark]
-        public DaysOfWeek EnumsDotNetNonGenericObserveCase()
+        public static DaysOfWeek EnumsDotNetNonGenericObserveCase()
         {
             DaysOfWeek current = default;
             var toParse = _toParse.AsSpan();
@@ -448,7 +448,7 @@ namespace Benchmarks
 
 
         [Benchmark(Baseline = true)]
-        public DaysOfWeek EnumTransformer()
+        public static DaysOfWeek EnumTransformer()
         {
             DaysOfWeek current = default;
             var toParse = _toParse.AsSpan();
@@ -463,7 +463,7 @@ namespace Benchmarks
             return current;
         }
     }
-    
+
     /* .NET Core 3.1.22 (CoreCLR 4.700.21.56803, CoreFX 4.700.21.57101), X64 RyuJIT
 |          Method |     Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------- |---------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
@@ -480,7 +480,7 @@ namespace Benchmarks
     {
         public enum DayOfWeek : byte
         {
-            None ,
+            None,
             Monday,
             Tuesday,
             Wednesday,
@@ -490,14 +490,14 @@ namespace Benchmarks
             Sunday,
         }
 
-        public static string[] AllEnums =
+        public static readonly string[] AllEnums =
             Enumerable.Range(0, 50).Select(i => ((DayOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
 
         private static readonly ITransformer<DayOfWeek> _parser = TextTransformer.Default.GetTransformer<DayOfWeek>();
 
 
         [Benchmark(Baseline = true)]
-        public DayOfWeek EnumTransformer()
+        public static DayOfWeek EnumTransformer()
         {
             DayOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -507,9 +507,9 @@ namespace Benchmarks
             }
             return current;
         }
-        
+
         [Benchmark]
-        public DayOfWeek Generated()
+        public static DayOfWeek Generated()
         {
             DayOfWeek current = default;
             for (int i = AllEnums.Length - 1; i >= 0; i--)
@@ -562,7 +562,7 @@ namespace Benchmarks
             All = Weekdays | Weekends
         }
 
-        public static byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
+        public static readonly byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
 
         internal static Func<byte, DaysOfWeek> GetNumberConverterDynamicMethod()
         {
@@ -595,7 +595,7 @@ namespace Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public DaysOfWeek NativeTest()
+        public static DaysOfWeek NativeTest()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -604,7 +604,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek PointerDedicated()
+        public static DaysOfWeek PointerDedicated()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -613,7 +613,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek PointerGeneric()
+        public static DaysOfWeek PointerGeneric()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -640,7 +640,7 @@ namespace Benchmarks
             (TEnum)(object)number;
 
         [Benchmark]
-        public DaysOfWeek CastTest()
+        public static DaysOfWeek CastTest()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -649,7 +649,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek ExpressionTest()
+        public static DaysOfWeek ExpressionTest()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -658,7 +658,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek DynamicMethod()
+        public static DaysOfWeek DynamicMethod()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -669,7 +669,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek UnsafeAsTest()
+        public static DaysOfWeek UnsafeAsTest()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -682,7 +682,7 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public DaysOfWeek UnsafeAsRefTest()
+        public static DaysOfWeek UnsafeAsRefTest()
         {
             Span<DaysOfWeek> enums = MemoryMarshal.Cast<byte, DaysOfWeek>(AllEnumValues.AsSpan());
 
@@ -717,7 +717,7 @@ namespace Benchmarks
 
 
         [Benchmark]
-        public DaysOfWeek SelectedSolution()
+        public static DaysOfWeek SelectedSolution()
         {
             DaysOfWeek current = default;
             for (int i = AllEnumValues.Length - 1; i >= 0; i--)
@@ -770,7 +770,7 @@ namespace Benchmarks
         }
 
         [Benchmark(OperationsPerInvoke = OPERATIONS_PER_INVOKE)]
-        public bool HasFlag_Native()
+        public static bool HasFlag_Native()
         {
             const FileAccess VALUE = FileAccess.ReadWrite;
             var result = true;
@@ -782,7 +782,7 @@ namespace Benchmarks
         }
 
         [Benchmark(OperationsPerInvoke = OPERATIONS_PER_INVOKE)]
-        public bool HasFlags_Dynamic()
+        public static bool HasFlags_Dynamic()
         {
             const FileAccess VALUE = FileAccess.ReadWrite;
             var result = true;
@@ -794,7 +794,7 @@ namespace Benchmarks
         }
 
         [Benchmark(OperationsPerInvoke = OPERATIONS_PER_INVOKE, Baseline = true)]
-        public bool HasFlags_Bitwise()
+        public static bool HasFlags_Bitwise()
         {
             const FileAccess VALUE = FileAccess.ReadWrite;
             var result = true;

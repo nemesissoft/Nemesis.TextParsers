@@ -131,7 +131,7 @@ namespace Nemesis.TextParsers.Parsers
                             throw new ArgumentException($"The key '{key}' has already been added");
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(Settings.Behaviour), Settings.Behaviour, null);
+                        throw new ArgumentOutOfRangeException($"{nameof(Settings)}.{nameof(Settings.Behaviour)} has invalid value of {Settings.Behaviour}", (Exception)null);
                 }
             }
         }

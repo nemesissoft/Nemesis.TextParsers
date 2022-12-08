@@ -82,14 +82,14 @@ namespace Nemesis.TextParsers.Tests.Collections
         [Test]
         public void Dict_CompoundTestsArrayAndList()
         {
-            var sut = Sut.GetTransformer<Dictionary<float[], List<TimeSpan>>>();
+            var sut = Sut.GetTransformer<Dictionary<double[], List<TimeSpan>>>();
 
             var dict = Enumerable.Range(0, 4).ToDictionary(
-                i => new float[] { 10.1f * i, 10.2f * i + 1, 10.3f * i + 2 },
+                i => new[] { 10.1 * i, 10.2 * i + 1, 10.3 * i + 2 },
                 i => new List<TimeSpan> { new TimeSpan(i, i + 1, i + 2, i + 3), new TimeSpan(10 * i, 10 * i + 1, 10 * i + 2, 10 * i + 3) });
 
             var text = sut.Format(dict);
-            Assert.That(text, Is.EqualTo(@"0|1|2=01:02:03|01:02:03;10.1|11.2|12.3=1.02:03:04|10.11:12:13;20.2|21.4|22.6=2.03:04:05|20.21:22:23;30.300001|31.599998|32.9=3.04:05:06|31.07:32:33"));
+            Assert.That(text, Is.EqualTo(@"0|1|2=01:02:03|01:02:03;10.1|11.2|12.3=1.02:03:04|10.11:12:13;20.2|21.4|22.6=2.03:04:05|20.21:22:23;30.299999999999997|31.599999999999998|32.900000000000006=3.04:05:06|31.07:32:33"));
 
             //dict.Remove(dict.First().Key);
 
