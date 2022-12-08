@@ -9,10 +9,10 @@ public static class LightLinqGenericMath
     public static (bool success, TNumber result) Sum<TNumber>(this ParsingSequence values, ITransformer<TNumber> transformer)
         where TNumber : INumberBase<TNumber>
     {
-        var sum = TNumber.Zero;
-
         var enumerator = values.GetEnumerator();
-        if (!enumerator.MoveNext()) return (false, sum);
+        if (!enumerator.MoveNext()) return (false, TNumber.Zero);
+
+        var sum = TNumber.Zero;
 
         do
             sum += enumerator.Current.ParseWith(transformer);
@@ -22,26 +22,37 @@ public static class LightLinqGenericMath
         return (true, sum);
     }
 
+    public static (bool success, TNumber result) Average<TNumber>(this ParsingSequence values, ITransformer<TNumber> transformer)
+        where TNumber : IFloatingPoint<TNumber>
+    {
+        var enumerator = values.GetEnumerator();
+        if (!enumerator.MoveNext()) return (false, TNumber.Zero);
+
+        TNumber avg = enumerator.Current.ParseWith(transformer);
+        int count = 1;
+
+        while (enumerator.MoveNext())
+            avg += (enumerator.Current.ParseWith(transformer) - avg)
+                                  /
+                    TNumber.CreateChecked(++count);
+        return (true, avg);
+    }
 
     public static (bool success, TResult result) Average<TNumber, TResult>(this ParsingSequence values, ITransformer<TNumber> transformer)
         where TNumber : INumberBase<TNumber>
-        where TResult : INumber<TResult> //TODO change to IFloatingPoint and rework to walking AVG ?
+        where TResult : IFloatingPoint<TResult>
     {
-        var sum = TResult.Zero;
-
         var enumerator = values.GetEnumerator();
-        if (!enumerator.MoveNext()) return (false, sum);
+        if (!enumerator.MoveNext()) return (false, TResult.Zero);
 
-        int count = 0;
-        do
-        {
-            sum += TResult.CreateChecked(enumerator.Current.ParseWith(transformer));
-            count++;
-        }
-        while (enumerator.MoveNext());
+        TResult avg = TResult.CreateChecked(enumerator.Current.ParseWith(transformer));
+        int count = 1;
 
-
-        return (true, sum / TResult.CreateChecked(count));
+        while (enumerator.MoveNext())
+            avg += (TResult.CreateChecked(enumerator.Current.ParseWith(transformer)) - avg)
+                                  /
+                    TResult.CreateChecked(++count);
+        return (true, avg);
     }
 
     public static (bool success, TResult result) Variance<TNumber, TResult>(this ParsingSequence values, ITransformer<TNumber> transformer)

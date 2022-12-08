@@ -296,6 +296,8 @@ namespace Nemesis.TextParsers.Tests
 
             if (failed.Count > 0)
                 Assert.Fail($"Failed cases({failed.Count} cases):{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
+
+            Console.WriteLine($"Test cases run:{caseNo}");
         }
 
         private void ShouldParseAndFormat(Type testType)

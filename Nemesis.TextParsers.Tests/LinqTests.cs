@@ -164,9 +164,9 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void AverageGeneric()
         {
-            var (success, result) = GetSequence(@"1|2|3|4|5|6|7|8|9|10").Average<int, int>(_intTransformer);
+            var (success, result) = GetSequence(@"1|2|3|4|5|6|7|8|9|10").Average<Half>(_halfTransformer);
             Assert.That(success, Is.True);
-            Assert.That(result, Is.EqualTo(5)); //5, not 5.5
+            Assert.That(result, Is.EqualTo((Half)5.5));
         }
 
         [TestCase(@"", false, 0f)]
