@@ -22,6 +22,22 @@ public static class LightLinq
 
     public static (bool success, double result) Average(this ParsingSequence values, ITransformer<double> transformer)
     {
+        var e = values.GetEnumerator();
+        if (!e.MoveNext()) return (false, 0);
+
+        double sum = e.Current.ParseWith(transformer);
+        long count = 1;
+        while (e.MoveNext())
+        {
+            checked { sum += e.Current.ParseWith(transformer); }
+            count++;
+        }
+
+        return (true, sum / count);
+    }
+
+    public static (bool success, double result) WalkingAverage(this ParsingSequence values, ITransformer<double> transformer)
+    {
         var enumerator = values.GetEnumerator();
         if (!enumerator.MoveNext()) return (false, 0);
 
