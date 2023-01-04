@@ -29,8 +29,8 @@
 
 		
 		<!--Benchamrking-->
-		<PackageReference Update="BenchmarkDotNet" Version="0.13.1" />
-		<PackageReference Update="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.1" />
+		<PackageReference Update="BenchmarkDotNet" Version="0.13.3" />
+		<PackageReference Update="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.3" />
 		<PackageReference Update="morelinq" Version="3.2.0" />
 		<PackageReference Update="Enums.NET" Version="3.0.1" />
 		<PackageReference Update="Newtonsoft.Json" Version="13.0.1" />

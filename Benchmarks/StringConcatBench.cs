@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Text;
-using BenchmarkDotNet.Attributes;
-using Nemesis.TextParsers.Utils;
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Text;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using Nemesis.TextParsers.Utils;
 
 // ReSharper disable CommentTypo
 
@@ -52,6 +54,9 @@ namespace Benchmarks
 |        ValueStringBuilder | 1024 |   2,134.57 ns |  0.67 |    2072 B |
 */
     [MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net60, baseline: true)]
+    [SimpleJob(RuntimeMoniker.Net70)]
+    [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
     public class StringConcatBench
     {
         [Params(4, 16, 64, 256, 1024)]
