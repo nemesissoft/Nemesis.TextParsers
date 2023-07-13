@@ -39,7 +39,7 @@ namespace Nemesis.TextParsers
             private readonly char _dictionaryKeyValueDelimiter;
             #endregion
 
-            public ParsingPairSequenceEnumerator(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter) : this()
+            public ParsingPairSequenceEnumerator(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter) : this()
             {
                 _tokenSequenceEnumerator = tokenSource.GetEnumerator();
 
@@ -81,7 +81,6 @@ namespace Nemesis.TextParsers
                     var remaining = kvpEnumerator.Current.ToString();
                     throw new ArgumentException($@"{key.ToString()}{delimiter}{value.ToString()} pair cannot have more than 2 elements: '{remaining}'");
                 }
-                //if (key == null) throw new ArgumentException("Key equal to NULL is not supported");
 
                 return PairParserInput.FromKvp(key, value);
             }
@@ -125,7 +124,7 @@ namespace Nemesis.TextParsers
             value = Value;
         }
 
-        public static PairParserInput FromKvp(scoped ParserInput key, scoped ParserInput value) => new(key, value);
+        public static PairParserInput FromKvp(ParserInput key, ParserInput value) => new(key, value);
 
         public override string ToString() => $"{Key.ToString()}={Value.ToString()}";
     }

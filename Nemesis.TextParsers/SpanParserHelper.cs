@@ -20,7 +20,7 @@ namespace Nemesis.TextParsers
 
 
         [PureMethod]
-        public static ReadOnlySpan<char> UnescapeCharacter(this in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
+        public static ReadOnlySpan<char> UnescapeCharacter(this scoped in ReadOnlySpan<char> input, char escapingSequenceStart, char character)
         {
             int length = input.Length;
             if (length < 2) return input;

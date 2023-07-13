@@ -13,7 +13,7 @@ namespace Nemesis.TextParsers
         private readonly char _sequenceDelimiter;
         #endregion
 
-        public ParsingSequence(in TokenSequence<char> tokenSource, char escapingSequenceStart,
+        public ParsingSequence(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart,
             char nullElementMarker, char sequenceDelimiter)
         {
             _tokenSource = tokenSource;
@@ -33,7 +33,7 @@ namespace Nemesis.TextParsers
             private readonly char _sequenceDelimiter;
             #endregion
 
-            public ParsingSequenceEnumerator(in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char sequenceDelimiter)
+            public ParsingSequenceEnumerator(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char sequenceDelimiter)
             {
                 _tokenSequenceEnumerator = tokenSource.GetEnumerator();
                 _escapingSequenceStart = escapingSequenceStart;
@@ -123,7 +123,7 @@ Only ['{_escapingSequenceStart}','{_nullElementMarker}','{_sequenceDelimiter}'] 
 
         public static ParserInput FromDefault() => new(true, default);
 
-        public static ParserInput FromText(scoped ReadOnlySpan<char> text) => new(false, text);
+        public static ParserInput FromText(ReadOnlySpan<char> text) => new(false, text);
 
         public T ParseWith<T>(ITransformer<T> transformer) => IsDefault ? default : transformer.Parse(Text);
 

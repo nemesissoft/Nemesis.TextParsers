@@ -131,7 +131,7 @@ namespace Nemesis.TextParsers.Utils
 
             public T Current { get; private set; }
 
-            public LeanCollectionEnumerator(in LeanCollection<T> leanCollection)
+            public LeanCollectionEnumerator(scoped in LeanCollection<T> leanCollection)
             {
                 _leanCollection = leanCollection;
                 Current = default;
@@ -272,7 +272,7 @@ namespace Nemesis.TextParsers.Utils
                     CollectionSize.Two => new[] { more._item1, more._item2 },
                     CollectionSize.Three => new[] { more._item1, more._item2, more._item3 },
                     //this is already covered above: CollectionSize.More => more._items.ToArray(),
-                    _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised")
+                    _ => throw new ArgumentOutOfRangeException(nameof(more), $"Internal state of {nameof(LeanCollection<T>)} was compromised")
                 };
 
         #endregion
@@ -353,12 +353,8 @@ namespace Nemesis.TextParsers.Utils
                     return comparer.Compare(_item1, _item2) <= 0 ? this : new(_item2, _item1);
 
                 case CollectionSize.Three:
-                    static void Swap(ref T t1, ref T t2)
-                    {
-                        var temp = t2;
-                        t2 = t1;
-                        t1 = temp;
-                    }
+                    static void Swap(ref T t1, ref T t2) => (t1, t2) = (t2, t1);
+
                     comparer ??= Comparer<T>.Default;
                     if (comparer.Compare(_item1, _item2) <= 0 && comparer.Compare(_item2, _item3) <= 0)
                         return this;
@@ -381,7 +377,7 @@ namespace Nemesis.TextParsers.Utils
                     Array.Sort(_items, comparer);
                     return new(_items);
             }
-        } 
+        }
         #endregion
     }
 }
