@@ -23,7 +23,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 using Nemesis.TextParsers.Settings; 
 namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
                .SetName($"E2E_{i + 1:00}_{t.name}"));
-        
+
         [TestCaseSource(nameof(_endToEndCases))]
         public void EndToEndTests(string source, string expectedCode)
         {
@@ -35,8 +35,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
 
             Assert.That(actual, Is.EqualTo(expectedCode).Using(IgnoreNewLinesComparer.EqualityComparer));
         }
-        
-        
+
+
         private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
         {
             (@"[DeconstructableSettings(':', '␀', '/', '{', '}')]
@@ -84,7 +84,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
         {
             bool matchNotContain = expectedCodePart.StartsWith("NOT CONTAIN:");
             if (matchNotContain)
-                expectedCodePart = expectedCodePart[12..];
+                expectedCodePart = expectedCodePart.Substring(12);
 
             //arrange
             var compilation = CreateCompilation(source);

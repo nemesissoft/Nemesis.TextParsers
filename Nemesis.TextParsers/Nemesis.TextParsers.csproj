@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;netstandard2.1;netstandard2.0;net461;net47</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;netstandard2.1;netstandard2.0</TargetFrameworks>
 
 		<PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
 		<Description>Contains various parser optimized for speed and no allocation</Description>
-
+		
 
 		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
 		<PackageIcon>review-icon.png</PackageIcon>
@@ -34,13 +34,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
-		<PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" />
+		<PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" />
 	</ItemGroup>
 
 	<!--Legacy on-->
 	<PropertyGroup>
-		<AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net47' ">true</AllowUnsafeBlocks>
+		<AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
@@ -50,16 +50,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="System.Memory"  />
 	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-		<PackageReference Include="System.ValueTuple" />
-		<PackageReference Include="System.Memory"  />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
-		<PackageReference Include="System.Memory"  />
-	</ItemGroup>
-
+	
 	<!--Legacy off-->
 
 
@@ -70,7 +61,7 @@
 	</ItemGroup>
 
 
-	<!--Pack documentation once it's suppoerted on nuget-->
+	<!--TODO Pack documentation once it's suppoerted on nuget-->
 	<!--<PropertyGroup><PackageReadmeFile>README.md</PackageReadmeFile></PropertyGroup>
 	    <ItemGroup><None Include="..\README.md" Pack="true" PackagePath="" /></ItemGroup>
 	-->

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;net48;net461</TargetFrameworks>		
+		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>		
 	</PropertyGroup>
 
 
@@ -19,6 +19,8 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="NUnit.Analyzers" />
+		
 
 		<PackageReference Include="System.Memory" />
 

@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using NUnit.Framework;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
+using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -79,13 +79,13 @@ namespace Nemesis.TextParsers.Tests
             (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
 
         private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
-            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default);
+            new(_numberHandler, EnumSettings.Default);
 
-        private static readonly ITransformer<TEnum> _sutCaseSensitive =
-            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.CaseInsensitive, false));
+        private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sutCaseSensitive =
+            new(_numberHandler, EnumSettings.Default.With(s => s.CaseInsensitive, false));
 
-        private static readonly ITransformer<TEnum> _sutOnlyEnumNames =
-            new EnumTransformer<TEnum, TUnderlying, TNumberHandler>(_numberHandler, EnumSettings.Default.With(s => s.AllowParsingNumerics, false));
+        private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sutOnlyEnumNames =
+            new(_numberHandler, EnumSettings.Default.With(s => s.AllowParsingNumerics, false));
 
 
         private static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
@@ -151,7 +151,9 @@ namespace Nemesis.TextParsers.Tests
             else
             {
                 TEnum actual = _sut.Parse(input.AsSpan());
-                Assert.That(actual, Is.EqualTo((EmptyEnum)0));
+                var zero = 0;
+                var result = Unsafe.As<int, TEnum>(ref zero);
+                Assert.That(actual, Is.EqualTo(result));
             }
         }
 
@@ -162,11 +164,12 @@ namespace Nemesis.TextParsers.Tests
         {
             var actual = _sut.Parse(input.AsSpan());
             var defaultValue = ToEnum(_numberHandler.Zero);
-
-            Assert.That(actual, Is.EqualTo(defaultValue));
-            Assert.That((TUnderlying)(object)actual, Is.EqualTo(_numberHandler.Zero));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual, Is.EqualTo(defaultValue));
+                Assert.That((TUnderlying)(object)actual, Is.EqualTo(_numberHandler.Zero));
+            });
         }
-
 
         [Test]
         public void ParseNumberFlags() //7 = 1,2,4
@@ -210,7 +213,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
         }
 
-        internal static Func<string> GetFailedMessageBuilder(IEnumerable<string> failed) =>
+        private static Func<string> GetFailedMessageBuilder(IEnumerable<string> failed) =>
             () => $"Failed cases:{Environment.NewLine}{string.Join(Environment.NewLine, failed)}";
 
         [Test]
@@ -323,9 +326,11 @@ namespace Nemesis.TextParsers.Tests
 
                 var actual = _sutCaseSensitive.Parse(name.AsSpan());
                 var actualNative = (TEnum)Enum.Parse(typeof(TEnum), name, false);
-
-                Assert.That(actual, Is.EqualTo(actualNative));
-                Assert.That((TUnderlying)(object)actual, Is.EqualTo(value));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(actual, Is.EqualTo(actualNative));
+                    Assert.That((TUnderlying)(object)actual, Is.EqualTo(value));
+                });
             }
         }
 
@@ -360,7 +365,7 @@ namespace Nemesis.TextParsers.Tests
             {
                 Assert.DoesNotThrow(() => _sut.Parse(name));
 
-                var assertMessage = $"Parsing '{name }'";
+                var assertMessage = $"Parsing '{name}'";
 
                 var ex = Assert.Throws<FormatException>(() => _sutCaseSensitive.Parse(name), assertMessage);
 
@@ -700,9 +705,11 @@ namespace Nemesis.TextParsers.Tests
 
                 var parsed1 = sut.Parse(text);
                 var parsed2 = sut.Parse(text);
-
-                Assert.That(parsed1, Is.EqualTo(option), $"Case {i}");
-                Assert.That(parsed2, Is.EqualTo(option), $"Case {i}");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(parsed1, Is.EqualTo(option), $"Case {i}");
+                    Assert.That(parsed2, Is.EqualTo(option), $"Case {i}");
+                });
             }
         }
     }
