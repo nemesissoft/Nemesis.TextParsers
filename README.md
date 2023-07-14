@@ -1,4 +1,5 @@
-# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
+![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) 
+# Nemesis.TextParsers
 
 [![Build status - master](https://img.shields.io/appveyor/ci/Nemesis/nemesis-textparsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master)
 [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message&style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests)
@@ -140,7 +141,7 @@ return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0)
 
 ## Funding
 Open source software is free but creating it is not. Should you wish to support us in our noble endeavour, please consider the following donation methods:
-* [![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
+[![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
 
 
 ## Todo / road map
