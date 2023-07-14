@@ -3,17 +3,16 @@
 		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;netstandard2.1;netstandard2.0</TargetFrameworks>
 
 		<PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
-		<Description>Contains various parser optimized for speed and no allocation</Description>
-		
+		<Description>Contains various parser optimized for speed and no allocation.</Description>
 
+
+		<IsPackable>true</IsPackable>
 		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
-		<PackageIcon>review-icon.png</PackageIcon>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
-
+		<PackageIcon>properties\review-icon.png</PackageIcon>
+		<PackageReadmeFile>properties\README.md</PackageReadmeFile>		
+				
 		<!--this will be patched by build system-->
 		<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>
-
 
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -22,7 +21,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\images\review-icon.png" Pack="true" PackagePath="\" />
+		<None Include="..\images\review-icon.png" Pack="true" PackagePath="properties">
+			<Link>Properties\icon.png</Link>
+		</None> 
+		
+		<None Include="..\README.md" Pack="true" PackagePath="properties">
+			<Link>Properties\README.md</Link>
+		</None>
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -59,10 +64,5 @@
 			<_Parameter1>$(MSBuildProjectName).Tests, PublicKey=00240000048000001a010000060200000024000052534131300800000100010035c8d69e21b106b1164c8fc9c108ed2c08b283d13af6028fc6d6dd07ddd98039bcd99689793df5eef77230ce0a469dfb3ba7575ec699a6e001224ef90b3ce3437e873f0e5bc267a992a78ce1ecb85545d021f17ce51dccf9b3b2cb418aa9adcd2cf93fcc53ab12cb80a5cd51dcf6f3f3be70777b5dbf6d43dc20801be7f9d8220d8ac1082391647e650ff596673c8cd40257f113c8d59f8b150cebc991eeedc69a9c1d442f93089a276aad3122cf90feafb02a384524fcab4d269de23aa5666c6fcc8b89766455d8e0fe9e65d1034673382c596cc60ee8d1b1b4fedb767ff05d7d6cdae0c0db091c24311ae373f98887826256298d72a772a3a8abee357a28f6a5bb4f4369ab</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
-
-
-	<!--TODO Pack documentation once it's suppoerted on nuget-->
-	<!--<PropertyGroup><PackageReadmeFile>README.md</PackageReadmeFile></PropertyGroup>
-	    <ItemGroup><None Include="..\README.md" Pack="true" PackagePath="" /></ItemGroup>
-	-->
+	
 </Project>

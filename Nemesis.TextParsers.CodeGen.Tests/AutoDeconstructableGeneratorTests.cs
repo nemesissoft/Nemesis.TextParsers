@@ -1,45 +1,38 @@
 ﻿extern alias original;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Nemesis.CodeAnalysis;
-using Nemesis.TextParsers.CodeGen.Deconstructable;
 
 using NUnit.Framework;
 
 using static Nemesis.TextParsers.CodeGen.Tests.Utils;
 
+namespace Nemesis.TextParsers.CodeGen.Tests;
 
-namespace Nemesis.TextParsers.CodeGen.Tests
+[TestFixture]
+public partial class AutoDeconstructableGeneratorTests
 {
-    [TestFixture]
-    public partial class AutoDeconstructableGeneratorTests
-    {
-        private static readonly IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
-           .Select((t, i) => new TestCaseData($@"
+    private static readonly IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
+       .Select((t, i) => new TestCaseData($@"
 using Nemesis.TextParsers.Settings; 
 namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
-               .SetName($"E2E_{i + 1:00}_{t.name}"));
+           .SetName($"E2E_{i + 1:00}_{t.name}"));
 
-        [TestCaseSource(nameof(_endToEndCases))]
-        public void EndToEndTests(string source, string expectedCode)
-        {
-            var compilation = CreateCompilation(source);
+    [TestCaseSource(nameof(_endToEndCases))]
+    public void EndToEndTests(string source, string expectedCode)
+    {
+        var compilation = CreateCompilation(source);
 
-            var generatedTrees = GetGeneratedTreesOnly(compilation);
+        var generatedTrees = GetGeneratedTreesOnly(compilation);
 
-            var actual = ScrubGeneratorComments(generatedTrees.Single());
+        var actual = ScrubGeneratorComments(generatedTrees.Single());
 
-            Assert.That(actual, Is.EqualTo(expectedCode).Using(IgnoreNewLinesComparer.EqualityComparer));
-        }
+        Assert.That(actual, Is.EqualTo(expectedCode).Using(IgnoreNewLinesComparer.EqualityComparer));
+    }
 
 
-        private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
-        {
-            (@"[DeconstructableSettings(':', '␀', '/', '{', '}')]
+    private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
+    {
+        (@"[DeconstructableSettings(':', '␀', '/', '{', '}')]
             readonly partial struct Child
             {
                 public byte Age { get; }
@@ -49,87 +42,59 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
             }", "private readonly TupleHelper _helper = new TupleHelper(':', '␀', '/', '{', '}');"),
 
 
-            (@"[DeconstructableSettings('_', '␀', '*', '<', '>')]
+        (@"[DeconstructableSettings('_', '␀', '*', '<', '>')]
             partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '<', '>');"),
 
-            (@"[DeconstructableSettings('_', '␀', '*', '<')]
+        (@"[DeconstructableSettings('_', '␀', '*', '<')]
             partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '<', ')');"),
 
-            (@"[DeconstructableSettings('_', '␀', '*')]
+        (@"[DeconstructableSettings('_', '␀', '*')]
             partial record T(byte B) { }", @"new TupleHelper('_', '␀', '*', '(', ')');"),
 
-            (@"[DeconstructableSettings('_', '␀')]
+        (@"[DeconstructableSettings('_', '␀')]
             partial record T(byte B) { }", @"new TupleHelper('_', '␀', '\\', '(', ')');"),
 
-            (@"[DeconstructableSettings('_')]
+        (@"[DeconstructableSettings('_')]
             partial record T(byte B) { }", @"new TupleHelper('_', '∅', '\\', '(', ')');"),
 
-            (@"[DeconstructableSettings]
+        (@"[DeconstructableSettings]
             partial record T(byte B) { }", @"new TupleHelper(';', '∅', '\\', '(', ')');"),
 
-            (@"partial record T(byte B) { }", @"_helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();"),
+        (@"partial record T(byte B) { }", @"_helper = transformerStore.SettingsStore.GetSettingsFor<Nemesis.TextParsers.Settings.DeconstructableSettings>().ToTupleHelper();"),
 
 
-            (@"[DeconstructableSettings(useDeconstructableEmpty: true)]
+        (@"[DeconstructableSettings(useDeconstructableEmpty: true)]
             partial record T(byte B) { }", @"public override T GetEmpty() => new T(_transformer_B.GetEmpty());"),
 
-            (@"[DeconstructableSettings(useDeconstructableEmpty: false)]
+        (@"[DeconstructableSettings(useDeconstructableEmpty: false)]
             partial record T(byte B) { }", @"NOT CONTAIN:GetEmpty()"),
-        }
-           .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
-               .SetName($"Settings{i + 1:00}"));
+    }
+       .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
+           .SetName($"Settings{i + 1:00}"));
 
-        [TestCaseSource(nameof(_settingsCases))]
-        public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
-        {
-            bool matchNotContain = expectedCodePart.StartsWith("NOT CONTAIN:");
-            if (matchNotContain)
-                expectedCodePart = expectedCodePart.Substring(12);
+    [TestCaseSource(nameof(_settingsCases))]
+    public void SettingsRetrieval_ShouldEmitProperValues(string source, string expectedCodePart)
+    {
+        bool matchNotContain = expectedCodePart.StartsWith("NOT CONTAIN:");
+        if (matchNotContain)
+            expectedCodePart = expectedCodePart.Substring(12);
 
-            //arrange
-            var compilation = CreateCompilation(source);
+        //arrange
+        var compilation = CreateCompilation(source);
 
-            //act
-            var generatedTrees = GetGeneratedTreesOnly(compilation);
-            var actual = generatedTrees.Single();
+        //act
+        var generatedTrees = GetGeneratedTreesOnly(compilation);
+        var actual = generatedTrees.Single();
 
 
-            //assert
-            Assert.That(actual, matchNotContain ? Does.Not.Contain(expectedCodePart) : Does.Contain(expectedCodePart));
-        }
+        //assert
+        Assert.That(actual, matchNotContain ? Does.Not.Contain(expectedCodePart) : Does.Contain(expectedCodePart));
+    }
 
-        public static IReadOnlyList<string> GetGeneratedTreesOnly(Compilation compilation, int requiredCardinality = 1)
-        {
-            var newComp = CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
-            Assert.That(diagnostics, Is.Empty);
-
-            SyntaxTree attributeTree = null;
-            foreach (var tree in newComp.SyntaxTrees)
-            {
-                var attributeDeclaration = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>()
-                    .FirstOrDefault(cds => string.Equals(cds.Identifier.ValueText, AutoDeconstructableGenerator.ATTRIBUTE_NAME, StringComparison.Ordinal));
-                if (attributeDeclaration != null)
-                {
-                    attributeTree = tree;
-                    break;
-                }
-            }
-            Assert.That(attributeTree, Is.Not.Null, "Auto attribute not found among generated trees");
-
-            var toRemove = compilation.SyntaxTrees.Append(attributeTree);
-
-            var generatedTrees = newComp.RemoveSyntaxTrees(toRemove).SyntaxTrees.ToList();
-            Assert.That(generatedTrees, Has.Count.EqualTo(requiredCardinality));
-
-            return generatedTrees.Select(tree =>
-                ((CompilationUnitSyntax)tree.GetRoot())
-                .ToFullString()).ToList();
-        }
-
-        [Test]
-        public void Generate_When_StaticUsing_And_Mnemonics()
-        {
-            var compilation = CreateCompilation(@"using SD = System.Double;
+    [Test]
+    public void Generate_When_StaticUsing_And_Mnemonics()
+    {
+        var compilation = CreateCompilation(@"using SD = System.Double;
 using static Tests3.ContainerClass3;
 
 namespace Tests1
@@ -148,11 +113,11 @@ namespace Tests3
     public static class ContainerClass3 { public class NestedClass3 { } }
 }");
 
-            var generatedTrees = GetGeneratedTreesOnly(compilation);
+        var generatedTrees = GetGeneratedTreesOnly(compilation);
 
-            var actual = ScrubGeneratorComments(generatedTrees.Single());
+        var actual = ScrubGeneratorComments(generatedTrees.Single());
 
-            Assert.That(actual, Is.EqualTo(@"//HEAD
+        Assert.That(actual, Is.EqualTo(@"//HEAD
 using System;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
@@ -235,7 +200,6 @@ namespace Tests1
         }
     }
 }").Using(IgnoreNewLinesComparer.EqualityComparer));
-        }
     }
 }
 

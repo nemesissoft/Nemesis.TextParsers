@@ -40,7 +40,7 @@ TL;DR - are you looking for performant, non allocating serializer from structura
 
 ### Other popular choices
 
-When stucked with a task of parsing various items form strings we ofter opt for TypeConverter (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ? We tend to create methods like:
+When stucked with a task of parsing various items form strings we often opt for TypeConverter (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ? We tend to create methods like:
 ```csharp
 public static T FromString<T>(string text) =>
     (T)TypeDescriptor.GetConverter(typeof(T))
@@ -143,9 +143,7 @@ Open source software is free but creating it is not. Should you wish to support 
 * [![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
 
 
-
 ## Todo / road map
 - [ ] ability to format to buffer i.e. TryFormat pattern
-- [x] become more DI friendly adding support for cross cutting concerns i.e. logging and own TransformerStore customizations 
 - [ ] support for ILookup<,>, IGrouping<,>, ReadOnlyObservableCollection<>
 - [ ] support for native parsing/formatting of F# types (map, collections, records...)

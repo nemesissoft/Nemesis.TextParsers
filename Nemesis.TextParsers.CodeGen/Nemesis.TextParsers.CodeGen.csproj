@@ -2,11 +2,10 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-
-
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<IsPackable>true</IsPackable>
 		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
 		<PackageTags>codegen codegeneration generation trnasformer parse ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
 		<Description>Contains various parser optimized for speed and no allocation</Description>
@@ -19,9 +18,7 @@
 		<!-- Do not include the generator as a lib dependency -->
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-		<PackageIcon>review-icon.png</PackageIcon>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
+		<PackageIcon>review-icon.png</PackageIcon>		
 
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>

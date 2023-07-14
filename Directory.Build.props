@@ -10,6 +10,9 @@
 		<Authors>Michał Bryłka, Leszek Kowalski</Authors>
 		<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
 		<Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
+		<IsPackable>false</IsPackable>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
 
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsAsErrors />

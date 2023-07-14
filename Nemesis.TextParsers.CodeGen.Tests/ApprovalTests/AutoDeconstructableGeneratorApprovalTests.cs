@@ -15,17 +15,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
     internal class AutoDeconstructableGeneratorApprovalTests
     {
         [Test] public void ApprovalTestsRecord() => RunCase("Record");
-        
+
         [Test] public void ApprovalTestsStruct() => RunCase("ReadOnlyStruct");
-        
+
         [Test] public void ApprovalTestsLarge() => RunCase("Large");
-        
+
         [Test] public void ApprovalTestsComplexTypes() => RunCase("ComplexType");
-        
+
         [Test] public void ApprovalTestsSimpleWrapperStruct() => RunCase("SimpleWrapperStruct");
 
-        
-        
+
+
         [Test]
         public void HouseKeeping() => ApprovalMaintenance.VerifyNoAbandonedFiles();
 
@@ -34,11 +34,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests
             var (_, source, _) = EndToEndCases.AutoDeconstructableCases().SingleOrDefault(t => t.name == index);
             Assert.That(source, Is.Not.Null);
             Assert.That(source, Is.Not.Empty);
-            
+
             var compilation = CreateCompilation(
                 $@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {source} }}");
 
-            var generatedTrees = AutoDeconstructableGeneratorTests.GetGeneratedTreesOnly(compilation);
+            var generatedTrees = GetGeneratedTreesOnly(compilation);
 
             var actual = ScrubGeneratorComments(generatedTrees.Single());
 

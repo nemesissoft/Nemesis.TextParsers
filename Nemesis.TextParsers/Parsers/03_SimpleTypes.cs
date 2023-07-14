@@ -878,7 +878,7 @@ namespace Nemesis.TextParsers.Parsers
 
             _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 
-            return new Regex(pattern, options);
+            return new(pattern, options);
         }
 
         public override string Format(Regex re)
@@ -907,7 +907,9 @@ namespace Nemesis.TextParsers.Parsers
 
         private RegexTransformer() { }
 
+#pragma warning disable SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
         public override Regex GetEmpty() => new("", RegexOptions.None);
+#pragma warning restore SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
     }
 
     internal class RegexOptionsTransformer : TransformerBase<RegexOptions>

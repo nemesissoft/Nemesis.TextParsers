@@ -55,7 +55,8 @@ Generally, not affected by custom settings, parsed using InvariantCulture. The f
    * RegexOptions.IgnorePatternWhitespace → 'x'
    * RegexOptions.RightToLeft → 'r'
    * RegexOptions.ECMAScript → 'e'
-   * RegexOptions.CultureInvariant → 'v'  
+   * RegexOptions.CultureInvariant → 'v' 
+   * RegexOptions.NonBacktracking → 'b'
 
 
 ### KeyValuePair<,> (compound parser)
@@ -72,7 +73,7 @@ While generally possible, one might be tempted to format/parse octuples and larg
 Format can be customized using settings
 
 ### Transformables aspect
-User can register his own transformer. More on this topic in **Transformables** section below. 
+User can register his own transformer. More on this topic in [Transformables](#transformables) section below. 
 
 ### FactoryMethod 
 (legacy) It is possible to use type's ```ToString``` method for formatting and static ```FromText(ReadOnlySpan<char> text)``` or ```FromText(string text)``` method for parsing. If given entity's code is not owned at parsing point, it's possible to provide separate FactoryMethod transformer 
@@ -106,7 +107,7 @@ Generally parsed as separated with '|' and optionally enclosed in brackets/brace
 Format can be customized using settings - separately for arrays and other collections.
 
 ### Deconstructables aspect
-Values can be formatted automatically using deconstructor and parsed using matching constructor's metadata. More on this topic in **Deconstructables** section below. Format can be customized using settings. 
+Values can be formatted automatically using deconstructor and parsed using matching constructor's metadata. More on this topic in [Deconstructables](#deconstructables) section below. Format can be customized using settings. 
 
 
 ### TypeConverters (for legacy reasons) 
@@ -135,7 +136,8 @@ internal class CustomList<TElement> : ICustomList<TElement>, IEquatable<ICustomL
 
 internal class CustomListTransformer<TElement> : TransformerBase<ICustomList<TElement>>
 {
-    //4. Transformable aspect supports simple injection of ITransformerStore via it's constructor - user can use other transformers already registered for simple/complex types 
+    //4. Transformable aspect supports simple injection of ITransformerStore via it's constructor  
+    //   User can thus use other transformers already registered for simple/complex types 
     private readonly ITransformerStore _transformerStore;
     public CustomListTransformer(ITransformerStore transformerStore) => _transformerStore = transformerStore;
 
@@ -148,7 +150,6 @@ internal class CustomListTransformer<TElement> : TransformerBase<ICustomList<TEl
       and empty parses to what looks like empty in given example i.e. empty array, dictionary etc.*/
 }
 ```
-
 
 ## Deconstructables
 Study how the following code presents features and possibilities of **Deconstructables** aspect
@@ -218,8 +219,13 @@ class DeconstructableTransformer : CustomDeconstructionTransformer<DataWithCusto
         new DataWithCustomDeconstructableTransformer(666, true, new decimal[] { 6, 7, 8, 9 });
 }
 
-/*8. TextTransformer.Default provides default values for (among others) DeconstructableSettings. They can be globally overriden inside referenced SettingsStore but user may opt to override them only for given type. For more info see point 5 and 6 of this listing, but there is also a convenient declarative approach: */
-[DeconstructableSettings(',', '∅', '\\', '{', '}')] //9. user may want to specify all characters or leave some out as defaults - taken from DeconstructableSettingsAttribute constructor defaults, not from SettingsStore 
+/*8. TextTransformer.Default provides default values for (among others) DeconstructableSettings.
+     They can be globally overriden inside referenced SettingsStore but user may opt to override them only for given type. 
+     For more info see point 5 and 6 of this listing, but there is also a convenient declarative approach: */
+
+/*9. user may want to specify all characters or leave some out as defaults - 
+     taken from DeconstructableSettingsAttribute constructor defaults, not from SettingsStore */
+[DeconstructableSettings(',', '∅', '\\', '{', '}')] 
 internal readonly struct Child
 {
     public byte Age { get; }
@@ -293,17 +299,23 @@ class PersonTransformer : CustomDeconstructionTransformer<Person>
 }
 ```
 
+Since records contain appropriate constructor/deconstructor, one can use [Deconstructables](#deconstructables) aspect on them.
+
 Finally, you can implement own _`Nemesis.TextParsers.ITransformer<TElement>`_ or (if you really have no other option) _`System.ComponentModel.TypeConverter`_ class
 
 
 ## C# 9.0 Code generation
 With introduction of new code-gen engine, you can opt to have your transformer generated automatically without any imperative code.
 ```csharp 
+// add <PackageReference Include="Nemesis.TextParsers.CodeGen" Version="VERSION" /> to csproj
+
 //1. use specially provided (via code-gen) Auto.AutoDeconstructable attribute
 [Auto.AutoDeconstructable]
 //2. provide deconstructable aspect options or leave this attribute out - default options will be engaged 
 [DeconstructableSettings('_', '∅', '%', '〈', '〉')]
-readonly partial /*3. partial modifier is VERY important - you need this cause generated code is placed in different file*/ struct StructPoint3d
+readonly 
+partial //3. partial modifier is VERY important - you need this cause generated code is placed in different file 
+struct StructPoint3d
 {
     public double X { get; }
     public double Y { get; }

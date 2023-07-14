@@ -45,10 +45,13 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(formatted, Is.EqualTo("(Mike;36;(Comodo Dragon)|(Lizard))"));
 
             var parsed = sut.Parse(formatted);
-            Assert.That(parsed.Name, Is.EqualTo("Mike"));
-            Assert.That(parsed.Age, Is.EqualTo(36));
-            Assert.That(parsed.Animals[0].Name, Is.EqualTo("Comodo Dragon"));
-            Assert.That(parsed.Animals[1].Name, Is.EqualTo("Lizard"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.Name, Is.EqualTo("Mike"));
+                Assert.That(parsed.Age, Is.EqualTo(36));
+                Assert.That(parsed.Animals[0].Name, Is.EqualTo("Comodo Dragon"));
+                Assert.That(parsed.Animals[1].Name, Is.EqualTo("Lizard"));
+            });
         }
 
         enum Habitat { Terrestrial/*, Aquatic, Amphibian*/ }
@@ -85,11 +88,14 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(formatted, Is.EqualTo(@"Janusz-Korwin\-Mikke-78"));
 
             var parsed = sut.Parse(formatted);
-            Assert.That(parsed.FirstName, Is.EqualTo("Janusz"));
-            Assert.That(parsed.FamilyName, Is.EqualTo("Korwin-Mikke"));
-            Assert.That(parsed.Age, Is.EqualTo(78));
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.FirstName, Is.EqualTo("Janusz"));
+                Assert.That(parsed.FamilyName, Is.EqualTo("Korwin-Mikke"));
+                Assert.That(parsed.Age, Is.EqualTo(78));
 
-            Assert.That(parsed, Is.EqualTo(politician));
+                Assert.That(parsed, Is.EqualTo(politician));
+            });
         }
 
         [Transformer(typeof(PersonTransformer))]
@@ -120,11 +126,12 @@ namespace Nemesis.TextParsers.Tests
             var sut = Sut.GetTransformer<Triplet<double>>();
 
             var parsed = sut.Parse(input);
-            Assert.That(parsed?.First ?? double.NaN, Is.EqualTo(expectedFirst));
-            Assert.That(parsed?.Second ?? double.NaN, Is.EqualTo(expectedSecond));
-            Assert.That(parsed?.Third ?? double.NaN, Is.EqualTo(expectedThird));
-
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed?.First ?? double.NaN, Is.EqualTo(expectedFirst));
+                Assert.That(parsed?.Second ?? double.NaN, Is.EqualTo(expectedSecond));
+                Assert.That(parsed?.Third ?? double.NaN, Is.EqualTo(expectedThird));
+            });
             var formatted = sut.Format(parsed);
             var parsed2 = sut.Parse(formatted);
             Assert.That(parsed, Is.EqualTo(parsed2));
