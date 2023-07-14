@@ -7,21 +7,21 @@ using BenchmarkDotNet.Jobs;
 
 namespace Benchmarks
 {
-  /*|             Method |      Mean | Ratio | Allocated |
-    |------------------- |----------:|------:|----------:|
-    |              Class |  69.36 us |  0.96 |      64 B |
-    | ClassFromInterface |  78.04 us |  1.08 |      64 B |
-    |             Struct |  70.45 us |  0.97 |      41 B |
-    |     StructReadonly |  72.31 us |  1.00 |      41 B |
-    |       StructCreate | 198.49 us |  2.74 |      26 B |
-    */
+    /*|             Method |      Mean | Ratio | Allocated |
+      |------------------- |----------:|------:|----------:|
+      |              Class |  69.36 us |  0.96 |      64 B |
+      | ClassFromInterface |  78.04 us |  1.08 |      64 B |
+      |             Struct |  70.45 us |  0.97 |      41 B |
+      |     StructReadonly |  72.31 us |  1.00 |      41 B |
+      |       StructCreate | 198.49 us |  2.74 |      26 B |
+      */
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     public class ClassVsStruct
     {
         class ClassContainer
         {
-            readonly HelperClass _field = new HelperClass(',', '∅', '\\', '(', ')', "ABCDEFG");
+            readonly HelperClass _field = new(',', '∅', '\\', '(', ')', "ABCDEFG");
 
             public int Count() => _field.Count();
         }
@@ -35,14 +35,14 @@ namespace Benchmarks
 
         class StructContainer
         {
-            readonly HelperStruct _field = new HelperStruct(',', '∅', '\\', '(', ')', "ABCDEFG");
+            readonly HelperStruct _field = new(',', '∅', '\\', '(', ')', "ABCDEFG");
 
             public int Count() => _field.Count();
         }
 
         class StructReadonlyContainer
         {
-            readonly HelperStructReadonly _field = new HelperStructReadonly(',', '∅', '\\', '(', ')', "ABCDEFG");
+            readonly HelperStructReadonly _field = new(',', '∅', '\\', '(', ')', "ABCDEFG");
 
             public int Count() => _field.Count();
         }
@@ -117,12 +117,14 @@ namespace Benchmarks
 
         sealed class HelperClass
         {
+#pragma warning disable IDE0032 // Use auto property
             private readonly char _tupleDelimiter;
             private readonly char _nullElementMarker;
             private readonly char _escapingSequenceStart;
             private readonly char _tupleStart;
             private readonly char _tupleEnd;
             private readonly string _text;
+#pragma warning restore IDE0032 // Use auto property
 
             public HelperClass(char tupleDelimiter, char nullElementMarker, char escapingSequenceStart, char tupleStart, char tupleEnd, string text)
             {
@@ -211,15 +213,19 @@ namespace Benchmarks
             }
         }
 
+#pragma warning disable IDE0250 // Make struct 'readonly' - not-read only for tests
         struct HelperStruct
+#pragma warning restore IDE0250 // Make struct 'readonly'
         {
+#pragma warning disable IDE0032 // Use auto property
             private readonly char _tupleDelimiter;
             private readonly char _nullElementMarker;
             private readonly char _escapingSequenceStart;
             private readonly char _tupleStart;
             private readonly char _tupleEnd;
             private readonly string _text;
-            
+#pragma warning restore IDE0032 // Use auto property
+
             public char TupleDelimiter => _tupleDelimiter;
             public char NullElementMarker => _nullElementMarker;
             public char EscapingSequenceStart => _escapingSequenceStart;

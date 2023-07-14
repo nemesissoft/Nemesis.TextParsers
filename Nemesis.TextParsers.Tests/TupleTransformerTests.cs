@@ -20,7 +20,7 @@ namespace Nemesis.TextParsers.Tests
             bool isKvp = tupleType.IsGenericType && !tupleType.IsGenericTypeDefinition &&
                          tupleType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
 
-            Assert.IsTrue(isValueTuple || isKvp, "isValueTuple || isKvp");
+            Assert.That(isValueTuple || isKvp, Is.True, "isValueTuple || isKvp");
 
             var transformer = Sut.GetTransformer<TTuple>();
 
@@ -139,16 +139,17 @@ namespace Nemesis.TextParsers.Tests
 
 
             var parsed3 = sut.Parse(textActual);
-            Assert.That(parsed3, Is.EqualTo(tuple));
-
-
-            Assert.That(parsed1, Is.EqualTo(parsed2));
-            Assert.That(parsed1, Is.EqualTo(parsed3));
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed3, Is.EqualTo(tuple));
+                Assert.That(parsed1, Is.EqualTo(parsed2));
+                Assert.That(parsed1, Is.EqualTo(parsed3));
+            });
         }
 
         private const string NO_PARENTHESES_ERROR =
             "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
-        internal static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)>
+        private static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)>
             Bad_Tuple_Data() => new[]
         {
             (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException),

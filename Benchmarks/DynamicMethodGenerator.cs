@@ -8,7 +8,7 @@ namespace Benchmarks
     {
         public static DynamicMethodGenerator<TDelegate> Create<TDelegate>(string name)
             where TDelegate : Delegate
-            => new DynamicMethodGenerator<TDelegate>(name);
+            => new(name);
     }
 
     public sealed class DynamicMethodGenerator<TDelegate> where TDelegate : Delegate

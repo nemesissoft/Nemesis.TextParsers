@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Nemesis.TextParsers.Tests.Collections;
@@ -121,7 +121,7 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(ex.Message, Does.Contain(expectedMessagePart));
         }
 
-        [TestCaseSource(typeof(CollectionsTests), nameof(CollectionsTests.ListCompoundData))]
+        [TestCaseSource(typeof(CollectionTestData), nameof(CollectionTestData.ListCompoundData))]
         public void List_Parse_CompoundTests((Type elementType, IEnumerable expectedList, string input) data)
         {
             static void CheckEquivalency(IEnumerable left, IEnumerable right)

@@ -25,7 +25,7 @@ namespace Benchmarks
                 Text = text;
             }
 
-            public static TestData FromCapacity(ushort capacity) => new TestData(
+            public static TestData FromCapacity(ushort capacity) => new(
                 capacity,
                 string.Join("|", Enumerable.Range(1, capacity).Select(i => i.ToString()))
             );

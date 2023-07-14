@@ -744,7 +744,7 @@ namespace Benchmarks
 | HasFlags_Bitwise | 0.2407 ns | 0.0043 ns | 0.0059 ns |  1.00 |    0.00 |     - |     - |     - |         - | */
     [MemoryDiagnoser]
     [SimpleJob(RuntimeMoniker.Net47)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     public class HasFlagBench
     {
         private const int OPERATIONS_PER_INVOKE = 10_000;

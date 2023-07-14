@@ -39,7 +39,7 @@ namespace Benchmarks
         private readonly Regex _illegalListEscapeSequencesDetector;
         private readonly Regex _illegalDictEscapeSequencesDetector;
 
-        private static readonly Regex _invalidRegexCharsReplacer = new Regex(@"
+        private static readonly Regex _invalidRegexCharsReplacer = new(@"
 (?<EscapeableChar>
 \.   |
 \^   |
@@ -108,11 +108,11 @@ namespace Benchmarks
 ", REGEX_OPTIONS);
         }
 
-        public static readonly CollectionSerializerSlow DefaultInstance = new CollectionSerializerSlow(
+        public static readonly CollectionSerializerSlow DefaultInstance = new(
             DEFAULT_LIST_DELIMITER, DEFAULT_DICTIONARY_PAIRS_DELIMITER, DEFAULT_DICTIONARY_KEY_VALUE_DELIMITER, DEFAULT_NULL_ELEMENT_MARKER,
             TextValueConverter.Instance);
 
-        public static readonly CollectionSerializerSlow AlternativeInstance = new CollectionSerializerSlow(
+        public static readonly CollectionSerializerSlow AlternativeInstance = new(
             ALTERNATIVE_LIST_DELIMITER, DEFAULT_DICTIONARY_PAIRS_DELIMITER, DEFAULT_DICTIONARY_KEY_VALUE_DELIMITER, DEFAULT_NULL_ELEMENT_MARKER,
             TextValueConverter.Instance);
 
@@ -313,7 +313,7 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
     public class TextValueConverter : IStringConverter
     {
         private TextValueConverter() { }
-        public static readonly TextValueConverter Instance = new TextValueConverter();
+        public static readonly TextValueConverter Instance = new();
 
 
         public T ConvertFromString<T>(string text) => (T)FromString(typeof(T), text);

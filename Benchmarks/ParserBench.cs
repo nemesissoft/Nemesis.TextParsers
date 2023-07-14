@@ -68,7 +68,7 @@ namespace Benchmarks
         }
 
 
-        private readonly JsonSerializer _serializer = new JsonSerializer();
+        private readonly JsonSerializer _serializer = new();
         [Benchmark]
         public int TextJsonNet()
         {
