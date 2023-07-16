@@ -97,7 +97,7 @@ Format can be customized using settings.
 ### Collections (compound parsers)
 Generally parsed as separated with '|' and optionally enclosed in brackets/braces etc. 
 1. Array - single dimension and jagged arrays are supported 
-2. Collections - Generic realizations of following types are supported: ```IEnumerable<>, ICollection<>, IList<>, List<>, IReadOnlyCollection<>, IReadOnlyList<>, ReadOnlyCollection<>, ISet<>, SortedSet<>, HashSet<>, LinkedList<>, Stack<>, Queue<>, ObservableCollection<>```
+2. Collections - Generic realizations of following types are supported: ```IEnumerable<>, ICollection<>, IList<>, List<>, IReadOnlyCollection<>, IReadOnlyList<>, ReadOnlyCollection<>, ISet<>, SortedSet<>, HashSet<>, LinkedList<>, Stack<>, Queue<>, ObservableCollection<>, ReadOnlyObservableCollection<>```
 3. LeanCollection -  LeanCollection type is a discriminated union that conveniently stashes 1,2,3 or more types (for performance reasons) but they are formatted like normal collections 
 4. Custom collection - in addition to that user can automatically parse his custom collection-like data structures provided that they implement ```ICollection<>``` while providing empty public constructor or implement ```IReadOnlyCollection<>``` while having public constructor that accepts ```IList<>``` realized using same generic parameters
 5. ArraySegment<> serialized in Deconstructable fashion (see below) - separated with '@', escaped with '~', bounded by curly braces ('{', '}'). Serialized parts are (in order of occurrence): offset, count, array
@@ -381,5 +381,4 @@ Various diagnositcs exist to guide end user in creation of proper types that can
 
 ## TBA
  - [ ] ILookup<,>
- - [ ] IGrouping<,>
- - [ ] ReadOnlyObservableCollection<>
+ - [ ] IGrouping<,> 

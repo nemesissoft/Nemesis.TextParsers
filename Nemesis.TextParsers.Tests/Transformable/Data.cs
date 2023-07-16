@@ -77,10 +77,10 @@ namespace Nemesis.TextParsers.Tests.Transformable
         public override string Format(ParsleyAndLeekFactors element) => element.ToString();
 
         public override ParsleyAndLeekFactors GetEmpty() =>
-            new ParsleyAndLeekFactors(10, new[] { 20.0f, 30.0f });
+            new(10, new[] { 20.0f, 30.0f });
 
         public override ParsleyAndLeekFactors GetNull() =>
-            new ParsleyAndLeekFactors(0, new[] { 0f, 0f });
+            new(0, new[] { 0f, 0f });
     }
 
 

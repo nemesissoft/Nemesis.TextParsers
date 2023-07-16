@@ -29,7 +29,7 @@ namespace Nemesis.TextParsers.Tests
         public override string ToString() => Value.ToString("G17", CultureInfo.InvariantCulture);
 
         [UsedImplicitly]
-        public static LowPrecisionFloat FromText(ReadOnlySpan<char> text) => new LowPrecisionFloat(
+        public static LowPrecisionFloat FromText(ReadOnlySpan<char> text) => new(
             SingleTransformer.Instance.Parse(text)
                 );
 

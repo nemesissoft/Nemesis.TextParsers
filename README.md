@@ -19,7 +19,8 @@
 ***
 
 ## Benefits and Features
-TL;DR - are you looking for performant, non allocating serializer from structural object to flat, human editable string? Look no further. [Benchmarks](Benchmarks/ParserBench.cs) shows potential gains from using Nemesis.TextParsers
+TL;DR - are you looking for performant, non allocating serializer from structural object to flat, human editable string? Look no further. 
+[Benchmarks](https://github.com/nemesissoft/Nemesis.TextParsers/blob/04605830652bc9ebd76594516932765bcfc4fb6c/Benchmarks/ParserBench.cs) shows potential gains from using Nemesis.TextParsers
 
 
 |        Method | Count |        Mean | Ratio | Allocated |
@@ -39,9 +40,11 @@ TL;DR - are you looking for performant, non allocating serializer from structura
 |   TextJsonNet |  1000 | 8,708.12 us |  1.07 | 3880800 B |
 |   TextParsers |  1000 | 4,384.00 us |  0.54 |  402400 B |
 
+More comprehensive examples are [here](https://github.com/nemesissoft/Nemesis.TextParsers/blob/master/Specification.md)
+
 ### Other popular choices
 
-When stucked with a task of parsing various items form strings we often opt for TypeConverter (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ? We tend to create methods like:
+When stucked with a task of parsing various items form strings we often opt for [TypeConverter](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ? We tend to create methods like:
 ```csharp
 public static T FromString<T>(string text) =>
     (T)TypeDescriptor.GetConverter(typeof(T))
@@ -117,7 +120,7 @@ But imagine a service application like exchange trading suite that has to perfor
 
 7. provides basic building blocks for parser's callers to be able to create their own transformers/factories 
     * LeanCollection that can store 1,2,3 or more elements 
-    * [SpanSplit](Nemesis.TextParsers/SpanSplit.cs) - string.Split equivalent is provided to accept faster representation of string - ReadOnlySpan&lt;char&gt;. Supports both standard and custom escaping sequences
+    * [SpanSplit](https://github.com/nemesissoft/Nemesis.TextParsers/blob/04605830652bc9ebd76594516932765bcfc4fb6c/Nemesis.TextParsers/SpanSplit.cs) - string.Split equivalent is provided to accept faster representation of string - ReadOnlySpan&lt;char&gt;. Supports both standard and custom escaping sequences
     * access to every implemented parser/formatter
 8. basic LINQ support 
 ```csharp
@@ -126,7 +129,7 @@ var avg = "1|2|3".AsSpan()
     .Parse('\\', '∅', '|')
     .Average(DoubleTransformer.Instance);
 ```
-9. basic support for GUI editors for compound types like collections/dictionaries: [CollectionMeta](Nemesis.TextParsers/Utils/CollectionMeta.cs), [DictionaryMeta](Nemesis.TextParsers/Utils/DictionaryMeta.cs)
+9. basic support for GUI editors for compound types like collections/dictionaries: [CollectionMeta](https://github.com/nemesissoft/Nemesis.TextParsers/blob/04605830652bc9ebd76594516932765bcfc4fb6c/Nemesis.TextParsers/Utils/CollectionMeta.cs), [DictionaryMeta](https://github.com/nemesissoft/Nemesis.TextParsers/blob/04605830652bc9ebd76594516932765bcfc4fb6c/Nemesis.TextParsers/Utils/DictionaryMeta.cs)
 10. lean/frugal implementation of StringBuilder - ValueSequenceBuilder
 ```csharp
 Span<char> initialBuffer = stackalloc char[32];
@@ -146,5 +149,5 @@ Open source software is free but creating it is not. Should you wish to support 
 
 ## Todo / road map
 - [ ] ability to format to buffer i.e. TryFormat pattern
-- [ ] support for ILookup<,>, IGrouping<,>, ReadOnlyObservableCollection<>
+- [ ] support for ILookup<,>, IGrouping<,>
 - [ ] support for native parsing/formatting of F# types (map, collections, records...)

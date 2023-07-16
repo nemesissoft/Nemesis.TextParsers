@@ -61,7 +61,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
             d13 = D13;
         }
 
-        public static readonly LotsOfDeconstructableData EmptyInstance = new LotsOfDeconstructableData("", false, 0, null, 0.0f, null, 0, new List<string>(),
+        public static readonly LotsOfDeconstructableData EmptyInstance = new("", false, 0, null, 0.0f, null, 0, new List<string>(),
             new List<int>(), new Dictionary<string, float?>(), new decimal[0], new BigInteger[0][], new Complex(0.0, 0.0)
         );
 
@@ -108,7 +108,6 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
     //this is to demonstrate support of LSP rule 
     internal abstract class EmptyConventionBase { }
 
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
     internal sealed class EmptyFactoryMethodConvention : EmptyConventionBase, IEquatable<EmptyFactoryMethodConvention>
     {
         public float Number { get; }

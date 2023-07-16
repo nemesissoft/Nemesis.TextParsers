@@ -4,7 +4,7 @@ using Nemesis.TextParsers.Utils;
 
 using NUnit.Framework;
 #if !NET
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
@@ -78,23 +78,23 @@ namespace Nemesis.TextParsers.Tests
     class RecordsTransformersTests
     {
         [Test]
-        public void ShouldBeAbleToReparse()
+        public void ShouldBeAbleToReparse_WithEscapedSequence()
         {
-            var politician = new Person("Janusz", "Korwin-Mikke", 78);
+            var writer = new Person("Antoine", "de Saint-Exupéry", 44);
 
             var sut = Sut.GetTransformer<Person>();
-            var formatted = sut.Format(politician);
+            var formatted = sut.Format(writer);
 
-            Assert.That(formatted, Is.EqualTo(@"Janusz-Korwin\-Mikke-78"));
+            Assert.That(formatted, Is.EqualTo(@"Antoine-de Saint\-Exupéry-44"));
 
             var parsed = sut.Parse(formatted);
             Assert.Multiple(() =>
             {
-                Assert.That(parsed.FirstName, Is.EqualTo("Janusz"));
-                Assert.That(parsed.FamilyName, Is.EqualTo("Korwin-Mikke"));
-                Assert.That(parsed.Age, Is.EqualTo(78));
+                Assert.That(parsed.FirstName, Is.EqualTo("Antoine"));
+                Assert.That(parsed.FamilyName, Is.EqualTo("de Saint-Exupéry"));
+                Assert.That(parsed.Age, Is.EqualTo(44));
 
-                Assert.That(parsed, Is.EqualTo(politician));
+                Assert.That(parsed, Is.EqualTo(writer));
             });
         }
 

@@ -45,8 +45,6 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(newText, Is.EqualTo(newText2));
         }
 
-        [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
         public interface ITextBasedObject
         {
             string ToText();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -120,7 +119,7 @@ namespace Benchmarks
         public IEnumerable<string> ParseCollectionOfStrings(string text)
         {
             if (text == null) return null;
-            if (text == string.Empty) return new string[0];
+            if (text == string.Empty) return Array.Empty<string>();
 
             ThrowOnInvalidText(text, _illegalListEscapeSequencesDetector, _validListDelimiters);
 
@@ -134,7 +133,6 @@ namespace Benchmarks
 
         public IEnumerable<T> ParseCollection<T>(string text) => ParseCollectionOfStrings(text).Select(s => _converter.ConvertFromString<T>(s));
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public string FormatCollection(IEnumerable<string> coll)
         {
             if (coll == null) return null;
@@ -327,13 +325,13 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
             if (destinationType.IsArray)
                 return GetMethod(nameof(ParseArray)).MakeGenericMethod(destinationType.GetElementType());
 
-            else if (ImplementsGenericInterface(destinationType,typeof(IList<>)) && !destinationType.IsArray)
+            else if (ImplementsGenericInterface(destinationType, typeof(IList<>)) && !destinationType.IsArray)
                 return GetMethod(nameof(ParseList)).MakeGenericMethod(destinationType.GetGenericArguments()[0]);
 
-            else if (ImplementsGenericInterface(destinationType,typeof(IDictionary<,>)))
+            else if (ImplementsGenericInterface(destinationType, typeof(IDictionary<,>)))
                 return GetMethod(nameof(ParseDictionary))
                     .MakeGenericMethod(destinationType.GetGenericArguments()[0], destinationType.GetGenericArguments()[1]);
-            
+
             else return GetMethod(nameof(ParseSimple)).MakeGenericMethod(destinationType);
         }
 
@@ -348,7 +346,7 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
         private Dictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text) => string.IsNullOrEmpty(text)
             ? GetEmptyDictionary<TKey, TValue>()
             : (Dictionary<TKey, TValue>)CollectionSerializerSlow.DefaultInstance.ParseDictionary<TKey, TValue>(text);
-        
+
         private T ParseSimple<T>(string text) => string.IsNullOrEmpty(text) ? GetEmptySimple<T>() :
             (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(text);
 
@@ -365,7 +363,6 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
 
 
 
-        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
         public string ConvertToString<T>(T value) => ToString(typeof(T), value);
 
         public string ToString(Type sourceType, object obj) => sourceType == typeof(string)
@@ -377,10 +374,10 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
             if (sourceType.IsArray)
                 return GetMethod(nameof(FormatArray)).MakeGenericMethod(sourceType.GetElementType());
 
-            else if (ImplementsGenericInterface(     sourceType,     typeof(IList<>)) && !sourceType.IsArray)
+            else if (ImplementsGenericInterface(sourceType, typeof(IList<>)) && !sourceType.IsArray)
                 return GetMethod(nameof(FormatList)).MakeGenericMethod(sourceType.GetGenericArguments()[0]);
 
-            else if (ImplementsGenericInterface(  sourceType,        typeof(IDictionary<,>)))
+            else if (ImplementsGenericInterface(sourceType, typeof(IDictionary<,>)))
                 return GetMethod(nameof(FormatDictionary))
                     .MakeGenericMethod(sourceType.GetGenericArguments()[0], sourceType.GetGenericArguments()[1]);
 
@@ -396,7 +393,7 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
         private string FormatDictionary<TKey, TValue>(IDictionary<TKey, TValue> dict) =>
             dict == null ? GetEmptyFormattedText() : CollectionSerializerSlow.DefaultInstance.FormatDictionary(dict);
 
-       
+
         private string FormatSimple<T>(T obj) => obj == null ? GetEmptyFormattedText() :
             TypeDescriptor.GetConverter(typeof(T)).ConvertToInvariantString(obj);
 
@@ -411,6 +408,6 @@ Only [{string.Join(", ", validDelimiters.Select(d => $"'{d}'"))}] are supported 
         private static bool ImplementsGenericInterface(Type type, Type generic) =>
             type == generic ||
             type.IsGenericType && type.GetGenericTypeDefinition() == generic ||
-            type.GetInterfaces().Any(t => t.IsGenericType && ImplementsGenericInterface(t,generic));
+            type.GetInterfaces().Any(t => t.IsGenericType && ImplementsGenericInterface(t, generic));
     }
 }

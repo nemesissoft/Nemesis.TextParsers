@@ -74,9 +74,11 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             var text = sut.Format(dict);
             var dict2 = sut.Parse(text);
-
-            Assert.That(text, Is.EqualTo("1=1.02:03:04;2=2.03:04:05;3=3.04:05:06;4=4.05:06:07;5=5.06:07:08"));
-            Assert.That(dict2, Is.EqualTo(dict));
+            Assert.Multiple(() =>
+            {
+                Assert.That(text, Is.EqualTo("1=1.02:03:04;2=2.03:04:05;3=3.04:05:06;4=4.05:06:07;5=5.06:07:08"));
+                Assert.That(dict2, Is.EqualTo(dict));
+            });
         }
 
         [Test]

@@ -43,7 +43,7 @@ namespace Nemesis.TextParsers.Utils
 
         public override bool Equals(object? obj) => obj is CollectionMeta other && Equals(other);
 
-        public override int GetHashCode() => unchecked(((int) Kind * 397) ^ ElementType.GetHashCode());
+        public override int GetHashCode() => unchecked(((int)Kind * 397) ^ ElementType.GetHashCode());
 
         public static bool operator ==(CollectionMeta left, CollectionMeta right) => left.Equals(right);
 
@@ -68,42 +68,24 @@ namespace Nemesis.TextParsers.Utils
             int? count = (sourceElements as ICollection)?.Count;
 
             var input = new List<TDestElem?>(count ?? 8);
-            foreach (var element in sourceElements) 
+            foreach (var element in sourceElements)
                 input.Add(ConvertElement<TDestElem>(element));
 
-            switch (Kind)
+            return Kind switch
             {
-                case CollectionKind.Array:
-                    return input.ToArray();
-
-                case CollectionKind.List:
-                    return input;
-
-                case CollectionKind.ReadOnlyCollection:
-                    return input.AsReadOnly();
-
-                case CollectionKind.HashSet:
-                    return new HashSet<TDestElem?>(input);
-
-                case CollectionKind.SortedSet:
-                    return new SortedSet<TDestElem?>(input);
-
-                case CollectionKind.LinkedList:
-                    return new LinkedList<TDestElem?>(input);
-
-                case CollectionKind.Stack:
-                    return new Stack<TDestElem?>(input);
-
-                case CollectionKind.Queue:
-                    return new Queue<TDestElem?>(input);
-
-                case CollectionKind.ObservableCollection:
-                    return new ObservableCollection<TDestElem?>(input);
-
+                CollectionKind.Array => input.ToArray(),
+                CollectionKind.List => input,
+                CollectionKind.ReadOnlyCollection => input.AsReadOnly(),
+                CollectionKind.HashSet => new HashSet<TDestElem?>(input),
+                CollectionKind.SortedSet => new SortedSet<TDestElem?>(input),
+                CollectionKind.LinkedList => new LinkedList<TDestElem?>(input),
+                CollectionKind.Stack => new Stack<TDestElem?>(input),
+                CollectionKind.Queue => new Queue<TDestElem?>(input),
+                CollectionKind.ObservableCollection => new ObservableCollection<TDestElem?>(input),
+                CollectionKind.ReadOnlyObservableCollection => new ReadOnlyObservableCollection<TDestElem?>(new ObservableCollection<TDestElem?>(input)),
                 //case CollectionKind.Unknown:
-                default:
-                    throw new NotSupportedException($@"{nameof(Kind)} = '{Kind}' is not supported");
-            }
+                _ => throw new NotSupportedException($@"{nameof(Kind)} = '{Kind}' is not supported"),
+            };
         }
 
         private static TDest? ConvertElement<TDest>(object? element)
@@ -178,6 +160,9 @@ namespace Nemesis.TextParsers.Utils
 
                 else if (definition == typeof(ObservableCollection<>))
                     return CollectionKind.ObservableCollection;
+
+                else if (definition == typeof(ReadOnlyObservableCollection<>))
+                    return CollectionKind.ReadOnlyObservableCollection;
             }
 
             return CollectionKind.Unknown;
@@ -196,28 +181,21 @@ namespace Nemesis.TextParsers.Utils
 
         private static readonly HashSet<Type> _supportedCollectionTypes = new()
         {
-            typeof(IEnumerable<>),
-            typeof(ICollection<>),
-            typeof(IList<>),
-            typeof(List<>),
+            typeof(IEnumerable<>), typeof(ICollection<>), typeof(IList<>), typeof(List<>),
 
-            typeof(IReadOnlyCollection<>),
-            typeof(IReadOnlyList<>),
-            typeof(ReadOnlyCollection<>),
+            typeof(IReadOnlyCollection<>), typeof(IReadOnlyList<>), typeof(ReadOnlyCollection<>),
 
-            typeof(ISet<>),
-            typeof(SortedSet<>),
-            typeof(HashSet<>),
+            typeof(ISet<>), typeof(SortedSet<>), typeof(HashSet<>),
 
-            typeof(LinkedList<>),
-            typeof(Stack<>),
-            typeof(Queue<>),
+            typeof(LinkedList<>), typeof(Stack<>), typeof(Queue<>),
 
-            typeof(ObservableCollection<>),
+            typeof(ObservableCollection<>), typeof(ReadOnlyObservableCollection<>),
         };
 
         public static bool IsTypeSupported(Type collectionType) =>
-            collectionType is {IsGenericType: true} && collectionType.GetGenericTypeDefinition() is { } definition && _supportedCollectionTypes.Contains(definition);
+            collectionType is { IsGenericType: true } &&
+            collectionType.GetGenericTypeDefinition() is { } definition &&
+            _supportedCollectionTypes.Contains(definition);
     }
 
     public enum CollectionKind : byte
@@ -236,6 +214,7 @@ namespace Nemesis.TextParsers.Utils
         Stack,
         Queue,
 
-        ObservableCollection
+        ObservableCollection,
+        ReadOnlyObservableCollection
     }
 }

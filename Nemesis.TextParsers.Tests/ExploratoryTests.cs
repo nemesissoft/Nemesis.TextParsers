@@ -546,7 +546,7 @@ namespace Nemesis.TextParsers.Tests
             typeof(List<string>), typeof(ReadOnlyCollection<string>),
             typeof(HashSet<string>), typeof(SortedSet<string>), typeof(ISet<string>),
             typeof(LinkedList<string>), typeof(Stack<TimeSpan>), typeof(Queue<TimeSpan?>),
-            typeof(ObservableCollection<string>),
+            typeof(ObservableCollection<string>), typeof(ReadOnlyObservableCollection<string>),
 
             typeof(Dictionary<string,string>), typeof(IDictionary<string,int>),
             typeof(Dictionary<int, float>), typeof(Dictionary<double, string>), typeof(Dictionary<Fruits, double>),

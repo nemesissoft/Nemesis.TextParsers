@@ -5,7 +5,6 @@ using BenchmarkDotNet.Attributes;
 
 namespace Benchmarks
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public interface IAggressionBased<out TValue>
     {
         TValue PassiveValue { get; }
