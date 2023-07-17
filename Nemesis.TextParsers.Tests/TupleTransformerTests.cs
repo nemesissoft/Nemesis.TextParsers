@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Nemesis.Essentials.Runtime;
+﻿using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Utils;
-using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 
 namespace Nemesis.TextParsers.Tests

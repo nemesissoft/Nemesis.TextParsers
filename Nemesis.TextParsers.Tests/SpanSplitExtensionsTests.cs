@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NUnit.Framework;
-
-namespace Nemesis.TextParsers.Tests;
+﻿namespace Nemesis.TextParsers.Tests;
 
 [TestFixture]
 public class SpanSplitExtensionsTests

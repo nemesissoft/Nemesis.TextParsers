@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Collections;
 using Nemesis.TextParsers.Tests.Collections;
 using Nemesis.TextParsers.Tests.Utils;
-using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {

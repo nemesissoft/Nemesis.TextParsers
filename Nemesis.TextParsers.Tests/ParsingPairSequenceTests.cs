@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Nemesis.TextParsers.Tests.Utils;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
-using NUnit.Framework;
-using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {
@@ -79,7 +75,7 @@ namespace Nemesis.TextParsers.Tests
         [TestCase(07, @"∅=value", "Key cannot be null")]//Key element in dictionary cannot be null
         [TestCase(08, @"∅", "'<DEFAULT>' has no matching value")]//null dictionary can only be mapped as null string 
         public void Dict_Parse_NegativeTest(int _, string input, string expectedMessage) =>
-            Assert.That(() => ParseDictionary<string, string>(input), 
+            Assert.That(() => ParseDictionary<string, string>(input),
                 Throws.ArgumentException.And
                     .Message.Contains(expectedMessage)
                 );

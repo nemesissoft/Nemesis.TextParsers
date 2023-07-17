@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Numerics;
-using System.Reflection;
-using System.Text.RegularExpressions;
+﻿using System.Collections.ObjectModel;
 
 using AutoFixture;
 
@@ -17,7 +9,6 @@ using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
 using Nemesis.TextParsers.Tests.Infrastructure;
 using Nemesis.TextParsers.Tests.Utils;
-using NUnit.Framework;
 
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 
@@ -68,7 +59,7 @@ public sealed class ExploratoryTests
     }
 
     [OneTimeSetUp]
-    public void BeforeAnyTest()
+    public void BeforeAllTest()
     {
         _randomSource.SetNewSeed();
         Console.WriteLine($"{GetType().Name} initial seed = {_randomSource.Seed}");
@@ -244,37 +235,21 @@ public sealed class ExploratoryTests
         Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext.Test.Name} - seed = {_randomSource.Seed}");
     }
 
-
-    private static IEnumerable<Type> GetTypeNamesFor(ExploratoryTestCategory category) =>
-        _allTestCases.Where(d => d.category == category).Select(d => d.type);
-
-    [Test]
-    public void Enums() => ShouldParseAndFormat(ExploratoryTestCategory.Enums);
-
-    [Test]
-    public void Structs() => ShouldParseAndFormat(ExploratoryTestCategory.Structs);
-
-    [Test]
-    public void ValueTuples() => ShouldParseAndFormat(ExploratoryTestCategory.ValueTuples);
-
-    [Test]
-    public void Arrays() => ShouldParseAndFormat(ExploratoryTestCategory.Arrays);
-
-    [Test]
-    public void Dictionaries() => ShouldParseAndFormat(ExploratoryTestCategory.Dictionaries);
-
-    [Test]
-    public void Collections() => ShouldParseAndFormat(ExploratoryTestCategory.Collections);
-
-    [Test]
-    public void Classes() => ShouldParseAndFormat(ExploratoryTestCategory.Classes);
-
     [Test]
     public void Remaining() =>
         CollectionAssert.IsEmpty(GetTypeNamesFor(ExploratoryTestCategory.Remaining));
 
+    private static IEnumerable<Type> GetTypeNamesFor(ExploratoryTestCategory category) =>
+        _allTestCases.Where(d => d.category == category).Select(d => d.type);
 
-    private void ShouldParseAndFormat(ExploratoryTestCategory category)
+    private static IEnumerable<TestCaseData> GetTestCategories =>
+        Enum.GetValues(typeof(ExploratoryTestCategory))
+        .Cast<ExploratoryTestCategory>()
+        .Where(c => c != ExploratoryTestCategory.Remaining)
+        .Select(c => new TestCaseData(c).SetName($"Cat_{c}"));
+
+    [TestCaseSource(nameof(GetTestCategories))]
+    public void TestCategory(ExploratoryTestCategory category)
     {
         var failed = new List<string>();
         var caseNo = 0;
@@ -298,14 +273,14 @@ public sealed class ExploratoryTests
             Assert.Fail($"Failed cases({failed.Count} cases):{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
 
         Console.WriteLine($"Test cases run:{caseNo}");
-    }
 
-    private void ShouldParseAndFormat(Type testType)
-    {
-        var tester = MakeDelegate<Action<ExploratoryTests, ITransformer>>
-            ((test, trans) => test.ShouldParseAndFormatHelper<int>(trans), testType);
+        void ShouldParseAndFormat(Type testType)
+        {
+            var tester = MakeDelegate<Action<ExploratoryTests, ITransformer>>
+                ((test, trans) => test.ShouldParseAndFormatHelper<int>(trans), testType);
 
-        tester(this, _transformerStore.GetTransformer(testType));
+            tester(this, _transformerStore.GetTransformer(testType));
+        }
     }
 
     private void ShouldParseAndFormatHelper<T>(ITransformer ngTransformer)

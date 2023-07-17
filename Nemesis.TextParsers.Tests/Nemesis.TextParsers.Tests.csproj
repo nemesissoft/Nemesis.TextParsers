@@ -1,9 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>		
+		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
+	<ItemGroup>		
+		<Using Include="System.Text" />
+		<Using Include="System.Text.RegularExpressions" />
+		<Using Include="System.Reflection" />
+		<Using Include="NUnit.Framework" />
+		<Using Include="System.Net" />
+		<Using Include="System.Numerics" />
+		<Using Include="System.Runtime.CompilerServices" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\.editorconfig" Link=".editorconfig" />
@@ -20,7 +30,7 @@
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="NUnit.Analyzers" />
-		
+
 
 		<PackageReference Include="System.Memory" />
 

@@ -1,9 +1,6 @@
-﻿using System;
-using Nemesis.TextParsers.Parsers;
+﻿using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Tests.Utils;
 using Nemesis.TextParsers.Utils;
-
-using NUnit.Framework;
 #if !NET
 using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Tests.Utils;
-using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests;
 
