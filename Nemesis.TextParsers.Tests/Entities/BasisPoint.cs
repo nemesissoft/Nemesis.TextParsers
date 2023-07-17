@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Tests.Utils;
 using Nemesis.TextParsers.Utils;
 using NUnit.Framework;
-using static Nemesis.TextParsers.Tests.TestHelper;
+using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Entities;

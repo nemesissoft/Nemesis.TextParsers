@@ -12,7 +12,7 @@ using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
 using NUnit.Framework;
 
-namespace Nemesis.TextParsers.Tests;
+namespace Nemesis.TextParsers.Tests.Utils;
 
 internal static class TestHelper
 {
@@ -193,84 +193,4 @@ internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<str
         .Replace(Environment.NewLine, "")
         .Replace("\n", "")
         .Replace("\r", "");
-}
-
-[PublicAPI]
-internal class RandomSource
-{
-    private int _seed;
-    private Random _rand;
-
-    public RandomSource() => UseNewSeed();
-
-    public RandomSource(int seed) => UseNewSeed(seed);
-
-    public int UseNewSeed()
-    {
-        _seed = Environment.TickCount;
-        _rand = new Random(_seed);
-        return _seed;
-    }
-
-    public void UseNewSeed(int newSeed)
-    {
-        _seed = newSeed;
-        _rand = new Random(_seed);
-    }
-
-    public int Next() => _rand.Next();
-    public int Next(int maxValue) => _rand.Next(maxValue);
-    public int Next(int minValue, int maxValue) => _rand.Next(minValue, maxValue);
-    public double NextDouble() => _rand.NextDouble();
-
-    public TElement NextElement<TElement>(IReadOnlyList<TElement> list) => list[Next(list.Count)];
-
-    public string NextString(char start, char end, int length = 10)
-    {
-        var chars = new char[length];
-        for (var i = 0; i < chars.Length; i++)
-            chars[i] = (char)_rand.Next(start, end + 1);
-        return new string(chars);
-    }
-
-    public T NextFrom<T>(Span<T> span) => span[Next(span.Length)];
-
-    public double NextFloatingNumber(int magnitude = 1000, bool generateSpecialValues = true)
-    {
-        if (generateSpecialValues && _rand.NextDouble() is { } chance && chance < 0.1)
-        {
-            if (chance < 0.045) return double.PositiveInfinity;
-            else if (chance < 0.09) return double.NegativeInfinity;
-            else return double.NaN;
-        }
-        else
-            return Math.Round((_rand.NextDouble() - 0.5) * 2 * magnitude, 3);
-    }
-
-    public TEnum NextEnum<TEnum, TUnderlying>()
-        where TEnum : Enum
-        where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
-    {
-        var values = Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().ToList();
-
-        bool isFlag = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
-
-        TUnderlying value;
-
-        if (values.Count == 0)
-        {
-            var numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
-            value = _rand.NextDouble() < 0.5 ? numberHandler.Zero : numberHandler.One;
-        }
-        else if (isFlag)
-        {
-            var numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
-            long last = numberHandler.ToInt64(values.Last());
-            value = numberHandler.FromInt64(_rand.Next((int)(last * 2)));
-        }
-        else
-            value = values[_rand.Next(0, values.Count)];
-
-        return Unsafe.As<TUnderlying, TEnum>(ref value);
-    }
 }

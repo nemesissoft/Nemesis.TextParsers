@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using NUnit.Framework;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Tests.Utils;
 using Nemesis.TextParsers.Utils;
+using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests
 {

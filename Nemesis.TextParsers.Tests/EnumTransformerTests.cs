@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
+using Nemesis.TextParsers.Tests.Utils;
 using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests

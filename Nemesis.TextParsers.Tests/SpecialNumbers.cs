@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using NUnit.Framework;
 using Nemesis.TextParsers.Parsers;
+using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {

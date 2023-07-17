@@ -83,24 +83,30 @@ namespace Nemesis.TextParsers.Tests
 
 
             LeanCollection<float> coll1 = 100.1f;
-            Assert.That(coll1.Size, Is.EqualTo(1));
-            Assert.That(coll1.ToList(), Is.EqualTo(new[] { 100.1f }));
-
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(coll1.Size, Is.EqualTo(1));
+                Assert.That(coll1.ToList(), Is.EqualTo(new[] { 100.1f }));
+            });
             LeanCollection<float> coll2 = (1000, 2000);
-            Assert.That(coll2.Size, Is.EqualTo(2));
-            Assert.That(coll2.ToList(), Is.EqualTo(new[] { 1000, 2000 }));
-
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(coll2.Size, Is.EqualTo(2));
+                Assert.That(coll2.ToList(), Is.EqualTo(new[] { 1000, 2000 }));
+            });
             LeanCollection<float> coll3 = (100, 200, 300);
-            Assert.That(coll3.Size, Is.EqualTo(3));
-            Assert.That(coll3.ToList(), Is.EqualTo(new[] { 100, 200, 300 }));
-
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(coll3.Size, Is.EqualTo(3));
+                Assert.That(coll3.ToList(), Is.EqualTo(new[] { 100, 200, 300 }));
+            });
             var array = new[] { 15.5f, 25.6f, 35.99f, 50, 999 };
             var collMore = LeanCollectionFactory.FromArray(array);
-            Assert.That(collMore.Size, Is.EqualTo(5));
-            Assert.That(collMore.ToList(), Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }));
+            Assert.Multiple(() =>
+            {
+                Assert.That(collMore.Size, Is.EqualTo(5));
+                Assert.That(collMore.ToList(), Is.EqualTo(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }));
+            });
         }
 
         [Test]
@@ -218,15 +224,17 @@ namespace Nemesis.TextParsers.Tests
         {
             var coll1 = LeanCollectionFactory.FromArray(elements);
             var coll2 = LeanCollectionFactory.FromArray(elements);
-            Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2.GetHashCode()), "#1 != #2");
-            Assert.That(coll1, Is.EqualTo(coll2), "1 != 2");
-
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2.GetHashCode()), "#1 != #2");
+                Assert.That(coll1, Is.EqualTo(coll2), "1 != 2");
+            });
             var coll2A = LeanCollectionFactory.FromArray(elements?.ToArray());
-            Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2A.GetHashCode()), "#1 != #2a");
-            Assert.That(coll1, Is.EqualTo(coll2A), "1 != 2a");
-
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2A.GetHashCode()), "#1 != #2a");
+                Assert.That(coll1, Is.EqualTo(coll2A), "1 != 2a");
+            });
             var coll3 = LeanCollectionFactory.FromArray(new[] { 15.5f, 25.6f, 35.99f, 50, 999, 1555555 });
             Assert.That(coll1, Is.Not.EqualTo(coll3));
 
@@ -260,11 +268,12 @@ namespace Nemesis.TextParsers.Tests
 
             var actual = ((IListOperations<float>)test).Sort().ToList();
 
-            Assert.That(actual, Is.EqualTo(expectedElements));
-
-            Assert.That(actual, Is.Ordered);
-
-            Assert.That(elements, Is.EqualTo(copy), "Post condition - do NOT mutate array");
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual, Is.EqualTo(expectedElements));
+                Assert.That(actual, Is.Ordered);
+                Assert.That(elements, Is.EqualTo(copy), "Post condition - do NOT mutate array");
+            });
         }
 
         [TestCase(new[] { 1f, 8, 9, 5, 3, 4 }, new[] { 1.0f, 3.0f, 4.0f, 5.0f, 8.0f, 9.0f })]
@@ -279,12 +288,13 @@ namespace Nemesis.TextParsers.Tests
 
             var actual = ((IListOperations<float>)test).Sort().ToList();
 
-            Assert.That(actual, Is.EqualTo(expectedElements));
-
-            Assert.That(actual, Is.Ordered);
-            Assert.That(elements, Is.Ordered); //original buffer get's mutated
-
-            Assert.That(elements, Is.Not.EqualTo(copy), "Post condition - DO mutate array");
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual, Is.EqualTo(expectedElements));
+                Assert.That(actual, Is.Ordered);
+                Assert.That(elements, Is.Ordered); //original buffer get's mutated
+                Assert.That(elements, Is.Not.EqualTo(copy), "Post condition - DO mutate array");
+            });
         }
 
         [TestCase(null, new float[0])]

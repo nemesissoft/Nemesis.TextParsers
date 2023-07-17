@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using TCD = NUnit.Framework.TestCaseData;
-using static Nemesis.TextParsers.Tests.TestHelper;
+using static Nemesis.TextParsers.Tests.Utils.TestHelper;
+using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests.Transformable
 {

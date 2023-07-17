@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Settings;
 
-namespace Nemesis.TextParsers.Tests
+namespace Nemesis.TextParsers.Tests.Utils
 {
     internal static class Sut
     {
@@ -42,9 +41,7 @@ namespace Nemesis.TextParsers.Tests
 
             Stack<char> GetRandomChars(int length, string reason)
             {
-
                 seed += 10;
-                Console.WriteLine($"Seed for {reason} = {seed}");
                 var rand = new Random(seed);
                 var result = new HashSet<char>(
 #if !NET462
@@ -57,7 +54,7 @@ namespace Nemesis.TextParsers.Tests
                         special[rand.Next(special.Length)]
                     );
                 } while (result.Count < length);
-
+                Console.WriteLine($"Seed for {reason} = {seed} [{string.Join(", ", result.Select(c => $"'{c}'"))}]");
                 return new Stack<char>(result);
             }
 

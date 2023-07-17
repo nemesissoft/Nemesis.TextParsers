@@ -52,8 +52,8 @@ namespace Benchmarks
         {
             var dict = new Dictionary<Tuple<string, string, string>, int>(COUNT);
             int i = 0;
-            foreach (var key in _keys)
-                dict[new Tuple<string, string, string>(key.Client, key.Username, key.Token)] = i++;
+            foreach (var (Client, Username, Token) in _keys)
+                dict[new Tuple<string, string, string>(Client, Username, Token)] = i++;
 
             return dict;
         }
@@ -62,8 +62,8 @@ namespace Benchmarks
         {
             var dict = new Dictionary<(string, string, string), int>(COUNT);
             int i = 0;
-            foreach (var key in _keys)
-                dict[(key.Client, key.Username, key.Token)] = i++;
+            foreach (var (Client, Username, Token) in _keys)
+                dict[(Client, Username, Token)] = i++;
 
             return dict;
         }
@@ -85,8 +85,8 @@ namespace Benchmarks
             var dict = _string;
             int value = 0;
 
-            foreach (var key in _keys)
-                value = dict["Client=" + key.Client + " Username=" + key.Username + " Token=" + key.Token];
+            foreach (var (Client, Username, Token) in _keys)
+                value = dict["Client=" + Client + " Username=" + Username + " Token=" + Token];
 
             return value;
         }
@@ -97,8 +97,8 @@ namespace Benchmarks
             var dict = _tuple;
             int value = 0;
 
-            foreach (var key in _keys)
-                value = dict[new Tuple<string, string, string>(key.Client, key.Username, key.Token)];
+            foreach (var (Client, Username, Token) in _keys)
+                value = dict[new Tuple<string, string, string>(Client, Username, Token)];
 
             return value;
         }
@@ -109,8 +109,8 @@ namespace Benchmarks
             var dict = _valueTuple;
             int value = 0;
 
-            foreach (var key in _keys)
-                value = dict[(key.Client, key.Username, key.Token)];
+            foreach (var (Client, Username, Token) in _keys)
+                value = dict[(Client, Username, Token)];
 
             return value;
         }

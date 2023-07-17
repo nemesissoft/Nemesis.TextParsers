@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
+using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests.Collections;
 

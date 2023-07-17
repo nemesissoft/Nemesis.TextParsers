@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Nemesis.TextParsers.Settings;
+using Nemesis.TextParsers.Tests.Utils;
 using NUnit.Framework;
-using static Nemesis.TextParsers.Tests.TestHelper;
+using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Collections

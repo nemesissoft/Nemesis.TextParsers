@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dss = System.Collections.Generic.Dictionary<string, string>;
 using NUnit.Framework;
+using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests
 {
