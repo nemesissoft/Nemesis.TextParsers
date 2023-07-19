@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using System.Numerics;
 
 namespace Nemesis.TextParsers.Utils;
 

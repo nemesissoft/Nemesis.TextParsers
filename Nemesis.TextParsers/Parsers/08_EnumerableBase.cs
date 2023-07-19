@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Nemesis.TextParsers.Settings;
+﻿using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers;

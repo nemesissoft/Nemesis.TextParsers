@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;

@@ -1,58 +1,55 @@
-﻿using System;
-using System.Reflection;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
-namespace Nemesis.TextParsers.Parsers
+namespace Nemesis.TextParsers.Parsers;
+
+[UsedImplicitly]
+public sealed class TextFactoryTransformerCreator : FactoryMethodTransformerCreator
 {
-    [UsedImplicitly]
-    public sealed class TextFactoryTransformerCreator : FactoryMethodTransformerCreator
+    public TextFactoryTransformerCreator([NotNull] FactoryMethodSettings settings)
+        : base(settings) { }
+
+    protected override Type GetFactoryMethodContainer(Type type)
     {
-        public TextFactoryTransformerCreator([NotNull] FactoryMethodSettings settings)
-            : base(settings) { }
-
-        protected override Type GetFactoryMethodContainer(Type type)
+        Type factoryType = type.GetCustomAttribute<TextFactoryAttribute>()?.FactoryType;
+        if (factoryType == null) return null;
+        if (factoryType.IsGenericTypeDefinition)
         {
-            Type factoryType = type.GetCustomAttribute<TextFactoryAttribute>()?.FactoryType;
-            if (factoryType == null) return null;
-            if (factoryType.IsGenericTypeDefinition)
-            {
-                if (type.IsGenericTypeDefinition)
-                    throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
+            if (type.IsGenericTypeDefinition)
+                throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
 
-                factoryType = type.IsGenericType ?
-                    factoryType.MakeGenericType(type.GenericTypeArguments) :
-                    factoryType.MakeGenericType(type);
-            }
-            return factoryType;
+            factoryType = type.IsGenericType ?
+                factoryType.MakeGenericType(type.GenericTypeArguments) :
+                factoryType.MakeGenericType(type);
         }
-
-        protected override MethodInfo PrepareParseMethod(MethodInfo method, Type elementType)
-        {
-            if (method.IsGenericMethodDefinition)
-            {
-                method = elementType.IsGenericType ?
-                    method.MakeGenericMethod(elementType.GenericTypeArguments) :
-                    method.MakeGenericMethod(elementType);
-            }
-
-            return method;
-        }
-
-        public override sbyte Priority => 21;
-
-        public override string ToString() =>
-            $"Create transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(ReadOnlySpan<char> or string)";
+        return factoryType;
     }
 
-    // ReSharper disable RedundantAttributeUsageProperty
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
-    // ReSharper restore RedundantAttributeUsageProperty
-    public sealed class TextFactoryAttribute : Attribute
+    protected override MethodInfo PrepareParseMethod(MethodInfo method, Type elementType)
     {
-        public Type FactoryType { get; }
+        if (method.IsGenericMethodDefinition)
+        {
+            method = elementType.IsGenericType ?
+                method.MakeGenericMethod(elementType.GenericTypeArguments) :
+                method.MakeGenericMethod(elementType);
+        }
 
-        public TextFactoryAttribute([NotNull] Type factoryType) => FactoryType = factoryType ?? throw new ArgumentNullException(nameof(factoryType));
+        return method;
     }
+
+    public override sbyte Priority => 21;
+
+    public override string ToString() =>
+        $"Create transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(ReadOnlySpan<char> or string)";
+}
+
+// ReSharper disable RedundantAttributeUsageProperty
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
+// ReSharper restore RedundantAttributeUsageProperty
+public sealed class TextFactoryAttribute : Attribute
+{
+    public Type FactoryType { get; }
+
+    public TextFactoryAttribute([NotNull] Type factoryType) => FactoryType = factoryType ?? throw new ArgumentNullException(nameof(factoryType));
 }

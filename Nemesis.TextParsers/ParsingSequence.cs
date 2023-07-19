@@ -1,132 +1,129 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using Nemesis.TextParsers.Utils;
+﻿using Nemesis.TextParsers.Utils;
 
-namespace Nemesis.TextParsers
+namespace Nemesis.TextParsers;
+
+public readonly ref struct ParsingSequence
 {
-    public readonly ref struct ParsingSequence
+    #region Fields and properties
+    private readonly TokenSequence<char> _tokenSource;
+    private readonly char _escapingSequenceStart;
+    private readonly char _nullElementMarker;
+    private readonly char _sequenceDelimiter;
+    #endregion
+
+    public ParsingSequence(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart,
+        char nullElementMarker, char sequenceDelimiter)
     {
-        #region Fields and properties
-        private readonly TokenSequence<char> _tokenSource;
+        _tokenSource = tokenSource;
+        _escapingSequenceStart = escapingSequenceStart;
+        _nullElementMarker = nullElementMarker;
+        _sequenceDelimiter = sequenceDelimiter;
+    }
+
+    public ParsingSequenceEnumerator GetEnumerator() => new(_tokenSource, _escapingSequenceStart, _nullElementMarker, _sequenceDelimiter);
+
+    public ref struct ParsingSequenceEnumerator
+    {
+        #region Fields
+        private TokenSequence<char>.TokenSequenceEnumerator _tokenSequenceEnumerator;
         private readonly char _escapingSequenceStart;
         private readonly char _nullElementMarker;
         private readonly char _sequenceDelimiter;
         #endregion
 
-        public ParsingSequence(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart,
-            char nullElementMarker, char sequenceDelimiter)
+        public ParsingSequenceEnumerator(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char sequenceDelimiter)
         {
-            _tokenSource = tokenSource;
+            _tokenSequenceEnumerator = tokenSource.GetEnumerator();
             _escapingSequenceStart = escapingSequenceStart;
             _nullElementMarker = nullElementMarker;
             _sequenceDelimiter = sequenceDelimiter;
+
+            Current = default;
         }
 
-        public ParsingSequenceEnumerator GetEnumerator() => new(_tokenSource, _escapingSequenceStart, _nullElementMarker, _sequenceDelimiter);
 
-        public ref struct ParsingSequenceEnumerator
+        public bool MoveNext()
         {
-            #region Fields
-            private TokenSequence<char>.TokenSequenceEnumerator _tokenSequenceEnumerator;
-            private readonly char _escapingSequenceStart;
-            private readonly char _nullElementMarker;
-            private readonly char _sequenceDelimiter;
-            #endregion
+            bool canMove = _tokenSequenceEnumerator.MoveNext();
+            Current = canMove ? ParseElement(_tokenSequenceEnumerator.Current) : default;
+            return canMove;
+        }
 
-            public ParsingSequenceEnumerator(scoped in TokenSequence<char> tokenSource, char escapingSequenceStart, char nullElementMarker, char sequenceDelimiter)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ParserInput ParseElement(scoped in ReadOnlySpan<char> input)
+        {
+            if (input.Length == 1 && input[0].Equals(_nullElementMarker))
+                return ParserInput.FromDefault();
+
+            int idx = input.IndexOf(_escapingSequenceStart);
+            if (idx >= 0)
             {
-                _tokenSequenceEnumerator = tokenSource.GetEnumerator();
-                _escapingSequenceStart = escapingSequenceStart;
-                _nullElementMarker = nullElementMarker;
-                _sequenceDelimiter = sequenceDelimiter;
+                var bufferLength = Math.Min(Math.Max(input.Length * 13 / 10, 16), 256);
+                Span<char> initialBuffer = stackalloc char[bufferLength];
+                using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
-                Current = default;
-            }
-
-
-            public bool MoveNext()
-            {
-                bool canMove = _tokenSequenceEnumerator.MoveNext();
-                Current = canMove ? ParseElement(_tokenSequenceEnumerator.Current) : default;
-                return canMove;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ParserInput ParseElement(scoped in ReadOnlySpan<char> input)
-            {
-                if (input.Length == 1 && input[0].Equals(_nullElementMarker))
-                    return ParserInput.FromDefault();
-
-                int idx = input.IndexOf(_escapingSequenceStart);
-                if (idx >= 0)
+                bool escaped = false;
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (int i = 0; i < input.Length; i++)
                 {
-                    var bufferLength = Math.Min(Math.Max(input.Length * 13 / 10, 16), 256);
-                    Span<char> initialBuffer = stackalloc char[bufferLength];
-                    using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-                    bool escaped = false;
-                    // ReSharper disable once ForCanBeConvertedToForeach
-                    for (int i = 0; i < input.Length; i++)
+                    char current = input[i];
+                    if (escaped)
                     {
-                        char current = input[i];
-                        if (escaped)
-                        {
-                            if (current == _escapingSequenceStart ||
-                                current == _nullElementMarker ||
-                                current == _sequenceDelimiter)
-                                accumulator.Append(current);
-                            else
-                                throw new ArgumentException($@"Illegal escape sequence found in input: '{current}'.
+                        if (current == _escapingSequenceStart ||
+                            current == _nullElementMarker ||
+                            current == _sequenceDelimiter)
+                            accumulator.Append(current);
+                        else
+                            throw new ArgumentException($@"Illegal escape sequence found in input: '{current}'.
 Only ['{_escapingSequenceStart}','{_nullElementMarker}','{_sequenceDelimiter}'] are supported as escaping sequence characters.", nameof(input));
 
-                            escaped = false;
-                        }
-                        else
-                        {
-                            bool isEscape = current.Equals(_escapingSequenceStart);
-                            if (isEscape)
-                                escaped = true;
-                            else
-                                accumulator.Append(current);
-                        }
+                        escaped = false;
                     }
-
-                    if (escaped)
-                        throw new ArgumentException("Unfinished escaping sequence detected at the end of input", nameof(input));
-
-                    var toParse = accumulator.AsSpan();
-                    return ParserInput.FromText(toParse.ToArray());
+                    else
+                    {
+                        bool isEscape = current.Equals(_escapingSequenceStart);
+                        if (isEscape)
+                            escaped = true;
+                        else
+                            accumulator.Append(current);
+                    }
                 }
-                return ParserInput.FromText(input);
+
+                if (escaped)
+                    throw new ArgumentException("Unfinished escaping sequence detected at the end of input", nameof(input));
+
+                var toParse = accumulator.AsSpan();
+                return ParserInput.FromText(toParse.ToArray());
             }
-
-            public ParserInput Current { get; private set; }
+            return ParserInput.FromText(input);
         }
-    }
 
-    public readonly ref struct ParserInput
+        public ParserInput Current { get; private set; }
+    }
+}
+
+public readonly ref struct ParserInput
+{
+    public bool IsDefault { get; }
+    public ReadOnlySpan<char> Text { get; }
+
+    private ParserInput(bool isDefault, ReadOnlySpan<char> text)
     {
-        public bool IsDefault { get; }
-        public ReadOnlySpan<char> Text { get; }
-
-        private ParserInput(bool isDefault, ReadOnlySpan<char> text)
-        {
-            IsDefault = isDefault;
-            Text = text;
-        }
-
-        public void Deconstruct(out bool isDefault, out ReadOnlySpan<char> text)
-        {
-            isDefault = IsDefault;
-            text = Text;
-        }
-
-        public static ParserInput FromDefault() => new(true, default);
-
-        public static ParserInput FromText(ReadOnlySpan<char> text) => new(false, text);
-
-        public T ParseWith<T>(ITransformer<T> transformer) => IsDefault ? default : transformer.Parse(Text);
-
-        public override string ToString() => IsDefault ? "<DEFAULT>" : Text.ToString();
+        IsDefault = isDefault;
+        Text = text;
     }
+
+    public void Deconstruct(out bool isDefault, out ReadOnlySpan<char> text)
+    {
+        isDefault = IsDefault;
+        text = Text;
+    }
+
+    public static ParserInput FromDefault() => new(true, default);
+
+    public static ParserInput FromText(ReadOnlySpan<char> text) => new(false, text);
+
+    public T ParseWith<T>(ITransformer<T> transformer) => IsDefault ? default : transformer.Parse(Text);
+
+    public override string ToString() => IsDefault ? "<DEFAULT>" : Text.ToString();
 }
