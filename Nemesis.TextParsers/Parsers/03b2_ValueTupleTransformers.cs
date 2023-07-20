@@ -70,10 +70,7 @@ public sealed class ValueTuple2Transformer<T1, T2> : TransformerBase<(T1, T2)>
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple2");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 
@@ -130,12 +127,8 @@ public sealed class ValueTuple3Transformer<T1, T2, T3> : TransformerBase<(T1, T2
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
-        _helper.ParseNext(ref enumerator, 3);
-        var t3 = _helper.ParseElement(ref enumerator, _transformer3);
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple3");
+        var t3 = _helper.ParseElement(ref enumerator, _transformer3, 3, "ValueTuple3");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 
@@ -197,15 +190,9 @@ public sealed class ValueTuple4Transformer<T1, T2, T3, T4> : TransformerBase<(T1
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
-        _helper.ParseNext(ref enumerator, 3);
-        var t3 = _helper.ParseElement(ref enumerator, _transformer3);
-
-        _helper.ParseNext(ref enumerator, 4);
-        var t4 = _helper.ParseElement(ref enumerator, _transformer4);
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple4");
+        var t3 = _helper.ParseElement(ref enumerator, _transformer3, 3, "ValueTuple4");
+        var t4 = _helper.ParseElement(ref enumerator, _transformer4, 4, "ValueTuple4");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 
@@ -273,18 +260,10 @@ public sealed class ValueTuple5Transformer<T1, T2, T3, T4, T5> : TransformerBase
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
-        _helper.ParseNext(ref enumerator, 3);
-        var t3 = _helper.ParseElement(ref enumerator, _transformer3);
-
-        _helper.ParseNext(ref enumerator, 4);
-        var t4 = _helper.ParseElement(ref enumerator, _transformer4);
-
-        _helper.ParseNext(ref enumerator, 5);
-        var t5 = _helper.ParseElement(ref enumerator, _transformer5);
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple5");
+        var t3 = _helper.ParseElement(ref enumerator, _transformer3, 3, "ValueTuple5");
+        var t4 = _helper.ParseElement(ref enumerator, _transformer4, 4, "ValueTuple5");
+        var t5 = _helper.ParseElement(ref enumerator, _transformer5, 5, "ValueTuple5");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 
@@ -361,21 +340,11 @@ public sealed class ValueTuple6Transformer<T1, T2, T3, T4, T5, T6> : Transformer
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
-        _helper.ParseNext(ref enumerator, 3);
-        var t3 = _helper.ParseElement(ref enumerator, _transformer3);
-
-        _helper.ParseNext(ref enumerator, 4);
-        var t4 = _helper.ParseElement(ref enumerator, _transformer4);
-
-        _helper.ParseNext(ref enumerator, 5);
-        var t5 = _helper.ParseElement(ref enumerator, _transformer5);
-
-        _helper.ParseNext(ref enumerator, 6);
-        var t6 = _helper.ParseElement(ref enumerator, _transformer6);
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple6");
+        var t3 = _helper.ParseElement(ref enumerator, _transformer3, 3, "ValueTuple6");
+        var t4 = _helper.ParseElement(ref enumerator, _transformer4, 4, "ValueTuple6");
+        var t5 = _helper.ParseElement(ref enumerator, _transformer5, 5, "ValueTuple6");
+        var t6 = _helper.ParseElement(ref enumerator, _transformer6, 6, "ValueTuple6");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 
@@ -458,24 +427,12 @@ public sealed class ValueTuple7Transformer<T1, T2, T3, T4, T5, T6, T7> : Transfo
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
-        _helper.ParseNext(ref enumerator, 3);
-        var t3 = _helper.ParseElement(ref enumerator, _transformer3);
-
-        _helper.ParseNext(ref enumerator, 4);
-        var t4 = _helper.ParseElement(ref enumerator, _transformer4);
-
-        _helper.ParseNext(ref enumerator, 5);
-        var t5 = _helper.ParseElement(ref enumerator, _transformer5);
-
-        _helper.ParseNext(ref enumerator, 6);
-        var t6 = _helper.ParseElement(ref enumerator, _transformer6);
-
-        _helper.ParseNext(ref enumerator, 7);
-        var t7 = _helper.ParseElement(ref enumerator, _transformer7);
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple7");
+        var t3 = _helper.ParseElement(ref enumerator, _transformer3, 3, "ValueTuple7");
+        var t4 = _helper.ParseElement(ref enumerator, _transformer4, 4, "ValueTuple7");
+        var t5 = _helper.ParseElement(ref enumerator, _transformer5, 5, "ValueTuple7");
+        var t6 = _helper.ParseElement(ref enumerator, _transformer6, 6, "ValueTuple7");
+        var t7 = _helper.ParseElement(ref enumerator, _transformer7, 7, "ValueTuple7");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 
@@ -564,27 +521,13 @@ public sealed class ValueTupleRestTransformer<T1, T2, T3, T4, T5, T6, T7, TRest>
         var enumerator = _helper.ParseStart(input, ARITY);
 
         var t1 = _helper.ParseElement(ref enumerator, _transformer1);
-
-        _helper.ParseNext(ref enumerator, 2);
-        var t2 = _helper.ParseElement(ref enumerator, _transformer2);
-
-        _helper.ParseNext(ref enumerator, 3);
-        var t3 = _helper.ParseElement(ref enumerator, _transformer3);
-
-        _helper.ParseNext(ref enumerator, 4);
-        var t4 = _helper.ParseElement(ref enumerator, _transformer4);
-
-        _helper.ParseNext(ref enumerator, 5);
-        var t5 = _helper.ParseElement(ref enumerator, _transformer5);
-
-        _helper.ParseNext(ref enumerator, 6);
-        var t6 = _helper.ParseElement(ref enumerator, _transformer6);
-
-        _helper.ParseNext(ref enumerator, 7);
-        var t7 = _helper.ParseElement(ref enumerator, _transformer7);
-
-        _helper.ParseNext(ref enumerator, 8);
-        var tRest = _helper.ParseElement(ref enumerator, _transformerRest);
+        var t2 = _helper.ParseElement(ref enumerator, _transformer2, 2, "ValueTuple8");
+        var t3 = _helper.ParseElement(ref enumerator, _transformer3, 3, "ValueTuple8");
+        var t4 = _helper.ParseElement(ref enumerator, _transformer4, 4, "ValueTuple8");
+        var t5 = _helper.ParseElement(ref enumerator, _transformer5, 5, "ValueTuple8");
+        var t6 = _helper.ParseElement(ref enumerator, _transformer6, 6, "ValueTuple8");
+        var t7 = _helper.ParseElement(ref enumerator, _transformer7, 7, "ValueTuple8");
+        var tRest = _helper.ParseElement(ref enumerator, _transformerRest, 8, "ValueTuple8");
 
         _helper.ParseEnd(ref enumerator, ARITY);
 

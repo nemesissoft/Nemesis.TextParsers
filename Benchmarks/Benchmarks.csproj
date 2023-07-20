@@ -2,10 +2,10 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>	
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		
+
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<PublicSign>false</PublicSign>
@@ -18,9 +18,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\Nemesis.TextParsers.Public.snk" Link="Nemesis.TextParsers.Public.snk">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+		<None Include="..\Nemesis.TextParsers.Public.snk" Link="Nemesis.TextParsers.Public.snk">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -159,12 +159,8 @@ public class ArraySegmentTransformer<TElement> : SimpleTransformer<ArraySegment<
         var enumerator = helper.ParseStart(input, 3, TYPE_NAME);
 
         int offset = helper.ParseElement(ref enumerator, Int32Transformer.Instance);
-
-        helper.ParseNext(ref enumerator, 2, TYPE_NAME);
-        int count = helper.ParseElement(ref enumerator, Int32Transformer.Instance);
-
-        helper.ParseNext(ref enumerator, 3, TYPE_NAME);
-        var array = helper.ParseElement(ref enumerator, _arrayTransformer);
+        int count = helper.ParseElement(ref enumerator, Int32Transformer.Instance, 2, TYPE_NAME);
+        var array = helper.ParseElement(ref enumerator, _arrayTransformer, 3, TYPE_NAME);
 
         helper.ParseEnd(ref enumerator, 3, TYPE_NAME);
 

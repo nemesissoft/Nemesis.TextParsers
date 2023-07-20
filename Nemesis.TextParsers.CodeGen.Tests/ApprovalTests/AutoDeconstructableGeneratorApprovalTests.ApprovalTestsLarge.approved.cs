@@ -49,41 +49,29 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_n1);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_n2);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_n2, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_n3);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_n3, 3);
 
-            _helper.ParseNext(ref enumerator, 4);
-            var t4 = _helper.ParseElement(ref enumerator, _transformer_n4);
+            var t4 = _helper.ParseElement(ref enumerator, _transformer_n4, 4);
 
-            _helper.ParseNext(ref enumerator, 5);
-            var t5 = _helper.ParseElement(ref enumerator, _transformer_n5);
+            var t5 = _helper.ParseElement(ref enumerator, _transformer_n5, 5);
 
-            _helper.ParseNext(ref enumerator, 6);
-            var t6 = _helper.ParseElement(ref enumerator, _transformer_n6);
+            var t6 = _helper.ParseElement(ref enumerator, _transformer_n6, 6);
 
-            _helper.ParseNext(ref enumerator, 7);
-            var t7 = _helper.ParseElement(ref enumerator, _transformer_n7);
+            var t7 = _helper.ParseElement(ref enumerator, _transformer_n7, 7);
 
-            _helper.ParseNext(ref enumerator, 8);
-            var t8 = _helper.ParseElement(ref enumerator, _transformer_n8);
+            var t8 = _helper.ParseElement(ref enumerator, _transformer_n8, 8);
 
-            _helper.ParseNext(ref enumerator, 9);
-            var t9 = _helper.ParseElement(ref enumerator, _transformer_n9);
+            var t9 = _helper.ParseElement(ref enumerator, _transformer_n9, 9);
 
-            _helper.ParseNext(ref enumerator, 10);
-            var t10 = _helper.ParseElement(ref enumerator, _transformer_n10);
+            var t10 = _helper.ParseElement(ref enumerator, _transformer_n10, 10);
 
-            _helper.ParseNext(ref enumerator, 11);
-            var t11 = _helper.ParseElement(ref enumerator, _transformer_n11);
+            var t11 = _helper.ParseElement(ref enumerator, _transformer_n11, 11);
 
-            _helper.ParseNext(ref enumerator, 12);
-            var t12 = _helper.ParseElement(ref enumerator, _transformer_n12);
+            var t12 = _helper.ParseElement(ref enumerator, _transformer_n12, 12);
 
-            _helper.ParseNext(ref enumerator, 13);
-            var t13 = _helper.ParseElement(ref enumerator, _transformer_n13);
+            var t13 = _helper.ParseElement(ref enumerator, _transformer_n13, 13);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new Large(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13);

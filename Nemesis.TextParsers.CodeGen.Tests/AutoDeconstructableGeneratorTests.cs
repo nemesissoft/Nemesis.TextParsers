@@ -1,9 +1,4 @@
 ﻿extern alias original;
-using System.Collections.Generic;
-using System.Linq;
-
-using NUnit.Framework;
-
 using static Nemesis.TextParsers.CodeGen.Tests.Utils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
@@ -161,14 +156,11 @@ namespace Tests1
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_FloatNumber);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_DoubleNumber);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_DoubleNumber, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_NestedFullyQualified);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_NestedFullyQualified, 3);
 
-            _helper.ParseNext(ref enumerator, 4);
-            var t4 = _helper.ParseElement(ref enumerator, _transformer_NestedUsingStatic);
+            var t4 = _helper.ParseElement(ref enumerator, _transformer_NestedUsingStatic, 4);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new Numbers(t1, t2, t3, t4);

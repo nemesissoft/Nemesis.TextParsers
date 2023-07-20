@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
+﻿namespace Nemesis.TextParsers.CodeGen.Tests;
 
-namespace Nemesis.TextParsers.CodeGen.Tests
+static class EndToEndCases
 {
-    static class EndToEndCases
+    public static IReadOnlyList<(string name, string source, string expectedCode)> AutoDeconstructableCases() => new[]
     {
-        public static IReadOnlyList<(string name, string source, string expectedCode)> AutoDeconstructableCases() => new[]
-        {
-            ("SimpleWrapperRecord", @"[Auto.AutoDeconstructable] partial record eDoubleRecord(double Value) { }",
-                @"//HEAD
+        ("SimpleWrapperRecord", @"[Auto.AutoDeconstructable] partial record eDoubleRecord(double Value) { }",
+            @"//HEAD
 using System;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
@@ -69,8 +67,8 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     }
 }"),
 
-            
-            ("SimpleWrapperStruct", @"[Auto.AutoDeconstructable] readonly partial struct eDoubleStruct {
+
+        ("SimpleWrapperStruct", @"[Auto.AutoDeconstructable] readonly partial struct eDoubleStruct {
                 public double Value { get; }
                 public eDoubleStruct(double value) => Value = value;
                 public void Deconstruct(out double value) => value = Value;
@@ -137,7 +135,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 }"),
 
 
-            ("Record", @"public record RecordPoint2d(double X, double Y) { }
+        ("Record", @"public record RecordPoint2d(double X, double Y) { }
 
                [Auto.AutoDeconstructable]
                [DeconstructableSettings(',', '∅', '\\', '[', ']')]
@@ -181,11 +179,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_X);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_Y);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_Y, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_Z);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_Z, 3);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new RecordPoint3d(t1, t2, t3);
@@ -218,7 +214,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
 
 
-            ("ReadOnlyStruct", @"[Auto.AutoDeconstructable]
+        ("ReadOnlyStruct", @"[Auto.AutoDeconstructable]
                [DeconstructableSettings(';', '∅', '\\', '(', ')')]
                public readonly partial struct Point3d
                {
@@ -263,11 +259,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_x);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_y);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_y, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_z);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_z, 3);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new Point3d(t1, t2, t3);
@@ -299,7 +293,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 
 
 
-            ("Large", @"[Auto.AutoDeconstructable]
+        ("Large", @"[Auto.AutoDeconstructable]
                partial class Large
                {
                    public double N1 { get; } public float N2 { get; } public int N3 { get; } public uint N4 { get; }
@@ -325,7 +319,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests
                        n13 = N13;
                    }
                }",
-                @"//HEAD
+            @"//HEAD
 using System;
 using System.Numerics;
 using Nemesis.TextParsers;
@@ -376,41 +370,29 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_n1);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_n2);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_n2, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_n3);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_n3, 3);
 
-            _helper.ParseNext(ref enumerator, 4);
-            var t4 = _helper.ParseElement(ref enumerator, _transformer_n4);
+            var t4 = _helper.ParseElement(ref enumerator, _transformer_n4, 4);
 
-            _helper.ParseNext(ref enumerator, 5);
-            var t5 = _helper.ParseElement(ref enumerator, _transformer_n5);
+            var t5 = _helper.ParseElement(ref enumerator, _transformer_n5, 5);
 
-            _helper.ParseNext(ref enumerator, 6);
-            var t6 = _helper.ParseElement(ref enumerator, _transformer_n6);
+            var t6 = _helper.ParseElement(ref enumerator, _transformer_n6, 6);
 
-            _helper.ParseNext(ref enumerator, 7);
-            var t7 = _helper.ParseElement(ref enumerator, _transformer_n7);
+            var t7 = _helper.ParseElement(ref enumerator, _transformer_n7, 7);
 
-            _helper.ParseNext(ref enumerator, 8);
-            var t8 = _helper.ParseElement(ref enumerator, _transformer_n8);
+            var t8 = _helper.ParseElement(ref enumerator, _transformer_n8, 8);
 
-            _helper.ParseNext(ref enumerator, 9);
-            var t9 = _helper.ParseElement(ref enumerator, _transformer_n9);
+            var t9 = _helper.ParseElement(ref enumerator, _transformer_n9, 9);
 
-            _helper.ParseNext(ref enumerator, 10);
-            var t10 = _helper.ParseElement(ref enumerator, _transformer_n10);
+            var t10 = _helper.ParseElement(ref enumerator, _transformer_n10, 10);
 
-            _helper.ParseNext(ref enumerator, 11);
-            var t11 = _helper.ParseElement(ref enumerator, _transformer_n11);
+            var t11 = _helper.ParseElement(ref enumerator, _transformer_n11, 11);
 
-            _helper.ParseNext(ref enumerator, 12);
-            var t12 = _helper.ParseElement(ref enumerator, _transformer_n12);
+            var t12 = _helper.ParseElement(ref enumerator, _transformer_n12, 12);
 
-            _helper.ParseNext(ref enumerator, 13);
-            var t13 = _helper.ParseElement(ref enumerator, _transformer_n13);
+            var t13 = _helper.ParseElement(ref enumerator, _transformer_n13, 13);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new Large(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13);
@@ -471,11 +453,11 @@ namespace Nemesis.TextParsers.CodeGen.Tests
 }"),
 
 
-            
-            ("ComplexType", @" public readonly struct Number{}
+
+        ("ComplexType", @" public readonly struct Number{}
                 [Auto.AutoDeconstructable]               
                 public partial record ComplexTypes(double[] Doubles, Number? Nullable, System.Collections.Generic.List<Number> List) { }",
-                @"//HEAD
+            @"//HEAD
 using System;
 using System.Collections.Generic;
 using Nemesis.TextParsers;
@@ -516,11 +498,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_Doubles);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_Nullable);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_Nullable, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_List);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_List, 3);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new ComplexTypes(t1, t2, t3);
@@ -549,6 +529,5 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
     }
 }")
-        };
-    }
+    };
 }

@@ -139,7 +139,17 @@ These requirements were not met in:
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ParseNext(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte index, string typeName = null)
+    public void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity, string typeName = null)
+    {
+        if (enumerator.MoveNext())
+        {
+            var remaining = enumerator.Current.ToString();
+            throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{TupleDelimiter}' cannot have more than {arity} elements: '{remaining}'");
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser, byte? index = null, string typeName = null)
     {
         static string ToOrdinal(byte number) =>
             number % 100 is <= 13 and >= 11
@@ -152,24 +162,14 @@ These requirements were not met in:
                     _ => $"{number}th",
                 };
 
-        var current = enumerator.Current;
-        if (!enumerator.MoveNext())
-            throw new ArgumentException($"{typeName ?? "Tuple"}: {ToOrdinal(index)} element was not found after '{current.ToString()}'");
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ParseEnd(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, byte arity, string typeName = null)
-    {
-        if (enumerator.MoveNext())
+        if (index.HasValue)
         {
-            var remaining = enumerator.Current.ToString();
-            throw new ArgumentException($@"{typeName ?? "Tuple"} of arity={arity} separated by '{TupleDelimiter}' cannot have more than {arity} elements: '{remaining}'");
+            var current = enumerator.Current;
+            if (!enumerator.MoveNext())
+                throw new ArgumentException($"{typeName ?? "Tuple"}: {ToOrdinal(index.Value)} element was not found after '{current.ToString()}'");
         }
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TElement ParseElement<TElement>(ref TokenSequence<char>.TokenSequenceEnumerator enumerator, ISpanParser<TElement> parser)
-    {
+
         ReadOnlySpan<char> input = enumerator.Current;
         var unescapedInput = input.UnescapeCharacter(EscapingSequenceStart, TupleDelimiter);
 

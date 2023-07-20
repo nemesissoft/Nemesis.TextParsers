@@ -62,10 +62,7 @@ public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
             var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
             var key = _helper.ParseElement(ref enumerator, _keyTransformer);
-
-            _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
-            var value = _helper.ParseElement(ref enumerator, _valueTransformer);
-
+            var value = _helper.ParseElement(ref enumerator, _valueTransformer, 2, TYPE_NAME);
 
             _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 

@@ -1,17 +1,9 @@
 ﻿extern alias original;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reflection;
-using System.Text.RegularExpressions;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Nemesis.CodeAnalysis;
 using Nemesis.TextParsers.CodeGen.Deconstructable;
-using NUnit.Framework;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
 

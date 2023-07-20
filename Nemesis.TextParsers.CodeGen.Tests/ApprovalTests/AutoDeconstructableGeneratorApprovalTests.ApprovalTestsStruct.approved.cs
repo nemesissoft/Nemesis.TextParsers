@@ -35,11 +35,9 @@ namespace Nemesis.TextParsers.CodeGen.Tests
             var enumerator = _helper.ParseStart(input, ARITY);
             var t1 = _helper.ParseElement(ref enumerator, _transformer_x);
 
-            _helper.ParseNext(ref enumerator, 2);
-            var t2 = _helper.ParseElement(ref enumerator, _transformer_y);
+            var t2 = _helper.ParseElement(ref enumerator, _transformer_y, 2);
 
-            _helper.ParseNext(ref enumerator, 3);
-            var t3 = _helper.ParseElement(ref enumerator, _transformer_z);
+            var t3 = _helper.ParseElement(ref enumerator, _transformer_z, 3);
 
             _helper.ParseEnd(ref enumerator, ARITY);
             return new Point3d(t1, t2, t3);

@@ -866,9 +866,7 @@ public sealed class RegexTransformer : SimpleTransformer<Regex>
         var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
         var options = _helper.ParseElement(ref enumerator, RegexOptionsTransformer.Instance);
-
-        _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
-        var pattern = _helper.ParseElement(ref enumerator, StringTransformer.Instance);
+        var pattern = _helper.ParseElement(ref enumerator, StringTransformer.Instance, 2, TYPE_NAME);
 
         _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 
@@ -901,9 +899,7 @@ public sealed class RegexTransformer : SimpleTransformer<Regex>
 
     private RegexTransformer() { }
 
-#pragma warning disable SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
     public override Regex GetEmpty() => new("", RegexOptions.None);
-#pragma warning restore SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
 }
 
 internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
@@ -1034,10 +1030,7 @@ public sealed class ComplexTransformer : SimpleTransformer<Complex>
         var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
 
         double real = _helper.ParseElement(ref enumerator, doubleParser);
-
-        _helper.ParseNext(ref enumerator, 2, TYPE_NAME);
-        double imaginary = _helper.ParseElement(ref enumerator, doubleParser);
-
+        double imaginary = _helper.ParseElement(ref enumerator, doubleParser, 2, TYPE_NAME);
 
         _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 

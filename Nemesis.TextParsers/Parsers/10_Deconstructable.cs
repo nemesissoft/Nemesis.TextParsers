@@ -348,15 +348,9 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
          var enumerator = Helper.ParseStart(input, ARITY);
 
          var t1 = Helper.ParseElement(ref enumerator, _transformer1);
-
-         Helper.ParseNext(ref enumerator, 2);
-         var t2 = Helper.ParseElement(ref enumerator, _transformer2);
-
-         Helper.ParseNext(ref enumerator, 3);
-         var t3 = Helper.ParseElement(ref enumerator, _transformer3);
-
-         Helper.ParseNext(ref enumerator, 4);
-         var t4 = Helper.ParseElement(ref enumerator, _transformer4);
+         var t2 = Helper.ParseElement(ref enumerator, _transformer2, 2);
+         var t3 = Helper.ParseElement(ref enumerator, _transformer3, 3);
+         var t4 = Helper.ParseElement(ref enumerator, _transformer4, 4);
 
          Helper.ParseEnd(ref enumerator, ARITY);
 
@@ -376,7 +370,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
         var enumerator = Expression.Variable(typeof(TokenSequence<char>.TokenSequenceEnumerator), "enumerator");
         var fields = @params.Select((p, i) => Expression.Variable(p.ParameterType, $"t{i + 1}")).ToList();
 
-        var expressions = new List<Expression>(5 + arity * 2)
+        var expressions = new List<Expression>(3 + arity)
             {
                 Expression.Assign(enumerator,
                     Expression.Call(helper, nameof(TupleHelper.ParseStart), null, input, Expression.Constant(arity), Expression.Constant(typeName))
@@ -385,12 +379,6 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
 
         for (int i = 0; i < arity; i++)
         {
-            if (i > 0)
-                expressions.Add(
-                    Expression.Call(helper, nameof(TupleHelper.ParseNext), null,
-                        enumerator, Expression.Constant((byte)(i + 1)), Expression.Constant(typeName))
-                );
-
             var field = fields[i];
 
             var trans = Expression.Convert(
@@ -398,10 +386,13 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
                 typeof(ISpanParser<>).MakeGenericType(field.Type)
             );
 
+            var arguments = new Expression[] {
+                enumerator, trans, Expression.Constant(i > 0 ? (byte?)(i + 1) : null, typeof(byte?)), Expression.Constant(typeName)
+            };
 
             var assignment = Expression.Assign(
                 field,
-                Expression.Call(helper, nameof(TupleHelper.ParseElement), new[] { field.Type }, enumerator, trans)
+                Expression.Call(helper, nameof(TupleHelper.ParseElement), new[] { field.Type }, arguments)
             );
             expressions.Add(assignment);
         }
