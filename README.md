@@ -43,7 +43,8 @@ More comprehensive examples are [here](https://github.com/nemesissoft/Nemesis.Te
 
 ### Other popular choices
 
-When stucked with a task of parsing various items form strings we often opt for [TypeConverter](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter) ? We tend to create methods like:
+When stucked with a task of parsing various items form strings we often opt for [TypeConverter](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter).
+We tend to create methods like:
 ```csharp
 public static T FromString<T>(string text) =>
     (T)TypeDescriptor.GetConverter(typeof(T))
@@ -79,9 +80,9 @@ public abstract class BaseTextConverter<TValue> : TextTypeConverter
 }
 ```
 
-What is wrong with that? Well, nothing... except of performance. 
+What is wrong with that? Well, nothing... except of performance and possibly - support for generics. 
 
-TypeConverter was designed 15+ years ago when processing power tended to double every now and then and (in my opinion) it was more suited for creating GUI-like editors where performance usually is not an issue. 
+TypeConverter was designed around 2002 when processing power tended to double every now and then and (in my opinion) it was more suited for creating GUI-like editors where performance usually is not an issue. 
 But imagine a service application like exchange trading suite that has to perform multiple operations per second and in such cases processor has more important thing to do than parsing strings. 
 
 ### Features
@@ -142,7 +143,7 @@ return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0)
 
 
 ## Funding
-Open source software is free but creating it is not. Should you wish to support us in our noble endeavour, please consider the following donation methods:
+Open source software is free to use but creating and maintaining is a laborious effort. Should you wish to support us in our noble endeavour, please consider the following donation methods:
 [![Donate using Liberapay](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/master/images/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
 
 
