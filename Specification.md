@@ -1,4 +1,4 @@
-﻿# ![Logo](http://icons.iconarchive.com/icons/iconka/cat-commerce/64/review-icon.png) Nemesis.TextParsers
+﻿# ![Logo](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/master/images/review-icon.png) Nemesis.TextParsers
 
 ***
 
@@ -45,7 +45,7 @@ Generally, not affected by custom settings, parsed using InvariantCulture. The f
 6. Version - integers separated with dots
 7. IpAddress - valid integers separated with dots
 8. Complex – semicolon separated and parenthesis bound two numbers (real and imaginary part) i.e. *(3.14; 2)* which translates to *π+2ⅈ*
-9. Regex - option and pattern serialized in Deconstructable fashion (see below) - separated with ';', escaped with '~' (to avoid overescaping of already frequent '\' escaping character in regex format), bounded by curly braces ('{', '}'). Options serialized using regex option format (flag combination specified without separators i.e. ``` "mi" == RegexOptions.Multiline | RegexOptions.IgnoreCase ```):
+9. Regex - option and pattern serialized in [Deconstructables fashion](#deconstructables) - separated with ';', escaped with '~' (to avoid overescaping of already frequent '\' escaping character in regex format), bounded by curly braces ('{', '}'). Options serialized using regex option format (flag combination specified without separators i.e. ``` "mi" == RegexOptions.Multiline | RegexOptions.IgnoreCase ```):
    * RegexOptions.None → '0'
    * RegexOptions.IgnoreCase → 'i'
    * RegexOptions.Multiline → 'm'
@@ -100,7 +100,7 @@ Generally parsed as separated with '|' and optionally enclosed in brackets/brace
 2. Collections - Generic realizations of following types are supported: ```IEnumerable<>, ICollection<>, IList<>, List<>, IReadOnlyCollection<>, IReadOnlyList<>, ReadOnlyCollection<>, ISet<>, SortedSet<>, HashSet<>, LinkedList<>, Stack<>, Queue<>, ObservableCollection<>, ReadOnlyObservableCollection<>```
 3. LeanCollection -  LeanCollection type is a discriminated union that conveniently stashes 1,2,3 or more types (for performance reasons) but they are formatted like normal collections 
 4. Custom collection - in addition to that user can automatically parse his custom collection-like data structures provided that they implement ```ICollection<>``` while providing empty public constructor or implement ```IReadOnlyCollection<>``` while having public constructor that accepts ```IList<>``` realized using same generic parameters
-5. ArraySegment<> serialized in Deconstructable fashion (see below) - separated with '@', escaped with '~', bounded by curly braces ('{', '}'). Serialized parts are (in order of occurrence): offset, count, array
+5. ArraySegment<> serialized in [Deconstructables fashion](#deconstructables) - separated with '@', escaped with '~', bounded by curly braces ('{', '}'). Serialized parts are (in order of occurrence): offset, count, array
 
 
 
@@ -264,7 +264,9 @@ __with__ keyword is analogous to With-pattern known from functional languages:
 
 
 ## C# 9.0 Records
-With introduction of [Records](https://devblogs.microsoft.com/dotnet/welcome-to-c-9-0/#records) in C# 9.0 one may wonder how they might be serialized to flat text formats. As a matter of fact, Records are merely a syntax sugar for C# - they stand for a class with automatically implemented structural equality(along with IEquatable and operators), positional deconstruction and printing/formatting. Hence, as such they are supported in NTP out-of-the-box - via Deconstructable pattern. Caution is advised when employing this pattern for derived positional records:
+With introduction of [Records](https://devblogs.microsoft.com/dotnet/welcome-to-c-9-0/#records) in C# 9.0 one may wonder how they might be serialized to flat text formats. 
+As a matter of fact, Records are merely a syntax sugar for C# - they stand for a class with automatically implemented structural equality(along with IEquatable and operators), positional deconstruction and printing/formatting. 
+Hence, as such they are supported in NTP out-of-the-box - via [Deconstructable](#deconstructables) pattern. Caution is advised when employing this pattern for derived positional records:
 ```csharp 
 record Vertebrate(string Name)
 {
@@ -281,7 +283,7 @@ record ReptileWithName(string Name, Habitat Habitat) : Vertebrate(Name) { }
 TextTransformer.Default.GetTransformer<ReptileWithName>().Parse("(Comodo Dragon;Terrestrial)")
 ```
 
-Alternatively you might implement semi-automatic transformation via Transformable pattern (here depicted in tandem with Deconstructable transformation):
+Alternatively you might implement semi-automatic transformation via [Transformable](#transformables) pattern (here depicted in tandem with [Deconstructable](#deconstructables) transformation):
 ```csharp 
 [Transformer(typeof(PersonTransformer))]
 record Person(string FirstName, string FamilyName, int Age) { }
