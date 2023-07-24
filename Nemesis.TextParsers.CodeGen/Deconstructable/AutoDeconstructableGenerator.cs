@@ -1,9 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-
-using Nemesis.TextParsers.CodeGen.Utils;
+﻿using Nemesis.TextParsers.CodeGen.Utils;
 
 #nullable enable
 

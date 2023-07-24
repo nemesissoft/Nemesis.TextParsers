@@ -18,7 +18,7 @@
 		<!-- Do not include the generator as a lib dependency -->
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-		<PackageIcon>review-icon.png</PackageIcon>		
+		<PackageIcon>review-icon.png</PackageIcon>
 
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -26,6 +26,13 @@
 		<DebugType>embedded</DebugType>
 		<DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<Using Include="Microsoft.CodeAnalysis" />
+		<Using Include="Microsoft.CodeAnalysis.CSharp" />
+		<Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
+		<Using Include="Microsoft.CodeAnalysis.Text" />
+	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)'=='Release'">
 		<!-- Package the generator in the analyzer directory of the nuget package -->
@@ -38,7 +45,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />		
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
 	</ItemGroup>
 
 

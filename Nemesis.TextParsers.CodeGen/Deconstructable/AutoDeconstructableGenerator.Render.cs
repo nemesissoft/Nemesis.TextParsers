@@ -1,7 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-
-
-#nullable enable
+﻿#nullable enable
 
 namespace Nemesis.TextParsers.CodeGen.Deconstructable;
 

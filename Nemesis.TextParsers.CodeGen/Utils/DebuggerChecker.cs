@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 
-using Microsoft.CodeAnalysis;
-
 namespace Nemesis.TextParsers.CodeGen.Utils;
 
 //[Conditional("DEBUG")]
@@ -9,17 +7,12 @@ static class DebuggerChecker
 {
     public static void CheckDebugger(this GeneratorExecutionContext context, string generatorName)
     {
-        if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.DebugSourceGenerators", out var debugValue) &&
-            bool.TryParse(debugValue, out var shouldDebug) &&
-            shouldDebug)
-        {
+        bool ShouldDebug(string optionName) =>
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(optionName, out var option) &&
+            bool.TryParse(option, out var shouldDebug) && shouldDebug;
+
+        if (ShouldDebug("build_property.DebugSourceGenerators") || ShouldDebug($"build_property.Debug{generatorName}"))
             Debugger.Launch();
-        }
-        else if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.Debug" + generatorName, out debugValue) &&
-                 bool.TryParse(debugValue, out shouldDebug) &&
-                 shouldDebug)
-        {
-            Debugger.Launch();
-        }
+
     }
 }
