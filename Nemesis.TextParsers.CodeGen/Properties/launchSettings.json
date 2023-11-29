@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Debug CodeGen.Sample": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Nemesis.TextParsers.CodeGen.Sample\\Nemesis.TextParsers.CodeGen.Sample.csproj"
+    }
+  }
+}
