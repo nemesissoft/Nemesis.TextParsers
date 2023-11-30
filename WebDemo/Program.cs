@@ -12,12 +12,10 @@ services.AddSwaggerGen(options =>
     options.SchemaFilter<EnumSchemaFilter>();
 });
 
-//TODO allow for deserialization of immutable options
-var parsingSettings = builder.Configuration.GetRequiredSection(nameof(ParsingSettings)).Get<ParsingSettings>()!;
-// TODO add private set; everywhere + add tests for serialization and config hydration + add validation after (make records) + check if validation triggers after Bind()
-
-var ps = new ParsingSettings();
-builder.Configuration.GetRequiredSection(nameof(ParsingSettings)).Bind(ps, op => { op.BindNonPublicProperties = true; });
+var parsingSettings = builder.Configuration.GetRequiredSection(nameof(ParsingSettings))
+    .Get<ParsingSettings>(op => { op.BindNonPublicProperties = true; op.ErrorOnUnknownConfiguration = true; })!;
+// TODO add tests for serialization and config hydration
+// TODO add validation after (make records) + check if validation triggers after Bind()
 
 
 var transformerStore = parsingSettings.ToTransformerStore();
@@ -49,8 +47,7 @@ app.MapGet("/showConfigurations", () => parsingSettings)
 
 app.MapPost("/parse/{type}", (string type, [FromQuery] string text) =>
 {
-    var t = Type.GetType(type);
-    var parsed = transformerStore.GetTransformer(t).ParseObject(text);
+    var parsed = transformerStore.GetTransformer(Type.GetType(type)).ParseObject(text);
     return parsed;
 }).WithName("Parse").WithOpenApi();
 
