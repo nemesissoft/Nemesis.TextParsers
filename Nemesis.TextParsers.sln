@@ -17,8 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
-		GetNetCoreVersions.ps1 = GetNetCoreVersions.ps1
 		Directory.Packages.props = Directory.Packages.props
+		GetNetCoreVersions.ps1 = GetNetCoreVersions.ps1
 		LICENSE.txt = LICENSE.txt
 		Nemesis.TextParsers.Public.snk = Nemesis.TextParsers.Public.snk
 		README.md = README.md
@@ -30,6 +30,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen.Tests", "Nemesis.TextParsers.CodeGen.Tests\Nemesis.TextParsers.CodeGen.Tests.csproj", "{FC3A4A7E-D28D-4A84-8F52-6BCED05BED78}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen.Sample", "Nemesis.TextParsers.CodeGen.Sample\Nemesis.TextParsers.CodeGen.Sample.csproj", "{7C32D596-6B5B-4E39-8C96-2FC8757E3213}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebDemo", "WebDemo\WebDemo.csproj", "{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +63,10 @@ Global
 		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C32D596-6B5B-4E39-8C96-2FC8757E3213}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

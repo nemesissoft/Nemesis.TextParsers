@@ -42,5 +42,10 @@
 		<PackageVersion Include="Enums.NET" Version="3.0.1" />
 		<PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageVersion Include="System.Text.Json" Version="4.6.0" />
+		
+		
+		<!--Web-->
+		<PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+		<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	</ItemGroup>
 </Project>
