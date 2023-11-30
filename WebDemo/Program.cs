@@ -2,14 +2,24 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Settings;
+using WebDemo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
+services.AddSwaggerGen(options =>
+{
+    options.SchemaFilter<EnumSchemaFilter>();
+});
 
 //TODO allow for deserialization of immutable options
-var parsingSettings = builder.Configuration.GetRequiredSection("ParsingSettings").Get<ParsingSettings>()!;
+var parsingSettings = builder.Configuration.GetRequiredSection(nameof(ParsingSettings)).Get<ParsingSettings>()!;
+// TODO add private set; everywhere + add tests for serialization and config hydration + add validation after (make records) + check if validation triggers after Bind()
+
+var ps = new ParsingSettings();
+builder.Configuration.GetRequiredSection(nameof(ParsingSettings)).Bind(ps, op => { op.BindNonPublicProperties = true; });
+
+
 var transformerStore = parsingSettings.ToTransformerStore();
 
 
@@ -26,6 +36,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -76,6 +87,10 @@ sealed class ParsingSettings
     }
 }
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.KebabCaseLower, WriteIndented = true)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.KebabCaseLower,
+    WriteIndented = true,
+    UseStringEnumConverter = true
+)]
 [JsonSerializable(typeof(ParsingSettings))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext { }

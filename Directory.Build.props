@@ -3,7 +3,7 @@
 		<!--This will get replaced by Build System-->
 		<Version>1.0.0</Version>
 		
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>12.0</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		
 		<!--TODO <Nullable>enable</Nullable>-->

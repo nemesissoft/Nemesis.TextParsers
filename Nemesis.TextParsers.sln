@@ -31,7 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen.Sample", "Nemesis.TextParsers.CodeGen.Sample\Nemesis.TextParsers.CodeGen.Sample.csproj", "{7C32D596-6B5B-4E39-8C96-2FC8757E3213}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebDemo", "WebDemo\WebDemo.csproj", "{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebDemo", "WebDemo\WebDemo.csproj", "{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.ArchTests", "Nemesis.TextParsers.ArchTests\Nemesis.TextParsers.ArchTests.csproj", "{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +69,10 @@ Global
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

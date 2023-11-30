@@ -1,16 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using FluentAssertions;
+﻿using FluentAssertions;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
-using Nemesis.TextParsers.Parsers;
-using NUnit.Framework;
 
 namespace Nemesis.TextParsers.Tests.Utils;
 

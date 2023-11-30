@@ -1,15 +1,12 @@
 ﻿namespace Nemesis.TextParsers.Settings;
 
-public readonly struct EnumSettings : ISettings
+#if NET
+[method: System.Text.Json.Serialization.JsonConstructor]
+#endif 
+public sealed class EnumSettings(bool caseInsensitive, bool allowParsingNumerics) : ISettings
 {
-    public bool CaseInsensitive { get; }
-    public bool AllowParsingNumerics { get; }
-
-    public EnumSettings(bool caseInsensitive, bool allowParsingNumerics)
-    {
-        CaseInsensitive = caseInsensitive;
-        AllowParsingNumerics = allowParsingNumerics;
-    }
+    public bool CaseInsensitive { get; private set; } = caseInsensitive;
+    public bool AllowParsingNumerics { get; private set; } = allowParsingNumerics;
 
     public static EnumSettings Default { get; } = new(true, true);
 
