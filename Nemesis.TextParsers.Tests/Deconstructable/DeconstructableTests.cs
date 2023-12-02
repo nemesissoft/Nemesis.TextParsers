@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using Nemesis.Essentials.Runtime;
+﻿using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Tests.Utils;
-using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 using B2B = System.Func<Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder, Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder>;
 using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
-using TCD = NUnit.Framework.TestCaseData;
+
 
 namespace Nemesis.TextParsers.Tests.Deconstructable;
 
@@ -18,7 +15,7 @@ internal class DeconstructableTests
     private static IEnumerable<TCD> CorrectData() => new[]
     {
         new TCD(typeof(CarrotAndOnionFactors),
-                new CarrotAndOnionFactors(123.456789M, new[] { 1, 2, 3, (float)Math.Round(Math.PI, 2) }, TimeSpan.Parse("12:34:56")),
+                new CarrotAndOnionFactors(123.456789M, [1, 2, 3, (float)Math.Round(Math.PI, 2)], TimeSpan.Parse("12:34:56")),
                 @"(123.456789;1|2|3|3.14;12:34:56)"),
         new TCD(typeof(Address), new Address("Wrocław", 52200), @"(Wrocław;52200)"),
         new TCD(typeof(Address), new Address("Wrocław)", 52200), @"(Wrocław);52200)"),
@@ -41,7 +38,7 @@ internal class DeconstructableTests
 
         tester = tester.MakeGenericMethod(type);
 
-        tester.Invoke(null, new[] { instance, text, null });
+        tester.Invoke(null, [instance, text, null]);
     }
 
     private static void FormatAndParseHelper<TDeconstructable>(TDeconstructable instance, string text, B2B settingsMutator = null)
@@ -226,11 +223,11 @@ internal class DeconstructableTests
         );
 
         FormatAndParseHelper(
-            new House("My house", 116.2f, new List<Room>
-            {
-                new Room("Kid/wife room", new Dictionary<string, decimal>{["BRIMNES"]=857,["STRANDMON"]=699}),
-                new Room("Kitchen", new Dictionary<string, decimal>{["VADHOLMA"]=999,["RISATORP"]=29.99m}),
-            }),
+            new House("My house", 116.2f,
+            [
+                new("Kid/wife room", new Dictionary<string, decimal> { ["BRIMNES"] = 857, ["STRANDMON"] = 699 }),
+                new("Kitchen", new Dictionary<string, decimal> { ["VADHOLMA"] = 999, ["RISATORP"] = 29.99m }),
+            ]),
             @"{My house⸗116.2⸗[Kid//wife room,BRIMNES=857;STRANDMON=699]|[Kitchen,VADHOLMA=999;RISATORP=29.99]}",
             s => s.WithBorders('{', '}')
                 .WithDelimiter('⸗')
@@ -243,7 +240,7 @@ internal class DeconstructableTests
     [Test]
     public void ParseAndFormat_AttributeProvidedSettings()
     {
-        var instance = new Kindergarten(null, new[] { new Child(3, 20.2f), new Child(5, 25.66f) });
+        var instance = new Kindergarten(null, [new Child(3, 20.2f), new Child(5, 25.66f)]);
         var text = @"␀;{3,20.2}|{5,25.66}";
 
         var sut = Sut.GetTransformer<Kindergarten>();
@@ -307,15 +304,15 @@ internal class DeconstructableTests
     private static IEnumerable<TCD> CustomDeconstructable_Data() => new[]
     {
         //instance, input
-        new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, new decimal[] {10, 20, 30}),
+        new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, [10, 20, 30]),
             @"{3.14_False_10|20|30}"),
-        new TCD(new DataWithCustomDeconstructableTransformer(666, true, new decimal[] {6, 7, 8, 9}), null), //overriden by custom transformer 
-        new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, Array.Empty<decimal>()), ""), //overriden by deconstructable aspect convention
+        new TCD(new DataWithCustomDeconstructableTransformer(666, true, [6, 7, 8, 9]), null), //overriden by custom transformer 
+        new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, []), ""), //overriden by deconstructable aspect convention
 
         new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, null), @"{3.14_False_␀}"),
         new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_False_␀}"),
         new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_␀_␀}"),
-        new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, Array.Empty<decimal>()), @"{__}"),
+        new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, []), @"{__}"),
     };
 
     [TestCaseSource(nameof(CustomDeconstructable_Data))]
@@ -343,7 +340,7 @@ internal class DeconstructableTests
     {
         IsMutuallyEquivalent(
             Sut.GetTransformer<House>().GetEmpty(),
-            new House("", 0.0f, new List<Room>())); //not overriden  
+            new House("", 0.0f, [])); //not overriden  
 
         IsMutuallyEquivalent(
             Sut.GetTransformer<Room>().GetEmpty(),

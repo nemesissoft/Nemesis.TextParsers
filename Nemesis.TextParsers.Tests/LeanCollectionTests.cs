@@ -119,7 +119,7 @@ namespace Nemesis.TextParsers.Tests
             var three = (double)new LeanCollection<double>(11, 22, 33);
             Assert.That(three, Is.EqualTo(11));
 
-            var many = (double)new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            var many = (double)new LeanCollection<double>([1.1, 2.2, 3.3, 4.4, 5.5]);
             Assert.That(many, Is.EqualTo(1.1));
         }
 
@@ -146,7 +146,7 @@ namespace Nemesis.TextParsers.Tests
                 (11, 22)
             ));
 
-            var many = ((double, double))new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            var many = ((double, double))new LeanCollection<double>([1.1, 2.2, 3.3, 4.4, 5.5]);
             Assert.That(many, Is.EqualTo(
                 (1.1, 2.2)
             ));
@@ -175,7 +175,7 @@ namespace Nemesis.TextParsers.Tests
                 (11, 22, 33)
             ));
 
-            var many = ((double, double, double))new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            var many = ((double, double, double))new LeanCollection<double>([1.1, 2.2, 3.3, 4.4, 5.5]);
             Assert.That(many, Is.EqualTo(
                 (1.1, 2.2, 3.3)
             ));
@@ -204,7 +204,7 @@ namespace Nemesis.TextParsers.Tests
                 new[] { 11.0, 22, 33 }
                 ));
 
-            var many = (double[])new LeanCollection<double>(new[] { 1.1, 2.2, 3.3, 4.4, 5.5 });
+            var many = (double[])new LeanCollection<double>([1.1, 2.2, 3.3, 4.4, 5.5]);
             Assert.That(many, Is.EqualTo(
                 new[] { 1.1, 2.2, 3.3, 4.4, 5.5 }
                 ));
@@ -314,13 +314,13 @@ namespace Nemesis.TextParsers.Tests
             Assert.That(actual, Is.EqualTo(expected), "structEnumerator");
 
 
-            actual = new();
+            actual = [];
             while (iEnumerator.MoveNext())
                 actual.Add((iEnumerator.Current as float?) ?? float.NaN);
             Assert.That(actual, Is.EqualTo(expected), "iEnumerator");
 
 
-            actual = new();
+            actual = [];
             while (iEnumeratorT.MoveNext())
                 actual.Add(iEnumeratorT.Current);
             Assert.That(actual, Is.EqualTo(expected), "iEnumeratorT");

@@ -10,6 +10,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Using Include="Nemesis.TextParsers" />
+		<Using Include="Nemesis.TextParsers.Settings" />
+		<Using Include="Microsoft.AspNetCore.Mvc" />
+		<Using Include="System.Text.Json.Serialization" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Swashbuckle.AspNetCore" />
 	</ItemGroup>

@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Utils;
 using Nemesis.TextParsers.Utils;
-using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
-using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Collections;
 
@@ -18,25 +12,46 @@ namespace Nemesis.TextParsers.Tests.Collections;
 class CollectionTransformerTests
 {
     private static readonly Type[] _collectionTypes =
-    {
-        typeof(int[]), typeof(int[][]),
-        typeof(List<int>), typeof(IList<int>), typeof(ICollection<int>), typeof(IEnumerable<int>),
-        typeof(ReadOnlyCollection<int>), typeof(IReadOnlyCollection<int>), typeof(IReadOnlyList<int>),
-        typeof(ISet<int>), typeof(HashSet<int>), typeof(SortedSet<int>),
-        typeof(LinkedList<int>), typeof(Stack<int>), typeof(Queue<int>),
-        typeof(ObservableCollection<int>), typeof(ReadOnlyObservableCollection<float>),
+    [
+        typeof(int[]),
+        typeof(int[][]),
+        typeof(List<int>),
+        typeof(IList<int>),
+        typeof(ICollection<int>),
+        typeof(IEnumerable<int>),
+        typeof(ReadOnlyCollection<int>),
+        typeof(IReadOnlyCollection<int>),
+        typeof(IReadOnlyList<int>),
+        typeof(ISet<int>),
+        typeof(HashSet<int>),
+        typeof(SortedSet<int>),
+        typeof(LinkedList<int>),
+        typeof(Stack<int>),
+        typeof(Queue<int>),
+        typeof(ObservableCollection<int>),
+        typeof(ReadOnlyObservableCollection<float>),
         //dictionary like collection
-        typeof(IEnumerable<KeyValuePair<int, string>>), typeof(ICollection<KeyValuePair<int, string>>),
-        typeof(IReadOnlyCollection<KeyValuePair<int, string>>), typeof(IReadOnlyList<KeyValuePair<int, string>>),
+        typeof(IEnumerable<KeyValuePair<int, string>>),
+        typeof(ICollection<KeyValuePair<int, string>>),
+        typeof(IReadOnlyCollection<KeyValuePair<int, string>>),
+        typeof(IReadOnlyList<KeyValuePair<int, string>>),
 
-        typeof(Dictionary<int, string>), typeof(IDictionary<int, string>),
-        typeof(ReadOnlyDictionary<int, string>), typeof(IReadOnlyDictionary<int, string>),
-        typeof(SortedList<int, string>), typeof(SortedDictionary<int, string>),
+        typeof(Dictionary<int, string>),
+        typeof(IDictionary<int, string>),
+        typeof(ReadOnlyDictionary<int, string>),
+        typeof(IReadOnlyDictionary<int, string>),
+        typeof(SortedList<int, string>),
+        typeof(SortedDictionary<int, string>),
         //custom collections
-        typeof(StringList), typeof(Times10NumberList), typeof(ImmutableIntCollection), typeof(ImmutableNullableIntCollection),
+        typeof(StringList),
+        typeof(Times10NumberList),
+        typeof(ImmutableIntCollection),
+        typeof(ImmutableNullableIntCollection),
         //custom dictionaries 
-        typeof(StringKeyedDictionary<int>), typeof(FloatValuedDictionary<int>), typeof(ImmutableDecimalValuedDictionary<int>),
-    };
+        typeof(StringKeyedDictionary<int>),
+        typeof(FloatValuedDictionary<int>),
+        typeof(ImmutableDecimalValuedDictionary<int>),
+    ];
 
 
     private static IEnumerable<(Type contractType, string input, int cardinality, Type expectedType)>
@@ -142,7 +157,7 @@ class CollectionTransformerTests
     class StringList : List<string> { }
     class Times10NumberList : ICollection<int>, IDeserializationCallback
     {
-        private readonly List<int> _items = new();
+        private readonly List<int> _items = [];
 
         public void OnDeserialization(object sender)
         {
@@ -169,21 +184,14 @@ class CollectionTransformerTests
         public bool IsReadOnly => false;
     }
 
-    class ImmutableIntCollection : ReadOnlyCollection<int>
-    {
-        public ImmutableIntCollection(IList<int> list) : base(list) { }
-    }
-    class ImmutableNullableIntCollection : ReadOnlyCollection<int?>
-    {
-        public ImmutableNullableIntCollection(IList<int?> list) : base(list) { }
-    }
+    class ImmutableIntCollection(IList<int> list) : ReadOnlyCollection<int>(list) { }
+    class ImmutableNullableIntCollection(IList<int?> list) : ReadOnlyCollection<int?>(list) { }
 
     class StringKeyedDictionary<TValue> : SortedDictionary<string, TValue> { }
     class FloatValuedDictionary<TKey> : Dictionary<TKey, float> { }
-    class ImmutableDecimalValuedDictionary<TKey> : ReadOnlyDictionary<TKey, decimal>
-    {
-        public ImmutableDecimalValuedDictionary(IDictionary<TKey, decimal> dictionary) : base(dictionary) { }
-    }
+    class ImmutableDecimalValuedDictionary<TKey>(IDictionary<TKey, decimal> dictionary)
+        : ReadOnlyDictionary<TKey, decimal>(dictionary)
+    { }
 
     private static IEnumerable<TCD> CollectionTestData(string differentiator) =>
         CorrectData().Select((t, i) =>

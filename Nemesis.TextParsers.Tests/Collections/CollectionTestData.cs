@@ -101,12 +101,12 @@ internal class CollectionTestData
         @"10\|11\|12|20\|21\|22|30\|31\|32|40\|41\|42|50\|51\|52" ),
 
         (typeof(float[][]), Enumerable.Range(1, 1).Select(
-                i => new[] {new float[]{ 10 * i, 10 * i + 1 }, new float[] { 100 * i, 100 * i + 1 } }
+                i => new[] {new float[]{ 10 * i, 10 * i + 1 }, [100 * i, 100 * i + 1] }
         ).ToList(),
         @"10\\\|11\|100\\\|101" ),
 
         (typeof(float[][]), Enumerable.Range(1, 3).Select(
-                i => new[] {new float[]{ 10 * i, 10 * i + 1 }, new float[] { 100 * i, 100 * i + 1 } }
+                i => new[] {new float[]{ 10 * i, 10 * i + 1 }, [100 * i, 100 * i + 1] }
         ).ToList(),
         @"10\\\|11\|100\\\|101|20\\\|21\|200\\\|201|30\\\|31\|300\\\|301" ),
 
@@ -217,8 +217,8 @@ internal class CollectionTestData
             Enumerable.Range(1, 3).Select(i =>
                 new SortedDictionary<char, float[]>()
                 {
-                    [(char)(65+(i-1)*3+0)] = new[]{ i*10 + 0.5f, i*10 + 1.5f, i*10 + 2.5f, i*10 + 3.5f},
-                    [(char)(65+(i-1)*3+1)] = new[]{ i*100 + 0.5f, i*100 + 1.5f, i*100 + 2.5f, i*100 + 3.5f},
+                    [(char)(65+(i-1)*3+0)] = [i*10 + 0.5f, i*10 + 1.5f, i*10 + 2.5f, i*10 + 3.5f],
+                    [(char)(65+(i-1)*3+1)] = [i*100 + 0.5f, i*100 + 1.5f, i*100 + 2.5f, i*100 + 3.5f],
                 }
             ).ToList(),
             @"A=10.5\|11.5\|12.5\|13.5;B=100.5\|101.5\|102.5\|103.5|D=20.5\|21.5\|22.5\|23.5;E=200.5\|201.5\|202.5\|203.5|G=30.5\|31.5\|32.5\|33.5;H=300.5\|301.5\|302.5\|303.5"),

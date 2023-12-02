@@ -89,7 +89,7 @@ public class DictionaryTests
 
         var dict = Enumerable.Range(0, 4).ToDictionary(
             i => new[] { 10.1 * i, 10.2 * i + 1, 10.3 * i + 2 },
-            i => new List<TimeSpan> { new TimeSpan(i, i + 1, i + 2, i + 3), new TimeSpan(10 * i, 10 * i + 1, 10 * i + 2, 10 * i + 3) });
+            i => new List<TimeSpan> { new(i, i + 1, i + 2, i + 3), new(10 * i, 10 * i + 1, 10 * i + 2, 10 * i + 3) });
 
         var text = sut.Format(dict);
         Assert.That(text, Is.EqualTo(@"0|1|2=01:02:03|01:02:03;10.1|11.2|12.3=1.02:03:04|10.11:12:13;20.2|21.4|22.6=2.03:04:05|20.21:22:23;30.299999999999997|31.599999999999998|32.900000000000006=3.04:05:06|31.07:32:33"));

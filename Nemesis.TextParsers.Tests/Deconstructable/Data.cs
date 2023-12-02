@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reflection;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using Nemesis.Essentials.Design;
 using Nemesis.Essentials.Runtime;
@@ -259,7 +253,7 @@ internal class DeconstructableTransformer : CustomDeconstructionTransformer<Data
             .WithDeconstructableEmpty();//default value but just to be clear 
 
     public override DataWithCustomDeconstructableTransformer GetNull() =>
-        new(666, true, new decimal[] { 6, 7, 8, 9 });
+        new(666, true, [6, 7, 8, 9]);
 }
 
 
@@ -297,18 +291,11 @@ internal static class ExternallyDeconstructableExt
         .Of(() => new ExternallyDeconstructable(default, default));
 }
 
-internal class House
+internal class House(string name, float area, List<Room> rooms)
 {
-    public string Name { get; }
-    public float Area { get; }
-    public List<Room> Rooms { get; }
-
-    public House(string name, float area, List<Room> rooms)
-    {
-        Name = name;
-        Area = area;
-        Rooms = rooms;
-    }
+    public string Name { get; } = name;
+    public float Area { get; } = area;
+    public List<Room> Rooms { get; } = rooms;
 
     public void Deconstruct(out string name, out float area, out List<Room> rooms)
     {
@@ -321,16 +308,10 @@ internal class House
 }
 
 [Transformer(typeof(RoomTransformer))]
-internal class Room
+internal class Room(string name, Dictionary<string, decimal> furniturePrices)
 {
-    public string Name { get; }
-    public Dictionary<string, decimal> FurniturePrices { get; }
-
-    public Room(string name, Dictionary<string, decimal> furniturePrices)
-    {
-        Name = name;
-        FurniturePrices = furniturePrices;
-    }
+    public string Name { get; } = name;
+    public Dictionary<string, decimal> FurniturePrices { get; } = furniturePrices;
 
     public void Deconstruct(out string name, out Dictionary<string, decimal> furniturePrices)
     {
@@ -341,10 +322,8 @@ internal class Room
     public override string ToString() => $"{Name}[{string.Join(", ", FurniturePrices?.Select(kvp => $"{kvp.Key}=>{kvp.Value}") ?? Enumerable.Empty<string>())}]";
 }
 
-internal class RoomTransformer : CustomDeconstructionTransformer<Room>
+internal class RoomTransformer([NotNull] ITransformerStore transformerStore) : CustomDeconstructionTransformer<Room>(transformerStore)
 {
-    public RoomTransformer([NotNull] ITransformerStore transformerStore) : base(transformerStore) { }
-
     protected override DeconstructionTransformerBuilder BuildSettings(DeconstructionTransformerBuilder prototype)
         => prototype
             .WithBorders('[', ']')

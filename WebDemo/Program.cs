@@ -1,16 +1,9 @@
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
-using Nemesis.TextParsers;
-using Nemesis.TextParsers.Settings;
 using WebDemo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 services.AddEndpointsApiExplorer();
-services.AddSwaggerGen(options =>
-{
-    options.SchemaFilter<EnumSchemaFilter>();
-});
+services.AddSwaggerGen(options => { options.SchemaFilter<EnumSchemaFilter>(); });
 
 var parsingSettings = builder.Configuration.GetRequiredSection(nameof(ParsingSettings))
     .Get<ParsingSettings>(op => { op.BindNonPublicProperties = true; op.ErrorOnUnknownConfiguration = true; })!;

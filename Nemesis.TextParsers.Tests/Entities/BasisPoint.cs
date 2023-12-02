@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Nemesis.TextParsers.Parsers;
+﻿using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Tests.Utils;
 using Nemesis.TextParsers.Utils;
-using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
-using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Entities;
 
@@ -13,17 +9,14 @@ namespace Nemesis.TextParsers.Tests.Entities;
 /// Represents BasisPoint. 1bs is 1/100th of 1%
 /// </summary>
 [Transformer(typeof(BasisPointTransformer))]
-public readonly struct BasisPoint : IEquatable<BasisPoint>
+public readonly struct BasisPoint(double realValue) : IEquatable<BasisPoint>
 {
     private const double BPS_FACTOR = 10_000d;
 
-    public double RealValue { get; }
+    public double RealValue { get; } = realValue;
     internal double BpsValue => RealValue * BPS_FACTOR;
 
-    public BasisPoint(double realValue) => RealValue = realValue;
-
     public static BasisPoint FromBps(double bps) => new(bps / BPS_FACTOR);
-
 
     #region Equals
     public bool Equals(BasisPoint other) =>
@@ -69,13 +62,12 @@ internal sealed class BasisPointTransformer : TransformerBase<BasisPoint>
             IsCharEqual(text, 2, 'P') &&
             IsCharEqual(text, 1, 'S')
            )
-            text = text.Slice(0, length - 3);
+            text = text[..(length - 3)];
         else if (length > 2 &&
                  IsCharEqual(text, 2, 'B') &&
                  IsCharEqual(text, 1, 'P')
                 )
-            text = text.Slice(0, length - 2);
-
+            text = text[..(length - 2)];
 
         var bps = DoubleTransformer.Instance.Parse(text);
         return BasisPoint.FromBps(bps);

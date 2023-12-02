@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Collections;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Tests.Utils;
-using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
-using TCD = NUnit.Framework.TestCaseData;
+
 
 namespace Nemesis.TextParsers.Tests.Collections
 {
@@ -236,7 +231,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             IEnumerable parsed = null;
             try
             {
-                parsed = (IEnumerable)parseMethod.Invoke(this, new object[] { data.input });
+                parsed = (IEnumerable)parseMethod.Invoke(this, [data.input]);
                 passed = true;
             }
             catch (Exception e)
@@ -343,21 +338,21 @@ namespace Nemesis.TextParsers.Tests.Collections
             new TCD("06", new List<string[]>(), @""),
 
 
-            new TCD("07", new[]
+            new TCD("07", new List<string>[]
             {
-                new List<string> {"A", "B", "C"},
-                new List<string> {"D", "E", "F"},
+                ["A", "B", "C"],
+                ["D", "E", "F"],
             }, @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD("08", new[]
+            new TCD("08", new List<string>[]
             {
-                new List<string>(),
-                new List<string>(),
+                [],
+                [],
             }, @"[|]"),
-            new TCD("09", new[]
+            new TCD("09", new List<string>[]
             {
-                new List<string>(),
-                new List<string>{"1","2","3"},
-                new List<string>(),
+                [],
+                ["1","2","3"],
+                [],
             }, @"[|[1\|2\|3]|]"),
             new TCD("10", Array.Empty<List<string>>(), @""),
 

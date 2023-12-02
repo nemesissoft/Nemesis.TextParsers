@@ -1,9 +1,6 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.TextParsers.Parsers;
@@ -63,13 +60,13 @@ internal sealed class ParsleyAndLeekFactorsTransformer : TransformerBase<Parsley
             while (leekStream.MoveNext())
                 leekFactors[leekCount++] = floatParser.Parse(leekStream.Current);
 
-            return new ParsleyAndLeekFactors(parsley, leekFactors.Slice(0, leekCount).ToArray());
+            return new(parsley, leekFactors[..leekCount].ToArray());
         }
 
         return current.Length switch
         {
-            0 => new ParsleyAndLeekFactors(parsley, new float[0]),
-            1 when current[0] == '∅' => new ParsleyAndLeekFactors(parsley, null),
+            0 => new(parsley, []),
+            1 when current[0] == '∅' => new(parsley, null),
             _ => Parse(current)
         };
     }
@@ -77,10 +74,10 @@ internal sealed class ParsleyAndLeekFactorsTransformer : TransformerBase<Parsley
     public override string Format(ParsleyAndLeekFactors element) => element.ToString();
 
     public override ParsleyAndLeekFactors GetEmpty() =>
-        new(10, new[] { 20.0f, 30.0f });
+        new(10, [20.0f, 30.0f]);
 
     public override ParsleyAndLeekFactors GetNull() =>
-        new(0, new[] { 0f, 0f });
+        new(0, [0f, 0f]);
 }
 
 

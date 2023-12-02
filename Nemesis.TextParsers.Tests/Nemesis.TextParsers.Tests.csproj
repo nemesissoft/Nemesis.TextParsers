@@ -6,6 +6,7 @@
 
 	<ItemGroup>
 		<Using Include="NUnit.Framework" />
+		<Using Include="NUnit.Framework.TestCaseData" Alias="TCD" />
 		<Using Include="System.Net" />
 	</ItemGroup>
 

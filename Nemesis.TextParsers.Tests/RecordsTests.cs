@@ -30,11 +30,11 @@ namespace Nemesis.TextParsers.Tests
         [Test]
         public void ShouldBeAbleToReparseComplexRecords()
         {
-            var collector = new AnimalCollector("Mike", 36, new Vertebrate[]
-            {
+            var collector = new AnimalCollector("Mike", 36,
+            [
                 new ReptileWithName("Comodo Dragon", Habitat.Terrestrial),
                 new TerrestrialLizard(Diet.Carnivorous)
-            });
+            ]);
             var sut = Sut.GetTransformer<AnimalCollector>();
 
 

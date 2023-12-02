@@ -152,8 +152,11 @@
             var actual2 = input.AsSpan().UnescapeCharacter('\\', character2, character1)
                 .ToString();
 
-            Assert.That(actual1, Is.EqualTo(expectedOutput));
-            Assert.That(actual2, Is.EqualTo(expectedOutput));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual1, Is.EqualTo(expectedOutput));
+                Assert.That(actual2, Is.EqualTo(expectedOutput));
+            });
         }
     }
 }

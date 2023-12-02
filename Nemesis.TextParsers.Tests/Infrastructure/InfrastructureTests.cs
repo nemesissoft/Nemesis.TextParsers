@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using Nemesis.TextParsers.Tests.Utils;
+﻿using Nemesis.TextParsers.Tests.Utils;
 using Nemesis.TextParsers.Utils;
-using NUnit.Framework;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
-using TCD = NUnit.Framework.TestCaseData;
 
 namespace Nemesis.TextParsers.Tests.Infrastructure;
 
@@ -109,7 +102,7 @@ public class InfrastructureTests
 
                 foreach ((int arity, var tupleType) in tupleTypes)
                     yield return (
-                        tupleType.MakeGenericType(new[] { type }.Concat(Enumerable.Repeat(0, arity - 1).Select(i => GetRandomType())).ToArray()),
+                        tupleType.MakeGenericType([type, .. Enumerable.Repeat(0, arity - 1).Select(i => GetRandomType())]),
                         expected
                    );
             }
@@ -181,27 +174,27 @@ public class InfrastructureTests
 
 
         new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>),
-            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger?, bool>(0, null, false)),
+            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>("", 0, 0M, null, [], [], [], new ValueTuple<FileMode, BigInteger?, bool>(0, null, false)),
             new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger?, bool>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger?, bool>(0, null, false))
         ),
         new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>),
-            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>(), new ValueTuple<FileMode, BigInteger>(0, 0)),
+            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>("", 0, 0M, null, [], [], [], new ValueTuple<FileMode, BigInteger>(0, 0)),
             new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode, BigInteger>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode, BigInteger>(0, 0))
         ),
         new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>),
-            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>(), new ValueTuple<FileMode>(0)),
+            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>("", 0, 0M, null, [], [], [], new ValueTuple<FileMode>(0)),
             new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>, ValueTuple<FileMode>>(null, 0, 0M, null, null, null, null, new ValueTuple<FileMode>(0))
         ),
         new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>),
-            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>(), new Dictionary<string, int>()),
+            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>("", 0, 0M, null, [], [], []),
             new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[], Dictionary<string,int>>(null, 0, 0M, null, null, null, null)
         ),
         new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>),
-            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, new List<byte>(), Array.Empty<sbyte>()),
+            new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>("", 0, 0M, null, [], []),
             new ValueTuple<string, int, decimal, double?, List<byte>, sbyte[]>(null, 0, 0M, null, null, null)
         ),
         new TCD(typeof(ValueTuple<string, int, decimal, double?, List<byte>>),
-            new ValueTuple<string, int, decimal, double?, List<byte>>("", 0, 0M, null, new List<byte>()),
+            new ValueTuple<string, int, decimal, double?, List<byte>>("", 0, 0M, null, []),
             new ValueTuple<string, int, decimal, double?, List<byte>>(null, 0, 0M, null, null)
         ),
         new TCD(typeof(ValueTuple<string, int, decimal, double?>),
@@ -248,7 +241,7 @@ public class InfrastructureTests
 
 
     //type, input, expectedOutput
-    internal static IEnumerable<TCD> EmptyNullParsingData() => new[]
+    private static IEnumerable<TCD> EmptyNullParsingData() => new[]
     {
         new TCD(typeof(ValueTuple<int, int>), "", (0, 0)),
         new TCD(typeof(ValueTuple<int, int>), null, (0, 0)),

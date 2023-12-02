@@ -70,7 +70,7 @@ public readonly ref struct TokenSequence<TElement> where TElement : IEquatable<T
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int FindUnescapedSeparator()
+        private readonly int FindUnescapedSeparator()
         {
             int idx = _sequence.IndexOf(_separator);
             if (idx < 0) return -1;

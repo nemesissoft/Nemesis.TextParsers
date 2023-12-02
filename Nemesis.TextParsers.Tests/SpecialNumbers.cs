@@ -6,15 +6,13 @@ using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests;
 
-struct LowPrecisionFloat : IEquatable<LowPrecisionFloat>
+readonly struct LowPrecisionFloat(float value) : IEquatable<LowPrecisionFloat>
 {
-    public float Value { get; }
-
-    public LowPrecisionFloat(float value) => Value = value;
+    public float Value { get; } = value;
 
     public bool Equals(LowPrecisionFloat other) => AlmostEqualUlps(Value, other.Value);
 
-    public override bool Equals(object obj) => !(obj is null) && obj is LowPrecisionFloat other && Equals(other);
+    public override bool Equals(object obj) => obj is not null && obj is LowPrecisionFloat other && Equals(other);
 
     public override int GetHashCode() => Value.GetHashCode();
 
@@ -39,7 +37,6 @@ struct LowPrecisionFloat : IEquatable<LowPrecisionFloat>
 
         // Different signs means they do not match.
         if (aNegative != bNegative)
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
             return a == b; // Check for equality to make sure +0==-0
 
         // Find the difference in ULPs.
@@ -48,22 +45,16 @@ struct LowPrecisionFloat : IEquatable<LowPrecisionFloat>
     }
 }
 
-struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactors>
+readonly struct CarrotAndOnionFactors(float carrot, float[] onionFactors) : IEquatable<CarrotAndOnionFactors>
 {
-    public float Carrot { get; }
-    public float[] OnionFactors { get; }
-
-    public CarrotAndOnionFactors(float carrot, float[] onionFactors)
-    {
-        Carrot = carrot;
-        OnionFactors = onionFactors;
-    }
+    public float Carrot { get; } = carrot;
+    public float[] OnionFactors { get; } = onionFactors;
 
     public bool Equals(CarrotAndOnionFactors other) =>
         Carrot.Equals(other.Carrot) &&
         EnumerableEqualityComparer<float>.DefaultInstance.Equals(OnionFactors, other.OnionFactors);
 
-    public override bool Equals(object obj) => !(obj is null) && obj is CarrotAndOnionFactors other && Equals(other);
+    public override bool Equals(object obj) => obj is not null && obj is CarrotAndOnionFactors other && Equals(other);
 
     public override int GetHashCode() => unchecked((Carrot.GetHashCode() * 397) ^ (OnionFactors?.GetHashCode() ?? 0));
 
@@ -92,7 +83,7 @@ struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactors>
         if (stream.MoveNext())
         {
             if (EqualsOrdinalIgnoreCase(stream.Current, NULL.AsSpan()))
-                return new CarrotAndOnionFactors(carrot, null);
+                return new(carrot, null);
 
             var onionStream = stream.Current.Split(',', true).GetEnumerator();
             while (onionStream.MoveNext())
@@ -102,7 +93,7 @@ struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactors>
             }
         }
 
-        return new CarrotAndOnionFactors(carrot, onionFactors.Slice(0, onionCount).ToArray());
+        return new(carrot, onionFactors[..onionCount].ToArray());
     }
 
     private static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
@@ -156,8 +147,8 @@ public class SpecialNumbersTests
     {
         var list = new List<CarrotAndOnionFactors>()
         {
-            new CarrotAndOnionFactors(1.1f, new[]{2.1f, 3.1f, 4.1f}),
-            new CarrotAndOnionFactors(10.1f, new[]{20.1f, 30.1f, 40.1f}),
+            new(1.1f, [2.1f, 3.1f, 4.1f]),
+            new(10.1f, [20.1f, 30.1f, 40.1f]),
         };
 
         var trans = Sut.GetTransformer<List<CarrotAndOnionFactors>>();
