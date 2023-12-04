@@ -15,7 +15,7 @@ public sealed class SettingsStoreBuilder
     public SettingsStoreBuilder() => _settings = new Dictionary<Type, ISettings>();
 
     public SettingsStoreBuilder(IEnumerable<ISettings> settings) =>
-        _settings = settings?.ToDictionary(s => s.GetType()) ?? new Dictionary<Type, ISettings>();
+        _settings = settings?.ToDictionary(s => s.GetType()) ?? [];
 
     public static SettingsStoreBuilder GetDefault(Assembly fromAssembly = null)
     {

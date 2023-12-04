@@ -69,7 +69,7 @@ public readonly struct DictionaryMeta : IEquatable<DictionaryMeta>
                                throw new MissingMethodException(nameof(DictionaryMeta), nameof(CreateDictionaryGeneric));
         createDictMethod = createDictMethod.MakeGenericMethod(KeyType, ValueType);
 
-        return createDictMethod.Invoke(this, new object[] { sourceElements });
+        return createDictMethod.Invoke(this, [sourceElements]);
     }
 
     public IDictionary<TKey, TValue> CreateDictionaryGeneric<TKey, TValue>(IList<(object Key, object Value)> sourceElements)
@@ -187,8 +187,8 @@ internal static class DictionaryKindHelper
         return (genType.GenericTypeArguments[0], genType.GenericTypeArguments[1]);
     }
 
-    private static readonly HashSet<Type> _supportedDictionaryTypes = new()
-    {
+    private static readonly HashSet<Type> _supportedDictionaryTypes =
+    [
         typeof(Dictionary<,>),
         typeof(IDictionary<,>),
 
@@ -197,7 +197,7 @@ internal static class DictionaryKindHelper
 
         typeof(SortedList<,>),
         typeof(SortedDictionary<,>),
-    };
+    ];
 
     public static bool IsTypeSupported(Type dictType) =>
         dictType is { IsGenericType: true } && dictType.GetGenericTypeDefinition() is { } definition &&

@@ -392,7 +392,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
 
             var assignment = Expression.Assign(
                 field,
-                Expression.Call(helper, nameof(TupleHelper.ParseElement), new[] { field.Type }, arguments)
+                Expression.Call(helper, nameof(TupleHelper.ParseElement), [field.Type], arguments)
             );
             expressions.Add(assignment);
         }
@@ -481,7 +481,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
                 typeof(IFormatter<>).MakeGenericType(temp.Type)
             );
 
-            var format = Expression.Call(helper, nameof(TupleHelper.FormatElement), new[] { temp.Type },
+            var format = Expression.Call(helper, nameof(TupleHelper.FormatElement), [temp.Type],
                     formatter, temp, accumulator);
             expressions.Add(format);
         }

@@ -176,8 +176,8 @@ internal static class CollectionMetaHelper
         return genericInterfaceType.GenericTypeArguments[0];
     }
 
-    private static readonly HashSet<Type> _supportedCollectionTypes = new()
-    {
+    private static readonly HashSet<Type> _supportedCollectionTypes =
+    [
         typeof(IEnumerable<>), typeof(ICollection<>), typeof(IList<>), typeof(List<>),
 
         typeof(IReadOnlyCollection<>), typeof(IReadOnlyList<>), typeof(ReadOnlyCollection<>),
@@ -187,7 +187,7 @@ internal static class CollectionMetaHelper
         typeof(LinkedList<>), typeof(Stack<>), typeof(Queue<>),
 
         typeof(ObservableCollection<>), typeof(ReadOnlyObservableCollection<>),
-    };
+    ];
 
     public static bool IsTypeSupported(Type collectionType) =>
         collectionType is { IsGenericType: true } &&

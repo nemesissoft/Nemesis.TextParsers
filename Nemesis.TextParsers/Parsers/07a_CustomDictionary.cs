@@ -34,7 +34,7 @@ public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
 
             createMethod = createMethod.MakeGenericMethod(meta1.keyType, meta1.valueType, dictType);
 
-            return (ITransformer<TDictionary>)createMethod.Invoke(this, new object[] { supportsDeserializationLogic });
+            return (ITransformer<TDictionary>)createMethod.Invoke(this, [supportsDeserializationLogic]);
         }
         else if (IsReadOnlyDictionary(dictType, out var meta2))
         {
@@ -46,7 +46,7 @@ public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
             createMethod = createMethod.MakeGenericMethod(meta2.keyType, meta2.valueType, dictType);
 
             return (ITransformer<TDictionary>)createMethod.Invoke(this,
-                new object[] { supportsDeserializationLogic, meta2.ctor });
+                [supportsDeserializationLogic, meta2.ctor]);
         }
         else
             throw new NotSupportedException(

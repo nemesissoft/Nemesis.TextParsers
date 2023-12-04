@@ -64,7 +64,7 @@ public ref struct ValueSequenceBuilder<T>
     /// <summary>
     /// Converts this instance to string. If underlying type <paramref name="{T}"/> is <see cref="System.Char"/> then it returns text written so far
     /// </summary>
-    public override string ToString() => AsSpan().ToString();
+    public override readonly string ToString() => AsSpan().ToString();
 
     private void Grow()
     {

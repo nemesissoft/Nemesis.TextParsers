@@ -1,7 +1,4 @@
-﻿using System;
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Buffers;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
@@ -190,11 +187,11 @@ namespace Benchmarks
         /// <summary>
         /// Return values written so far to underlying memory 
         /// </summary>
-        public readonly ReadOnlySpan<char> AsSpan() => _current.Slice(0, Length);
+        public readonly ReadOnlySpan<char> AsSpan() => _current[..Length];
 
         public readonly ReadOnlySpan<char> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
 
-        public readonly ReadOnlySpan<char> AsSpanTo(int length) => _current.Slice(0, length);
+        public readonly ReadOnlySpan<char> AsSpanTo(int length) => _current[..length];
 
         public readonly ReadOnlySpan<char> AsSpanFrom(int start) => _current[start..Length];
 

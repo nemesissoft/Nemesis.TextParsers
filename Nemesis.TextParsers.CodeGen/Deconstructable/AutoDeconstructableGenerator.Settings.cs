@@ -62,7 +62,7 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
         private sealed class DeconstructableSyntaxReceiver : ISyntaxReceiver
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly List<TypeDeclarationSyntax> _candidateTypes = new();
+            private readonly List<TypeDeclarationSyntax> _candidateTypes = [];
             public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _candidateTypes;
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)

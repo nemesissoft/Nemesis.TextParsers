@@ -111,8 +111,7 @@ public sealed class ArrayTransformer<TElement> : EnumerableTransformerBase<TElem
 
     protected override TElement[] ParseCore(in ReadOnlySpan<char> input)
     {
-        if (input.IsEmpty)
-            return Array.Empty<TElement>();
+        if (input.IsEmpty) return [];
 
         var stream = ParseStream(input);
 
@@ -164,7 +163,7 @@ public class ArraySegmentTransformer<TElement> : SimpleTransformer<ArraySegment<
 
         helper.ParseEnd(ref enumerator, 3, TYPE_NAME);
 
-        return new ArraySegment<TElement>(array ?? Array.Empty<TElement>(), offset, count); //array cannot be null for ArraySegment
+        return new(array ?? [], offset, count); //array cannot be null for ArraySegment
     }
 
     public override string Format(ArraySegment<TElement> segment)

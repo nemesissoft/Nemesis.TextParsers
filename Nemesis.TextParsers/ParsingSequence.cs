@@ -50,7 +50,7 @@ public readonly ref struct ParsingSequence
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ParserInput ParseElement(scoped in ReadOnlySpan<char> input)
+        private readonly ParserInput ParseElement(scoped in ReadOnlySpan<char> input)
         {
             if (input.Length == 1 && input[0].Equals(_nullElementMarker))
                 return ParserInput.FromDefault();

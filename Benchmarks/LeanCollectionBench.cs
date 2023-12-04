@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 
 using Nemesis.TextParsers.Utils;
 
@@ -46,11 +43,11 @@ namespace Benchmarks
 
         public IEnumerable<Input> Sources => new[]
         {
-            new Input(new[] {10}),
-            new Input(new[] {20, 10}),
-            new Input(new[] {30, 20, 10}),
-            new Input(new[] {90, 80, 70, 60, 50, 40, 30, 20, 10}),
-            new Input(new[] {140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10}),
+            new Input([10]),
+            new Input([20, 10]),
+            new Input([30, 20, 10]),
+            new Input([90, 80, 70, 60, 50, 40, 30, 20, 10]),
+            new Input([140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10]),
         };
 
 
@@ -74,7 +71,7 @@ namespace Benchmarks
             // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
             foreach (var i in coll)
                 sum += i;
-            
+
             return sum;
         }
 

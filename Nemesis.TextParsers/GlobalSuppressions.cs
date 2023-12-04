@@ -9,3 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Foreign code", Scope = "namespace", Target = "~N:JetBrains.Annotations")]
 [assembly: SuppressMessage("Style", "IDE0057:Use range operator", Justification = "Multiple target frameworks without support for range operator", Scope = "namespaceanddescendants", Target = "~N:Nemesis.TextParsers")]
 [assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "not improving readability", Scope = "namespaceanddescendants", Target = "~N:Nemesis.TextParsers")]
+[assembly: SuppressMessage("Style", "IDE0270:Use coalesce expression", Justification = "Taken from source code package", Scope = "namespaceanddescendants", Target = "~N:Nemesis.TextParsers.Runtime")]
+
+

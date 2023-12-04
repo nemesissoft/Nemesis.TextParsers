@@ -21,7 +21,7 @@ public class SpanSplitExtensionsTests
         foreach (ReadOnlySpan<char> part in str.AsSpan().Split(separator, true))
             actual.Add(part.ToString());
 
-        string[] expected = str == "" ? new string[0] : str.Split(separator);
+        string[] expected = str == "" ? [] : str.Split(separator);
         Assert.That(actual, Is.EqualTo(expected));
     }
 

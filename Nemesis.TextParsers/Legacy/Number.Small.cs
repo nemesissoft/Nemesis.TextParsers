@@ -245,7 +245,9 @@ namespace Legacy
 
     public static class UInt16Parser
     {
+#pragma warning disable IDE0051 // Remove unused private members
         private static ushort MinValue => ushort.MinValue;
+#pragma warning restore IDE0051 // Remove unused private members
         private static ushort MaxValue => ushort.MaxValue;
 
         public static ushort Parse(ReadOnlySpan<char> s, NumberStyles style = NumberStyles.Integer, IFormatProvider provider = null)

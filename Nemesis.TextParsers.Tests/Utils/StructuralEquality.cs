@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Collections;
 using Nemesis.Essentials.Design;
 using Nemesis.TextParsers.Runtime;
 
@@ -29,10 +26,10 @@ public static class StructuralEquality
             FieldInfo comparerInstanceField = comparerType.GetField(nameof(EnumerableEqualityComparer<string>.DefaultInstance));
             var comparer = comparerInstanceField.GetValue(null);
 
-            MethodInfo equalsMethod = comparerInstanceField.FieldType.GetMethod(nameof(IEqualityComparer.Equals), new[] { enumerableType, enumerableType })
+            MethodInfo equalsMethod = comparerInstanceField.FieldType.GetMethod(nameof(IEqualityComparer.Equals), [enumerableType, enumerableType])
                                       ?? throw new MissingFieldException("EnumerableEqualityComparer<>.DefaultInstance field is missing");
 
-            var result = (bool)equalsMethod.Invoke(comparer, new object[] { left, right });
+            var result = (bool)equalsMethod.Invoke(comparer, [left, right]);
 
             return result;
         }

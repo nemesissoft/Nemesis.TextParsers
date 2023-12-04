@@ -30,7 +30,7 @@ public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
 
             createMethod = createMethod.MakeGenericMethod(elementType, collectionType);
 
-            return (ITransformer<TCollection>)createMethod.Invoke(this, new object[] { supportsDeserializationLogic });
+            return (ITransformer<TCollection>)createMethod.Invoke(this, [supportsDeserializationLogic]);
         }
         else if (IsReadOnlyCollection(collectionType, out var meta))
         {
@@ -42,7 +42,7 @@ public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
             createMethod = createMethod.MakeGenericMethod(meta.elementType, collectionType);
 
             return (ITransformer<TCollection>)createMethod.Invoke(this,
-                new object[] { supportsDeserializationLogic, meta.ctor }
+                [supportsDeserializationLogic, meta.ctor]
             );
         }
         else

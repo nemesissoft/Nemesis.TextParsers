@@ -35,7 +35,7 @@ public static class LeanCollectionFactory
             1 => new(items[0]),
             2 => new(items[0], items[1]),
             3 => new(items[0], items[1], items[2]),
-            _ => new(cloneBuffer ? items.ToArray() : items)
+            _ => new(cloneBuffer ? [.. items] : items)
         };
 }
 
@@ -184,7 +184,7 @@ public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnume
 
         public T Current { get; private set; }
 
-        object IEnumerator.Current => Current;
+        readonly object IEnumerator.Current => Current;
 
         public LeanCollectionEnumeratorNonRef(in LeanCollection<T> leanCollection)
         {
@@ -240,7 +240,7 @@ public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnume
             _index = _leanCollection._size == CollectionSize.More ? 0 : -1;
         }
 
-        public void Dispose() { }
+        public readonly void Dispose() { }
     }
 
     #endregion
@@ -264,10 +264,10 @@ public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnume
             ? more._items.ToArray()
             : more._size switch
             {
-                CollectionSize.Zero => Array.Empty<T>(),
-                CollectionSize.One => new[] { more._item1 },
-                CollectionSize.Two => new[] { more._item1, more._item2 },
-                CollectionSize.Three => new[] { more._item1, more._item2, more._item3 },
+                CollectionSize.Zero => [],
+                CollectionSize.One => [more._item1],
+                CollectionSize.Two => [more._item1, more._item2],
+                CollectionSize.Three => [more._item1, more._item2, more._item3],
                 //this is already covered above: CollectionSize.More => more._items.ToArray(),
                 _ => throw new ArgumentOutOfRangeException(nameof(more), $"Internal state of {nameof(LeanCollection<T>)} was compromised")
             };

@@ -133,7 +133,7 @@ namespace Nemesis.TextParsers.Tests
                     ?? throw new MissingMethodException("Method ParseCollection does not exist"))
                 .MakeGenericMethod(data.elementType);
 
-            var deser = (IEnumerable)parseMethod.Invoke(null, new object[] { data.input });
+            var deser = (IEnumerable)parseMethod.Invoke(null, [data.input]);
             CheckEquivalency(deser, data.expectedList);
 
             /*if (data.expectedList == null)

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
@@ -35,7 +32,7 @@ public enum DaysOfWeek : byte
 }
 
 [TypeConverter(typeof(PointConverter))]
-internal struct Point : IEquatable<Point>
+internal readonly struct Point : IEquatable<Point>
 {
     public int X { get; }
     public int Y { get; }
@@ -71,7 +68,7 @@ internal sealed class PointConverter : BaseTextConverter<Point>
     public override string FormatToString(Point value) => value.ToString();
 }
 
-internal struct Rect : IEquatable<Rect>
+internal readonly struct Rect : IEquatable<Rect>
 {
     public int X { get; }
     public int Y { get; }
@@ -130,33 +127,18 @@ internal struct Rect : IEquatable<Rect>
     }
 }
 
-internal struct ThreeLetters : IEquatable<ThreeLetters>
+internal readonly struct ThreeLetters(char c1, char c2, char c3) : IEquatable<ThreeLetters>
 {
-    public char C1 { get; }
-    public char C2 { get; }
-    public char C3 { get; }
-
-    public ThreeLetters(char c1, char c2, char c3)
-    {
-        C1 = c1;
-        C2 = c2;
-        C3 = c3;
-    }
+    public char C1 { get; } = c1;
+    public char C2 { get; } = c2;
+    public char C3 { get; } = c3;
 
     public bool Equals(ThreeLetters other) => C1 == other.C1 && C2 == other.C2 && C3 == other.C3;
 
     public override bool Equals(object obj) => obj is not null && obj is ThreeLetters other && Equals(other);
 
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            var hashCode = C1.GetHashCode();
-            hashCode = hashCode * 397 ^ C2.GetHashCode();
-            hashCode = hashCode * 397 ^ C3.GetHashCode();
-            return hashCode;
-        }
-    }
+    public override int GetHashCode() => (C1, C2, C3).GetHashCode();
+
 
     public static bool operator ==(ThreeLetters left, ThreeLetters right) => left.Equals(right);
 
@@ -170,7 +152,7 @@ internal struct ThreeLetters : IEquatable<ThreeLetters>
             new ThreeLetters(text[0], text[1], text[2]) : default;
 }
 
-internal struct ThreeElements<TElement> : IEquatable<ThreeElements<TElement>>
+internal readonly struct ThreeElements<TElement> : IEquatable<ThreeElements<TElement>>
     where TElement : IEquatable<TElement>
 {
     public TElement E1 { get; }
@@ -237,7 +219,7 @@ internal struct ThreeElements<TElement> : IEquatable<ThreeElements<TElement>>
     }
 }
 
-internal struct Range<TElement>
+internal readonly struct Range<TElement>
 {
     private const char SEPARATOR = '‥';
     private const char ESCAPING_SEQUENCE_START = '\\';
@@ -312,7 +294,7 @@ internal struct Range<TElement>
 }
 
 [TextFactory(typeof(PairTextFactory<>))]
-internal struct PairWithFactory<TElement> : IEquatable<PairWithFactory<TElement>>
+internal readonly struct PairWithFactory<TElement> : IEquatable<PairWithFactory<TElement>>
     where TElement : IEquatable<TElement>
 {
     public TElement Left { get; }
@@ -378,7 +360,7 @@ internal enum Colors { None = 0, Red = 1, Blue = 2, Green = 4, RedAndBlue = Red 
 
 
 [TypeConverter(typeof(OptionConverter))]
-internal struct Option
+internal readonly struct Option
 {
     public OptionEnum Value { get; }
 
@@ -387,27 +369,21 @@ internal struct Option
     public override string ToString() => Value.ToString();
 }
 
-internal enum OptionEnum : byte
-{
-    None,
-    Option1,
-    Option2,
-    Option3
-}
+internal enum OptionEnum : byte { None, Option1, Option2, Option3 }
 
 internal sealed class OptionConverter : BaseTextConverter<Option>, ITransformer<Option>
 {
     public override Option ParseString(string text) =>
         text.ToLowerInvariant() switch
         {
-            "option1" => new Option(OptionEnum.Option1),
-            "o1" => new Option(OptionEnum.Option1),
-            "option2" => new Option(OptionEnum.Option2),
-            "o2" => new Option(OptionEnum.Option2),
-            "option3" => new Option(OptionEnum.Option3),
-            "o3" => new Option(OptionEnum.Option3),
+            "option1" => new(OptionEnum.Option1),
+            "o1" => new(OptionEnum.Option1),
+            "option2" => new(OptionEnum.Option2),
+            "o2" => new(OptionEnum.Option2),
+            "option3" => new(OptionEnum.Option3),
+            "o3" => new(OptionEnum.Option3),
             // "none"
-            _ => new Option(OptionEnum.None)
+            _ => new(OptionEnum.None)
         };
 
     public override string FormatToString(Option value) => value.ToString();

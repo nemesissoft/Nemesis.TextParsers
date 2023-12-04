@@ -56,7 +56,7 @@ public readonly ref struct ParsingPairSequence
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private PairParserInput ParsePair(scoped in ReadOnlySpan<char> input)
+        private readonly PairParserInput ParsePair(scoped in ReadOnlySpan<char> input)
         {
             var delimiter = _dictionaryKeyValueDelimiter;
             var unescapedKvp = input.UnescapeCharacter(_escapingSequenceStart, _dictionaryPairsDelimiter);

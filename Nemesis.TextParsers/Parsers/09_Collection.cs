@@ -33,7 +33,7 @@ public sealed class CollectionTransformerCreator : ICanCreateTransformer
 
         createMethod = createMethod.MakeGenericMethod(elementType, collectionType);
 
-        return (ITransformer<TCollection>)createMethod.Invoke(this, new object[] { kind });
+        return (ITransformer<TCollection>)createMethod.Invoke(this, [kind]);
     }
 
     private ITransformer<TCollection> CreateCollectionTransformer<TElement, TCollection>(CollectionKind kind)
@@ -172,7 +172,7 @@ public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTra
                     );
                 }
             default:
-                throw new ArgumentOutOfRangeException(nameof(_kind), _kind, $"{nameof(_kind)} = '{nameof(CollectionKind)}.{nameof(CollectionKind.Unknown)}' is not supported");
+                throw new NotSupportedException($"{nameof(_kind)} = '{nameof(CollectionKind)}.{_kind}' is not supported");
         }
     }
 
@@ -187,7 +187,7 @@ public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTra
             CollectionKind.Stack => new Stack<TElement>(0),
             CollectionKind.Queue => new Queue<TElement>(0),
             CollectionKind.ObservableCollection => new ObservableCollection<TElement>(),
-            CollectionKind.ReadOnlyObservableCollection => new ReadOnlyObservableCollection<TElement>(new ObservableCollection<TElement>()),
+            CollectionKind.ReadOnlyObservableCollection => new ReadOnlyObservableCollection<TElement>([]),
             CollectionKind.Unknown => throw new NotSupportedException($"Collection kind {_kind} is not supported for empty element query"),
             //CollectionKind.List
             _ => (IEnumerable<TElement>)new List<TElement>(0),

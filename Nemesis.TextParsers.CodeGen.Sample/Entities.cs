@@ -4,13 +4,11 @@ namespace Nemesis.TextParsers.CodeGen.Sample;
 
 [Auto.AutoDeconstructable]
 [DeconstructableSettings('_', '∅', '%', '〈', '〉')]
-readonly partial struct StructPoint3d
+readonly partial struct StructPoint3d(double x, double y, double z)
 {
-    public double X { get; }
-    public double Y { get; }
-    public double Z { get; }
-
-    public StructPoint3d(double x, double y, double z) { X = x; Y = y; Z = z; }
+    public double X { get; } = x;
+    public double Y { get; } = y;
+    public double Z { get; } = z;
 
     public void Deconstruct(out double x, out double y, out double z) { x = X; y = Y; z = Z; }
 }

@@ -32,7 +32,7 @@ public sealed class DictionaryTransformerCreator : ICanCreateTransformer
 
         createMethod = createMethod.MakeGenericMethod(keyType, valueType, dictType);
 
-        return (ITransformer<TDictionary>)createMethod.Invoke(this, new object[] { kind });
+        return (ITransformer<TDictionary>)createMethod.Invoke(this, [kind]);
     }
 
     private ITransformer<TDict> CreateDictionaryTransformer<TKey, TValue, TDict>(DictionaryKind kind)

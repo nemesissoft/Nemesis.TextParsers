@@ -114,7 +114,7 @@ namespace Nemesis.TextParsers.Tests
 
             tester = tester.MakeGenericMethod(data.instance.GetType());
 
-            tester.Invoke(null, new object[] { data.instance, data.input });
+            tester.Invoke(null, [data.instance, data.input]);
         }
 
         private static void TupleTransformer_CompoundTestHelper<TTuple>(TTuple tuple, string input) where TTuple : struct

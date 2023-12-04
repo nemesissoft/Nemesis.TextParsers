@@ -916,21 +916,21 @@ internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
         return result;
     }
 
-    private static readonly RegexOptions[] _optionValues = {
+    private static readonly RegexOptions[] _optionValues = [
             RegexOptions.IgnoreCase,
-            RegexOptions.Multiline,
-            RegexOptions.ExplicitCapture,
-            RegexOptions.Compiled,
-            RegexOptions.Singleline,
-            RegexOptions.IgnorePatternWhitespace,
-            RegexOptions.RightToLeft,
-            (RegexOptions)128,
-            RegexOptions.ECMAScript,
-            RegexOptions.CultureInvariant,
+        RegexOptions.Multiline,
+        RegexOptions.ExplicitCapture,
+        RegexOptions.Compiled,
+        RegexOptions.Singleline,
+        RegexOptions.IgnorePatternWhitespace,
+        RegexOptions.RightToLeft,
+        (RegexOptions)128,
+        RegexOptions.ECMAScript,
+        RegexOptions.CultureInvariant,
 #if NET7_0_OR_GREATER
             RegexOptions.NonBacktracking
 #endif
-    };
+    ];
 
     public override string Format(RegexOptions element)
     {
