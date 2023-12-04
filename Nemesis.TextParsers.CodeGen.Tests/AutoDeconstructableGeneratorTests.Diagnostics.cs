@@ -105,12 +105,11 @@ public partial class AutoDeconstructableGeneratorTests
         CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
         var diagnosticsList = diagnostics.ToList();
 
-
-        Assert.That(diagnosticsList, Has.Count.EqualTo(1));
-
-        var diagnostic = diagnosticsList.Single();
         Assert.Multiple(() =>
         {
+            Assert.That(diagnosticsList, Has.Count.EqualTo(1));
+
+            var diagnostic = diagnosticsList.Single();
             Assert.That(diagnostic.Descriptor.Id, Is.EqualTo(AutoDeconstructableGenerator.NoSettingsAttributeRule.Id));
             Assert.That(diagnostic.ToString(), Does.Contain(@"Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute is not recognized. Please reference Nemesis.TextParsers into your project"));
         });

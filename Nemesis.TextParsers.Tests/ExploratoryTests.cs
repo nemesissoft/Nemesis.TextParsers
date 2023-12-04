@@ -237,7 +237,7 @@ public sealed class ExploratoryTests
 
     [Test]
     public void Remaining() =>
-        CollectionAssert.IsEmpty(GetTypeNamesFor(ExploratoryTestCategory.Remaining));
+        Assert.That(GetTypeNamesFor(ExploratoryTestCategory.Remaining), Is.Empty);
 
     private static IEnumerable<Type> GetTypeNamesFor(ExploratoryTestCategory category) =>
         _allTestCases.Where(d => d.category == category).Select(d => d.type);

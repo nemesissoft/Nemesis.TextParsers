@@ -36,7 +36,6 @@ namespace Legacy
         }
     }
 
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class ByteParser
     {
         private static byte MinValue => byte.MinValue;
@@ -91,7 +90,6 @@ namespace Legacy
 
     }
 
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class SByteParser
     {
         private static sbyte MinValue => sbyte.MinValue;
@@ -166,7 +164,6 @@ namespace Legacy
 
     }
 
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class Int16Parser
     {
         private static short MinValue => short.MinValue;
@@ -246,8 +243,6 @@ namespace Legacy
 
     }
 
-    [SuppressMessage("ReSharper", "UnusedMember.Local")]
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class UInt16Parser
     {
         private static ushort MinValue => ushort.MinValue;

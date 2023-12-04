@@ -46,7 +46,7 @@ namespace Nemesis.TextParsers.Tests
                 atLeaseOnePass = true;
             }
 
-            Assert.IsTrue(atLeaseOnePass);
+            Assert.That(atLeaseOnePass, Is.True);
         }
 
         [Test]

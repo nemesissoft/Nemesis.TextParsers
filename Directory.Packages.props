@@ -18,12 +18,12 @@
 
 
 		<!--Tests-->
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
-		<PackageVersion Include="NUnit" Version="3.13.3" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageVersion Include="NUnit" Version="4.0.1" />
 		<PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
-		<PackageVersion Include="AutoFixture" Version="4.18.0" />
-		<PackageVersion Include="FluentAssertions" Version="6.7.0" />
-		<PackageVersion Include="ApprovalTests" Version="5.7.3" />
+		<PackageVersion Include="AutoFixture" Version="4.18.1" />
+		<PackageVersion Include="FluentAssertions" Version="6.12.0" />
+		<PackageVersion Include="ApprovalTests" Version="6.0.0" />
 		<PackageVersion Include="NUnit.Analyzers" Version="3.6.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
