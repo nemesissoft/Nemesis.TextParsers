@@ -1,8 +1,5 @@
 ﻿namespace Nemesis.TextParsers.Settings;
 
-#if NET
-[method: System.Text.Json.Serialization.JsonConstructor]
-#endif 
 public sealed class FactoryMethodSettings(string factoryMethodName, string emptyPropertyName, string nullPropertyName) : ISettings
 {
     public string FactoryMethodName { get; private set; } = factoryMethodName;

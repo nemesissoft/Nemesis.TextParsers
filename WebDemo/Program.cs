@@ -7,7 +7,6 @@ services.AddSwaggerGen(options => { options.SchemaFilter<EnumSchemaFilter>(); })
 
 var parsingSettings = builder.Configuration.GetRequiredSection(nameof(ParsingSettings))
     .Get<ParsingSettings>(op => { op.BindNonPublicProperties = true; op.ErrorOnUnknownConfiguration = true; })!;
-// TODO add tests for serialization and config hydration
 // TODO add validation after (make records) + check if validation triggers after Bind()
 
 

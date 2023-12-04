@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Numerics;
 using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests.Collections;
@@ -115,7 +111,7 @@ internal class CollectionTestData
         @"10\|11\|12|20\|21\|22|30\|31\|32|40\|41\|42|50\|51\|52" ),
 
         (typeof(IList<float>), Enumerable.Range(1, 5).Select(
-            i => (IList<float>)new List<float> {10 * i, 10 * i + 1, 10 * i + 2}).ToList(),
+            i => (IList<float>)[10 * i, 10 * i + 1, 10 * i + 2]).ToList(),
         @"10\|11\|12|20\|21\|22|30\|31\|32|40\|41\|42|50\|51\|52" ),
 
         (typeof(bool), Enumerable.Range(1, 8).Select(i => i % 2 == 0).ToList(),

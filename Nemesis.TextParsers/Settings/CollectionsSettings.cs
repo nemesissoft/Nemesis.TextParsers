@@ -13,9 +13,7 @@ public abstract class CollectionSettingsBase : ISettings
     /// Capacity used for creating initial collection/list/array. Use no value (null) to calculate capacity each time based on input  
     /// </summary>
     public byte? DefaultCapacity { get; private set; }
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif    
+
     protected CollectionSettingsBase(char listDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, byte? defaultCapacity)
     {
         if (listDelimiter == nullElementMarker ||
@@ -31,7 +29,7 @@ public abstract class CollectionSettingsBase : ISettings
             escapingSequenceStart == end
 
         )
-            throw new ArgumentException($@"{nameof(CollectionSettingsBase)} requires unique characters to be used for parsing/formatting purposes. 
+            throw new ArgumentException($@"{GetType().Name} requires unique characters to be used for parsing/formatting purposes. 
 Start ('{start}') and end ('{end}') can be equal to each other");
 
 
@@ -61,9 +59,6 @@ public sealed class CollectionSettings : CollectionSettingsBase
 {
     public static CollectionSettings Default { get; } = new('|', '∅', '\\', null, null, null);
 
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     public CollectionSettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
         char? start, char? end, byte? defaultCapacity)
         : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
@@ -73,9 +68,6 @@ public sealed class ArraySettings : CollectionSettingsBase
 {
     public static ArraySettings Default { get; } = new('|', '∅', '\\', null, null, null);
 
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     public ArraySettings(char listDelimiter, char nullElementMarker, char escapingSequenceStart,
         char? start, char? end, byte? defaultCapacity)
         : base(listDelimiter, nullElementMarker, escapingSequenceStart, start, end, defaultCapacity) { }
@@ -98,9 +90,6 @@ public sealed class DictionarySettings : ISettings
     /// </summary>
     public byte? DefaultCapacity { get; private set; }
 
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     public DictionarySettings(char dictionaryPairsDelimiter, char dictionaryKeyValueDelimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end, DictionaryBehaviour behaviour, byte? defaultCapacity)
     {
         if (dictionaryPairsDelimiter == dictionaryKeyValueDelimiter ||
@@ -125,7 +114,13 @@ public sealed class DictionarySettings : ISettings
                 $@"{nameof(DictionarySettings)} requires unique characters to be used for parsing/formatting purposes. 
 Start ('{start}') and end ('{end}') can be equal to each other");
 
-
+#if NET
+        if (!Enum.IsDefined(behaviour))
+            throw new ArgumentException($"Value of '{behaviour}' is illegal for {nameof(DictionaryBehaviour)}");
+#else
+        if (!Enum.IsDefined(typeof(DictionaryBehaviour), behaviour))
+            throw new ArgumentException($"Value of '{behaviour}' is illegal for {nameof(DictionaryBehaviour)}");
+#endif
 
         DictionaryPairsDelimiter = dictionaryPairsDelimiter;
         DictionaryKeyValueDelimiter = dictionaryKeyValueDelimiter;
@@ -156,9 +151,4 @@ Start ('{start}') and end ('{end}') can be equal to each other");
     }
 }
 
-public enum DictionaryBehaviour : byte
-{
-    OverrideKeys,
-    DoNotOverrideKeys,
-    ThrowOnDuplicate
-}
+public enum DictionaryBehaviour : byte { OverrideKeys, DoNotOverrideKeys, ThrowOnDuplicate }

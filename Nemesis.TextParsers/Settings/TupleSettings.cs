@@ -12,11 +12,29 @@ public abstract class TupleSettings : ISettings
     public char? Start { get; private set; }
     public char? End { get; private set; }
 
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     protected TupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
     {
+        if (delimiter == nullElementMarker ||
+            delimiter == escapingSequenceStart ||
+            delimiter == start ||
+            delimiter == end ||
+
+            nullElementMarker == escapingSequenceStart ||
+            nullElementMarker == start ||
+            nullElementMarker == end ||
+
+            escapingSequenceStart == start ||
+            escapingSequenceStart == end
+        )
+            throw new ArgumentException($@"{GetType().Name} requires unique characters to be used for parsing/formatting purposes. Start ('{start}') and end ('{end}') can be equal to each other
+Passed parameters: 
+{nameof(delimiter)} = '{delimiter}'
+{nameof(nullElementMarker)} = '{nullElementMarker}'
+{nameof(escapingSequenceStart)} = '{escapingSequenceStart}'
+{nameof(start)} = '{start}'
+{nameof(end)} = '{end}'");
+
+
         Delimiter = delimiter;
         NullElementMarker = nullElementMarker;
         EscapingSequenceStart = escapingSequenceStart;
@@ -32,9 +50,6 @@ public abstract class TupleSettings : ISettings
 
 public sealed class ValueTupleSettings : TupleSettings
 {
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     public ValueTupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
         : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
 
@@ -43,9 +58,6 @@ public sealed class ValueTupleSettings : TupleSettings
 
 public sealed class KeyValuePairSettings : TupleSettings
 {
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     public KeyValuePairSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
         : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
 
@@ -59,9 +71,6 @@ public sealed class DeconstructableSettings : TupleSettings
 {
     public bool UseDeconstructableEmpty { get; private set; }
 
-#if NET
-    [System.Text.Json.Serialization.JsonConstructor]
-#endif 
     public DeconstructableSettings(char delimiter = Dsa.DEFAULT_DELIMITER,
             char nullElementMarker = Dsa.DEFAULT_NULL_ELEMENT_MARKER,
             char escapingSequenceStart = Dsa.DEFAULT_ESCAPING_SEQUENCE_START,

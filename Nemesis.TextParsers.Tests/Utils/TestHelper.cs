@@ -5,7 +5,7 @@ using Nemesis.Essentials.Runtime;
 
 namespace Nemesis.TextParsers.Tests.Utils;
 
-internal static class TestHelper
+internal static partial class TestHelper
 {
     public static string AssertException(Exception actual, Type expectedException, string expectedErrorMessagePart, bool logMessage = false)
     {
@@ -161,10 +161,17 @@ internal static class TestHelper
         IsMutuallyEquivalent(parsed1, parsed3);
     }
 
-#pragma warning disable SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
+#if NET7_0_OR_GREATER
+    [GeneratedRegex(@"\W", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex GetInvalidTestNamePattern();
+
+    public static string SanitizeTestName(this string text) =>
+        GetInvalidTestNamePattern().Replace(text, "_");
+#else
     private static readonly Regex _invalidTestName = new(@"\W", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-#pragma warning restore SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
+    
     public static string SanitizeTestName(this string text) => _invalidTestName.Replace(text, "_");
+#endif        
 }
 
 internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>

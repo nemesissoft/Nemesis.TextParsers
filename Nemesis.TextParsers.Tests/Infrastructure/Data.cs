@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Numerics;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using Nemesis.Essentials.Design;
 
@@ -61,13 +55,15 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
             d13 = D13;
         }
 
-        public static readonly LotsOfDeconstructableData EmptyInstance = new("", false, 0, null, 0.0f, null, 0, new List<string>(),
-            new List<int>(), new Dictionary<string, float?>(), new decimal[0], new BigInteger[0][], new Complex(0.0, 0.0)
+        public static readonly LotsOfDeconstructableData EmptyInstance =
+            new(
+                "", false, 0, null, 0.0f, null, 0, [],
+                new List<int>(), [], [], [], new(0.0, 0.0)
         );
 
         public bool Equals(LotsOfDeconstructableData other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return D1 == other.D1 && D2 == other.D2 && D3 == other.D3 && D4 == other.D4 &&
                    D5.Equals(other.D5) && Nullable.Equals(D6, other.D6) && D7 == other.D7 &&
@@ -80,7 +76,7 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
         }
 
         public override bool Equals(object obj) =>
-            !(obj is null) &&
+            obj is not null &&
             (ReferenceEquals(this, obj) || obj is LotsOfDeconstructableData lots && Equals(lots));
 
         public override int GetHashCode()
@@ -132,12 +128,12 @@ namespace Nemesis.TextParsers.Tests.Infrastructure
 
         #region Equals
         public bool Equals(EmptyFactoryMethodConvention other) =>
-                !(other is null) && (ReferenceEquals(this, other) ||
+                other is not null && (ReferenceEquals(this, other) ||
                     Number.Equals(other.Number) && Math.Abs(Time.Ticks - other.Time.Ticks) < 2 * TimeSpan.TicksPerMinute
                  );
 
         public override bool Equals(object obj) =>
-            !(obj is null) && (ReferenceEquals(this, obj) || obj is EmptyFactoryMethodConvention ec && Equals(ec));
+            obj is not null && (ReferenceEquals(this, obj) || obj is EmptyFactoryMethodConvention ec && Equals(ec));
 
         public override int GetHashCode() => unchecked((Number.GetHashCode() * 397) ^ Time.GetHashCode());
         #endregion

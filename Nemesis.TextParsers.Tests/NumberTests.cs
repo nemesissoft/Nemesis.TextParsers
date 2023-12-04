@@ -67,9 +67,11 @@ namespace Nemesis.TextParsers.Tests
             {
                 string text = i.ToString(null, CultureInfo.InvariantCulture);
                 bool success = _sut.TryParse(text.AsSpan(), out var value);
-
-                Assert.That(success, Is.True, $"Failed at '{text}'");
-                Assert.That(value, Is.GreaterThan(prev));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(success, Is.True, $"Failed at '{text}'");
+                    Assert.That(value, Is.GreaterThan(prev));
+                });
                 prev = value;
 
 

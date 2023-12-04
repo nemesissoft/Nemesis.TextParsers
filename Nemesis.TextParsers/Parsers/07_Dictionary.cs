@@ -208,7 +208,7 @@ public sealed class DictionaryTransformer<TKey, TValue, TDict> : DictionaryTrans
 
         IDictionary<TKey, TValue> result = _kind switch
         {
-            DictionaryKind.Unknown => throw new ArgumentOutOfRangeException(nameof(_kind), _kind, $"{nameof(_kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
+            DictionaryKind.Unknown => throw new NotSupportedException($"{nameof(_kind)} = '{nameof(DictionaryKind)}.{nameof(DictionaryKind.Unknown)}' is not supported"),
             DictionaryKind.SortedDictionary => new SortedDictionary<TKey, TValue>(),
             DictionaryKind.SortedList => new SortedList<TKey, TValue>(Settings.GetCapacity(input)),
             _ => new Dictionary<TKey, TValue>(Settings.GetCapacity(input))

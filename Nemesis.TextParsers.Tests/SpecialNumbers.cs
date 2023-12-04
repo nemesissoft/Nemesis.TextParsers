@@ -126,9 +126,11 @@ public class SpecialNumbersTests
     {
         LowPrecisionFloat actual = Sut.GetTransformer<LowPrecisionFloat>()
             .Parse(data.inputText.AsSpan());
-
-        Assert.That(actual.Value, Is.EqualTo(data.expected).Within(3).Ulps);
-        Assert.That(actual, Is.EqualTo(new LowPrecisionFloat(data.expected)));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual.Value, Is.EqualTo(data.expected).Within(3).Ulps);
+            Assert.That(actual, Is.EqualTo(new LowPrecisionFloat(data.expected)));
+        });
     }
 
     [Test]
@@ -137,8 +139,11 @@ public class SpecialNumbersTests
         var actual = Sut.GetTransformer<List<LowPrecisionFloat>>()
             .Parse("3.14|1|2|3.0005");
 
-        Assert.That(actual, Has.Count.EqualTo(4));
-        Assert.That(actual.Select(lpf => lpf.Value), Is.EqualTo(new[] { 3.14f, 1f, 2f, 3.0005f }));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Has.Count.EqualTo(4));
+            Assert.That(actual.Select(lpf => lpf.Value), Is.EqualTo(new[] { 3.14f, 1f, 2f, 3.0005f }));
+        });
     }
 
 

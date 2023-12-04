@@ -1,8 +1,5 @@
 ﻿namespace Nemesis.TextParsers.Settings;
 
-#if NET
-[method: System.Text.Json.Serialization.JsonConstructor]
-#endif 
 public sealed class EnumSettings(bool caseInsensitive, bool allowParsingNumerics) : ISettings
 {
     public bool CaseInsensitive { get; private set; } = caseInsensitive;

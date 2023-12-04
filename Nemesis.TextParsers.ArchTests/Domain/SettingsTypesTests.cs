@@ -1,5 +1,4 @@
 using ISettings = Nemesis.TextParsers.Settings.ISettings;
-using JsonConstructorAttribute = System.Text.Json.Serialization.JsonConstructorAttribute;
 
 namespace Nemesis.TextParsers.ArchTests.Domain;
 
@@ -65,22 +64,26 @@ public class SettingsTypesTests
         });
     }
 
-    [Test]
-    public void All_AtLeastOneConstructorNeedsToBeAnnotatedWithJsonConstructor()
-    {
-        var types = GetSettingsTypes();
-
-        Assert.Multiple(() =>
+    /*
+    //#if NET
+    //   [System.Text.Json.Serialization.JsonConstructor]
+    //#endif 
+        [Test]
+        public void All_AtLeastOneConstructorNeedsToBeAnnotatedWithJsonConstructor()
         {
-            foreach (var type in types)
-            {
-                var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                var attributes = ctors
-                    .Select(c => c.GetCustomAttribute<JsonConstructorAttribute>())
-                    .ToArray();
+            var types = GetSettingsTypes();
 
-                Assert.That(attributes, Has.Some.Not.Null, () => $"{type.Name} should have at least one constructor annotated with {nameof(JsonConstructorAttribute)}");
-            }
-        });
-    }
+            Assert.Multiple(() =>
+            {
+                foreach (var type in types)
+                {
+                    var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var attributes = ctors
+                        .Select(c => c.GetCustomAttribute<JsonConstructorAttribute>())
+                        .ToArray();
+
+                    Assert.That(attributes, Has.Some.Not.Null, () => $"{type.Name} should have at least one constructor annotated with {nameof(JsonConstructorAttribute)}");
+                }
+            });
+        }*/
 }

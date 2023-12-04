@@ -36,10 +36,12 @@ namespace Nemesis.TextParsers.Tests
             var newText = converter.ConvertToInvariantString(data.instance);
             var newInstance = converter.ConvertFromInvariantString(data.text);
             var newText2 = converter.ConvertToInvariantString(newInstance ?? "");
-
-            Assert.That(newInstance, Is.EqualTo(data.instance));
-            Assert.That(newText, Is.EqualTo(data.text));
-            Assert.That(newText, Is.EqualTo(newText2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(newInstance, Is.EqualTo(data.instance));
+                Assert.That(newText, Is.EqualTo(data.text));
+                Assert.That(newText, Is.EqualTo(newText2));
+            });
         }
 
         public interface ITextBasedObject
@@ -50,7 +52,7 @@ namespace Nemesis.TextParsers.Tests
         }
 
         [TypeConverter(typeof(UniversalTextTypeConverter<CommaSeparated>))]
-        struct CommaSeparated : ITextBasedObject
+        readonly struct CommaSeparated : ITextBasedObject
         {
             public double Value1 { get; }
             public int Value2 { get; }
@@ -80,6 +82,5 @@ namespace Nemesis.TextParsers.Tests
 
             public override int GetHashCode() => unchecked((Value1.GetHashCode() * 397) ^ Value2);
         }
-
     }
 }
