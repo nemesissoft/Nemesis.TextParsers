@@ -174,7 +174,7 @@ public sealed class ExploratoryTests
         _fixture.Register(GetRandomRegex);
 
         _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
-        _fixture.Register(() => new IPAddress(new[] { (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255) }));
+        _fixture.Register(() => new IPAddress([(byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255)]));
 
 
         _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
@@ -544,7 +544,7 @@ internal static class FixtureUtils
         foreach (var elementType in structs)
         {
             var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-            concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            concreteMethod.Invoke(null, [fixture, randomSource]);
         }
     }
 
@@ -566,7 +566,7 @@ internal static class FixtureUtils
         foreach (var elementType in elementTypes)
         {
             var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-            concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            concreteMethod.Invoke(null, [fixture, randomSource]);
         }
     }
 
@@ -624,7 +624,7 @@ internal static class FixtureUtils
 
             method = method.MakeGenericMethod(elementTypes);
 
-            method.Invoke(null, new object[] { fixture });
+            method.Invoke(null, [fixture]);
         }
     }
 

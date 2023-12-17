@@ -54,7 +54,7 @@ internal static partial class TestHelper
             var method = typeof(TestHelper).GetMethod(nameof(ArraySegmentEquals), BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 ?? throw new MissingMethodException(nameof(TestHelper), nameof(ArraySegmentEquals));
             method = method.MakeGenericMethod(ase1);
-            var equals = (bool)method.Invoke(null, new[] { o1, o2 });
+            var equals = (bool)method.Invoke(null, [o1, o2]);
 
             Assert.That(equals, Is.True, "o1 != o2 when treated as ArraySegment");
         }

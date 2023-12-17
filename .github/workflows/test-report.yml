@@ -1,0 +1,19 @@
+name: 'Test Report'
+on:
+  workflow_run:
+    workflows: ['CI']
+    types:
+      - completed
+
+run-name: "Test for '${{ github.event.workflow_run.head_commit.message }}'"
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: dorny/test-reporter@v1
+      with:        
+        artifact: 'TestResult'
+        name: "Tests results"
+        reporter: dotnet-trx
+        path: "**/*.trx"    
