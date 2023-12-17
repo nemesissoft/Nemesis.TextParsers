@@ -1,9 +1,9 @@
-# ![Logo](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/master/images/review-icon.png) Nemesis.TextParsers
+# ![Logo](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/main/images/icon.png) Nemesis.TextParsers
 
-[![Build status - master](https://img.shields.io/appveyor/ci/Nemesis/nemesis-textparsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/branch/master)
-[![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message&style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests)
-[![Last commit](https://img.shields.io/github/last-commit/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers)
-[![Last release](https://img.shields.io/github/release-date/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/artifacts)
+[![Build status - main](https://img.shields.io/github/actions/workflow/status/nemesissoft/Nemesis.TextParsers/ci.yml?style=flat-square&label=build&logo=github)](https://github.com/nemesissoft/Nemesis.TextParsers/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/nemesissoft/Nemesis.TextParsers/test-report.yml?style=flat-square&label=tests&logo=github)](https://github.com/nemesissoft/Nemesis.TextParsers/actions/workflows/test-report.yml)
+[![Last commit](https://img.shields.io/github/last-commit/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/commits/main/)
+[![Last release](https://img.shields.io/github/release-date/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/releases/)
 
 [![Code size](https://img.shields.io/github/languages/code-size/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers)
 [![Issues](https://img.shields.io/github/issues/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/issues)
@@ -11,10 +11,12 @@
 [![GitHub stars](https://img.shields.io/github/stars/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/stargazers)
 
 
-[
- ![NuGet version](https://img.shields.io/nuget/v/Nemesis.TextParsers.svg?style=flat-square)
- ![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.svg?style=flat-square)
-](https://www.nuget.org/packages/Nemesis.TextParsers/)
+[![NuGet version](https://img.shields.io/nuget/v/Nemesis.TextParsers.svg?style=flat-square)](https://www.nuget.org/packages/Nemesis.TextParsers/)
+![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.svg?style=flat-square)
+
+![License](https://img.shields.io/github/license/nemesissoft/Nemesis.TextParsers)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_shield)
+
 ***
 
 ## Benefits and Features
@@ -39,7 +41,7 @@ TL;DR - are you looking for performant, non allocating serializer from structura
 |   TextJsonNet |  1000 | 8,708.12 us |  1.07 | 3880800 B |
 |   TextParsers |  1000 | 4,384.00 us |  0.54 |  402400 B |
 
-More comprehensive examples are [here](https://github.com/nemesissoft/Nemesis.TextParsers/blob/master/Specification.md)
+More comprehensive examples are [here](https://github.com/nemesissoft/Nemesis.TextParsers/blob/main/Specification.md)
 
 ### Other popular choices
 
@@ -144,7 +146,7 @@ return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0)
 
 ## Funding
 Open source software is free to use but creating and maintaining is a laborious effort. Should you wish to support us in our noble endeavour, please consider the following donation methods:
-[![Donate using Liberapay](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/master/images/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
+[![Donate using Liberapay](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/main/images/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
 
 
 ## Todo / road map
@@ -154,6 +156,9 @@ Open source software is free to use but creating and maintaining is a laborious 
 
 
 ## Links
-- [Documentation](https://github.com/nemesissoft/Nemesis.TextParsers/blob/master/Specification.md)
+- [Documentation](https://github.com/nemesissoft/Nemesis.TextParsers/blob/main/Specification.md)
 - [NuGet Package](https://www.nuget.org/packages/Nemesis.TextParsers/)
 - [Release Notes](https://github.com/nemesissoft/Nemesis.TextParsers/releases)
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_large)

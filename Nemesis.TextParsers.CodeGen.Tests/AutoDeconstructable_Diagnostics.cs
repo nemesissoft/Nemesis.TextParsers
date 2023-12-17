@@ -1,21 +1,24 @@
 ﻿extern alias original;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 using Nemesis.CodeAnalysis;
 using Nemesis.TextParsers.CodeGen.Deconstructable;
 
-using static Nemesis.TextParsers.CodeGen.Tests.Utils;
+using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
 [TestFixture]
-public partial class AutoDeconstructableGeneratorTests
+public class AutoDeconstructable_Diagnostics
 {
-    [TestCase(@"namespace Tests { [Auto.AutoDeconstructable] public partial record RecordPoint2d(double X, double Y) { } }")]
+    [TestCase("""
+        namespace Tests;
+        [Auto.AutoDeconstructable]
+        public partial record RecordPoint2d(double X, double Y);
+        """)]
     public void DiagnosticsRemoval_LackOfAutoAttribute(string source)
     {
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
         var initialDiagnostics = CompilationUtils.GetCompilationIssues(compilation).ToList();
 
         Assert.That(initialDiagnostics, Has.Count.EqualTo(1));
@@ -26,12 +29,18 @@ public partial class AutoDeconstructableGeneratorTests
         Assert.That(diagnostics, Is.Empty);
     }
 
-    [TestCaseSource(nameof(_endToEndCases))]
-    public void DiagnosticsRemoval_LackOfAutoAttribute_EndToEnd(string source, string _) => DiagnosticsRemoval_LackOfAutoAttribute(source);
+    [Test]
+    public void DiagnosticsRemoval_LackOfAutoAttribute_EndToEnd() => Assert.Multiple(() =>
+    {
+        foreach (var (_, source, _) in EndToEndCases.GetAutoDeconstructableCases())
+        {
+            DiagnosticsRemoval_LackOfAutoAttribute(source);
+        }
+    });
 
 
 
-    private static readonly IEnumerable<TestCaseData> _negativeDiagnostics = new (string source, string rule, string expectedMessagePart)[]
+    private static readonly IEnumerable<TCD> _negativeDiagnostics = new (string source, string rule, string expectedMessagePart)[]
     {
         (@"[AutoDeconstructable] class NonPartial { }", nameof(AutoDeconstructableGenerator.NonPartialTypeRule), "Type decorated with AutoDeconstructableAttribute must be also declared partial"),
 
@@ -59,7 +68,7 @@ public partial class AutoDeconstructableGeneratorTests
     partial class ContainingType { [Auto.AutoDeconstructable] partial class Test{} } 
 }", nameof(AutoDeconstructableGenerator.NamespaceAndTypeNamesEqualRule), "Test: Type name cannot be equal to containing namespace: 'Nemesis.TextParsers.CodeGen.Tests.Test'"),
     }
-        .Select((t, i) => new TestCaseData($@"using Auto; using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.rule, t.expectedMessagePart)
+        .Select((t, i) => new TCD($@"using Auto; using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.rule, t.expectedMessagePart)
             .SetName($"Negative{i + 1:00}_{t.rule}"));
 
     [TestCaseSource(nameof(_negativeDiagnostics))]
@@ -69,7 +78,7 @@ public partial class AutoDeconstructableGeneratorTests
             .GetField(ruleName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
             ?.GetValue(null) ?? throw new NotSupportedException($"Rule '{ruleName}' does not exist");
 
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
 
         CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
 
@@ -85,22 +94,10 @@ public partial class AutoDeconstructableGeneratorTests
     }
 
     [Test]
-    public void Diagnostics_RemoveSettingsAttribute()
+    public void Diagnostics_NoSettingsAttributeReference()
     {
-        var source = @"[AutoDeconstructable] partial class DoesNotMatter { }";
-
-        var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
-
-        var compilation = CSharpCompilation.Create("compilation",
-            new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
-            new[]
-            {
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
-                MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
-                //Important - no NTP reference
-            },
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
+        //Important - no NTP reference - test is about removal of NTP library and expected code gen (lack of) ability to generate code
+        var compilation = CreateTestCompilation(@"[AutoDeconstructable] partial class DoesNotMatter { }");
 
         CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
         var diagnosticsList = diagnostics.ToList();

@@ -13,6 +13,25 @@
 				$(PackageDescription)
 				This package was built from the source at $(RepositoryUrl.TrimEnd('.git'))/tree/$(SourceRevisionId)
 			</PackageDescription>
+
+			<Authors>Michał Bryłka, Leszek Kowalski</Authors>
+			<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+			<Copyright>Copyright © Michał Bryłka. Icon by http://www.iconka.com </Copyright>
+			<PublishRepositoryUrl>true</PublishRepositoryUrl>
+			<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
+
+			<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+			<EmbedUntrackedSources>true</EmbedUntrackedSources>
+			<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+			<DebugType>embedded</DebugType>
+			<DebugSymbols>true</DebugSymbols>
+
+			<PackageIcon>properties\icon.png</PackageIcon>
+			<PackageReadmeFile>properties\README.md</PackageReadmeFile>
+
+			<EnablePackageValidation>true</EnablePackageValidation>
+			<!-- Optional: Detect breaking changes from a previous version -->
+			<!-- <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion> -->
 		</PropertyGroup>
 	</Target>
 </Project>

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 
 // ReSharper disable MemberCanBePrivate.Local

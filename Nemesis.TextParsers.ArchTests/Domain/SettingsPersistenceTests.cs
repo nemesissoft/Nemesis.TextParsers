@@ -5,7 +5,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Nemesis.TextParsers.Settings;
 
-namespace Nemesis.TextParsers.Tests.Infrastructure;
+namespace Nemesis.TextParsers.ArchTests.Domain;
 
 [TestFixture]
 public class SettingsPersistenceTests
@@ -109,13 +109,14 @@ public class SettingsPersistenceTests
 
     private static void SettingsPersistanceHelper(ISettings settings,
         Func<object, string> serializer,
-        Func<string, object> deserializer)
+        Func<string, object?> deserializer)
     {
         var settingsType = settings.GetType();
-        var doc = JsonNode.Parse(ConfigJsonFile);
-        var section = doc[settingsType.Name].ToString();
+        JsonNode doc = JsonNode.Parse(ConfigJsonFile)!;
+        var section = doc[settingsType.Name]?.ToString() ?? throw new InvalidDataException("Section does not exist");
 
         var deser1 = deserializer(section);
+        Assert.That(deser1, Is.Not.Null);
         AssertMutualEquivalence(deser1, settings);
 
 
@@ -124,6 +125,9 @@ public class SettingsPersistenceTests
 
         var deser2 = deserializer(fromText);
         var deser3 = deserializer(fromTestData);
+
+        Assert.That(deser2, Is.Not.Null);
+        Assert.That(deser3, Is.Not.Null);
 
         AssertMutualEquivalence(deser2, settings);
         AssertMutualEquivalence(deser3, settings);

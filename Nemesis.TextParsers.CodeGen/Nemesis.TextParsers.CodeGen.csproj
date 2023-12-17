@@ -5,29 +5,14 @@
 
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<IsPackable>true</IsPackable>
-		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
-		<PackageTags>codegen codegeneration generation trnasformer parse ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
-		<Description>Contains various parser optimized for speed and no allocation</Description>
-
-		<!--this will be patched by build system-->
-		<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>
-
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<!-- Do not include the generator as a lib dependency -->
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-
-		<PackageIcon>review-icon.png</PackageIcon>
-
-		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
-		<DebugType>embedded</DebugType>
-		<DebugSymbols>true</DebugSymbols>
+		
+		
+		<IsPackable>true</IsPackable>		
+		<PackageTags>codegen codegeneration generation trnasformer parse ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
+		<Description>Contains various code generators for parser optimized for speed and no allocation</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -43,14 +28,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\images\review-icon.png" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+		<PackageReference Include="MinVer" PrivateAssets="All" />
 	</ItemGroup>
-
 
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

@@ -4,14 +4,14 @@
 #if NETSTANDARD2_0 || NETFRAMEWORK
 
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 // ReSharper disable once CheckNamespace
 namespace Legacy
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public static partial class Number
+    internal static partial class Number
     {
         private const int NumberMaxDigits = 50; // needs to == NUMBER_MAXDIGITS in coreclr's src/classlibnative/bcltype/number.h.
 

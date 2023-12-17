@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests.Utils;

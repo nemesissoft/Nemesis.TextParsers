@@ -1,3 +1,4 @@
+using WebDemo;
 using WebDemo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ services.ConfigureHttpJsonOptions(options =>
     //TODO set JsonSerializerIsReflectionEnabledByDefault to false and make use of defined TypeInfoResolver below 
     //options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseUpper;
     //options.SerializerOptions.TypeInfoResolver = AppJsonSerializerContext.Default;
+
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
 
@@ -39,45 +41,36 @@ app.MapGet("/showConfigurations", () => parsingSettings)
 
 app.MapPost("/parse/{type}", (string type, [FromQuery] string text) =>
 {
-    var parsed = transformerStore.GetTransformer(Type.GetType(type)).ParseObject(text);
-    return parsed;
+    var t = Type.GetType(type);
+    if (t is null) return Results.BadRequest($"Type '{type}' cannot be parsed");
+
+    ITransformer transformer;
+    try
+    {
+        transformer = transformerStore.GetTransformer(t);
+    }
+    catch (Exception ex) when (ex.InnerException is NotSupportedException)
+    {
+        return Results.NotFound($"Type '{type}' is not supported for text transformation");
+    }
+
+    try
+    {
+        var parsed = transformer.ParseObject(text);
+        return parsed;
+    }
+    catch (Exception e)
+    {
+        return Results.Problem($"Text '{text}' failed to parse with message: {e.Message}");
+    }
 }).WithName("Parse").WithOpenApi();
 
 app.Run();
 
-sealed class ParsingSettings
-{
-    public CollectionSettings CollectionSettings { get; init; } = CollectionSettings.Default;
-    public ArraySettings ArraySettings { get; init; } = ArraySettings.Default;
-    public DictionarySettings DictionarySettings { get; init; } = DictionarySettings.Default;
 
-    public EnumSettings EnumSettings { get; init; } = EnumSettings.Default;
-
-    public FactoryMethodSettings FactoryMethodSettings { get; init; } = FactoryMethodSettings.Default;
-
-    public ValueTupleSettings ValueTupleSettings { get; init; } = ValueTupleSettings.Default;
-    public KeyValuePairSettings KeyValuePairSettings { get; init; } = KeyValuePairSettings.Default;
-    public DeconstructableSettings DeconstructableSettings { get; init; } = DeconstructableSettings.Default;
-
-    public ITransformerStore ToTransformerStore()
-    {
-        var settingsStore = SettingsStoreBuilder.GetDefault()
-            .AddOrUpdate(CollectionSettings)
-            .AddOrUpdate(ArraySettings)
-            .AddOrUpdate(DictionarySettings)
-            .AddOrUpdate(EnumSettings)
-            .AddOrUpdate(FactoryMethodSettings)
-            .AddOrUpdate(ValueTupleSettings)
-            .AddOrUpdate(KeyValuePairSettings)
-            .AddOrUpdate(DeconstructableSettings)
-            .Build();
-
-        return TextTransformer.GetDefaultStoreWith(settingsStore);
-    }
-}
 
 [JsonSourceGenerationOptions(
-    PropertyNamingPolicy = JsonKnownNamingPolicy.KebabCaseLower,
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true,
     UseStringEnumConverter = true
 )]

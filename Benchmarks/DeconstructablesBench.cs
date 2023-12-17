@@ -1,7 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Utils;

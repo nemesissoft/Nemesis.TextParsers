@@ -13,12 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
-		appveyor.yml = appveyor.yml
 		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
 		Directory.Packages.props = Directory.Packages.props
-		GetNetCoreVersions.ps1 = GetNetCoreVersions.ps1
+		global.json = global.json
 		LICENSE.txt = LICENSE.txt
 		Nemesis.TextParsers.Public.snk = Nemesis.TextParsers.Public.snk
 		README.md = README.md
@@ -33,7 +32,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebDemo", "WebDemo\WebDemo.csproj", "{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.ArchTests", "Nemesis.TextParsers.ArchTests\Nemesis.TextParsers.ArchTests.csproj", "{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.ArchTests", "Nemesis.TextParsers.ArchTests\Nemesis.TextParsers.ArchTests.csproj", "{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{07A21CBE-BC37-4086-ACB9-9D1F3DF0332E}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
+		.github\workflows\license-scanning.yml = .github\workflows\license-scanning.yml
+		.github\workflows\test-report.yml = .github\workflows\test-report.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +83,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{07A21CBE-BC37-4086-ACB9-9D1F3DF0332E} = {9E1DB4A9-1567-47CD-A602-6625864E752A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6A540D32-2D88-4946-806B-3E613476F833}

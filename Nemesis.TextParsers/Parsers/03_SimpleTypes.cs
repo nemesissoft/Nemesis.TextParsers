@@ -118,7 +118,7 @@ public sealed class BooleanTransformer : SimpleTransformer<bool>
 {
 #if NETSTANDARD2_0 || NETFRAMEWORK
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    internal static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
+    private static bool EqualsOrdinalIgnoreCase(ReadOnlySpan<char> span, ReadOnlySpan<char> value)
     {
         if (span.Length != value.Length)
             return false;
@@ -131,9 +131,9 @@ public sealed class BooleanTransformer : SimpleTransformer<bool>
         return true;
     }
 
-    internal const string TRUE_LITERAL = "True";
-    internal const string FALSE_LITERAL = "False";
-    public static bool TryParseBool(ReadOnlySpan<char> value, out bool result)
+    private const string TRUE_LITERAL = "True";
+    private const string FALSE_LITERAL = "False";
+    private static bool TryParseBool(ReadOnlySpan<char> value, out bool result)
     {
         ReadOnlySpan<char> trueSpan = TRUE_LITERAL.AsSpan();
         if (EqualsOrdinalIgnoreCase(trueSpan, value))
@@ -168,7 +168,7 @@ public sealed class BooleanTransformer : SimpleTransformer<bool>
         return false;
     }
 
-    public static bool ParseBool(ReadOnlySpan<char> value) =>
+    private static bool ParseBool(ReadOnlySpan<char> value) =>
         TryParseBool(value, out bool result) ? result : throw new FormatException($"Boolean supports only case insensitive '{TRUE_LITERAL}' or '{FALSE_LITERAL}'");
 
     private static ReadOnlySpan<char> TrimWhiteSpaceAndNull(ReadOnlySpan<char> value)

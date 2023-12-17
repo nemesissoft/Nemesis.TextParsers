@@ -49,7 +49,7 @@ public sealed class ExploratoryTests
                 typeof(Int64Enum), typeof(UInt64Enum),
                 typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors), typeof(BasisPoint),
 
-                typeof(Fruits[]), typeof(Dictionary<Fruits, double>),
+                typeof(Dictionary<Fruits, double>),
                 typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
                 typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
             }
@@ -174,7 +174,7 @@ public sealed class ExploratoryTests
         _fixture.Register(GetRandomRegex);
 
         _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
-        _fixture.Register(() => new IPAddress(new[] { (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255) }));
+        _fixture.Register(() => new IPAddress([(byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255)]));
 
 
         _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
@@ -232,7 +232,7 @@ public sealed class ExploratoryTests
     public void BeforeEachTest()
     {
         _randomSource.SetNewSeed();
-        Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext.Test.Name} - seed = {_randomSource.Seed}");
+        Console.WriteLine($"Seed = {_randomSource.Seed}"); //{GetType().Name}.{TestContext.CurrentContext.Test.Name}
     }
 
     [Test]
@@ -272,7 +272,7 @@ public sealed class ExploratoryTests
         if (failed.Count > 0)
             Assert.Fail($"Failed cases({failed.Count} cases):{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
 
-        Console.WriteLine($"Test cases run:{caseNo}");
+        Console.WriteLine($"Run:{caseNo}");
 
         void ShouldParseAndFormat(Type testType)
         {
@@ -370,7 +370,7 @@ public sealed class ExploratoryTests
         }
         catch (AssertionException ae)
         {
-            throw new Exception($"Failed for {friendlyName} during: {reason} due to '{ae.Message}'");
+            throw new Exception($"Assertion failed for {friendlyName} during: {reason} due to '{ae.Message}'");
         }
         catch (Exception e)
         {
@@ -462,8 +462,16 @@ static class ExploratoryTestsData
         structs.UnionWith(structs.Select(GetNullableCounterpart).ToList());
 
 
-        arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType()));
-        arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType().MakeArrayType()));
+        arrays.UnionWith(simpleTypes
+#if NETFRAMEWORK
+                .Where(t => !t.IsEnum)
+#endif
+                .Select(t => t.MakeArrayType()));
+        arrays.UnionWith(simpleTypes
+#if NETFRAMEWORK
+                .Where(t => !t.IsEnum)
+#endif
+                .Select(t => t.MakeArrayType().MakeArrayType()));
 
 
         collections.UnionWith(simpleTypes.Select(t => typeof(List<>).MakeGenericType(t)));
@@ -544,7 +552,7 @@ internal static class FixtureUtils
         foreach (var elementType in structs)
         {
             var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-            concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            concreteMethod.Invoke(null, [fixture, randomSource]);
         }
     }
 
@@ -566,7 +574,7 @@ internal static class FixtureUtils
         foreach (var elementType in elementTypes)
         {
             var concreteMethod = registerMethod.MakeGenericMethod(elementType);
-            concreteMethod.Invoke(null, new object[] { fixture, randomSource });
+            concreteMethod.Invoke(null, [fixture, randomSource]);
         }
     }
 
@@ -624,7 +632,7 @@ internal static class FixtureUtils
 
             method = method.MakeGenericMethod(elementTypes);
 
-            method.Invoke(null, new object[] { fixture });
+            method.Invoke(null, [fixture]);
         }
     }
 

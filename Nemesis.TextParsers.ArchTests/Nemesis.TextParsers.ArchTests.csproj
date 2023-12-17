@@ -11,16 +11,18 @@
 		
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="NUnit.Analyzers" />	
-		
+		<PackageReference Include="NUnit.Analyzers" />
+
+		<PackageReference Include="FluentAssertions" />
+
+		<PackageReference Include="System.Text.Json" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Using Include="NUnit.Framework" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="..\.editorconfig" Link=".editorconfig" />
+		<Using Include="NUnit.Framework.TestCaseData" Alias="TCD" />
 	</ItemGroup>
 
 	<ItemGroup>

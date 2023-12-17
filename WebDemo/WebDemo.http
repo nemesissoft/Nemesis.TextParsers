@@ -3,4 +3,24 @@
 GET {{WebDemo_HostAddress}}/showConfigurations
 Accept: application/json
 
-###
+
+### Valid
+POST {{WebDemo_HostAddress}}/parse/System.Int32[]?text={1;22;333}
+Accept: application/json
+
+### Not existing type
+POST {{WebDemo_HostAddress}}/parse/System.Int32[?text={1;22;333}
+Accept: application/json
+
+
+### Wrong class for transformation 
+POST {{WebDemo_HostAddress}}/parse/WebDemo.InvalidClass?text=ABCD
+Accept: application/json
+
+
+### Wrong payload
+POST {{WebDemo_HostAddress}}/parse/System.Int32[]?text=ABCD
+Accept: application/json
+
+
+

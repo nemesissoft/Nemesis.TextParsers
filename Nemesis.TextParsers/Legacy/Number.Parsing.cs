@@ -28,7 +28,7 @@ namespace Legacy
     // NaNs or Infinities.
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public static partial class Number
+    internal static partial class Number
     {
         private const int Int32Precision = 10;
         private const int UInt32Precision = Int32Precision;

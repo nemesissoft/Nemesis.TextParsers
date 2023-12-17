@@ -2,44 +2,15 @@
 	<PropertyGroup>
 		<TargetFrameworks>net7.0;net6.0;netstandard2.1;netstandard2.0</TargetFrameworks>
 
+		<IsPackable>true</IsPackable>
 		<PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
 		<Description>Contains various parser optimized for speed and no allocation.</Description>
-
-		<IsPackable>true</IsPackable>
-		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
-		<PackageIcon>properties\review-icon.png</PackageIcon>
-		<PackageReadmeFile>properties\README.md</PackageReadmeFile>
-
-		<!--this will be patched by build system-->
-		<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>
-
-		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
-
 	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="..\images\review-icon.png" Pack="true" PackagePath="properties">
-			<Link>Properties\icon.png</Link>
-		</None>
-
-		<None Include="..\README.md" Pack="true" PackagePath="properties">
-			<Link>Properties\README.md</Link>
-		</None>
-	</ItemGroup>
-
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="..\.editorconfig" Link=".editorconfig" />
-	</ItemGroup>
-
+	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
 		<PackageReference Include="Nemesis.Essentials.TypeMeta.Sources" PrivateAssets="All" />
+		<PackageReference Include="MinVer" PrivateAssets="All" />
 	</ItemGroup>
 
 	<!--Legacy on-->

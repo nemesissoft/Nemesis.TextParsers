@@ -12,7 +12,7 @@ using System.Globalization;
 // ReSharper disable once CheckNamespace
 namespace Legacy
 {
-    public static partial class Number
+    internal static partial class Number
     {
         private const NumberStyles INVALID_NUMBER_STYLES = ~(
             NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign | NumberStyles.AllowTrailingSign | NumberStyles.AllowParentheses |
@@ -36,7 +36,7 @@ namespace Legacy
         }
     }
 
-    public static class ByteParser
+    internal static class ByteParser
     {
         private static byte MinValue => byte.MinValue;
         private static byte MaxValue => byte.MaxValue;
@@ -90,7 +90,7 @@ namespace Legacy
 
     }
 
-    public static class SByteParser
+    internal static class SByteParser
     {
         private static sbyte MinValue => sbyte.MinValue;
         private static sbyte MaxValue => sbyte.MaxValue;
@@ -164,7 +164,7 @@ namespace Legacy
 
     }
 
-    public static class Int16Parser
+    internal static class Int16Parser
     {
         private static short MinValue => short.MinValue;
         private static short MaxValue => short.MaxValue;
@@ -243,7 +243,7 @@ namespace Legacy
 
     }
 
-    public static class UInt16Parser
+    internal static class UInt16Parser
     {
 #pragma warning disable IDE0051 // Remove unused private members
         private static ushort MinValue => ushort.MinValue;

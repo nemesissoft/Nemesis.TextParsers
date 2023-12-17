@@ -1,4 +1,4 @@
-﻿# ![Logo](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/master/images/review-icon.png) Nemesis.TextParsers
+﻿# ![Logo](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/main/images/icon.png) Nemesis.TextParsers
 
 ***
 

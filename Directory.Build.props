@@ -1,19 +1,13 @@
 <Project>
 	<PropertyGroup>
 		<!--This will get replaced by Build System-->
-		<Version>1.0.0</Version>
-		
+		<Version>0.0.1</Version>
+
 		<LangVersion>12.0</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
-		
-		<!--TODO <Nullable>enable</Nullable>-->
 
-		<Authors>Michał Bryłka, Leszek Kowalski</Authors>
-		<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
-		<Copyright>Copyright (c) Michał Bryłka. Icon by http://www.iconka.com </Copyright>
+		<!--TODO <Nullable>enable</Nullable>-->
 		<IsPackable>false</IsPackable>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
 
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsAsErrors />
@@ -25,6 +19,20 @@
 		<AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<None Include="..\images\icon.png" Pack="true" PackagePath="properties">
+			<Link>properties\icon.png</Link>
+		</None>
+
+		<None Include="..\README.md" Pack="true" PackagePath="properties">
+			<Link>properties\README.md</Link>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<None Include="..\.editorconfig" Link=".editorconfig" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<Using Include="System.Linq.Expressions" />
 		<Using Include="System.Text" />
