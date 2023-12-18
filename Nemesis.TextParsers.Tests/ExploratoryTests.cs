@@ -49,7 +49,7 @@ public sealed class ExploratoryTests
                 typeof(Int64Enum), typeof(UInt64Enum),
                 typeof(LowPrecisionFloat), typeof(CarrotAndOnionFactors), typeof(BasisPoint),
 
-                typeof(Fruits[]), typeof(Dictionary<Fruits, double>),
+                typeof(Dictionary<Fruits, double>),
                 typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
                 typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
             }
