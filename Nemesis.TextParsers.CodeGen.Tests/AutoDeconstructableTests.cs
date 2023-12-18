@@ -1,5 +1,5 @@
 ﻿extern alias original;
-using static Nemesis.TextParsers.CodeGen.Tests.Utils;
+using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
@@ -13,7 +13,7 @@ public class AutoDeconstructableTests
     [TestCaseSource(nameof(_endToEndCases))]
     public void EndToEndTests(string source, string expectedCode)
     {
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
 
         var generatedTrees = GetGeneratedTreesOnly(compilation);
 
@@ -73,7 +73,7 @@ public class AutoDeconstructableTests
             expectedCodePart = expectedCodePart.Substring(12);
 
         //arrange
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
 
         //act
         var generatedTrees = GetGeneratedTreesOnly(compilation);
@@ -87,7 +87,7 @@ public class AutoDeconstructableTests
     [Test]
     public void Generate_When_StaticUsing_And_Mnemonics()
     {
-        var compilation = CreateCompilation(@"using SD = System.Double;
+        var compilation = CreateValidCompilation(@"using SD = System.Double;
 using static Tests3.ContainerClass3;
 
 namespace Tests1

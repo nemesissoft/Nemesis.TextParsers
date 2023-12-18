@@ -1,11 +1,10 @@
 ﻿extern alias original;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 using Nemesis.CodeAnalysis;
 using Nemesis.TextParsers.CodeGen.Deconstructable;
 
-using static Nemesis.TextParsers.CodeGen.Tests.Utils;
+using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
@@ -19,7 +18,7 @@ public class AutoDeconstructable_Diagnostics
         """)]
     public void DiagnosticsRemoval_LackOfAutoAttribute(string source)
     {
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
         var initialDiagnostics = CompilationUtils.GetCompilationIssues(compilation).ToList();
 
         Assert.That(initialDiagnostics, Has.Count.EqualTo(1));
@@ -79,7 +78,7 @@ public class AutoDeconstructable_Diagnostics
             .GetField(ruleName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
             ?.GetValue(null) ?? throw new NotSupportedException($"Rule '{ruleName}' does not exist");
 
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
 
         CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
 
@@ -95,21 +94,10 @@ public class AutoDeconstructable_Diagnostics
     }
 
     [Test]
-    public void Diagnostics_RemoveSettingsAttribute()
+    public void Diagnostics_NoSettingsAttributeReference()
     {
-        var source = @"[AutoDeconstructable] partial class DoesNotMatter { }";
-
-        var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
-
-        var compilation = CSharpCompilation.Create("compilation",
-            [CSharpSyntaxTree.ParseText(source, new(LanguageVersion.Latest))],
-            [
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
-                MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
-                //Important - no NTP reference - test is about removal of NTP library and expected code gen (lack of) ability to generate code
-            ],
-            new(OutputKind.DynamicallyLinkedLibrary));
-
+        //Important - no NTP reference - test is about removal of NTP library and expected code gen (lack of) ability to generate code
+        var compilation = CreateTestCompilation(@"[AutoDeconstructable] partial class DoesNotMatter { }");
 
         CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
         var diagnosticsList = diagnostics.ToList();

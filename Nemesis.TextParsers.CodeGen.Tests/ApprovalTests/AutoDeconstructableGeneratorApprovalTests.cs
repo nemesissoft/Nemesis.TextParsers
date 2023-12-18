@@ -3,7 +3,7 @@ using ApprovalTests.Maintenance;
 using ApprovalTests.Reporters;
 using ApprovalTests.Writers;
 
-using static Nemesis.TextParsers.CodeGen.Tests.Utils;
+using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests;
 
@@ -31,7 +31,7 @@ internal class AutoDeconstructableGeneratorApprovalTests
         Assert.That(source, Is.Not.Null);
         Assert.That(source, Is.Not.Empty);
 
-        var compilation = CreateCompilation(source);
+        var compilation = CreateValidCompilation(source);
 
         var generatedTrees = GetGeneratedTreesOnly(compilation);
 

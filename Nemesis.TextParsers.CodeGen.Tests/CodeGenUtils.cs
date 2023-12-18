@@ -9,9 +9,12 @@ using Nemesis.TextParsers.CodeGen.Deconstructable;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
-internal static class Utils
+internal static class CodeGenUtils
 {
-    public static Compilation CreateCompilation(string source, [CallerMemberName] string? memberName = null)
+    public static Compilation CreateValidCompilation(string source, [CallerMemberName] string? memberName = null) =>
+        CreateTestCompilation(source, [typeof(original::Nemesis.TextParsers.ITransformer).GetTypeInfo().Assembly], memberName);
+
+    public static Compilation CreateTestCompilation(string source, Assembly[]? additionalAssemblies = null, [CallerMemberName] string? memberName = null)
     {
         var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
 
@@ -38,6 +41,13 @@ internal static class Utils
         var references = new List<PortableExecutableReference>(8);
         void AddRef(string path) =>
             references.Add(MetadataReference.CreateFromFile(path));
+
+        foreach (var t in new[] { typeof(Binder), typeof(BigInteger) })
+            AddRef(t.GetTypeInfo().Assembly.Location);
+
+        if (additionalAssemblies is not null)
+            foreach (var ass in additionalAssemblies)
+                AddRef(ass.Location);
 #if NET
         AddRef(Path.Combine(assemblyPath, "System.Runtime.dll"));
 #else
@@ -51,13 +61,8 @@ internal static class Utils
         AddRef(typeof(System.ComponentModel.EditorBrowsableAttribute).GetTypeInfo().Assembly.Location);
 #endif
 
-        foreach (var t in new[] { typeof(Binder), typeof(BigInteger), typeof(original::Nemesis.TextParsers.ITransformer) })
-            AddRef(t.GetTypeInfo().Assembly.Location);
-
-
-        var compilation = CSharpCompilation.Create($"{memberName}_Compilation", trees,
+        return CSharpCompilation.Create($"{memberName}_Compilation", trees,
             references, new(OutputKind.DynamicallyLinkedLibrary));
-        return compilation;
     }
 
 
@@ -68,7 +73,6 @@ internal static class Utils
     {
         text = _generatorPattern.Replace(text, "string.Empty, string.Empty");
         text = _headerPattern.Replace(text, "//HEAD");
-
         return text;
     }
 
