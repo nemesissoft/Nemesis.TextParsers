@@ -232,7 +232,7 @@ public sealed class ExploratoryTests
     public void BeforeEachTest()
     {
         _randomSource.SetNewSeed();
-        Console.WriteLine($"{GetType().Name}.{TestContext.CurrentContext.Test.Name} - seed = {_randomSource.Seed}");
+        Console.WriteLine($"Seed = {_randomSource.Seed}"); //{GetType().Name}.{TestContext.CurrentContext.Test.Name}
     }
 
     [Test]
@@ -272,7 +272,7 @@ public sealed class ExploratoryTests
         if (failed.Count > 0)
             Assert.Fail($"Failed cases({failed.Count} cases):{Environment.NewLine}{string.Join(Environment.NewLine, failed)}");
 
-        Console.WriteLine($"Test cases run:{caseNo}");
+        Console.WriteLine($"Run:{caseNo}");
 
         void ShouldParseAndFormat(Type testType)
         {

@@ -5,18 +5,12 @@
 
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+	
 		<IsPackable>true</IsPackable>
 		<PackageId>$(PackageIdPrefix)$(AssemblyName)</PackageId>
 		<PackageTags>codegen codegeneration generation trnasformer parse ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
 		<Description>Contains various parser optimized for speed and no allocation</Description>
-
-		<!--this will be patched by build system-->
-		<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>
-
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<!-- Do not include the generator as a lib dependency -->
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>

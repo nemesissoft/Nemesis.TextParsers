@@ -16,4 +16,6 @@ jobs:
         artifact: 'TestResult'
         name: "Tests results"
         reporter: dotnet-trx
-        path: "**/*.trx"    
+        path: "**/*.trx"         
+        fail-on-error: 'false'
+        fail-on-empty: 'true'
