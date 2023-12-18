@@ -11,8 +11,12 @@
 [![GitHub stars](https://img.shields.io/github/stars/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/stargazers)
 
 
-[![NuGet version](https://img.shields.io/nuget/v/Nemesis.TextParsers.svg?style=flat-square)](https://www.nuget.org/packages/Nemesis.TextParsers/)
-![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.svg?style=flat-square)
+[![Nuget](https://img.shields.io/nuget/v/Nemesis.TextParsers.svg?style=flat-square&logo=nuget&label=Nemesis.TextParsers&color=pink)](https://www.nuget.org/packages/Nemesis.TextParsers/)
+![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.svg?style=flat-square&color=pink)
+
+[![Nuget](https://img.shields.io/nuget/v/Nemesis.TextParsers.CodeGen.svg?style=flat-square&logo=nuget&label=Nemesis.TextParsers.CodeGen&color=purple)](https://www.nuget.org/packages/Nemesis.TextParsers.CodeGen/)
+![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.CodeGen.svg?style=flat-square&color=purple)
+
 
 ![License](https://img.shields.io/github/license/nemesissoft/Nemesis.TextParsers)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_shield)
