@@ -4,6 +4,7 @@
 [![Tests](https://img.shields.io/appveyor/tests/Nemesis/nemesis-textparsers?compact_message&style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/tests)
 [![Last commit](https://img.shields.io/github/last-commit/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers)
 [![Last release](https://img.shields.io/github/release-date/nemesissoft/Nemesis.TextParsers?style=flat-square)](https://ci.appveyor.com/project/Nemesis/nemesis-textparsers/build/artifacts)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_shield)
 
 [![Code size](https://img.shields.io/github/languages/code-size/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers)
 [![Issues](https://img.shields.io/github/issues/nemesissoft/Nemesis.TextParsers.svg?style=flat-square)](https://github.com/nemesissoft/Nemesis.TextParsers/issues)
@@ -157,3 +158,6 @@ Open source software is free to use but creating and maintaining is a laborious 
 - [Documentation](https://github.com/nemesissoft/Nemesis.TextParsers/blob/master/Specification.md)
 - [NuGet Package](https://www.nuget.org/packages/Nemesis.TextParsers/)
 - [Release Notes](https://github.com/nemesissoft/Nemesis.TextParsers/releases)
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_large)
