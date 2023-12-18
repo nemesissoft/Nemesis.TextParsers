@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<!--TODO add net48 target-->
-		<TargetFrameworks>net6.0</TargetFrameworks>
+	<PropertyGroup>		
+		<TargetFrameworks>net6.0;net48</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<NoWarn>$(NoWarn);NU1603</NoWarn>		
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Using Include="NUnit.Framework" />		
+	<ItemGroup>	
+		<Using Include="NUnit.Framework" />
+		<Using Include="NUnit.Framework.TestCaseData" Alias="TCD" />
 	</ItemGroup>
 
 	<ItemGroup>

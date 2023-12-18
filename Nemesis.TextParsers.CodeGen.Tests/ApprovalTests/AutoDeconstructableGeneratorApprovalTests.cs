@@ -8,7 +8,7 @@ using static Nemesis.TextParsers.CodeGen.Tests.Utils;
 namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests;
 
 [TestFixture, Explicit]
-[UseReporter(typeof(TortoiseDiffReporter), typeof(ClipboardReporter))]
+[UseReporter(typeof(VisualStudioReporter), typeof(ClipboardReporter))]
 internal class AutoDeconstructableGeneratorApprovalTests
 {
     [Test] public void ApprovalTestsRecord() => RunCase("Record");
@@ -27,12 +27,11 @@ internal class AutoDeconstructableGeneratorApprovalTests
 
     private static void RunCase(string index)
     {
-        var (_, source, _) = EndToEndCases.AutoDeconstructableCases().SingleOrDefault(t => t.name == index);
+        var (_, source, _) = EndToEndCases.GetAutoDeconstructableCases().SingleOrDefault(t => t.name == index);
         Assert.That(source, Is.Not.Null);
         Assert.That(source, Is.Not.Empty);
 
-        var compilation = CreateCompilation(
-            $@"using Nemesis.TextParsers.Settings; namespace Nemesis.TextParsers.CodeGen.Tests {{ {source} }}");
+        var compilation = CreateCompilation(source);
 
         var generatedTrees = GetGeneratedTreesOnly(compilation);
 

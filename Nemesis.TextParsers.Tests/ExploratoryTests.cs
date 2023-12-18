@@ -370,7 +370,7 @@ public sealed class ExploratoryTests
         }
         catch (AssertionException ae)
         {
-            throw new Exception($"Failed for {friendlyName} during: {reason} due to '{ae.Message}'");
+            throw new Exception($"Assertion failed for {friendlyName} during: {reason} due to '{ae.Message}'");
         }
         catch (Exception e)
         {

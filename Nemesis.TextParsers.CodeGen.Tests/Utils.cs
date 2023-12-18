@@ -1,5 +1,7 @@
-﻿extern alias original;
+﻿#nullable enable
+extern alias original;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Nemesis.CodeAnalysis;
@@ -9,14 +11,52 @@ namespace Nemesis.TextParsers.CodeGen.Tests;
 
 internal static class Utils
 {
-    public static Compilation CreateCompilation(string source, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary)
+    public static Compilation CreateCompilation(string source, [CallerMemberName] string? memberName = null)
     {
-        var (compilation, _, _) = CompilationUtils.CreateTestCompilation(source, new[]
-            {
-                typeof(BigInteger).GetTypeInfo().Assembly,
-                typeof(original::Nemesis.TextParsers.ITransformer).GetTypeInfo().Assembly
-            }, outputKind);
+        var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
 
+        static SyntaxTree Parse(string source) =>
+            CSharpSyntaxTree
+            .ParseText(source, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest));
+
+        SyntaxTree[] trees =
+        [
+            Parse(source)
+#if !NET
+            ,
+            Parse("""
+                namespace System.Runtime.CompilerServices
+                {
+                    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+                    internal static class IsExternalInit { }
+                }
+
+                """)
+#endif
+        ];
+
+        var references = new List<PortableExecutableReference>(8);
+        void AddRef(string path) =>
+            references.Add(MetadataReference.CreateFromFile(path));
+#if NET
+        AddRef(Path.Combine(assemblyPath, "System.Runtime.dll"));
+#else
+        var standardAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "netstandard");
+
+        AddRef(standardAssembly?.Location
+               ?? throw new NotSupportedException("netstandard is needed for legacy framework tests")
+        );
+
+        AddRef(typeof(System.ComponentModel.EditorBrowsableAttribute).GetTypeInfo().Assembly.Location);
+#endif
+
+        foreach (var t in new[] { typeof(Binder), typeof(BigInteger), typeof(original::Nemesis.TextParsers.ITransformer) })
+            AddRef(t.GetTypeInfo().Assembly.Location);
+
+
+        var compilation = CSharpCompilation.Create($"{memberName}_Compilation", trees,
+            references, new(OutputKind.DynamicallyLinkedLibrary));
         return compilation;
     }
 
@@ -37,7 +77,7 @@ internal static class Utils
         var newComp = CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
         Assert.That(diagnostics, Is.Empty);
 
-        SyntaxTree attributeTree = null;
+        SyntaxTree? attributeTree = null;
         foreach (var tree in newComp.SyntaxTrees)
         {
             var attributeDeclaration = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>()
@@ -50,7 +90,7 @@ internal static class Utils
         }
         Assert.That(attributeTree, Is.Not.Null, "Auto attribute not found among generated trees");
 
-        var toRemove = compilation.SyntaxTrees.Append(attributeTree);
+        var toRemove = compilation.SyntaxTrees.Append(attributeTree!);
 
         var generatedTrees = newComp.RemoveSyntaxTrees(toRemove).SyntaxTrees.ToList();
         Assert.That(generatedTrees, Has.Count.EqualTo(requiredCardinality));
@@ -68,13 +108,13 @@ internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<str
 
     public static readonly IEqualityComparer<string> EqualityComparer = new IgnoreNewLinesComparer();
 
-    public int Compare(string x, string y) => string.CompareOrdinal(NormalizeNewLines(x), NormalizeNewLines(y));
+    public int Compare(string? x, string? y) => string.CompareOrdinal(NormalizeNewLines(x), NormalizeNewLines(y));
 
-    public bool Equals(string x, string y) => NormalizeNewLines(x) == NormalizeNewLines(y);
+    public bool Equals(string? x, string? y) => NormalizeNewLines(x) == NormalizeNewLines(y);
 
     public int GetHashCode(string s) => NormalizeNewLines(s)?.GetHashCode() ?? 0;
 
-    public static string NormalizeNewLines(string s) => s?
+    public static string? NormalizeNewLines(string? s) => s?
         .Replace(Environment.NewLine, "")
         .Replace("\n", "")
         .Replace("\r", "");

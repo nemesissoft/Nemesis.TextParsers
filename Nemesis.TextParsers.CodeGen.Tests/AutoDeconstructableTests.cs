@@ -4,12 +4,10 @@ using static Nemesis.TextParsers.CodeGen.Tests.Utils;
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
 [TestFixture]
-public partial class AutoDeconstructableGeneratorTests
+public class AutoDeconstructableTests
 {
-    private static readonly IEnumerable<TestCaseData> _endToEndCases = EndToEndCases.AutoDeconstructableCases()
-       .Select((t, i) => new TestCaseData($@"
-using Nemesis.TextParsers.Settings; 
-namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
+    private static readonly IEnumerable<TCD> _endToEndCases = EndToEndCases.GetAutoDeconstructableCases()
+       .Select((t, i) => new TCD(t.source, t.expectedCode)
            .SetName($"E2E_{i + 1:00}_{t.name}"));
 
     [TestCaseSource(nameof(_endToEndCases))]
@@ -25,7 +23,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
     }
 
 
-    private static readonly IEnumerable<TestCaseData> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
+    private static readonly IEnumerable<TCD> _settingsCases = new (string typeDefinition, string expectedCodePart)[]
     {
         (@"[DeconstructableSettings(':', '␀', '/', '{', '}')]
             readonly partial struct Child
@@ -64,7 +62,7 @@ namespace Nemesis.TextParsers.CodeGen.Tests {{ {t.source} }}", t.expectedCode)
         (@"[DeconstructableSettings(useDeconstructableEmpty: false)]
             partial record T(byte B) { }", @"NOT CONTAIN:GetEmpty()"),
     }
-       .Select((t, i) => new TestCaseData($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
+       .Select((t, i) => new TCD($@"using Nemesis.TextParsers.Settings; namespace Tests {{ [Auto.AutoDeconstructable] {t.typeDefinition} }}", t.expectedCodePart)
            .SetName($"Settings{i + 1:00}"));
 
     [TestCaseSource(nameof(_settingsCases))]

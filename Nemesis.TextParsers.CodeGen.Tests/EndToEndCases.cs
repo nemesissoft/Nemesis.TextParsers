@@ -2,8 +2,20 @@
 
 static class EndToEndCases
 {
-    public static IReadOnlyList<(string name, string source, string expectedCode)> AutoDeconstructableCases() => new[]
-    {
+    public static IReadOnlyList<(string name, string source, string expectedCode)> GetAutoDeconstructableCases() =>
+        GetData().Select(t =>
+        (
+          t.name,
+          $$"""
+          using Nemesis.TextParsers.Settings; 
+          namespace Nemesis.TextParsers.CodeGen.Tests; 
+          {{t.source}}
+          """,
+          t.expectedCode)
+        ).ToList();
+
+    private static IReadOnlyList<(string name, string source, string expectedCode)> GetData() =>
+    [
         ("SimpleWrapperRecord", @"[Auto.AutoDeconstructable] partial record eDoubleRecord(double Value) { }",
             @"//HEAD
 using System;
@@ -529,5 +541,5 @@ namespace Nemesis.TextParsers.CodeGen.Tests
         }
     }
 }")
-    };
+    ];
 }
