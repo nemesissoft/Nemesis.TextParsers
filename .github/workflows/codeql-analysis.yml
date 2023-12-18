@@ -10,6 +10,8 @@ on:
   schedule:
     - cron: '40 16 * * 0'
 
+run-name: "QL: '${{ github.event.workflow_run.head_commit.message }}'"
+
 jobs:
   analyze:
     name: Analyze
@@ -37,7 +39,4 @@ jobs:
     - run: dotnet build --configuration Release 
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-      
-    - name: Upload results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/analyze@v2      

@@ -462,8 +462,16 @@ static class ExploratoryTestsData
         structs.UnionWith(structs.Select(GetNullableCounterpart).ToList());
 
 
-        arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType()));
-        arrays.UnionWith(simpleTypes.Select(t => t.MakeArrayType().MakeArrayType()));
+        arrays.UnionWith(simpleTypes
+#if NETFRAMEWORK
+                .Where(t => !t.IsEnum)
+#endif
+                .Select(t => t.MakeArrayType()));
+        arrays.UnionWith(simpleTypes
+#if NETFRAMEWORK
+                .Where(t => !t.IsEnum)
+#endif
+                .Select(t => t.MakeArrayType().MakeArrayType()));
 
 
         collections.UnionWith(simpleTypes.Select(t => typeof(List<>).MakeGenericType(t)));

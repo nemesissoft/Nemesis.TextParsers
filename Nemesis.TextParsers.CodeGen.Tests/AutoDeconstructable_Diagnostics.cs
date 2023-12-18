@@ -102,14 +102,13 @@ public class AutoDeconstructable_Diagnostics
         var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
 
         var compilation = CSharpCompilation.Create("compilation",
-            new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
-            new[]
-            {
+            [CSharpSyntaxTree.ParseText(source, new(LanguageVersion.Latest))],
+            [
                 MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
                 MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
-                //Important - no NTP reference
-            },
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                //Important - no NTP reference - test is about removal of NTP library and expected code gen (lack of) ability to generate code
+            ],
+            new(OutputKind.DynamicallyLinkedLibrary));
 
 
         CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
