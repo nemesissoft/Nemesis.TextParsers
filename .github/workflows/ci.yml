@@ -51,9 +51,7 @@ jobs:
             $releaseNotes = $releaseNotes + "`r`n`r`n"  + $body
         }
             
-        Write-Host "`tSetting release notes to '$releaseNotes'"
-
-        dotnet pack --configuration Release --output ${{ env.NuGetDirectory }} -p:PackageReleaseNotes=$releaseNotes
+        Write-Host "ABCD${releaseNotes}EFGH" -ForegroundColor red 
 
     
     - name: Non-release Pack 
