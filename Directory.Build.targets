@@ -2,13 +2,13 @@
 <Project>
 
 	<Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.1.3" />
-
-	<!--Append source information to PackageDescription.-->
+	
 	<Target Name="_AppendCommonPackageDescription"
 			BeforeTargets="InitializeStandardNuspecProperties;GenerateNuspec"
 			DependsOnTargets="InitializeSourceControlInformation"
 			Condition="'$(IsPackable)' == 'true'">
 		<PropertyGroup>
+			<!--Append source information to PackageDescription.-->
 			<PackageDescription>
 				$(PackageDescription)
 				This package was built from the source at $(RepositoryUrl.TrimEnd('.git'))/tree/$(SourceRevisionId)
@@ -28,6 +28,9 @@
 
 			<PackageIcon>properties\icon.png</PackageIcon>
 			<PackageReadmeFile>properties\README.md</PackageReadmeFile>
+
+			<!--this will be patched by build system-->
+			<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>			
 
 			<EnablePackageValidation>true</EnablePackageValidation>
 			<!-- Optional: Detect breaking changes from a previous version -->
