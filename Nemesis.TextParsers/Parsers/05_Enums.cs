@@ -1,14 +1,11 @@
-﻿using Nemesis.TextParsers.Runtime;
+﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
+using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
-#if !NET
-using NotNull = JetBrains.Annotations.NotNullAttribute;
-#else
-using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
-#endif
+using BF = System.Reflection.BindingFlags;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[JetBrains.Annotations.UsedImplicitly]
 public sealed class EnumTransformerCreator : ICanCreateTransformer
 {
     private readonly EnumSettings _settings;
@@ -27,28 +24,27 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
         var transType = typeof(EnumTransformer<,,>).MakeGenericType(enumType, underlyingType, numberHandler.GetType());
 
-        return (ITransformer<TEnum>)Activator.CreateInstance(transType, numberHandler, _settings);
+        return (ITransformer<TEnum>)(
+            Activator.CreateInstance(transType, numberHandler, _settings)
+            ?? throw new Exception($"Cannot create type '{nameof(TEnum)}'")
+       );
     }
 
     public bool CanHandle(Type type) => TryGetUnderlyingType(type, out _);
 
-    private static bool TryGetUnderlyingType(Type type, out Type underlyingType)
+    private static bool TryGetUnderlyingType(Type type, [NotNullWhen(true)] out Type? underlyingType)
     {
         if (!type.IsEnum)
         {
             underlyingType = null;
             return false;
         }
-        else
-        {
-            underlyingType = Enum.GetUnderlyingType(type);
 
-            return Type.GetTypeCode(underlyingType) is
-                TypeCode.SByte or TypeCode.Byte or
-                TypeCode.Int16 or TypeCode.UInt16 or
-                TypeCode.Int32 or TypeCode.UInt32 or
-                TypeCode.Int64 or TypeCode.UInt64;
-        }
+        underlyingType = Enum.GetUnderlyingType(type);
+
+        return Type.GetTypeCode(underlyingType) is
+            TypeCode.SByte or TypeCode.Byte or TypeCode.Int16 or TypeCode.UInt16 or
+            TypeCode.Int32 or TypeCode.UInt32 or TypeCode.Int64 or TypeCode.UInt64;
     }
 
     public sbyte Priority => 30;
@@ -58,8 +54,11 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 }
 
 public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : TransformerBase<TEnum>
-    where TEnum : Enum
+    where TEnum : struct, Enum
     where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
+#if NET7_0_OR_GREATER
+    , IBinaryInteger<TUnderlying>
+#endif
     where TNumberHandler : NumberTransformer<TUnderlying> //PERF: making number handler a concrete specification can win additional up to 3% in speed
 {
     private readonly TNumberHandler _numberHandler;
@@ -69,15 +68,14 @@ public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : Transf
 
     private readonly EnumTransformerHelper.ParserDelegate<TUnderlying> _elementParser;
 
-    // ReSharper disable once RedundantVerbatimPrefix
-    public EnumTransformer([NotNull] TNumberHandler numberHandler, EnumSettings settings)
+    public EnumTransformer(TNumberHandler numberHandler, EnumSettings settings)
     {
         _numberHandler = numberHandler ?? throw new ArgumentNullException(nameof(numberHandler));
         _settings = settings;
         _elementParser = EnumTransformerHelper.GetElementParser<TEnum, TUnderlying>(_settings);
     }
 
-    //check performance comparison in Benchmark project - ToEnumBench
+    //check performance comparison in Benchmark project - ConvertEnumBench
     internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
     protected override TEnum ParseCore(in ReadOnlySpan<char> input)
@@ -130,11 +128,14 @@ internal static class EnumTransformerHelper
 
     internal static ParserDelegate<TUnderlying> GetElementParser<TEnum, TUnderlying>(EnumSettings settings)
     {
-        var enumValues = typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Select(enumField => (enumField.Name, Value: (TUnderlying)enumField.GetValue(null))).ToList();
+        var enumValues = typeof(TEnum).GetFields(BF.Public | BF.Static)
+            .Select(enumField => (
+                enumField.Name,
+                Value: (TUnderlying)(enumField.GetValue(null) ?? throw new MissingMemberException(nameof(TEnum), enumField.Name))
+        )).ToList();
 
         var inputParam = Expression.Parameter(typeof(ReadOnlySpan<char>), "input");
-        //HACK this can potentially be subject to property in EnumSettings
+        //this can potentially be subject to property in EnumSettings
         if (enumValues.Count == 0)
             return Expression.Lambda<ParserDelegate<TUnderlying>>(Expression.Default(typeof(TUnderlying)), inputParam).Compile();
 
@@ -197,11 +198,12 @@ internal static class EnumTransformerHelper
     }
 
     private static MethodInfo GetCharEqMethod(string charEqMethodName) =>
-        typeof(EnumTransformerHelper).GetMethod(charEqMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+        typeof(EnumTransformerHelper).GetMethod(charEqMethodName, BF.Public | BF.NonPublic | BF.Static)
         ?? throw new MissingMethodException(nameof(EnumTransformerHelper), charEqMethodName);
 
-    private static Expression AndAlsoJoin(IReadOnlyCollection<Expression> expressionList) => expressionList?.Count > 0
-        ? expressionList.Aggregate<Expression, Expression>(null, (current, element) => current == null ? element : Expression.AndAlso(current, element))
+    private static Expression AndAlsoJoin(IReadOnlyCollection<Expression> expressionList) =>
+        expressionList?.Count > 0
+        ? expressionList.Aggregate<Expression, Expression>(null!, (curr, elem) => curr is null ? elem : Expression.AndAlso(curr, elem))
         : Expression.Constant(false);
 
     private static Expression IfThenElseJoin<TResult>(IReadOnlyList<(Expression Condition, TResult value)> expressionList, Expression lastElse, LabelTarget exitTarget)

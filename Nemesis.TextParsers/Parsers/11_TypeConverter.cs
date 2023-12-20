@@ -12,7 +12,6 @@ public sealed class TypeConverterTransformerCreator : ICanCreateTransformer
     public ITransformer<TElement> CreateTransformer<TElement>() =>
         TypeDescriptor.GetConverter(typeof(TElement)) switch
         {
-            // ReSharper disable once SuspiciousTypeConversion.Global
             ITransformer<TElement> t => t,
 
             var t1 when t1.GetType() == typeof(TypeConverter) => throw new NotSupportedException(

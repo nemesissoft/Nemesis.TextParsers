@@ -1,13 +1,9 @@
 ﻿using System.Buffers;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
 using Nemesis.TextParsers.Utils;
 
-// ReSharper disable CommentTypo
 
-namespace Benchmarks
-{/*
+namespace Benchmarks;
+/*
 |                    Method | Size |          Mean | Ratio | Allocated |
 |-------------------------- |----- |--------------:|------:|----------:|
 |              StringConcat |    4 |      72.47 ns |  1.78 |     192 B |
@@ -50,181 +46,180 @@ namespace Benchmarks
 | ValueSequenceBuilderUsing | 1024 |   2,135.26 ns |  0.67 |    2072 B |
 |        ValueStringBuilder | 1024 |   2,134.57 ns |  0.67 |    2072 B |
 */
-    [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.Net60, baseline: true)]
-    [SimpleJob(RuntimeMoniker.Net70)]
-    [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
-    public class StringConcatBench
+[MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net60, baseline: true)]
+[SimpleJob(RuntimeMoniker.Net70)]
+[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
+public class StringConcatBench
+{
+    [Params(4, 16, 64, 256, 1024)]
+    public int Size { get; set; }
+
+    [Benchmark]
+    public string StringConcat()
     {
-        [Params(4, 16, 64, 256, 1024)]
-        public int Size { get; set; }
-
-        [Benchmark]
-        public string StringConcat()
-        {
-            string s = "";
-            for (char c = 'A'; c < 'A' + Size; c++)
-                s += c.ToString();
-            return s;
-        }
-
-        [Benchmark(Baseline = true)]
-        public string StringBuilderNew()
-        {
-            var sb = new StringBuilder(64);
-            for (char c = 'A'; c < 'A' + Size; c++)
-                sb.Append(c);
-            return sb.ToString();
-        }
-
-        private readonly StringBuilder _builderCache = new(64);
-        [Benchmark]
-        public string StringBuilderPool()
-        {
-            var sb = _builderCache;
-            sb.Length = 0;
-            for (char c = 'A'; c < 'A' + Size; c++)
-                sb.Append(c);
-            return sb.ToString();
-        }
-
-        private readonly StringBuilder _builderCacheLarge = new(1030);
-        [Benchmark]
-        public string StringBuilderPoolLarge()
-        {
-            var sb = _builderCacheLarge;
-            sb.Length = 0;
-            for (char c = 'A'; c < 'A' + Size; c++)
-                sb.Append(c);
-            return sb.ToString();
-        }
-
-        [Benchmark]
-        public string ValueSequenceBuilder()
-        {
-            Span<char> initialBuffer = stackalloc char[Math.Min(512, Size)];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-            for (char c = 'A'; c < 'A' + Size; c++)
-                accumulator.Append(c);
-
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
-        }
-
-        [Benchmark]
-        public string ValueSequenceBuilderUsing()
-        {
-            Span<char> initialBuffer = stackalloc char[Math.Min(512, Size)];
-            using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-            for (char c = 'A'; c < 'A' + Size; c++)
-                accumulator.Append(c);
-
-            return accumulator.AsSpan().ToString();
-        }
-
-        [Benchmark]
-        public string ValueSequenceBuilderAllocHalf()
-        {
-            Span<char> initialBuffer = stackalloc char[Math.Min(512, Size) >> 1];
-            var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-            for (char c = 'A'; c < 'A' + Size; c++)
-                accumulator.Append(c);
-
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
-        }
-
-        [Benchmark]
-        public string ValueStringBuilder()
-        {
-            Span<char> initialBuffer = stackalloc char[Math.Min(512, Size)];
-            var accumulator = new ValueStringBuilder(initialBuffer);
-
-            for (char c = 'A'; c < 'A' + Size; c++)
-                accumulator.Append(c);
-
-            var text = accumulator.AsSpan().ToString();
-            accumulator.Dispose();
-            return text;
-        }
+        string s = "";
+        for (char c = 'A'; c < 'A' + Size; c++)
+            s += c.ToString();
+        return s;
     }
 
-    public ref struct ValueStringBuilder
+    [Benchmark(Baseline = true)]
+    public string StringBuilderNew()
     {
-        private Span<char> _current;
+        var sb = new StringBuilder(64);
+        for (char c = 'A'; c < 'A' + Size; c++)
+            sb.Append(c);
+        return sb.ToString();
+    }
 
-        private char[] _arrayFromPool;
+    private readonly StringBuilder _builderCache = new(64);
+    [Benchmark]
+    public string StringBuilderPool()
+    {
+        var sb = _builderCache;
+        sb.Length = 0;
+        for (char c = 'A'; c < 'A' + Size; c++)
+            sb.Append(c);
+        return sb.ToString();
+    }
 
-        public int Length { get; private set; }
+    private readonly StringBuilder _builderCacheLarge = new(1030);
+    [Benchmark]
+    public string StringBuilderPoolLarge()
+    {
+        var sb = _builderCacheLarge;
+        sb.Length = 0;
+        for (char c = 'A'; c < 'A' + Size; c++)
+            sb.Append(c);
+        return sb.ToString();
+    }
 
-        public ref char this[int index] => ref _current[index];
+    [Benchmark]
+    public string ValueSequenceBuilder()
+    {
+        Span<char> initialBuffer = stackalloc char[Math.Min(512, Size)];
+        var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
-        public ValueStringBuilder(Span<char> initialSpan)
+        for (char c = 'A'; c < 'A' + Size; c++)
+            accumulator.Append(c);
+
+        var text = accumulator.AsSpan().ToString();
+        accumulator.Dispose();
+        return text;
+    }
+
+    [Benchmark]
+    public string ValueSequenceBuilderUsing()
+    {
+        Span<char> initialBuffer = stackalloc char[Math.Min(512, Size)];
+        using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+        for (char c = 'A'; c < 'A' + Size; c++)
+            accumulator.Append(c);
+
+        return accumulator.AsSpan().ToString();
+    }
+
+    [Benchmark]
+    public string ValueSequenceBuilderAllocHalf()
+    {
+        Span<char> initialBuffer = stackalloc char[Math.Min(512, Size) >> 1];
+        var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+        for (char c = 'A'; c < 'A' + Size; c++)
+            accumulator.Append(c);
+
+        var text = accumulator.AsSpan().ToString();
+        accumulator.Dispose();
+        return text;
+    }
+
+    [Benchmark]
+    public string ValueStringBuilder()
+    {
+        Span<char> initialBuffer = stackalloc char[Math.Min(512, Size)];
+        var accumulator = new ValueStringBuilder(initialBuffer);
+
+        for (char c = 'A'; c < 'A' + Size; c++)
+            accumulator.Append(c);
+
+        var text = accumulator.AsSpan().ToString();
+        accumulator.Dispose();
+        return text;
+    }
+}
+
+public ref struct ValueStringBuilder
+{
+    private Span<char> _current;
+
+    private char[] _arrayFromPool;
+
+    public int Length { get; private set; }
+
+    public ref char this[int index] => ref _current[index];
+
+    public ValueStringBuilder(Span<char> initialSpan)
+    {
+        _current = initialSpan;
+        _arrayFromPool = null;
+        Length = 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Append(char item)
+    {
+        int pos = Length;
+        if (pos >= _current.Length)
+            Grow();
+        _current[pos] = item;
+        Length = pos + 1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public char Pop() => _current[--Length];
+
+    /// <summary>
+    /// Return values written so far to underlying memory 
+    /// </summary>
+    public readonly ReadOnlySpan<char> AsSpan() => _current[..Length];
+
+    public readonly ReadOnlySpan<char> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
+
+    public readonly ReadOnlySpan<char> AsSpanTo(int length) => _current[..length];
+
+    public readonly ReadOnlySpan<char> AsSpanFrom(int start) => _current[start..Length];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Dispose()
+    {
+        if (_arrayFromPool != null)
         {
-            _current = initialSpan;
+            ArrayPool<char>.Shared.Return(_arrayFromPool);
             _arrayFromPool = null;
-            Length = 0;
         }
+        this = default;
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Append(char item)
-        {
-            int pos = Length;
-            if (pos >= _current.Length)
-                Grow();
-            _current[pos] = item;
-            Length = pos + 1;
-        }
+    public void Shrink(uint by = 1)
+    {
+        if (Length > 0)
+            Length -= (int)by;
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char Pop() => _current[--Length];
+    /// <summary>
+    /// Converts this instance to string. If underlying type <paramref name="{T}"/> is <see cref="System.Char"/> then it returns text written so far
+    /// </summary>
+    public override string ToString() => AsSpan().ToString();
 
-        /// <summary>
-        /// Return values written so far to underlying memory 
-        /// </summary>
-        public readonly ReadOnlySpan<char> AsSpan() => _current[..Length];
-
-        public readonly ReadOnlySpan<char> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
-
-        public readonly ReadOnlySpan<char> AsSpanTo(int length) => _current[..length];
-
-        public readonly ReadOnlySpan<char> AsSpanFrom(int start) => _current[start..Length];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-            if (_arrayFromPool != null)
-            {
-                ArrayPool<char>.Shared.Return(_arrayFromPool);
-                _arrayFromPool = null;
-            }
-            this = default;
-        }
-
-        public void Shrink(uint by = 1)
-        {
-            if (Length > 0)
-                Length -= (int)by;
-        }
-
-        /// <summary>
-        /// Converts this instance to string. If underlying type <paramref name="{T}"/> is <see cref="System.Char"/> then it returns text written so far
-        /// </summary>
-        public override string ToString() => AsSpan().ToString();
-
-        private void Grow()
-        {
-            var array = ArrayPool<char>.Shared.Rent(Math.Max(_current.Length * 2, 16));
-            _current.CopyTo(array);
-            char[] prevFromPool = _arrayFromPool;
-            _current = _arrayFromPool = array;
-            if (prevFromPool != null)
-                ArrayPool<char>.Shared.Return(prevFromPool);
-        }
+    private void Grow()
+    {
+        var array = ArrayPool<char>.Shared.Rent(Math.Max(_current.Length * 2, 16));
+        _current.CopyTo(array);
+        char[] prevFromPool = _arrayFromPool;
+        _current = _arrayFromPool = array;
+        if (prevFromPool != null)
+            ArrayPool<char>.Shared.Return(prevFromPool);
     }
 }

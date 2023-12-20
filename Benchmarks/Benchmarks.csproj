@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>	
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>	
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
@@ -33,11 +33,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Using Include="BenchmarkDotNet.Attributes" />
+		<Using Include="BenchmarkDotNet.Jobs" />
+		<Using Include="BenchmarkDotNet.Configs" />
+		<Using Include="BenchmarkDotNet.Diagnosers" />		
+		<Using Include="System.Globalization" />		
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
 	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-		<PackageReference Include="System.Memory" Version="4.5.3" />
-	</ItemGroup>
-
+	
 </Project>

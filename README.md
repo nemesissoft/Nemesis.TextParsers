@@ -106,7 +106,7 @@ But imagine a service application like exchange trading suite that has to perfor
 3. supports pattern based parsing/formatting via ToString/FromText methods placed inside type or static/instance factory 
 4. supports compound types:
    * KeyValuePair<,> and ValueTuple of any arity 
-   * Enums (with number underlying types)
+   * Enums (with underlying number types; code gen and reflection based)
    * Nullables
    * Dictionaries (built-in i.e. SortedDictionary/SortedList and custom ones)
    * Arrays (including jagged arrays)
@@ -145,12 +145,7 @@ using (var enumerator = coll.GetEnumerator())
         FormatElement(formatter, enumerator.Current, ref accumulator);
 return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0).ToString();
 ```
-11. use C# 9.0 code-gen to provide several transformers (currently automatic generation of deconstructable pattern, more to follow in future)
-
-
-## Funding
-Open source software is free to use but creating and maintaining is a laborious effort. Should you wish to support us in our noble endeavour, please consider the following donation methods:
-[![Donate using Liberapay](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/main/images/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
+11. usage of C# 9.0 code-gen (and Incremental Code Generators) to provide several transformers for common cases where parsing logic is straightforward
 
 
 ## Todo / road map
@@ -163,6 +158,12 @@ Open source software is free to use but creating and maintaining is a laborious 
 - [Documentation](https://github.com/nemesissoft/Nemesis.TextParsers/blob/main/Specification.md)
 - [NuGet Package](https://www.nuget.org/packages/Nemesis.TextParsers/)
 - [Release Notes](https://github.com/nemesissoft/Nemesis.TextParsers/releases)
+
+## Funding
+Open source software is free to use but creating and maintaining is a laborious effort. Should you wish to support us in our noble endeavour, please consider the following donation methods:
+[![Donate using Liberapay](https://raw.githubusercontent.com/nemesissoft/Nemesis.TextParsers/main/images/donate.svg)](https://liberapay.com/Michal.Brylka/donate) ![Liberapay receiving](https://img.shields.io/liberapay/receives/Michal.Brylka?color=blue&style=flat-square)
+
+If you just want to say thanks, you can [buy me a ☕](https://www.buymeacoffee.com/michalbryla) or ⭐ any of my repositories. 
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_large)

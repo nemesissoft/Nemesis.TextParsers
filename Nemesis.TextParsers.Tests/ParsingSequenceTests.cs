@@ -110,12 +110,9 @@ namespace Nemesis.TextParsers.Tests
         [TestCase("08", @"AAA|BB\\\B", "Illegal escape sequence found in input: 'B'")]
         [TestCase("09", @"\AAA|BB\\\B", "Illegal escape sequence found in input: 'A'")]
         [TestCase("10", @"\r", "Illegal escape sequence found in input: 'r'")]
-        public void List_Parse_NegativeTest(string _, string input, string expectedMessagePart)
-        {
-            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-            var ex = Assert.Throws<ArgumentException>(() => ParseCollection<string>(input).ToList());
-            Assert.That(ex.Message, Does.Contain(expectedMessagePart));
-        }
+        public void List_Parse_NegativeTest(string _, string input, string expectedMessagePart) =>
+            Assert.That(() => ParseCollection<string>(input).ToList(),
+                Throws.ArgumentException.And.Message.Contains(expectedMessagePart));
 
         [TestCaseSource(typeof(CollectionTestData), nameof(CollectionTestData.ListCompoundData))]
         public void List_Parse_CompoundTests((Type elementType, IEnumerable expectedList, string input) data)

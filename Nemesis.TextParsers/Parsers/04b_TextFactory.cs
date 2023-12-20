@@ -1,18 +1,14 @@
-﻿using JetBrains.Annotations;
+﻿#nullable enable
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
-public sealed class TextFactoryTransformerCreator : FactoryMethodTransformerCreator
+public sealed class TextFactoryTransformerCreator(FactoryMethodSettings settings) : FactoryMethodTransformerCreator(settings)
 {
-    public TextFactoryTransformerCreator([NotNull] FactoryMethodSettings settings)
-        : base(settings) { }
-
-    protected override Type GetFactoryMethodContainer(Type type)
+    protected override Type? GetFactoryMethodContainingType(Type type)
     {
-        Type factoryType = type.GetCustomAttribute<TextFactoryAttribute>()?.FactoryType;
+        var factoryType = type.GetCustomAttribute<TextFactoryAttribute>()?.FactoryType;
         if (factoryType == null) return null;
         if (factoryType.IsGenericTypeDefinition)
         {
@@ -44,12 +40,8 @@ public sealed class TextFactoryTransformerCreator : FactoryMethodTransformerCrea
         $"Create transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(ReadOnlySpan<char> or string)";
 }
 
-// ReSharper disable RedundantAttributeUsageProperty
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
-// ReSharper restore RedundantAttributeUsageProperty
-public sealed class TextFactoryAttribute : Attribute
+public sealed class TextFactoryAttribute(Type factoryType) : Attribute
 {
-    public Type FactoryType { get; }
-
-    public TextFactoryAttribute([NotNull] Type factoryType) => FactoryType = factoryType ?? throw new ArgumentNullException(nameof(factoryType));
+    public Type FactoryType { get; } = factoryType;
 }

@@ -2,9 +2,9 @@
 
 namespace Nemesis.TextParsers.CodeGen.Utils;
 
-//[Conditional("DEBUG")]
 static class DebuggerChecker
 {
+    [Conditional("DEBUG")]
     public static void CheckDebugger(this GeneratorExecutionContext context, string generatorName)
     {
         bool ShouldDebug(string optionName) =>
@@ -13,6 +13,5 @@ static class DebuggerChecker
 
         if (ShouldDebug("build_property.DebugSourceGenerators") || ShouldDebug($"build_property.Debug{generatorName}"))
             Debugger.Launch();
-
     }
 }

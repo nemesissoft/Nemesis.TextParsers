@@ -140,18 +140,20 @@ internal static partial class TestHelper
     }
 
 
-    public static void RoundTrip([NotNull] object instance, ITransformerStore store = null)
+    public static void RoundTrip([NotNull] object instance, ITransformerStore store = null) =>
+        RoundTrip(instance, (store ?? Sut.DefaultStore).GetTransformer(instance.GetType()));
+
+
+    public static void RoundTrip([NotNull] object instance, ITransformer sut = null)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-
-        var sut = (store ?? Sut.DefaultStore).GetTransformer(instance.GetType());
 
         var text = sut.FormatObject(instance);
 
         var parsed1 = sut.ParseObject(text);
         var parsed2 = sut.ParseObject(text);
         IsMutuallyEquivalent(parsed1, instance);
-        IsMutuallyEquivalent(parsed2, instance);
+        IsMutuallyEquivalent(parsed2, parsed1);
 
 
         var text3 = sut.FormatObject(parsed1);

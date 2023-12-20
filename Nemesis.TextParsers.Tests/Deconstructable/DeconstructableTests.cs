@@ -192,7 +192,6 @@ internal class DeconstructableTests
     public void ParseAndFormat_Recursive()
     {
         //currently cyclic dependencies are not supported but have a look at the following deconstructable 
-        // ReSharper disable StringLiteralTypo
         FormatAndParseHelper(new King("Mieszko I", new King("Bolesław I Chrobry", new King("Mieszko II Lambert", new King("Kazimierz I Odnowiciel", new King("Bolesław II Szczodry", (King)null))))),
             @"Mieszko I>Bolesław I Chrobry|Mieszko II Lambert|Kazimierz I Odnowiciel|Bolesław II Szczodry",
             s => s
@@ -234,7 +233,6 @@ internal class DeconstructableTests
                 .WithEscapingSequenceStart('/')
         );
 
-        // ReSharper restore StringLiteralTypo
     }
 
     [Test]

@@ -1,15 +1,11 @@
-﻿using JetBrains.Annotations;
+﻿#nullable enable
 using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
-public sealed class ConventionTransformerCreator : FactoryMethodTransformerCreator
+public sealed class ConventionTransformerCreator(FactoryMethodSettings settings) : FactoryMethodTransformerCreator(settings)
 {
-    public ConventionTransformerCreator([NotNull] FactoryMethodSettings settings)
-        : base(settings) { }
-
-    protected override Type GetFactoryMethodContainer(Type type) => type;
+    protected override Type GetFactoryMethodContainingType(Type type) => type;
 
     protected override MethodInfo PrepareParseMethod(MethodInfo method, Type elementType) => method;
 

@@ -133,7 +133,6 @@ internal readonly struct LargeStruct
     public BigInteger N12 { get; }
     public Complex N13 { get; }
 
-    // ReSharper disable once MemberCanBePrivate.Local
     public LargeStruct(double n1, float n2, int n3, uint n4, short n5, ushort n6, byte n7, sbyte n8,
         long n9, ulong n10, decimal n11, BigInteger n12, Complex n13)
     {
@@ -503,8 +502,6 @@ internal class RegionTransformer : CustomDeconstructionTransformer<Region>
 [UsedImplicitly]
 internal readonly struct NoDeconstruct
 {
-    // ReSharper disable once MemberCanBePrivate.Local
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
     public string Text { get; }
     public NoDeconstruct(string text) => Text = text;
 }
@@ -512,9 +509,7 @@ internal readonly struct NoDeconstruct
 [UsedImplicitly]
 internal readonly struct DeconstructWithoutMatchingCtor
 {
-    // ReSharper disable once UnassignedGetOnlyAutoProperty
     public string Text { get; }
-    // ReSharper disable once UnusedMember.Local
     public void Deconstruct(out string text) => text = Text;
 }
 
@@ -522,8 +517,6 @@ internal readonly struct DeconstructWithoutMatchingCtor
 internal readonly struct CtorAndDeCtorOutOfSync
 {
     public string Text { get; }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
-    // ReSharper disable once MemberCanBePrivate.Local
     public int Number { get; }
 
     public CtorAndDeCtorOutOfSync(string text, int number)
@@ -554,7 +547,6 @@ internal readonly struct NotCompatibleCtor
 [UsedImplicitly]
 internal readonly struct NotOutParam
 {
-    // ReSharper disable once MemberCanBePrivate.Local
     public string Text { get; }
 
     public NotOutParam(string text) => Text = text;
@@ -625,7 +617,6 @@ internal readonly struct StaticNotCompatibleCtor
 [UsedImplicitly]
 internal readonly struct StaticNotOutParam
 {
-    // ReSharper disable once MemberCanBePrivate.Local
     public string Text { get; }
 
     public StaticNotOutParam(string text) => Text = text;

@@ -33,8 +33,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.CodeGen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebDemo", "WebDemo\WebDemo.csproj", "{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.TextParsers.ArchTests", "Nemesis.TextParsers.ArchTests\Nemesis.TextParsers.ArchTests.csproj", "{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{07A21CBE-BC37-4086-ACB9-9D1F3DF0332E}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\ci.yml = .github\workflows\ci.yml
@@ -77,10 +75,6 @@ Global
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EC0AC278-C20E-43F9-916A-A5BAA702C9DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

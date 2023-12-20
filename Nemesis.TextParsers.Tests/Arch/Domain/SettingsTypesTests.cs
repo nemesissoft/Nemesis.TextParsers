@@ -1,6 +1,6 @@
 using ISettings = Nemesis.TextParsers.Settings.ISettings;
 
-namespace Nemesis.TextParsers.ArchTests.Domain;
+namespace Nemesis.TextParsers.Tests.Arch.Domain;
 
 [TestFixture]
 public class SettingsTypesTests

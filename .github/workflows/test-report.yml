@@ -1,4 +1,4 @@
-name: 'Test Report'
+﻿name: 'Test Report'
 on:
   workflow_run:
     workflows: ['CI']
@@ -11,10 +11,11 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-    - uses: dorny/test-reporter@v1
+    - name: 📊 tests results
+      uses: dorny/test-reporter@v1
       with:        
         artifact: 'TestResult'
-        name: "Tests results"
+        name: 📊 tests results
         reporter: dotnet-trx
         path: "**/*.trx"         
         fail-on-error: 'true'

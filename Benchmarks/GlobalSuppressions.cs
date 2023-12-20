@@ -13,3 +13,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Performance", "CA1829:Use Length/Count property instead of Count() when available", Justification = "Benchmark project. Changes needs to be intentional", Scope = "namespaceanddescendants", Target = "~N:Benchmarks")]
 [assembly: SuppressMessage("GeneratedRegex", "SYSLIB1045:Convert to 'GeneratedRegexAttribute'.", Justification = "Benchmark project. Changes needs to be intentional", Scope = "namespaceanddescendants", Target = "~N:Benchmarks")]
 [assembly: SuppressMessage("Performance", "CA1827:Do not use Count() or LongCount() when Any() can be used", Justification = "Benchmark project. Changes needs to be intentional", Scope = "namespaceanddescendants", Target = "~N:Benchmarks")]
+[assembly: SuppressMessage("Performance", "CA1860:Avoid using 'Enumerable.Any()' extension method", Justification = "Benchmark project. Changes needs to be intentional.", Scope = "member", Target = "~M:Benchmarks.Linq_Count_Vs_Any.Any_Array~System.Boolean")]
+
+[assembly: SuppressMessage("Performance", "", Justification = "Benchmark project. Changes needs to be intentional", Scope = "namespaceanddescendants", Target = "~N:Benchmarks")]

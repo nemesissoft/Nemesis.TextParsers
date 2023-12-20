@@ -9,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
-// ReSharper disable once CheckNamespace
 namespace Legacy
 {
     // The Parse methods provided by the numeric classes convert a

@@ -1,8 +1,4 @@
 ﻿using System.Buffers;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Reports;
 
 namespace Benchmarks;
 
@@ -27,18 +23,9 @@ Intel Core i7-8700 CPU 3.20GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical c
 | Count_Enumerable |  100 | 289.673 ns | 4.8053 ns | 4.2598 ns | baseline |         | 0.0062 |      40 B |             |
 |   Any_Enumerable |  100 |  19.083 ns | 0.1910 ns | 0.1693 ns |     -93% |    1.7% | 0.0063 |      40 B |         +0% |
 */
-[MemoryDiagnoser]
-//[SimpleJob(RuntimeMoniker.Net70)]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-[Config(typeof(Config))]
 public class Linq_Count_Vs_Any
 {
-    private class Config : ManualConfig
-    {
-        public Config() =>
-            SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage);
-    }
-
     private int[] _data;
 
     [Params(10, 100)]
@@ -54,6 +41,9 @@ public class Linq_Count_Vs_Any
     }
 
     [BenchmarkCategory("Array"), Benchmark(Baseline = true)]
+    public bool Length_Array() => _data.Length > 0;
+
+    [BenchmarkCategory("Array"), Benchmark]
     public bool Count_Array() => _data.Count() > 0;
 
     [BenchmarkCategory("Array"), Benchmark]
@@ -89,18 +79,9 @@ public class Linq_Count_Vs_Any
 |   Count_Enumerable |  100 | 608.032 ns | 3.2091 ns | 3.0018 ns |    +153% |    0.7% | 0.0200 |     128 B |       +220% |
 |     Any_Enumerable |  100 | 309.636 ns | 2.7584 ns | 2.5802 ns |     +29% |    0.9% | 0.0200 |     128 B |       +220% |
 */
-[MemoryDiagnoser]
-//[SimpleJob(RuntimeMoniker.Net70)]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-[Config(typeof(Config))]
 public class Linq_Count_Vs_Any_WithPredicate
 {
-    private class Config : ManualConfig
-    {
-        public Config() =>
-            SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage);
-    }
-
     private int[] _data;
 
     [Params(10, 100)]

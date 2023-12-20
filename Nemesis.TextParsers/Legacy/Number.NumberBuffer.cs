@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// ReSharper disable once CheckNamespace
 namespace Legacy
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]

@@ -2,10 +2,11 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net7.0;net6.0;net48;net462</TargetFrameworks>
+		<IsTestProject>true</IsTestProject>
 
 		<!--Be able to browse generated files-->
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+		<CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>		
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,25 +17,40 @@
 
 	<ItemGroup>
 		<PackageReference Include="Nemesis.Essentials" />
-
-		<PackageReference Include="AutoFixture" />
-		<PackageReference Include="FluentAssertions" />
-
-
+		
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="NUnit.Analyzers" />
+		<PackageReference Include="AutoFixture" />
+		<PackageReference Include="FluentAssertions" />
 
 
 		<PackageReference Include="System.Memory" />
-		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />		
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+
+		
+		<PackageReference Include="System.Text.Json" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
 	</ItemGroup>
 
 
 	<ItemGroup>
 		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
+		<ProjectReference Include="..\Nemesis.TextParsers.CodeGen\Nemesis.TextParsers.CodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AssemblyAttribute Include="NUnit.Framework.Parallelizable">
+			<_Parameter1>NUnit.Framework.ParallelScope.Fixtures</_Parameter1>
+			<_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+		</AssemblyAttribute>
+
+		<AssemblyAttribute Include="NUnit.Framework.LevelOfParallelism">
+			<_Parameter1>3</_Parameter1>
+			<_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 </Project>

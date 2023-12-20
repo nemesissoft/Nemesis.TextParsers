@@ -1,8 +1,4 @@
 ﻿using System.Buffers;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Reports;
 
 namespace Benchmarks;
 
@@ -27,18 +23,9 @@ Intel Core i7-8700 CPU 3.20GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical c
 |                          |      |           |          |          |          |         |        |           |             |
 | WhereAndFirst_Enumerable |  100 | 354.49 ns | 4.052 ns | 3.790 ns | baseline |         | 0.0291 |     184 B |             |
 |         First_Enumerable |  100 | 332.65 ns | 1.550 ns | 1.294 ns |      -6% |    1.1% | 0.0200 |     128 B |        -30% |*/
-[MemoryDiagnoser]
-//[SimpleJob(RuntimeMoniker.Net70)]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-[Config(typeof(Config))]
 public class Linq_WhereAndFirst_Vs_First
 {
-    private class Config : ManualConfig
-    {
-        public Config() =>
-            SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage);
-    }
-
     private int[] _data;
 
     [Params(10, 100)]

@@ -9,7 +9,7 @@ using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
 [TestFixture]
-public class AutoDeconstructable_Diagnostics
+partial class AutoDeconstructableTests
 {
     [TestCase("""
         namespace Tests;
@@ -32,7 +32,7 @@ public class AutoDeconstructable_Diagnostics
     [Test]
     public void DiagnosticsRemoval_LackOfAutoAttribute_EndToEnd() => Assert.Multiple(() =>
     {
-        foreach (var (_, source, _) in EndToEndCases.GetAutoDeconstructableCases())
+        foreach (var (_, source, _) in GetAutoDeconstructableCases())
         {
             DiagnosticsRemoval_LackOfAutoAttribute(source);
         }

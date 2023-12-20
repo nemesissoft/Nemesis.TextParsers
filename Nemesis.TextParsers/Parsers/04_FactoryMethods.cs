@@ -1,32 +1,25 @@
-﻿using JetBrains.Annotations;
+﻿#nullable enable
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
+public abstract class FactoryMethodTransformerCreator(FactoryMethodSettings settings) : ICanCreateTransformer
 {
-    private readonly FactoryMethodSettings _settings;
-    protected readonly string FactoryMethodName;
-
-    protected FactoryMethodTransformerCreator([NotNull] FactoryMethodSettings settings)
-    {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        FactoryMethodName = _settings.FactoryMethodName;
-    }
-
+    private readonly FactoryMethodSettings _settings = settings;
+    protected readonly string FactoryMethodName = settings.FactoryMethodName;
 
     public ITransformer<TElement> CreateTransformer<TElement>() => GetTransformer<TElement>();
 
     public bool CanHandle(Type type) =>
-        GetFactoryMethodContainer(type) is { } containerType &&
+        GetFactoryMethodContainingType(type) is { } containerType &&
         containerType.GetMethods(STATIC_MEMBER_FLAGS).Any(m => FactoryMethodPredicate(m, type, FactoryMethodName));
 
 
-    private Func<TElement> GetPropertyValueProvider<TElement>(string propertyName)
+    private Func<TElement>? GetPropertyValueProvider<TElement>(string propertyName)
     {
         var elementType = typeof(TElement);
-        Type factoryMethodContainer = GetFactoryMethodContainer(elementType);
+        var factoryMethodContainer = GetFactoryMethodContainingType(elementType);
 
 
         if (factoryMethodContainer != null &&
@@ -46,7 +39,7 @@ public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
 
 
 
-    protected abstract Type GetFactoryMethodContainer(Type type);
+    protected abstract Type? GetFactoryMethodContainingType(Type type);
     public abstract sbyte Priority { get; }
     protected abstract MethodInfo PrepareParseMethod(MethodInfo method, Type elementType);
 
@@ -56,18 +49,19 @@ public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
         var elementType = typeof(TElement);
 
 
-        var formatterType = typeof(IFormattable).IsAssignableFrom(elementType)
+        var formatterType = (
+            typeof(IFormattable).IsAssignableFrom(elementType)
             ? typeof(FormattableFormatter<>)
-            : typeof(NormalFormatter<>);
-        formatterType = formatterType.MakeGenericType(elementType);
-        var formatter = (IFormatter<TElement>)Activator.CreateInstance(formatterType);
+            : typeof(NormalFormatter<>)
+            ).MakeGenericType(elementType);
+        if (Activator.CreateInstance(formatterType) is not IFormatter<TElement> formatter)
+            throw new ArgumentNullException($"Cannot create instance of '{formatterType}'");
 
-        Func<TElement> emptyValueProvider = GetPropertyValueProvider<TElement>(_settings.EmptyPropertyName);
-        Func<TElement> nullValueProvider = GetPropertyValueProvider<TElement>(_settings.NullPropertyName);
+        var emptyValueProvider = GetPropertyValueProvider<TElement>(_settings.EmptyPropertyName);
+        var nullValueProvider = GetPropertyValueProvider<TElement>(_settings.NullPropertyName);
 
 
-
-        Type factoryMethodContainer = GetFactoryMethodContainer(elementType)
+        Type factoryMethodContainer = GetFactoryMethodContainingType(elementType)
              ?? throw new InvalidOperationException($"Missing factory declaration for {elementType.GetFriendlyName()}");
 
         var conversionMethods = factoryMethodContainer.GetMethods(STATIC_MEMBER_FLAGS)
@@ -95,7 +89,7 @@ public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
             : new SpanFactoryTransformer<TElement>(body, inputParameter, formatter, emptyValueProvider, nullValueProvider);
 
 
-        MethodInfo FindMethodWithParameterType(Type paramType) =>
+        MethodInfo? FindMethodWithParameterType(Type paramType) =>
             conversionMethods.FirstOrDefault(m =>
                 m.GetParameters() is { Length: 1 } @params && @params[0].ParameterType == paramType);
     }
@@ -121,13 +115,14 @@ public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
     {
         private readonly string _description;
         private readonly IFormatter<TElement> _formatter;
-        private readonly Func<TElement> _emptyValueProvider;
-        private readonly Func<TElement> _nullValueProvider;
+        private readonly Func<TElement>? _emptyValueProvider;
+        private readonly Func<TElement>? _nullValueProvider;
 
-        protected FactoryTransformer(Expression body, [NotNull] IFormatter<TElement> formatter, Func<TElement> emptyValueProvider, Func<TElement> nullValueProvider)
+        protected FactoryTransformer(Expression body, IFormatter<TElement> formatter,
+            Func<TElement>? emptyValueProvider, Func<TElement>? nullValueProvider)
         {
             _description = $"Parse {typeof(TElement).GetFriendlyName()} using {GetMethodName(body)}";
-            _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            _formatter = formatter;
             _emptyValueProvider = emptyValueProvider;
             _nullValueProvider = nullValueProvider;
         }
@@ -154,7 +149,7 @@ public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
             };
 
             return
-                $"{method.DeclaringType.GetFriendlyName()}.{method.Name}({string.Join(", ", method.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})";
+                $"{method.DeclaringType?.GetFriendlyName()}.{method.Name}({string.Join(", ", method.GetParameters().Select(p => p.ParameterType.GetFriendlyName()))})";
         }
 
         public sealed override string ToString() => _description;
@@ -162,29 +157,29 @@ public abstract class FactoryMethodTransformerCreator : ICanCreateTransformer
 
     private sealed class StringFactoryTransformer<TElement> : FactoryTransformer<TElement>
     {
-        private readonly Func<string, TElement> _delegate;
+        private readonly Func<string, TElement> _parserDelegate;
 
         public StringFactoryTransformer(Expression body, ParameterExpression inputParameter, IFormatter<TElement> formatter,
-                                        Func<TElement> emptyValueProvider, Func<TElement> nullValueProvider)
+                                        Func<TElement>? emptyValueProvider, Func<TElement>? nullValueProvider)
             : base(body, formatter, emptyValueProvider, nullValueProvider)
-            => _delegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
+            => _parserDelegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
 
         protected override TElement ParseCore(in ReadOnlySpan<char> input) =>
-            _delegate(input.ToString());
+            _parserDelegate(input.ToString());
 
-        protected override TElement ParseText(string text) => _delegate(text);
+        protected override TElement ParseText(string text) => _parserDelegate(text);
     }
 
     private sealed class SpanFactoryTransformer<TElement> : FactoryTransformer<TElement>
     {
         private delegate TElement ParserDelegate(ReadOnlySpan<char> input);
-        private readonly ParserDelegate _delegate;
+        private readonly ParserDelegate _parserDelegate;
 
         public SpanFactoryTransformer(Expression body, ParameterExpression inputParameter, IFormatter<TElement> formatter,
-                                      Func<TElement> emptyValueProvider, Func<TElement> nullValueProvider)
+                                      Func<TElement>? emptyValueProvider, Func<TElement>? nullValueProvider)
             : base(body, formatter, emptyValueProvider, nullValueProvider)
-            => _delegate = Expression.Lambda<ParserDelegate>(body, inputParameter).Compile();
+            => _parserDelegate = Expression.Lambda<ParserDelegate>(body, inputParameter).Compile();
 
-        protected override TElement ParseCore(in ReadOnlySpan<char> input) => _delegate(input);
+        protected override TElement ParseCore(in ReadOnlySpan<char> input) => _parserDelegate(input);
     }
 }
