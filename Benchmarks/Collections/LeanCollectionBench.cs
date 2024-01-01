@@ -1,13 +1,10 @@
-﻿using BenchmarkDotNet.Attributes;
-
-using Nemesis.TextParsers.Utils;
+﻿using Nemesis.TextParsers.Utils;
 
 using Input = Benchmarks.BenchmarkInput<int[]>;
-// ReSharper disable CommentTypo
 
-namespace Benchmarks
-{
-    /*
+namespace Benchmarks.Collections;
+
+/*
 |       Method |               Source |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |------------- |--------------------- |----------:|---------:|---------:|------:|--------:|-------:|------:|------:|----------:|
 |      LeanSum |                 [10] |  32.16 ns | 0.219 ns | 0.205 ns |  1.00 |    0.00 |      - |     - |     - |         - |
@@ -35,92 +32,89 @@ namespace Benchmarks
 | LINQ_LeanSum | [140,(...), 10] [61] | 135.45 ns | 1.977 ns | 1.544 ns |  2.30 |    0.03 | 0.0138 |     - |     - |      88 B |
 | LINQ_ListSum | [140,(...), 10] [61] | 153.95 ns | 2.360 ns | 2.208 ns |  2.62 |    0.04 | 0.0241 |     - |     - |     152 B |
 */
-    [MemoryDiagnoser/*, GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)*/]
-    public class LeanCollectionSum
+//[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
+public class LeanCollectionSum
+{
+    [ParamsSource(nameof(Sources))]
+    public Input Source { get; set; }
+
+    public IEnumerable<Input> Sources => new[]
     {
-        [ParamsSource(nameof(Sources))]
-        public Input Source { get; set; }
-
-        public IEnumerable<Input> Sources => new[]
-        {
-            new Input([10]),
-            new Input([20, 10]),
-            new Input([30, 20, 10]),
-            new Input([90, 80, 70, 60, 50, 40, 30, 20, 10]),
-            new Input([140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10]),
-        };
+        new Input([10]),
+        new Input([20, 10]),
+        new Input([30, 20, 10]),
+        new Input([90, 80, 70, 60, 50, 40, 30, 20, 10]),
+        new Input([140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10]),
+    };
 
 
-        /*[BenchmarkCategory("Sum"), Benchmark]
-        public int NativeSum()
-        {
-            int sum = 0;
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            // ReSharper disable once ForCanBeConvertedToForeach
-            for (int i = 0; i < Source.Value.Length; i++)
-                sum += Source[i];
-            return sum;
-        }*/
+    /*[BenchmarkCategory("Sum"), Benchmark]
+    public int NativeSum()
+    {
+        int sum = 0;
+                        for (int i = 0; i < Source.Value.Length; i++)
+            sum += Source[i];
+        return sum;
+    }*/
 
-        [BenchmarkCategory("Sum"), Benchmark(Baseline = true)]
-        public int LeanSum()
-        {
-            var coll = LeanCollectionFactory.FromArray(Source.Value);
+    [BenchmarkCategory("Sum"), Benchmark(Baseline = true)]
+    public int LeanSum()
+    {
+        var coll = LeanCollectionFactory.FromArray(Source.Value);
 
-            var sum = 0;
-            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var i in coll)
-                sum += i;
+        var sum = 0;
+        foreach (var i in coll)
+            sum += i;
 
-            return sum;
-        }
-
-        /*[BenchmarkCategory("Sum"), Benchmark]
-        public int LeanSumIEnumerable()
-        {
-            var coll = LeanCollectionFactory.FromArray(Source.Value);
-
-            using var enumerator = ((IEnumerable<int>)coll).GetEnumerator();
-            if (!enumerator.MoveNext()) return 0;
-
-            int sum = 0;
-            do
-                sum += enumerator.Current;
-            while (enumerator.MoveNext());
-
-            return sum;
-        }*/
-
-        [BenchmarkCategory("Sum"), Benchmark]
-        public int ListSum()
-        {
-            var coll = new List<int>(Source.Value);
-
-            int sum = 0;
-            foreach (int i in coll)
-                sum += i;
-
-            return sum;
-        }
-
-        [BenchmarkCategory("Sum"), Benchmark]
-        public int LINQ_LeanSum()
-        {
-            var coll = LeanCollectionFactory.FromArray(Source.Value);
-
-            return coll.Sum();
-        }
-
-        [BenchmarkCategory("Sum"), Benchmark]
-        public int LINQ_ListSum()
-        {
-            var coll = new List<int>(Source.Value);
-
-            return coll.Sum();
-        }
+        return sum;
     }
 
-    /*
+    /*[BenchmarkCategory("Sum"), Benchmark]
+    public int LeanSumIEnumerable()
+    {
+        var coll = LeanCollectionFactory.FromArray(Source.Value);
+
+        using var enumerator = ((IEnumerable<int>)coll).GetEnumerator();
+        if (!enumerator.MoveNext()) return 0;
+
+        int sum = 0;
+        do
+            sum += enumerator.Current;
+        while (enumerator.MoveNext());
+
+        return sum;
+    }*/
+
+    [BenchmarkCategory("Sum"), Benchmark]
+    public int ListSum()
+    {
+        var coll = new List<int>(Source.Value);
+
+        int sum = 0;
+        foreach (int i in coll)
+            sum += i;
+
+        return sum;
+    }
+
+    [BenchmarkCategory("Sum"), Benchmark]
+    public int LINQ_LeanSum()
+    {
+        var coll = LeanCollectionFactory.FromArray(Source.Value);
+
+        return coll.Sum();
+    }
+
+    [BenchmarkCategory("Sum"), Benchmark]
+    public int LINQ_ListSum()
+    {
+        var coll = new List<int>(Source.Value);
+
+        return coll.Sum();
+    }
+}
+
+/*
 |   Method |               Source |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |--------- |--------------------- |----------:|---------:|---------:|------:|--------:|-------:|------:|------:|----------:|
 | LeanSort |                 [10] |  24.58 ns | 0.148 ns | 0.138 ns |  1.00 |    0.00 |      - |     - |     - |         - |
@@ -137,41 +131,40 @@ namespace Benchmarks
 |          |                      |           |          |          |       |         |        |       |       |           |
 | LeanSort | [140,(...), 10] [61] |  70.24 ns | 0.662 ns | 0.587 ns |  1.00 |    0.00 |      - |     - |     - |         - |
 | ListSort | [140,(...), 10] [61] | 150.32 ns | 1.558 ns | 1.458 ns |  2.14 |    0.03 | 0.0176 |     - |     - |     112 B |
-     */
-    [MemoryDiagnoser]
-    public class LeanCollectionSort
+ */
+[MemoryDiagnoser]
+public class LeanCollectionSort
+{
+    [ParamsSource(nameof(Sources))]
+    public Input Source { get; set; }
+
+    public IEnumerable<Input> Sources => new[]
     {
-        [ParamsSource(nameof(Sources))]
-        public Input Source { get; set; }
-
-        public IEnumerable<Input> Sources => new[]
-        {
-            new Input(new[] {10}),
-            new Input(new[] {20, 10}),
-            new Input(new[] {30, 20, 10}),
-            new Input(new[] {90, 80, 70, 60, 50, 40, 30, 20, 10}),
-            new Input(new[] {140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10}),
-        };
+        new Input([10]),
+        new Input([20, 10]),
+        new Input([30, 20, 10]),
+        new Input([90, 80, 70, 60, 50, 40, 30, 20, 10]),
+        new Input([140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10]),
+    };
 
 
-        [BenchmarkCategory("Sort"), Benchmark(Baseline = true)]
-        public int LeanSort()
-        {
-            var coll = LeanCollectionFactory.FromArray(Source.Value);
+    [BenchmarkCategory("Sort"), Benchmark(Baseline = true)]
+    public int LeanSort()
+    {
+        var coll = LeanCollectionFactory.FromArray(Source.Value);
 
-            coll = ((IListOperations<int>)coll).Sort();
+        coll = ((IListOperations<int>)coll).Sort();
 
-            return coll.Size;
-        }
+        return coll.Size;
+    }
 
-        [BenchmarkCategory("Sort"), Benchmark]
-        public int ListSort()
-        {
-            var coll = new List<int>(Source.Value);
+    [BenchmarkCategory("Sort"), Benchmark]
+    public int ListSort()
+    {
+        var coll = new List<int>(Source.Value);
 
-            coll.Sort();
+        coll.Sort();
 
-            return coll.Count;
-        }
+        return coll.Count;
     }
 }

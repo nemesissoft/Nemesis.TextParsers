@@ -266,7 +266,7 @@ public sealed class ExploratoryTests
                     ? inner
                     : e;
 
-                failed.Add($"Case {caseNo:000} {ex.Message}");
+                failed.Add($"Case {caseNo:000}: {ex}");
             }
 
         if (failed.Count > 0)

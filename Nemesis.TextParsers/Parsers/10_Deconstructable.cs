@@ -190,10 +190,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
     public ITransformer<TDeconstructable> ToTransformer<TDeconstructable>()
     {
-        // ReSharper disable ArgumentsStyleNamedExpression
-        var helper = new TupleHelper(tupleDelimiter: Delimiter, nullElementMarker: NullElementMarker,
-            escapingSequenceStart: EscapingSequenceStart, tupleStart: Start, tupleEnd: End);
-        // ReSharper restore ArgumentsStyleNamedExpression
+        var helper = new TupleHelper(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
 
         MethodInfo deconstruct;
         ConstructorInfo ctor;
@@ -261,12 +258,10 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                 )
             ).Where(sp => !sp.IsSupported);
 
-            // ReSharper disable PossibleMultipleEnumeration
             if (notSupportedParams.Any())
                 throw new NotSupportedException(
                     $@"Static {DECONSTRUCT} method must have all parameter types be recognizable by TransformerStore. Not supported types:
 {string.Join(", ", notSupportedParams.Select(sp => FlattenRef(sp.Type).GetFriendlyName()))}");
-            // ReSharper restore PossibleMultipleEnumeration
         }
         else
         {
@@ -287,12 +282,10 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
                     )
                 ).Where(sp => !sp.IsSupported);
 
-            // ReSharper disable PossibleMultipleEnumeration
             if (notSupportedParams.Any())
                 throw new NotSupportedException(
                     $@"Instance {DECONSTRUCT} method must have all parameter types be recognizable by TransformerStore. Not supported types:
 {string.Join(", ", notSupportedParams.Select(sp => FlattenRef(sp.Type).GetFriendlyName()))}");
-            // ReSharper restore PossibleMultipleEnumeration
         }
     }
 
@@ -302,7 +295,6 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
     {
         bool AreEqualByParamTypes()
         {
-            // ReSharper disable once LoopCanBeConvertedToQuery
             for (var i = 0; i < left.Count; i++)
                 if (FlattenRef(left[i].ParameterType)
                     !=
@@ -609,7 +601,6 @@ public abstract class CustomDeconstructionTransformer<TDeconstructable> : Transf
     {
         if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
         var builder = Builder.GetDefault(transformerStore);
-        // ReSharper disable once VirtualMemberCallInConstructor
         builder = BuildSettings(builder);
 
         _transformer = builder.ToTransformer<TDeconstructable>();

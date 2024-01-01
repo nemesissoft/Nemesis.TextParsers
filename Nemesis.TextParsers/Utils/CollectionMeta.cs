@@ -95,7 +95,7 @@ public readonly struct CollectionMeta : IEquatable<CollectionMeta>
                 null => default,
                 IFormattable formattable when typeof(TDest) == typeof(string) =>
                 (TDest)(object)formattable.ToString(null, CultureInfo.InvariantCulture),
-                _ => (TDest)TypeMeta.GetDefault(typeof(TDest))
+                _ => (TDest?)TypeMeta.GetDefault(typeof(TDest))
             };
         }
         catch (FormatException) { return default; }
@@ -178,15 +178,25 @@ internal static class CollectionMetaHelper
 
     private static readonly HashSet<Type> _supportedCollectionTypes =
     [
-        typeof(IEnumerable<>), typeof(ICollection<>), typeof(IList<>), typeof(List<>),
+        typeof(IEnumerable<>),
+        typeof(ICollection<>),
+        typeof(IList<>),
+        typeof(List<>),
 
-        typeof(IReadOnlyCollection<>), typeof(IReadOnlyList<>), typeof(ReadOnlyCollection<>),
+        typeof(IReadOnlyCollection<>),
+        typeof(IReadOnlyList<>),
+        typeof(ReadOnlyCollection<>),
 
-        typeof(ISet<>), typeof(SortedSet<>), typeof(HashSet<>),
+        typeof(ISet<>),
+        typeof(SortedSet<>),
+        typeof(HashSet<>),
 
-        typeof(LinkedList<>), typeof(Stack<>), typeof(Queue<>),
+        typeof(LinkedList<>),
+        typeof(Stack<>),
+        typeof(Queue<>),
 
-        typeof(ObservableCollection<>), typeof(ReadOnlyObservableCollection<>),
+        typeof(ObservableCollection<>),
+        typeof(ReadOnlyObservableCollection<>),
     ];
 
     public static bool IsTypeSupported(Type collectionType) =>

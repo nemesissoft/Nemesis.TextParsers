@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="System.Memory"  />
+		<PackageReference Include="System.Memory" />
 	</ItemGroup>
 
 	<!--Legacy off-->

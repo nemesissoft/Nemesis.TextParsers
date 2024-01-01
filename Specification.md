@@ -79,7 +79,11 @@ User can register his own transformer. More on this topic in [Transformables](#t
 (legacy) It is possible to use type's ```ToString``` method for formatting and static ```FromText(ReadOnlySpan<char> text)``` or ```FromText(string text)``` method for parsing. If given entity's code is not owned at parsing point, it's possible to provide separate FactoryMethod transformer 
 
 ### Enums 
-By default, enums are parsed with case insensitive parser and numbers are allowed but format can be customized using settings
+By default, enums are parsed with case insensitive parser and numbers are allowed but format can be customized using settings. 
+Enums are parsed using Expression Trees but can also be parsed using [source code generators](https://github.com/dotnet/roslyn/blob/main/docs/features/incremental-generators.md). 
+More on that [below](#source-code-generators)
+
+
 
 ### Nullable (compound parser)
 Values formatted using internal value parser, empty string is parsed as "no value"/null
@@ -153,6 +157,9 @@ internal class CustomListTransformer<TElement> : TransformerBase<ICustomList<TEl
 
 ## Deconstructables
 Study how the following code presents features and possibilities of **Deconstructables** aspect
+<details>
+<summary>Source code for Deconstructables aspect</summary>
+
 ```csharp
 //1. type can be truly immutable 💪
 readonly struct Address
@@ -238,6 +245,7 @@ internal readonly struct Child
     public override string ToString() => $"{nameof(Age)}: {Age}, {nameof(Weight)}: {Weight}";
 }
 ```
+</details>
 
 ## Settings
 User can use default parsing/formatting settings or opt-in with own settings instances or overridden ones. Settings need to extend ```ISettings``` interface. Entry point is ```SettingsStore``` class that can be constructed easily using ```SettingsStoreBuilder```:
@@ -262,6 +270,64 @@ var borderedDictionary = DictionarySettings.Default with
 __with__ keyword is analogous to With-pattern known from functional languages:
 [Copy and Update Record Expressions](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/copy-and-update-record-expressions)
 
+## Infrastructure
+For most cases using default transformers store of `TextTransformer.Default` is most convenient. 
+In case one would need more customizations is is recommended to implement something similar to this for own application (or use non-static class and inject `ITransformerStore` dependency):
+<details>
+<summary>Source code for FlatTextSerializer</summary>
+
+```csharp
+using Nemesis.TextParsers;
+using Nemesis.TextParsers.Settings;
+
+internal static class FlatTextSerializer
+{
+    public static ITransformerStore DefaultStore { get; } = TextTransformer.Default;
+    public static ITransformerStore BorderedStore { get; } = BuildBorderedStore();
+
+    private static ITransformerStore BuildBorderedStore()
+    {
+        //F# influenced settings 
+        var borderedDictionary = DictionarySettings.Default
+                .With(s => s.Start, '{')
+                .With(s => s.End, '}')
+                .With(s => s.DictionaryKeyValueDelimiter, ',')
+            ;
+        var borderedCollection = CollectionSettings.Default
+                .With(s => s.Start, '[')
+                .With(s => s.End, ']')
+                .With(s => s.ListDelimiter, ';')
+            ;
+        var borderedArray = ArraySettings.Default
+                .With(s => s.ListDelimiter, ',')
+                .With(s => s.Start, '|')
+                .With(s => s.End, '|')
+            ;
+        var weirdTuple = ValueTupleSettings.Default
+                .With(s => s.NullElementMarker, '␀')
+                .With(s => s.Delimiter, '⮿')
+                .With(s => s.Start, '/')
+                .With(s => s.End, '/')
+            ;
+        var borderedStore = SettingsStoreBuilder.GetDefault()
+            .AddOrUpdate(borderedArray)
+            .AddOrUpdate(borderedCollection)
+            .AddOrUpdate(borderedDictionary)
+            .AddOrUpdate(weirdTuple)
+            .Build();
+
+        return TextTransformer.GetDefaultStoreWith(borderedStore);
+    }
+
+    public static ITransformer<TElement> GetTransformer<TElement>()
+        => DefaultStore.GetTransformer<TElement>();
+
+    public static ITransformer GetTransformer(Type type)
+        => DefaultStore.GetTransformer(type);
+}
+```
+
+</details>
 
 ## C# 9.0 Records
 With introduction of [Records](https://devblogs.microsoft.com/dotnet/welcome-to-c-9-0/#records) in C# 9.0 one may wonder how they might be serialized to flat text formats. 
@@ -306,11 +372,112 @@ Since records contain appropriate constructor/deconstructor, one can use [Decons
 Finally, you can implement own _`Nemesis.TextParsers.ITransformer<TElement>`_ or (if you really have no other option) _`System.ComponentModel.TypeConverter`_ class
 
 
-## C# 9.0 Code generation
-With introduction of new code-gen engine, you can opt to have your transformer generated automatically without any imperative code.
-```csharp 
-// add <PackageReference Include="Nemesis.TextParsers.CodeGen" Version="VERSION" /> to csproj
+## Source code generators
+With introduction of new code-gen engine (C# 9 with later enhancements in C# 10), you can opt to have your transformer generated automatically without any imperative code.
+For it to work add the following package:
+[![Nuget](https://img.shields.io/nuget/v/Nemesis.TextParsers.CodeGen.svg?style=flat-square&logo=nuget&label=Nemesis.TextParsers.CodeGen&color=purple)](https://www.nuget.org/packages/Nemesis.TextParsers.CodeGen/)
+Either to csproj:
+```xml
+<PackageReference Include="Nemesis.TextParsers.CodeGen" Version="VERSION" />
+```
+or via command line:
+```powershell
+Install-Package Nemesis.TextParsers.CodeGen
+```
 
+### Enums code generator
+It is enough to annotate enum with 2 attributes:
+```csharp
+[Auto.AutoEnumTransformer(
+    //1. optionally pass parser settings
+    CaseInsensitive = true, AllowParsingNumerics = true, 
+    //2. TransformerClassName can be left blank. In that case the name of enum is used with "Transformer" suffix
+    TransformerClassName = "MonthCodeGenTransformer",
+    //3. optionally pass namespace to generate the transformer class within. If not provided the namespace of the enum will be used
+    TransformerClassNamespace = "ABC"
+)]
+//4. decorate enum with TransformerAttribute that points to automatically generated transformer
+[Transformer(typeof(ABC.MonthCodeGenTransformer))]
+public enum Month : byte
+{
+    None = 0,
+    January = 1, February = 2, March = 3,
+    April = 4, May = 5, June = 6,
+    July = 7, August = 8, September = 9,
+    October = 10, November = 11, December = 12
+}
+```
+This in turn generates the following parser using best practices (some lines are ommited for brevity):
+
+<details>
+<summary>Source code for generated parser</summary>
+
+```csharp
+public sealed class MonthCodeGenTransformer : TransformerBase<Nemesis.TextParsers.CodeGen.Sample.Month>
+{
+    public override string Format(Nemesis.TextParsers.CodeGen.Sample.Month element) => element switch
+    {
+        Nemesis.TextParsers.CodeGen.Sample.Month.None => nameof(Nemesis.TextParsers.CodeGen.Sample.Month.None),
+        Nemesis.TextParsers.CodeGen.Sample.Month.January => nameof(Nemesis.TextParsers.CodeGen.Sample.Month.January),
+        
+        // ...
+
+        Nemesis.TextParsers.CodeGen.Sample.Month.December => nameof(Nemesis.TextParsers.CodeGen.Sample.Month.December),
+        _ => element.ToString("G"),
+    };
+
+    protected override Nemesis.TextParsers.CodeGen.Sample.Month ParseCore(in ReadOnlySpan<char> input) =>
+        input.IsWhiteSpace() ? default : (Nemesis.TextParsers.CodeGen.Sample.Month)ParseElement(input);
+
+    private static byte ParseElement(ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty || input.IsWhiteSpace()) return default;
+        input = input.Trim();
+        if (IsNumeric(input) && byte.TryParse(input
+#if NETFRAMEWORK
+    .ToString() //legacy frameworks do not support parsing from ReadOnlySpan<char>
+#endif
+            , out var number))
+            return number;
+        else
+            return ParseName(input);
+
+
+        static bool IsNumeric(ReadOnlySpan<char> input) =>
+            input.Length > 0 && input[0] is var first &&
+            (char.IsDigit(first) || first is '-' or '+');    
+    }
+
+    private static byte ParseName(ReadOnlySpan<char> input)
+    {    
+        if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.None)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.None;            
+
+        else if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.January)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.January;            
+
+        else if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.February)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.February;            
+
+        // ...         
+
+        else if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.December)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.December;            
+
+        else throw new FormatException(@$"Enum of type 'Nemesis.TextParsers.CodeGen.Sample.Month' cannot be parsed from '{input.ToString()}'.
+Valid values are: [None or January or February or March or April or May or June or July or August or September or October or November or December] or number within byte range. 
+Ignore case option on.");        
+
+        static bool IsEqual(ReadOnlySpan<char> input, string label) =>
+            MemoryExtensions.Equals(input, label.AsSpan(), StringComparison.OrdinalIgnoreCase);
+    }
+}
+```
+
+</details>
+
+### Deconstructables code generator
+```csharp 
 //1. use specially provided (via code-gen) Auto.AutoDeconstructable attribute
 [Auto.AutoDeconstructable]
 //2. provide deconstructable aspect options or leave this attribute out - default options will be engaged 
@@ -371,13 +538,13 @@ sealed class StructPoint3dTransformer : TransformerBase<StructPoint3d>
     }
 }
 ``` 
+
 ### Code gen diagnositcs
 Various diagnositcs exist to guide end user in creation of proper types that can be consumed by automatic generation. They might for example:
 1. check if types decorated with Auto* attributes are declared partial (prerequisite for additive code generation)
 2. validate settings passed via declarative syntax
 3. validate internal structure of type (i.e. check if constructor has matching Deconstruct method)
 4. check if external dependencies are included 
-
 
 [![Demo](images/CodeGenDiagnostics.jpg)](images/CodeGenDiagnostics.jpg)
 

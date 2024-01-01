@@ -1,6 +1,6 @@
 ﻿using Nemesis.TextParsers.Settings;
 
-namespace Nemesis.TextParsers.ArchTests.Domain;
+namespace Nemesis.TextParsers.Tests.Arch.Domain;
 
 [TestFixture]
 public class SettingsValidationTests

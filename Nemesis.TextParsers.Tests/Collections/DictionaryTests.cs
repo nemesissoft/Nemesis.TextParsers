@@ -1,8 +1,6 @@
-﻿// ReSharper disable RedundantUsingDirective
-using Nemesis.TextParsers.Tests.Utils;
+﻿using Nemesis.TextParsers.Tests.Utils;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 using Dss = System.Collections.Generic.SortedDictionary<string, string>;
-// ReSharper restore RedundantUsingDirective
 
 namespace Nemesis.TextParsers.Tests.Collections;
 

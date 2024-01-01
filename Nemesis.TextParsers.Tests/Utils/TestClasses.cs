@@ -31,20 +31,56 @@ public enum DaysOfWeek : byte
     All = Weekdays | Weekends
 }
 
-[TypeConverter(typeof(PointConverter))]
-internal readonly struct Point : IEquatable<Point>
+internal enum EmptyEnum { }
+
+internal enum Enum1 { E1_1_Int }
+
+internal enum Enum2 { E2_1_Int, E2_2_Int }
+
+internal enum Enum3 { E3_1_Int, E3_2_Int, E3_3_Int }
+
+internal enum ByteEnum : byte { B1 = 0, B2 = 1, B3 = 2 }
+
+internal enum SByteEnum : sbyte { Sb1 = -10, Sb2 = 0, Sb3 = 5, Sb4 = 10 }
+
+internal enum Int64Enum : long { L1 = -50, L2 = 0, L3 = 1, L4 = 50 }
+
+internal enum UInt64Enum : ulong { Ul_1 = 0, Ul_2 = 1, Ul_3 = 50 }
+
+internal enum Casing { A, a, B, b, C, c }
+
+[Flags]
+internal enum Fruits : ushort
 {
-    public int X { get; }
-    public int Y { get; }
+    None = 0,
+    Apple = 1,
+    Pear = 2,
+    Plum = 4,
+    AppleAndPlum = Apple | Plum,
+    PearAndPlum = Pear | Plum,
+    All = Apple | Pear | Plum,
+}
 
-    public Point(int x, int y) => (X, Y) = (x, y);
+[Flags]
+internal enum FruitsWeirdAll : short
+{
+    None = 0,
+    Apple = 1,
+    Pear = 2,
+    Plum = 4,
+    AppleAndPlum = Apple | Plum,
+    PearAndPlum = Pear | Plum,
+    All = -1
+}
 
-    public bool Equals(Point other) => X == other.X && Y == other.Y;
+internal enum Color { Red = 1, Blue = 2, Green = 3 }
 
-    public override bool Equals(object obj) => obj is not null && obj is Point other && Equals(other);
+[Flags]
+internal enum Colors { None = 0, Red = 1, Blue = 2, Green = 4, RedAndBlue = Red | Blue }
 
-    public override int GetHashCode() => unchecked(X * 397 ^ Y);
-
+[TypeConverter(typeof(PointConverter))]
+internal readonly record struct Point(int X, int Y)
+{
     public override string ToString() => $"{X};{Y}";
 
     public static Point FromText(ReadOnlySpan<char> text)
@@ -68,44 +104,10 @@ internal sealed class PointConverter : BaseTextConverter<Point>
     public override string FormatToString(Point value) => value.ToString();
 }
 
-internal readonly struct Rect : IEquatable<Rect>
+internal readonly record struct Rect(int X, int Y, int Width, int Height)
 {
-    public int X { get; }
-    public int Y { get; }
-    public int Width { get; }
-    public int Height { get; }
-
-    public Rect(int x, int y, int width, int height)
-    {
-        X = x;
-        Y = y;
-        Width = width;
-        Height = height;
-    }
-
-    public bool Equals(Rect other) => X == other.X && Y == other.Y && Height == other.Height && Width == other.Width;
-
-    public override bool Equals(object obj) => obj is not null && obj is Rect other && Equals(other);
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            var hashCode = X;
-            hashCode = hashCode * 397 ^ Y;
-            hashCode = hashCode * 397 ^ Height;
-            hashCode = hashCode * 397 ^ Width;
-            return hashCode;
-        }
-    }
-
-    public static bool operator ==(Rect left, Rect right) => left.Equals(right);
-
-    public static bool operator !=(Rect left, Rect right) => !left.Equals(right);
-
     public override string ToString() => $"{X};{Y};{Width};{Height}";
 
-    [UsedImplicitly]
     public static Rect FromText(ReadOnlySpan<char> text)
     {
         var enumerator = text.Split(';').GetEnumerator();
@@ -122,28 +124,12 @@ internal readonly struct Rect : IEquatable<Rect>
         if (!enumerator.MoveNext()) return default;
         int height = Int32Transformer.Instance.Parse(enumerator.Current);
 
-
-        return new Rect(x, y, width, height);
+        return new(x, y, width, height);
     }
 }
 
-internal readonly struct ThreeLetters(char c1, char c2, char c3) : IEquatable<ThreeLetters>
+internal readonly record struct ThreeLetters(char C1, char C2, char C3)
 {
-    public char C1 { get; } = c1;
-    public char C2 { get; } = c2;
-    public char C3 { get; } = c3;
-
-    public bool Equals(ThreeLetters other) => C1 == other.C1 && C2 == other.C2 && C3 == other.C3;
-
-    public override bool Equals(object obj) => obj is not null && obj is ThreeLetters other && Equals(other);
-
-    public override int GetHashCode() => (C1, C2, C3).GetHashCode();
-
-
-    public static bool operator ==(ThreeLetters left, ThreeLetters right) => left.Equals(right);
-
-    public static bool operator !=(ThreeLetters left, ThreeLetters right) => !left.Equals(right);
-
     public override string ToString() => $"{C1}{C2}{C3}";
 
     [UsedImplicitly]
@@ -152,41 +138,9 @@ internal readonly struct ThreeLetters(char c1, char c2, char c3) : IEquatable<Th
             new ThreeLetters(text[0], text[1], text[2]) : default;
 }
 
-internal readonly struct ThreeElements<TElement> : IEquatable<ThreeElements<TElement>>
+internal readonly record struct ThreeElements<TElement>(TElement E1, TElement E2, TElement E3)
     where TElement : IEquatable<TElement>
 {
-    public TElement E1 { get; }
-    public TElement E2 { get; }
-    public TElement E3 { get; }
-
-    public ThreeElements(TElement e1, TElement e2, TElement e3)
-    {
-        E1 = e1;
-        E2 = e2;
-        E3 = e3;
-    }
-
-    public bool Equals(ThreeElements<TElement> other) =>
-        E1.Equals(other.E1) && E2.Equals(other.E2) && E3.Equals(other.E3);
-
-    public override bool Equals(object obj) =>
-        obj is not null && obj is ThreeElements<TElement> other && Equals(other);
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            var hashCode = EqualityComparer<TElement>.Default.GetHashCode(E1);
-            hashCode = hashCode * 397 ^ EqualityComparer<TElement>.Default.GetHashCode(E2);
-            hashCode = hashCode * 397 ^ EqualityComparer<TElement>.Default.GetHashCode(E3);
-            return hashCode;
-        }
-    }
-
-    public static bool operator ==(ThreeElements<TElement> left, ThreeElements<TElement> right) => left.Equals(right);
-
-    public static bool operator !=(ThreeElements<TElement> left, ThreeElements<TElement> right) => !left.Equals(right);
-
     public override string ToString() => FormattableString.Invariant($"{E1},{E2},{E3}");
 
     [UsedImplicitly]
@@ -219,22 +173,13 @@ internal readonly struct ThreeElements<TElement> : IEquatable<ThreeElements<TEle
     }
 }
 
-internal readonly struct Range<TElement>
+internal readonly record struct Range<TElement>(TElement From, TElement To)
 {
     private const char SEPARATOR = '‥';
     private const char ESCAPING_SEQUENCE_START = '\\';
     private const char NULL_ELEMENT_MARKER = '∅';
 
-    private static readonly IFormatter<TElement> _formatter = Sut.GetTransformer<TElement>();
-
-    public TElement From { get; }
-    public TElement To { get; }
-
-    public Range(TElement from, TElement to)
-    {
-        From = from;
-        To = to;
-    }
+    private static readonly ITransformer<TElement> _transformer = Sut.GetTransformer<TElement>();
 
     public override string ToString()
     {
@@ -253,7 +198,7 @@ internal readonly struct Range<TElement>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void FormatElement(TElement element, ref ValueSequenceBuilder<char> accumulator)
     {
-        string elementText = _formatter.Format(element);
+        string elementText = _transformer.Format(element);
         if (elementText == null)
             accumulator.Append(NULL_ELEMENT_MARKER);
         else
@@ -267,25 +212,23 @@ internal readonly struct Range<TElement>
         }
     }
 
-    [UsedImplicitly]
+
     public static Range<TElement> FromText(ReadOnlySpan<char> text)
     {
-        var trans = Sut.GetTransformer<TElement>();
-
         var tokens = text.Tokenize(SEPARATOR, ESCAPING_SEQUENCE_START, true);
         var parsed = tokens.PreParse(ESCAPING_SEQUENCE_START, NULL_ELEMENT_MARKER, SEPARATOR);
 
         var enumerator = parsed.GetEnumerator();
         {
             if (!enumerator.MoveNext()) throw GetException(0);
-            var from = enumerator.Current;
+            var from = enumerator.Current.ParseWith(_transformer);
 
             if (!enumerator.MoveNext()) throw GetException(1);
-            var to = enumerator.Current;
+            var to = enumerator.Current.ParseWith(_transformer);
 
             if (enumerator.MoveNext()) throw GetException(3);//end of sequence
 
-            return new Range<TElement>(from.ParseWith(trans), to.ParseWith(trans));
+            return new Range<TElement>(from, to);
         }
 
         static Exception GetException(int numberOfElements) => new ArgumentException(
@@ -294,33 +237,8 @@ internal readonly struct Range<TElement>
 }
 
 [TextFactory(typeof(PairTextFactory<>))]
-internal readonly struct PairWithFactory<TElement> : IEquatable<PairWithFactory<TElement>>
-    where TElement : IEquatable<TElement>
+internal readonly record struct PairWithFactory<TElement>(TElement Left, TElement Right)
 {
-    public TElement Left { get; }
-    public TElement Right { get; }
-
-    public PairWithFactory(TElement left, TElement right)
-    {
-        Left = left;
-        Right = right;
-    }
-
-    public bool Equals(PairWithFactory<TElement> other) => Left.Equals(other.Left) && Right.Equals(other.Right);
-
-    public override bool Equals(object obj) =>
-        obj is not null && obj is PairWithFactory<TElement> other && Equals(other);
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            var hashCode = EqualityComparer<TElement>.Default.GetHashCode(Left);
-            hashCode = hashCode * 397 ^ EqualityComparer<TElement>.Default.GetHashCode(Right);
-            return hashCode;
-        }
-    }
-
     public override string ToString() => FormattableString.Invariant($"{Left},{Right}");
 }
 
@@ -352,12 +270,6 @@ internal static class PairTextFactory<TElement> where TElement : IEquatable<TEle
             $@"Sequence should contain either 2, but contained {(numberOfElements > 2 ? "more than 2" : numberOfElements.ToString())} elements");
     }
 }
-
-internal enum Color { Red = 1, Blue = 2, Green = 3 }
-
-[Flags]
-internal enum Colors { None = 0, Red = 1, Blue = 2, Green = 4, RedAndBlue = Red | Blue }
-
 
 [TypeConverter(typeof(OptionConverter))]
 internal readonly struct Option

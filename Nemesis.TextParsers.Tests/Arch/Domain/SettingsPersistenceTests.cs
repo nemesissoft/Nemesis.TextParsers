@@ -1,11 +1,12 @@
-﻿using System.Text.Json;
+﻿#nullable enable
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Nemesis.TextParsers.Settings;
 
-namespace Nemesis.TextParsers.ArchTests.Domain;
+namespace Nemesis.TextParsers.Tests.Arch.Domain;
 
 [TestFixture]
 public class SettingsPersistenceTests
@@ -127,10 +128,11 @@ public class SettingsPersistenceTests
         var deser3 = deserializer(fromTestData);
 
         Assert.That(deser2, Is.Not.Null);
-        Assert.That(deser3, Is.Not.Null);
-
         AssertMutualEquivalence(deser2, settings);
+
+        Assert.That(deser3, Is.Not.Null);
         AssertMutualEquivalence(deser3, settings);
+
         AssertMutualEquivalence(deser2, deser3);
     }
 

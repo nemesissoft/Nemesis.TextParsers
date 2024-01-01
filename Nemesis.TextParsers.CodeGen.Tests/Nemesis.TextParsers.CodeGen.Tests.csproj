@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>		
 		<TargetFrameworks>net6.0;net48</TargetFrameworks>
+		<IsTestProject>true</IsTestProject>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<NoWarn>$(NoWarn);NU1603</NoWarn>		
 	</PropertyGroup>
@@ -15,6 +16,7 @@
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="NUnit.Analyzers" />
+		<PackageReference Include="FluentAssertions" />
 
 		<PackageReference Include="Nemesis.CodeAnalysis" />
 

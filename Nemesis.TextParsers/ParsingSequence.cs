@@ -63,7 +63,6 @@ public readonly ref struct ParsingSequence
                 using var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
 
                 bool escaped = false;
-                // ReSharper disable once ForCanBeConvertedToForeach
                 for (int i = 0; i < input.Length; i++)
                 {
                     char current = input[i];

@@ -3,9 +3,7 @@ extern alias original;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-using Nemesis.CodeAnalysis;
-using Nemesis.TextParsers.CodeGen.Deconstructable;
+using Nemesis.TextParsers.CodeGen.Utils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests;
 
@@ -76,16 +74,22 @@ internal static class CodeGenUtils
         return text;
     }
 
-    public static IReadOnlyList<string> GetGeneratedTreesOnly(Compilation compilation, int requiredCardinality = 1)
+    public static IReadOnlyList<string> GetGeneratedTreesOnly(Compilation compilation, ISourceGenerator sourceGenerator, string attributeName, int requiredCardinality = 1)
     {
-        var newComp = CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { sourceGenerator },
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            driverOptions: new GeneratorDriverOptions(default, trackIncrementalGeneratorSteps: true));
+
+        driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out var diagnostics);
+
         Assert.That(diagnostics, Is.Empty);
 
         SyntaxTree? attributeTree = null;
-        foreach (var tree in newComp.SyntaxTrees)
+        foreach (var tree in newCompilation.SyntaxTrees)
         {
             var attributeDeclaration = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>()
-                .FirstOrDefault(cds => string.Equals(cds.Identifier.ValueText, AutoDeconstructableGenerator.ATTRIBUTE_NAME, StringComparison.Ordinal));
+                .FirstOrDefault(cds => string.Equals(cds.Identifier.ValueText, attributeName, StringComparison.Ordinal));
             if (attributeDeclaration != null)
             {
                 attributeTree = tree;
@@ -96,13 +100,79 @@ internal static class CodeGenUtils
 
         var toRemove = compilation.SyntaxTrees.Append(attributeTree!);
 
-        var generatedTrees = newComp.RemoveSyntaxTrees(toRemove).SyntaxTrees.ToList();
+        var generatedTrees = newCompilation.RemoveSyntaxTrees(toRemove).SyntaxTrees.ToList();
         Assert.That(generatedTrees, Has.Count.EqualTo(requiredCardinality));
 
         return generatedTrees.Select(tree =>
             ((CompilationUnitSyntax)tree.GetRoot())
             .ToFullString()).ToList();
     }
+
+
+
+    public static GeneratorRunResult RunIncrementalGenerator(Compilation compilation, IIncrementalGenerator sourceGenerator)
+    {
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { sourceGenerator.AsSourceGenerator() },
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            driverOptions: new GeneratorDriverOptions(default, trackIncrementalGeneratorSteps: true));
+
+        driver = driver.RunGenerators(compilation);
+        return driver.GetRunResult().Results.Single();
+    }
+
+    public static IReadOnlyList<string> RunIncrementalGeneratorAndGetGeneratedSources(Compilation compilation, IIncrementalGenerator sourceGenerator, string attributeNameToRemove, int requiredCardinality = 1)
+    {
+        var result = RunIncrementalGenerator(compilation, sourceGenerator);
+        return GetGeneratedOutput(attributeNameToRemove, requiredCardinality, result);
+    }
+
+    public static (IReadOnlyList<string> Sources, IReadOnlyList<TMeta> Meta) RunIncrementalGeneratorAndCaptureInputs<TMeta>(Compilation compilation, IIncrementalGenerator sourceGenerator, string attributeNameToRemove, int requiredCardinality = 1)
+          where TMeta : struct
+    {
+        var result = RunIncrementalGenerator(compilation, sourceGenerator);
+        var generatedSources = GetGeneratedOutput(attributeNameToRemove, requiredCardinality, result);
+
+        IReadOnlyList<TMeta> meta = [];
+        if (result.TrackedSteps.TryGetValue("Meta", out var metaValue))
+        {
+            var stepResults = metaValue.Single().Outputs
+                .Select(o => (
+                    Result: (Result<TMeta?, Diagnostic>)o.Value,
+                    o.Reason
+                ))
+                .ToList();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(stepResults.Select(o => o.Reason), Has.All.EqualTo(IncrementalStepRunReason.New));
+                Assert.That(stepResults.Select(o => o.Result.IsSuccess && o.Result.Value is not null), Has.All.EqualTo(true));
+            });
+
+            meta = stepResults.Select(s => s.Result.Value!.Value!).ToList();
+        }
+
+        return (generatedSources, meta);
+    }
+
+    private static IReadOnlyList<string> GetGeneratedOutput(string attributeNameToRemove, int requiredCardinality, GeneratorRunResult result)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Diagnostics, Is.Empty);
+            Assert.That(result.Exception, Is.Null);
+            Assert.That(result.GeneratedSources, Has.Length.GreaterThan(1));
+        });
+
+        var generatedSources = result.GeneratedSources
+            .Where(gen => !gen.HintName.Equals($"{attributeNameToRemove}.g.cs"))
+            .Select(gen => gen.SourceText.ToString())
+            .ToList();
+        Assert.That(generatedSources, Has.Count.EqualTo(requiredCardinality));
+        return generatedSources;
+    }
+
+    public static string NormalizeNewLine(string text) => text.Replace("\r\n", "\n").Replace("\r", "\n");
 }
 
 

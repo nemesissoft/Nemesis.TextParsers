@@ -114,7 +114,6 @@ namespace Nemesis.TextParsers.Tests.Collections
                 var expectedOutput = NormalizeNullMarkers(data.expectedOutput);
                 Assert.That(result, Is.EqualTo(expectedOutput));
             }
-            //Console.WriteLine($@"'{result ?? "<null>"}'");
         }
 
         #region Negative tests
@@ -132,18 +131,14 @@ namespace Nemesis.TextParsers.Tests.Collections
         [TestCase("10", @"\r", "Illegal escape sequence found in input: 'r'")]
         [TestCase("11", @"\xAAA|BBB\n", "Illegal escape sequence found in input: 'x'")]
         #endregion
-        public void List_Parse_NegativeTest(string _, string input, string expectedMessagePart)
-        {
-            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-            var ex = Assert.Throws<ArgumentException>(() => _store.GetTransformer<IList<string>>().Parse(input));
-            Assert.That(ex.Message, Does.Contain(expectedMessagePart));
-        }
+        public void List_Parse_NegativeTest(string _, string input, string expectedMessagePart) =>
+            Assert.That(() => _store.GetTransformer<IList<string>>().Parse(input),
+                Throws.ArgumentException.And.Message.Contains(expectedMessagePart));
 
 
         private static IEnumerable<(Type elementType, string input, Type expectedException)> Bad_ListParseData() => new[]
         {
             (typeof(IList<>), @"A|B|C", typeof(InvalidOperationException)),
-            // ReSharper disable once StringLiteralTypo
             (typeof(bool), @"falsee", typeof(FormatException)),
             (typeof(bool), @"yes", typeof(FormatException)),
             (typeof(bool), @"no", typeof(FormatException)),

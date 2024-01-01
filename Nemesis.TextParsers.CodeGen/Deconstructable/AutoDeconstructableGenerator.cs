@@ -81,7 +81,7 @@ namespace Auto
                 {
                     var settings = GeneratedDeconstructableSettings.FromDeconstructableSettingsAttribute(deconstructableSettingsAttributeData);
 
-                    string typeModifiers = GetTypeModifiers(type);
+                    string typeModifiers = GetTypeModifiers(type, typeSymbol);
 
                     string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces);
                     context.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
@@ -90,12 +90,12 @@ namespace Auto
         }
     }
 
-    private static string GetTypeModifiers(TypeDeclarationSyntax type) =>
+    private static string GetTypeModifiers(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol) =>
         type.Modifiers + " " + type switch
         {
             ClassDeclarationSyntax => "class",
             StructDeclarationSyntax => "struct",
-            RecordDeclarationSyntax => "record",
+            RecordDeclarationSyntax => typeSymbol.IsReferenceType ? "record" : "record struct",
             _ => throw new NotSupportedException("Only class, struct or record types are allowed")
         };
 

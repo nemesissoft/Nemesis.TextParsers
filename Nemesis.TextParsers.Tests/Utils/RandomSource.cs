@@ -47,6 +47,9 @@ internal class RandomSource
     public TEnum NextEnum<TEnum, TUnderlying>()
         where TEnum : Enum
         where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
+#if NET7_0_OR_GREATER
+    , IBinaryInteger<TUnderlying>
+#endif
     {
         var values = Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().ToList();
 

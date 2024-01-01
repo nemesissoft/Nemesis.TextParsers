@@ -79,7 +79,11 @@ public static class NumberTransformerCache
         return cache;
     }
 
-    public static NumberTransformer<TNumber> GetNumberHandler<TNumber>() where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
+    public static NumberTransformer<TNumber> GetNumberHandler<TNumber>()
+        where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
+#if NET7_0_OR_GREATER
+    , IBinaryInteger<TNumber>
+#endif
         => _cache.TryGetValue(typeof(TNumber), out var numOp) ? (NumberTransformer<TNumber>)numOp : null;
 
     public static object GetNumberHandler(Type numberType) =>
@@ -249,6 +253,9 @@ public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer
 
 public abstract class NumberTransformer<TNumber> : SimpleTransformer<TNumber>
     where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
+#if NET7_0_OR_GREATER
+    , IBinaryInteger<TNumber>
+#endif
 {
     public abstract bool SupportsNegative { get; }
     public abstract TNumber Zero { get; }
@@ -272,6 +279,14 @@ public abstract class NumberTransformer<TNumber> : SimpleTransformer<TNumber>
     public abstract TNumber Div(TNumber left, TNumber right);
 
     public sealed override string Format(TNumber element) => element.ToString(null, Culture.InvCult);
+
+    public void Deconstruct(out TNumber zero, out TNumber one, out TNumber min, out TNumber max)
+    {
+        zero = Zero;
+        one = One;
+        min = MinValue;
+        max = MaxValue;
+    }
 }
 
 [UsedImplicitly]
@@ -904,20 +919,8 @@ public sealed class RegexTransformer : SimpleTransformer<Regex>
 
 internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
 {
-    protected override RegexOptions ParseCore(in ReadOnlySpan<char> input)
-    {
-        if (input.IsEmpty) return default;
-
-        var result = RegexOptions.None;
-
-        for (int i = input.Length - 1; i >= 0; i--)
-            result |= ParseSingle(input[i]);
-
-        return result;
-    }
-
     private static readonly RegexOptions[] _optionValues = [
-            RegexOptions.IgnoreCase,
+        RegexOptions.IgnoreCase,
         RegexOptions.Multiline,
         RegexOptions.ExplicitCapture,
         RegexOptions.Compiled,
@@ -928,33 +931,25 @@ internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
         RegexOptions.ECMAScript,
         RegexOptions.CultureInvariant,
 #if NET7_0_OR_GREATER
-            RegexOptions.NonBacktracking
+        RegexOptions.NonBacktracking
 #endif
     ];
-
-    public override string Format(RegexOptions element)
-    {
-        if (element == RegexOptions.None) return "0";
-
-        Span<char> initialBuffer = stackalloc char[8];
-        var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
-
-        try
-        {
-            foreach (var option in _optionValues)
-                if ((element & option) > 0)
-                    accumulator.Append(FormatSingle(option));
-
-            return accumulator.AsSpan().ToString();
-        }
-        finally { accumulator.Dispose(); }
-    }
 
     public static readonly ITransformer<RegexOptions> Instance = new RegexOptionsTransformer();
     private RegexOptionsTransformer() { }
 
-    private static RegexOptions ParseSingle(char element) =>
-        element switch
+    protected override RegexOptions ParseCore(in ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty) return default;
+
+        var result = RegexOptions.None;
+
+        for (int i = input.Length - 1; i >= 0; i--)
+            result |= ParseSingle(input[i]);
+
+        return result;
+
+        static RegexOptions ParseSingle(char element) => element switch
         {
             '0' => RegexOptions.None,
             'i' => RegexOptions.IgnoreCase,
@@ -972,11 +967,28 @@ internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
 #if NET7_0_OR_GREATER
             'b' => RegexOptions.NonBacktracking,
 #endif
-            _ => throw new ArgumentException($"'{element}' is not supported for parsing RegexOptions")
+            _ => throw new NotSupportedException($"'{element}' is not supported for parsing RegexOptions")
         };
+    }
 
-    private static char FormatSingle(RegexOptions option) =>
-        option switch
+    public override string Format(RegexOptions element)
+    {
+        if (element == RegexOptions.None) return "0";
+
+        Span<char> initialBuffer = stackalloc char[8];
+        var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
+
+        try
+        {
+            foreach (var option in _optionValues)
+                if ((element & option) > 0)
+                    accumulator.Append(FormatSingle(option));
+
+            return accumulator.AsSpan().ToString();
+        }
+        finally { accumulator.Dispose(); }
+
+        static char FormatSingle(RegexOptions option) => option switch
         {
             RegexOptions.None => '0',
             RegexOptions.IgnoreCase => 'i',
@@ -995,8 +1007,9 @@ internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
 #if NET7_0_OR_GREATER
             RegexOptions.NonBacktracking => 'b',
 #endif
-            _ => throw new ArgumentException($"'{option}' is not supported for formatting RegexOptions")
+            _ => throw new NotSupportedException($"'{option}' is not supported for formatting RegexOptions")
         };
+    }
 
     /*[Flags]
     public enum RegexOptions

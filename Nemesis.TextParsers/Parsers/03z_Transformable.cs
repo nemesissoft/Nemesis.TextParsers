@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
+using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
@@ -33,15 +34,37 @@ public class TransformableCreator : ICanCreateTransformer
         var ctor = ctors[0];
         var @params = ctor.GetParameters();
 
-        return @params.Length switch
+        return @params.Length == 0
+            ? (ITransformer)Activator.CreateInstance(type, true)
+            : (ITransformer)Activator.CreateInstance(type, @params.Select(p => GetArguments(p.ParameterType, store)).ToArray());
+
+
+        static object GetArguments(Type parameterType, ITransformerStore store)
         {
-            0 => (ITransformer)Activator.CreateInstance(type, true),
-            1 => @params[0].ParameterType == typeof(ITransformerStore)
-                ? (ITransformer)Activator.CreateInstance(type, store)
-                : throw new NotSupportedException(
-                    $"Among single parameter constructors only the one that takes {nameof(ITransformerStore)} is supported"),
-            _ => throw new NotSupportedException("Only constructors of arity 0..1 are supported")
-        };
+            if (parameterType == typeof(ITransformerStore))
+                return store;
+
+            else if (typeof(ISettings).IsAssignableFrom(parameterType))
+                return store.SettingsStore.GetSettingsFor(parameterType);
+
+            else if (parameterType.IsGenericType && parameterType.GetGenericTypeDefinition() == typeof(NumberTransformer<>))
+            {
+                var elementType = parameterType.GenericTypeArguments[0];
+                return store.GetTransformer(elementType);
+            }
+
+            else if (parameterType.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
+            {
+                var realization = TypeMeta.GetGenericRealization(parameterType, typeof(ITransformer<>));
+                var elementType = realization.GenericTypeArguments[0];
+
+                return store.GetTransformer(elementType);
+            }
+
+            else
+                throw new NotSupportedException(
+    $"Only supported parameters for auto-injection to transformers marked with {nameof(TransformerAttribute)} are {nameof(ITransformerStore)}, implementations of {nameof(ISettings)}, generic {nameof(NumberTransformer<int>)} or generic {nameof(ITransformer)} implementations");
+        }
     }
 
     private static Type PrepareGenericTransformer(in Type transformable, in Type transformer)
@@ -89,10 +112,7 @@ public class TransformableCreator : ICanCreateTransformer
         $"Create transformer based on {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)}";
 }
 
-// ReSharper disable RedundantAttributeUsageProperty
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
-// ReSharper restore RedundantAttributeUsageProperty
-[PublicAPI]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum, Inherited = true, AllowMultiple = false)]
 public sealed class TransformerAttribute : Attribute
 {
     public Type TransformerType { get; }

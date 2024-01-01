@@ -62,10 +62,7 @@ public abstract class BaseNullableTextConverter<TValue> : TextTypeConverter
 }
 
 //in future this can be taken from text transformers 
-[PublicAPI]
-// ReSharper disable RedundantAttributeUsageProperty
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
-// ReSharper restore RedundantAttributeUsageProperty
 public sealed class TextConverterSyntaxAttribute : Attribute
 {
     public string Syntax { get; }
@@ -187,9 +184,8 @@ public class TextSyntaxProvider
             syntax = $"hh:mm:ss {(isNullable ? " or null" : "")}";
 
         else if (typeof(DateTime) == type)
-            // ReSharper disable once StringLiteralTypo
             syntax =
-                $"ISO 8601 roundtrip datetime literal (yyyy-MM-ddTHH:mm:ss.fffffffK) {(isNullable ? " or null" : "")}";
+    $"ISO 8601 roundtrip datetime literal (yyyy-MM-ddTHH:mm:ss.fffffffK) {(isNullable ? " or null" : "")}";
 
         else if (type.IsEnum)
             syntax = FormattableString.Invariant(
@@ -200,9 +196,7 @@ public class TextSyntaxProvider
 
     protected virtual string GetStringSyntax() => "UTF-16 character string";
 
-    // ReSharper disable SuggestBaseTypeForParameter
     private string GetSyntaxFromAttribute(Type source, Type originalType)
-    // ReSharper restore SuggestBaseTypeForParameter
     {
         var attr = source?.GetCustomAttribute<TextConverterSyntaxAttribute>(true);
         if (attr == null) return null;
@@ -279,7 +273,6 @@ public class TextSyntaxProvider
         };
     }
 
-    // ReSharper disable once InconsistentNaming
     private static readonly string NL = Environment.NewLine;
 
     private static string GetEscapeSequences(char escapingSequenceStart, params char[] specialChars) =>

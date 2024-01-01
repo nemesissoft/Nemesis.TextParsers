@@ -6,7 +6,6 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 {
     public partial class AutoDeconstructableGenerator
     {
-        // ReSharper disable once RedundantNameQualifier
         internal static readonly string DeconstructableSettingsAttributeName = "Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute";
 
         private static DiagnosticDescriptor GetDiagnosticDescriptor(byte id, string message,

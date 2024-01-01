@@ -87,7 +87,6 @@ public readonly struct DictionaryMeta : IEquatable<DictionaryMeta>
 
         for (int i = 0; i < capacity; i++)
         {
-            // ReSharper disable once PossibleNullReferenceException
             (object oKey, object oValue) = sourceElements[i];
             var key = ConvertElement<TKey>(oKey);
             var value = ConvertElement<TValue>(oValue);
