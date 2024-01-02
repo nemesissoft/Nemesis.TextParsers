@@ -1,38 +1,86 @@
 <Project>
+	<PropertyGroup Label="CI" Condition="'$(CI)' == ''">
+		<CI>false</CI>
+		<!-- GH, CircleCI, GitLab and BitBucket already use CI -->
+		<CI Condition="'$(TF_BUILD)' == 'true' or '$(TEAMCITY_VERSION)' != '' or '$(APPVEYOR)' != '' or 
+                   '$(BuildRunner)' == 'MyGet' or '$(JENKINS_URL)' != '' or '$(TRAVIS)' == 'true' or 
+                   '$(BUDDY)' == 'true'">true</CI>
+	</PropertyGroup>
+
 	<PropertyGroup>
+		<!-- The Microsoft.Managed.Core.targets use this property to use deterministic source paths in CI builds -->
+		<ContinuousIntegrationBuild>$(CI)</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<PropertyGroup Label="NuGet">
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<!--this will be patched by build system-->
+		<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>
+
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<GenerateRepositoryUrlAttribute>true</GenerateRepositoryUrlAttribute>
+
+		<!-- Use Directory.Packages.props if possible. NOTE: other MSBuild SDKs (i.e. NoTargets/Traversal) do not support central packages -->
+		<ManagePackageVersionsCentrally Condition="Exists('$(MSBuildThisFileDirectory)Directory.Packages.props') AND ('$(MSBuildProjectExtension)' == '.csproj' OR '$(MSBuildProjectExtension)' == '.vbproj')">true</ManagePackageVersionsCentrally>
+
+		<!-- Ensure MSBuild tooling can access package artifacts always via PKG_[PackageId] -->
+		<!--<GeneratePathProperty>true</GeneratePathProperty>-->
+	</PropertyGroup>
+
+
+	<PropertyGroup Label="Build">
+		<Configuration Condition="'$(Configuration)' == '' and $(CI)">Release</Configuration>
+
 		<!--This will get replaced by Build System-->
 		<Version>0.0.1</Version>
 
 		<LangVersion>12.0</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!--TODO <Nullable>enable</Nullable>-->
+		<!--Subject to change by project that need to be packed-->
 		<IsPackable>false</IsPackable>
 
+		
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<WarningsAsErrors />
+		<!--
+		Condition="$(CI) or '$(Configuration)' == 'Release'"
+		<WarningsNotAsErrors></WarningsNotAsErrors>
+		<CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
+		-->
 
-		<!--Public sign-->
+		<!--
+		TODO 
+		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GenerateDocumentationFile Condition="$(MSBuildProjectName.Contains('Tests'))">false</GenerateDocumentationFile>
+		-->
+
+		<DebugType>embedded</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+
+		<EnableSourceLink>true</EnableSourceLink>
+		<EnableSourceControlManagerQueries>true</EnableSourceControlManagerQueries>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<UseSourceLink>true</UseSourceLink>
+	</PropertyGroup>
+
+	<PropertyGroup Label="StrongName" Condition="Exists('$(MSBuildThisFileDirectory)Nemesis.Public.snk')">
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Nemesis.Public.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>true</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<PublicSign>true</PublicSign>
-		<AssemblyOriginatorKeyFile>..\Nemesis.TextParsers.Public.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<None Include="..\images\icon.png" Pack="true" PackagePath="properties">
-			<Link>properties\icon.png</Link>
-		</None>
 
-		<None Include="..\README.md" Pack="true" PackagePath="properties">
-			<Link>properties\README.md</Link>
-		</None>
-	</ItemGroup>
 	
+	
+
 	<ItemGroup>
-		<None Include="..\.editorconfig" Link=".editorconfig" />
+		<None Include="..\.editorconfig" Link="properties\.editorconfig" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<Using Include="System.Linq.Expressions" />
 		<Using Include="System.Text" />
@@ -42,4 +90,12 @@
 		<Using Include="System.Runtime.CompilerServices" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>$(MSBuildProjectName).Tests, PublicKey=002400000480000014020000060200000024000052534131001000000100010021f3d01159b17f134751b76186015afbfca0f161319ff82c8e192c38ff123c5d6c8e1a2e019ae71fd532a65ede8dd5800a6c10a5968c596e875ca1e5b6059721531bbc2c131b8c7ee8ec26f7cb6936ea11fac3d3fec479608ff773480ae4d25156aac9c4224260620517a00fa696fadea3bda92383b3475b2219be7d9fd4ea6a4ee6be301df7742a402d83ea70465f05947ebe6d307e401138c48304ca6d435a4a3543748057ade49c3423098177eadeae3f7cfdf5958c6dc9eb37d013446678c968bb2a1215f6341957d3029cbee3ce099e04c2f066fc704c5e08b85a74d6f458f5666dc555837635111008c0572138ab2e6e3d4e66a607665d94f48312164ec2b6e2de80769b296b3179e7993334b124dfb17d972902e70233b09a9bac2a15af8d6bd786befcdfddb292521a685c6afa10ab90f0508fbb8dc7d2af6341bcbb854a69a8d1e6372061e62b28057c3b629adb785eab34c13f9034c3d4abea467ae8ce973ed961e04ba9fa65dd481c2faa9185bd3833f478d911298ca41b6a041058acd5c91528f424cf859afc4b9a705f5917a01c5a119ca555f22b559a38195c55361a1a0c12400137263a0574c586c3e81f94a871f4b5380f8a335cfda28fc7cf131c7f32540b6f918cdd8925938163321a7f6c09cfbf807cbb8f0823be60528eaad5d0aee88fcc533715796a4c5ec9e066a5f303dd48cc116b521ccea4c3d2</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<Import Project="Directory.props" Condition="Exists('Directory.props')"/>
+	<Import Project="Directory.props.user" Condition="Exists('Directory.props.user')" />
 </Project>

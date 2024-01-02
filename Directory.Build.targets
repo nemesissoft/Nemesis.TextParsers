@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
-	<Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.1.3" />
+	<ItemGroup Label="NuGet">
+		<!-- solution-level icon/README -->
+		<None Include="..\images\icon.png" Pack="true" PackagePath="properties" Link="properties\icon.png"
+			  Condition="Exists('..\images\icon.png') and !Exists('icon.png')"
+		/>
+		<None Include="..\README.md" Pack="true" PackagePath="properties" Link="properties\README.md"
+			  Condition="Exists('..\README.md') and !Exists('README.md')"
+		/>
+
+		<!-- Project-level icon/README overrides -->
+		<None Include="icon.png" Pack="true" PackagePath="properties" Link="properties\icon.png"
+			  Condition="Exists('icon.png')"
+		/>
+		<None Include="README.md" Pack="true" PackagePath="properties" Link="properties\README.md"
+			  Condition="Exists('README.md')"
+		/>
+	<!--$(MSBuildThisFileDirectory)file, $(MSBuildProjectDirectory)\file-->
+	</ItemGroup>
 	
+	<Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.1.3" />
+
 	<Target Name="_AppendCommonPackageDescription"
 			BeforeTargets="InitializeStandardNuspecProperties;GenerateNuspec"
 			DependsOnTargets="InitializeSourceControlInformation"
@@ -14,27 +33,16 @@
 				This package was built from the source at $(RepositoryUrl.TrimEnd('.git'))/tree/$(SourceRevisionId)
 			</PackageDescription>
 
-			<Authors>Michał Bryłka, Leszek Kowalski</Authors>
-			<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
-			<Copyright>Copyright © Michał Bryłka. Icon by http://www.iconka.com </Copyright>
-			<PublishRepositoryUrl>true</PublishRepositoryUrl>
-			<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
-
 			<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-			<EmbedUntrackedSources>true</EmbedUntrackedSources>
 			<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
-			<DebugType>embedded</DebugType>
-			<DebugSymbols>true</DebugSymbols>
-
-			<PackageIcon>properties\icon.png</PackageIcon>
-			<PackageReadmeFile>properties\README.md</PackageReadmeFile>
-
-			<!--this will be patched by build system-->
-			<PackageReleaseNotes>RELEASE_NOTES_PLACEHOLDER</PackageReleaseNotes>			
+		
 
 			<EnablePackageValidation>true</EnablePackageValidation>
 			<!-- Optional: Detect breaking changes from a previous version -->
 			<!-- <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion> -->
+
+			<PackageIcon>properties\icon.png</PackageIcon>
+			<PackageReadmeFile>properties\README.md</PackageReadmeFile>			
 		</PropertyGroup>
-	</Target>
+	</Target>	
 </Project>

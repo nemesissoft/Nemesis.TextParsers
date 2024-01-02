@@ -6,6 +6,8 @@ on:
     branches:
       - '*'   
 
+run-name: "License Scanning"
+
 defaults:
   run:
     shell: pwsh
@@ -18,8 +20,6 @@ jobs:
     steps:
       - name: Checkout tree
         uses: actions/checkout@v4
-        
-
 
       - name: Run FOSSA scan and upload build data
         uses: fossa-contrib/fossa-action@v3

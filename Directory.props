@@ -1,0 +1,11 @@
+<Project>
+	<PropertyGroup>
+		<Authors>Michał Bryłka, Leszek Kowalski</Authors>
+		<Copyright>Copyright © Michał Bryłka</Copyright>
+		
+		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.TextParsers</PackageProjectUrl>
+
+		<PackageTags>split stringSplit tokenize token parse format list dictionary TextConverter ReadOnlySpan Span Memory fast allocation noAllocation</PackageTags>
+		<Description>Contains various parser optimized for speed and no allocation.</Description>
+	</PropertyGroup>
+</Project>
