@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Nemesis.TextParsers.CodeGen.Enums;
 using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
-namespace Nemesis.TextParsers.CodeGen.Tests.EnumTransformer;
+namespace Nemesis.TextParsers.CodeGen.Tests;
 
 [TestFixture]
 internal class EnumTransformerGeneratorTests
@@ -18,8 +18,7 @@ internal class EnumTransformerGeneratorTests
     {
         var compilation = CreateValidCompilation(source);
 
-        var (sources, metas) = RunIncrementalGeneratorAndCaptureInputs<TransformerMeta>(compilation,
-            new EnumTransformerGenerator(), EnumTransformerGenerator.ATTRIBUTE_NAME);
+        var (sources, metas) = new EnumTransformerGenerator().RunIncrementalGeneratorAndCaptureInputs<TransformerMeta>(compilation);
 
         Assert.Multiple(() =>
         {
@@ -42,7 +41,7 @@ internal class EnumTransformerGeneratorTests
           internal enum Casing { A, a, B, b, C, c, Good }
           """);
 
-        var result = RunIncrementalGenerator(compilation, new EnumTransformerGenerator());
+        var result = new EnumTransformerGenerator().RunIncrementalGenerator(compilation);
 
 
         var diagnostics = result.Diagnostics;

@@ -171,25 +171,26 @@ internal static partial class TestHelper
         GetInvalidTestNamePattern().Replace(text, "_");
 #else
     private static readonly Regex _invalidTestName = new(@"\W", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    
+
     public static string SanitizeTestName(this string text) => _invalidTestName.Replace(text, "_");
 #endif        
 }
 
+#nullable enable
 internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>
 {
-    [PublicAPI]
     public static readonly IComparer<string> Comparer = new IgnoreNewLinesComparer();
-    [PublicAPI]
+
     public static readonly IEqualityComparer<string> EqualityComparer = new IgnoreNewLinesComparer();
 
-    public int Compare(string x, string y) => string.CompareOrdinal(NormalizeNewLines(x), NormalizeNewLines(y));
+    public int Compare(string? x, string? y) => string.CompareOrdinal(NormalizeNewLines(x), NormalizeNewLines(y));
 
-    public bool Equals(string x, string y) => NormalizeNewLines(x) == NormalizeNewLines(y);
+    public bool Equals(string? x, string? y) => NormalizeNewLines(x) == NormalizeNewLines(y);
 
     public int GetHashCode(string s) => NormalizeNewLines(s)?.GetHashCode() ?? 0;
 
-    public static string NormalizeNewLines(string s) => s?
+    //for NET 6+ use string.ReplaceLineEndings()
+    public static string? NormalizeNewLines(string? s) => s?
         .Replace(Environment.NewLine, "")
         .Replace("\n", "")
         .Replace("\r", "");

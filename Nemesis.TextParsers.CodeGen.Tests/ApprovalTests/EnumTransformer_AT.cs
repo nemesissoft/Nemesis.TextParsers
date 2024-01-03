@@ -2,7 +2,6 @@
 using ApprovalTests.Reporters;
 using ApprovalTests.Writers;
 using Nemesis.TextParsers.CodeGen.Enums;
-using Nemesis.TextParsers.CodeGen.Tests.EnumTransformer;
 using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests;
@@ -36,12 +35,11 @@ internal class EnumTransformer_AT
 
         var compilation = CreateValidCompilation(source);
 
-        var sources = RunIncrementalGeneratorAndGetGeneratedSources(compilation,
-            new EnumTransformerGenerator(), EnumTransformerGenerator.ATTRIBUTE_NAME);
+        var sources = new EnumTransformerGenerator().RunIncrementalGeneratorAndGetGeneratedSources(compilation);
 
         var actual = ScrubGeneratorComments(sources.Single());
 
-        actual = NormalizeNewLine(actual);
+        actual = IgnoreNewLinesComparer.NormalizeNewLines(actual);
 
         Approvals.Verify(WriterFactory.CreateTextWriter(actual, "cs"));
     }

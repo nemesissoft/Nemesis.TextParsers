@@ -25,6 +25,8 @@ partial class EnumTransformerGenerator
 
     internal const string ATTRIBUTE_NAME = "AutoEnumTransformerAttribute";
 
+    protected override string GetAttributeName() => ATTRIBUTE_NAME;
+
     private const string ATTRIBUTE_FULL_NAME = $"Auto.{ATTRIBUTE_NAME}";
 
     private const string PROPERTY_CASE_INSENSITIVE = $"CaseInsensitive";

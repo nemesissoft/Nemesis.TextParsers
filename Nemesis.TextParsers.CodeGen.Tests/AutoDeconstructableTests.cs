@@ -203,7 +203,7 @@ namespace Tests1
     }
 
 
-    public static IReadOnlyList<(string name, string source, string expectedCode)> GetAutoDeconstructableCases() =>
+    internal static IReadOnlyList<(string name, string source, string expectedCode)> GetAutoDeconstructableCases() =>
         GetData().Select(t =>
         (
           t.name,

@@ -4,9 +4,9 @@ using Nemesis.TextParsers.CodeGen.Utils;
 namespace Nemesis.TextParsers.CodeGen.Enums;
 
 [Generator]
-public partial class EnumTransformerGenerator : IIncrementalGenerator
+public sealed partial class EnumTransformerGenerator : IncrementalGenerator
 {
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public override void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
             $"{ATTRIBUTE_NAME}.g.cs", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8)));
@@ -17,7 +17,7 @@ public partial class EnumTransformerGenerator : IIncrementalGenerator
                 predicate: static (node, _) => node is EnumDeclarationSyntax,
                 transform: GetTypeToGenerate)
             .Where(static result => result.IsError || (result.IsSuccess && result.Value is not null))
-            .WithTrackingName("Meta");
+            .WithTrackingName(INPUTS);
 
         context.RegisterSourceOutput(transformersToGenerate,
            static (spc, result) => Execute(result, spc));
