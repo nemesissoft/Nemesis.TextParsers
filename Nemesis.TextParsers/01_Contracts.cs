@@ -1,13 +1,9 @@
-﻿using System;
-using System.Globalization;
-using System.Runtime.CompilerServices;
+﻿using System.Globalization;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers;
 
-//TODO support nullable NRT
-[PublicAPI]
 public interface ITransformer
 {
     object ParseObject(string text);

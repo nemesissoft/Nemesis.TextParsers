@@ -51,6 +51,7 @@ class CollectionTransformerTests
         typeof(StringKeyedDictionary<int>),
         typeof(FloatValuedDictionary<int>),
         typeof(ImmutableDecimalValuedDictionary<int>),
+        typeof(CaseInsensitiveDictionary<int>),
     ];
 
 
@@ -121,6 +122,7 @@ class CollectionTransformerTests
             (typeof(StringKeyedDictionary<int>), @"One=1;Two=2;Zero=0;Four=4", 4, typeof(StringKeyedDictionary<int>)),
             (typeof(FloatValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(FloatValuedDictionary<int>)),
             (typeof(ImmutableDecimalValuedDictionary<int>), @"1=1.1;2=2.2;0=0.0;4=4.4", 4, typeof(ImmutableDecimalValuedDictionary<int>)),
+            (typeof(CaseInsensitiveDictionary<int>), @"A=1;B=2;C=3;a=10;b=20;c=30", 3, typeof(CaseInsensitiveDictionary<int>)),
         }
         .Concat(_collectionTypes.Select(t => (t, (string)null, -1, (Type)null))) //null values
         .Concat(_collectionTypes.Select(t => (t, "", 0, GetExpectedTypeFor(t)))) //empty
@@ -153,45 +155,6 @@ class CollectionTransformerTests
 
         return contractType;
     }
-
-    class StringList : List<string> { }
-    class Times10NumberList : ICollection<int>, IDeserializationCallback
-    {
-        private readonly List<int> _items = [];
-
-        public void OnDeserialization(object sender)
-        {
-            for (int i = 0; i < _items.Count; i++) _items[i] *= 10;
-        }
-
-
-        public IEnumerator<int> GetEnumerator() => _items.Select(i => i / 10).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
-
-        public void Add(int item) => _items.Add(item);
-
-        public void Clear() => _items.Clear();
-
-        public bool Contains(int item) => _items.Contains(item);
-
-        public void CopyTo(int[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
-
-        public bool Remove(int item) => _items.Remove(item);
-
-        public int Count => _items.Count;
-
-        public bool IsReadOnly => false;
-    }
-
-    class ImmutableIntCollection(IList<int> list) : ReadOnlyCollection<int>(list) { }
-    class ImmutableNullableIntCollection(IList<int?> list) : ReadOnlyCollection<int?>(list) { }
-
-    class StringKeyedDictionary<TValue> : SortedDictionary<string, TValue> { }
-    class FloatValuedDictionary<TKey> : Dictionary<TKey, float> { }
-    class ImmutableDecimalValuedDictionary<TKey>(IDictionary<TKey, decimal> dictionary)
-        : ReadOnlyDictionary<TKey, decimal>(dictionary)
-    { }
 
     private static IEnumerable<TCD> CollectionTestData(string differentiator) =>
         CorrectData().Select((t, i) =>
@@ -271,4 +234,49 @@ class CollectionTransformerTests
     [TestCase(new[] { 15.5f, 25.6f, 35.99f, 50, 999 }, "15.5|25.6|35.99|50|999")]
     public void LeanCollectionTest(float[] elements, string expectedText) =>
         ParseAndFormat(LeanCollectionFactory.FromArray(elements), expectedText);
+
+
+
+
+    class StringList : List<string> { }
+    class Times10NumberList : ICollection<int>, IDeserializationCallback
+    {
+        private readonly List<int> _items = [];
+
+        public void OnDeserialization(object sender)
+        {
+            for (int i = 0; i < _items.Count; i++) _items[i] *= 10;
+        }
+
+
+        public IEnumerator<int> GetEnumerator() => _items.Select(i => i / 10).GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
+
+        public void Add(int item) => _items.Add(item);
+
+        public void Clear() => _items.Clear();
+
+        public bool Contains(int item) => _items.Contains(item);
+
+        public void CopyTo(int[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
+
+        public bool Remove(int item) => _items.Remove(item);
+
+        public int Count => _items.Count;
+
+        public bool IsReadOnly => false;
+    }
+
+    class ImmutableIntCollection(IList<int> list) : ReadOnlyCollection<int>(list) { }
+    class ImmutableNullableIntCollection(IList<int?> list) : ReadOnlyCollection<int?>(list) { }
+
+    class StringKeyedDictionary<TValue> : SortedDictionary<string, TValue>;
+    class FloatValuedDictionary<TKey> : Dictionary<TKey, float>;
+    class ImmutableDecimalValuedDictionary<TKey>(IDictionary<TKey, decimal> dictionary)
+              : ReadOnlyDictionary<TKey, decimal>(dictionary);
+    class CaseInsensitiveDictionary<TValue> : Dictionary<string, TValue>
+    {
+        public CaseInsensitiveDictionary() : base(StringComparer.OrdinalIgnoreCase) { }
+    }
 }

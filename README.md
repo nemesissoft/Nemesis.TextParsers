@@ -148,7 +148,8 @@ return accumulator.AsSpanTo(accumulator.Length > 0 ? accumulator.Length - 1 : 0)
 11. usage of C# 9.0 code-gen (and Incremental Code Generators) to provide several transformers for common cases where parsing logic is straightforward
 
 
-## Todo / road map
+## Road map
+- [x] Add incremental code gen for enums
 - [ ] ability to format to buffer i.e. TryFormat pattern
 - [ ] support for ILookup<,>, IGrouping<,>
 - [ ] support for native parsing/formatting of F# types (map, collections, records...)

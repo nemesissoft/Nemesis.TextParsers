@@ -22,7 +22,6 @@ namespace Auto
     {
         context.CheckDebugger(nameof(AutoDeconstructableGenerator));
 
-        // TODO check if NTP is referenced + change NoSettingsAttributeRule diagnostics
         /*if (!context.Compilation.ReferencedAssemblyNames.Any(ai => ai.Name.Equals("Nemesis.TextParsers", StringComparison.OrdinalIgnoreCase)))
             context.ReportDiagnostic(); */
 
