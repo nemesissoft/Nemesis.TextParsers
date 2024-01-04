@@ -16,45 +16,45 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
                 ATTRIBUTE_FULL_NAME,
                 predicate: static (node, _) => node is EnumDeclarationSyntax,
                 transform: GetTypeToGenerate)
-            .Where(static result => result.IsError || (result.IsSuccess && result.Value is not null))
+            .Where(static result => !result.IsNone)
             .WithTrackingName(INPUTS);
 
         context.RegisterSourceOutput(transformersToGenerate,
            static (spc, result) => Execute(result, spc));
     }
 
-    private static void Execute(Result<TransformerMeta?, Diagnostic> result, SourceProductionContext context)
+    private static void Execute(Result<EnumTransformerInput, Diagnostic> result, SourceProductionContext context)
     {
-        if (result.IsError && result.Error is { } error)
-            context.ReportDiagnostic(error);
-        else if (result.IsSuccess && result.Value is { } meta)
-        {
-            var source = Render(in meta);
-            context.AddSource($"{meta.TransformerName}.g.cs", SourceText.From(source, Encoding.UTF8));
-        }
+        result.Invoke(
+            input =>
+            {
+                var source = Render(in input);
+                context.AddSource($"{input.TransformerName}.g.cs", SourceText.From(source, Encoding.UTF8));
+            },
+            context.ReportDiagnostic);
     }
 
-    private static string Render(in TransformerMeta meta)
+    private static string Render(in EnumTransformerInput input)
     {
         var sb = new StringBuilder(HEADER, 1024).AppendLine();
 
-        var enumName = meta.EnumFullyQualifiedName;
-        var numberType = meta.UnderlyingType;
-        var memberNames = meta.MemberNames;
+        var enumName = input.EnumFullyQualifiedName;
+        var numberType = input.UnderlyingType;
+        var memberNames = input.MemberNames;
 
         sb.AppendLine($$"""
             using System;
             using Nemesis.TextParsers;
             {{(
-              string.IsNullOrEmpty(meta.TransformerNamespace)
+              string.IsNullOrEmpty(input.TransformerNamespace)
                 ? ""
                 : $"""
-                namespace {meta.TransformerNamespace};
+                namespace {input.TransformerNamespace};
 
                 """
             )}}
             {{CODE_GEN_ATTRIBUTES}}
-            {{(meta.IsPublic ? "public" : "internal")}} sealed class {{meta.TransformerName}} : TransformerBase<{{enumName}}>
+            {{(input.IsPublic ? "public" : "internal")}} sealed class {{input.TransformerName}} : TransformerBase<{{enumName}}>
             {
             """);
 
@@ -76,7 +76,7 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
             """).AppendLine();
 
         //ParseCore
-        if (meta.IsFlagEnum)
+        if (input.IsFlagEnum)
         {
             sb.AppendLine($$"""
                 protected override {{enumName}} ParseCore(in ReadOnlySpan<char> input)
@@ -117,7 +117,7 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
                     input = input.Trim();
             """);
 
-        if (meta.AllowParsingNumerics)
+        if (input.AllowParsingNumerics)
         {
             sb.AppendLine($$"""
                     if (IsNumeric(input) && {{numberType}}.TryParse(input
@@ -166,8 +166,8 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
             """).AppendLine();
         }
 
-        var numberParsingText = meta.AllowParsingNumerics ? $" or number within {numberType} range. " : ". ";
-        var caseInsensitiveText = meta.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.";
+        var numberParsingText = input.AllowParsingNumerics ? $" or number within {numberType} range. " : ". ";
+        var caseInsensitiveText = input.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.";
         var exceptionMessage = $$"""
             Enum of type '{{enumName}}' cannot be parsed from '{input.ToString()}'.
             Valid values are: [{{string.Join(" or ", memberNames)}}]{{numberParsingText}}
@@ -178,7 +178,7 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
             """");
 
 
-        var stringComparison = meta.CaseInsensitive ? nameof(StringComparison.OrdinalIgnoreCase) : nameof(StringComparison.Ordinal);
+        var stringComparison = input.CaseInsensitive ? nameof(StringComparison.OrdinalIgnoreCase) : nameof(StringComparison.Ordinal);
         if (hasAnyMembers)
             sb.AppendLine().AppendLine($$"""
                     static bool IsEqual(ReadOnlySpan<char> input, string label) =>

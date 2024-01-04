@@ -14,21 +14,21 @@ internal class EnumTransformerGeneratorTests
             .SetName($"EnumCodeGen_{i + 1:00}_{t.name}"));
 
     [TestCaseSource(nameof(EnumCodeGenTestCases))]
-    public void Generate_ShouldReturnValid_MetaInput_And_Output(string source, TransformerMeta expectedMeta, string expectedCodeGen)
+    public void Generate_ShouldReturnValid_MetaInput_And_Output(string source, EnumTransformerInput expectedMeta, string expectedCodeGen)
     {
         var compilation = CreateValidCompilation(source);
 
-        var (sources, metas) = new EnumTransformerGenerator().RunIncrementalGeneratorAndCaptureInputs<TransformerMeta>(compilation);
+        var (sources, inputs) = new EnumTransformerGenerator().RunIncrementalGeneratorAndCaptureInputs<EnumTransformerInput>(compilation);
 
         Assert.Multiple(() =>
         {
-            Assert.That(metas, Has.Count.EqualTo(1));
+            Assert.That(inputs, Has.Count.EqualTo(1));
             Assert.That(sources, Has.Count.EqualTo(1));
 
-            var meta = metas[0];
+            var meta = inputs[0];
             meta.Should().BeEquivalentTo(expectedMeta);
 
-            var source = ScrubGeneratorComments(sources.First());
+            var source = ScrubGeneratorComments(sources[0]);
             Assert.That(source, Is.EqualTo(expectedCodeGen).Using(IgnoreNewLinesComparer.EqualityComparer));
         });
     }
@@ -57,7 +57,7 @@ internal class EnumTransformerGeneratorTests
         });
     }
 
-    internal static readonly IEnumerable<(string name, string source, TransformerMeta expectedMeta, string expectedCodeGen)> EnumCodeGenCases =
+    internal static readonly IEnumerable<(string name, string source, EnumTransformerInput expectedMeta, string expectedCodeGen)> EnumCodeGenCases =
     [
         ("Month", """
           [Auto.AutoEnumTransformer(CaseInsensitive = true, AllowParsingNumerics = true, TransformerClassName = "MonthCodeGenTransformer")]

@@ -106,6 +106,8 @@ internal static class CodeGenUtils
             ((CompilationUnitSyntax)tree.GetRoot())
             .ToFullString()).ToList();
     }
+
+    public static string NormalizeNewLines(string text) => text.Replace("\r\n", "\n").Replace("\r", "\n");
 }
 
 internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>
@@ -114,14 +116,14 @@ internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<str
 
     public static readonly IEqualityComparer<string> EqualityComparer = new IgnoreNewLinesComparer();
 
-    public int Compare(string? x, string? y) => string.CompareOrdinal(NormalizeNewLines(x), NormalizeNewLines(y));
+    public int Compare(string? x, string? y) => string.CompareOrdinal(RemoveNewLines(x), RemoveNewLines(y));
 
-    public bool Equals(string? x, string? y) => NormalizeNewLines(x) == NormalizeNewLines(y);
+    public bool Equals(string? x, string? y) => RemoveNewLines(x) == RemoveNewLines(y);
 
-    public int GetHashCode(string s) => NormalizeNewLines(s)?.GetHashCode() ?? 0;
+    public int GetHashCode(string s) => RemoveNewLines(s)?.GetHashCode() ?? 0;
 
     //for NET 6+ use string.ReplaceLineEndings()
-    public static string? NormalizeNewLines(string? s) => s?
+    private static string? RemoveNewLines(string? s) => s?
          .Replace(Environment.NewLine, "")
          .Replace("\n", "")
          .Replace("\r", "");

@@ -33,7 +33,7 @@ internal class AutoDeconstructable_AT
 
         var actual = ScrubGeneratorComments(generatedTrees.Single());
 
-        actual = IgnoreNewLinesComparer.NormalizeNewLines(actual);
+        actual = NormalizeNewLines(actual);
 
         Approvals.Verify(WriterFactory.CreateTextWriter(actual, "cs"));
     }

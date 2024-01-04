@@ -39,7 +39,7 @@ internal class EnumTransformer_AT
 
         var actual = ScrubGeneratorComments(sources.Single());
 
-        actual = IgnoreNewLinesComparer.NormalizeNewLines(actual);
+        actual = NormalizeNewLines(actual);
 
         Approvals.Verify(WriterFactory.CreateTextWriter(actual, "cs"));
     }

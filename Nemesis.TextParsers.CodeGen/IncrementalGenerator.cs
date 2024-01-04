@@ -26,18 +26,16 @@ public abstract class IncrementalGenerator : IIncrementalGenerator
         return GetGeneratedOutput(result, requiredCardinality);
     }
 
-    public (IReadOnlyList<string> Sources, IReadOnlyList<TMeta> Meta) RunIncrementalGeneratorAndCaptureInputs<TMeta>(Compilation compilation, int requiredCardinality = 1)
-          where TMeta : struct
+    public (IReadOnlyList<string> Sources, IReadOnlyList<TInput> Inputs) RunIncrementalGeneratorAndCaptureInputs<TInput>(Compilation compilation, int requiredCardinality = 1)
     {
         var result = RunIncrementalGenerator(compilation);
         var generatedSources = GetGeneratedOutput(result, requiredCardinality);
 
-        IReadOnlyList<TMeta> meta = [];
         if (result.TrackedSteps.TryGetValue(INPUTS, out var metaValue))
         {
             var stepResults = metaValue.Single().Outputs
                 .Select(o => (
-                    Result: (Result<TMeta?, Diagnostic>)o.Value,
+                    Result: (Result<TInput, Diagnostic>)o.Value,
                     o.Reason
                 ))
                 .ToList();
@@ -45,13 +43,17 @@ public abstract class IncrementalGenerator : IIncrementalGenerator
 
             if (stepResults.Any(r => r.Reason != IncrementalStepRunReason.New))
                 throw new NotSupportedException($"All generation steps are expected to be new");
-            if (stepResults.Any(r => r.Result.IsSuccess == false || r.Result.Value is null))
+
+            if (stepResults.Any(r => !r.Result.IsSuccess))
                 throw new NotSupportedException($"All generation steps are expected to be succesful");
 
-            meta = stepResults.Select(s => s.Result.Value!.Value!).ToList();
+            var meta = new List<TInput>(stepResults.Count);
+            stepResults.ForEach(r => r.Result.Invoke(meta.Add));
+
+            return (generatedSources, meta);
         }
 
-        return (generatedSources, meta);
+        return (generatedSources, []);
     }
 
     private IReadOnlyList<string> GetGeneratedOutput(GeneratorRunResult result, int requiredCardinality)

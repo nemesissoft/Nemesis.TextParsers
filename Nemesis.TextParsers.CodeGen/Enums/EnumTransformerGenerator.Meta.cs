@@ -63,7 +63,7 @@ partial class EnumTransformerGenerator
      }
      """;
 
-    private static Result<TransformerMeta?, Diagnostic> GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
+    private static Result<EnumTransformerInput, Diagnostic> GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
     {
         if (context.TargetSymbol is not INamedTypeSymbol enumSymbol ||
             enumSymbol.TypeKind != TypeKind.Enum ||
@@ -71,7 +71,7 @@ partial class EnumTransformerGenerator
             (enumSymbol.GetAttributes() is var attributes && attributes.Length == 0)
            )
         {
-            return (TransformerMeta?)null;
+            return Result<EnumTransformerInput, Diagnostic>.None();
         }
 
         ct.ThrowIfCancellationRequested();
@@ -126,7 +126,7 @@ partial class EnumTransformerGenerator
             }
         }
 
-        if (!autoAttributeFound) return (TransformerMeta?)null;
+        if (!autoAttributeFound) return Result<EnumTransformerInput, Diagnostic>.None();
 
         ct.ThrowIfCancellationRequested();
 
@@ -139,7 +139,7 @@ partial class EnumTransformerGenerator
             .Select(static symbol => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
             .ToArray();
 
-        var meta = new TransformerMeta(
+        var input = new EnumTransformerInput(
             transformerName ?? $"{enumSymbol.Name}Transformer",
             transformerNamespace ?? (enumSymbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : enumSymbol.ContainingNamespace.ToString()),
             caseInsensitive ?? true, allowParsingNumerics ?? true,
@@ -148,20 +148,20 @@ partial class EnumTransformerGenerator
             enumSymbol.DeclaredAccessibility == Accessibility.Public,
             hasFlags, underlyingType);
 
-        if (meta.CaseInsensitive &&
+        if (input.CaseInsensitive &&
             memberNames.Length != new HashSet<string>(memberNames, StringComparer.OrdinalIgnoreCase).Count)
         {
             return CreateDiagnostics(CaseInsensitiveIncompatibleMemberNames, enumSymbol);
         }
         else
-            return meta;
+            return input;
 
         static Diagnostic CreateDiagnostics(DiagnosticDescriptor rule, ISymbol? symbol) =>
             Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.ContainingNamespace?.ToString(), symbol?.Name);
     }
 }
 
-internal readonly record struct TransformerMeta(
+internal readonly record struct EnumTransformerInput(
     string TransformerName, string TransformerNamespace,
     bool CaseInsensitive, bool AllowParsingNumerics,
 
