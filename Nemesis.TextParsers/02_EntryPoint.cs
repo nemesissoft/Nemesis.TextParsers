@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using JetBrains.Annotations;
-using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
@@ -130,7 +129,7 @@ internal sealed class StandardTransformerStore : ITransformerStore
             if (handler.CanHandle(type))
                 return handler.CreateTransformer<TElement>();
 
-        throw new NotSupportedException($"Type '{type.GetFriendlyName()}' is not supported for string transformations. Provide appropriate chain of responsibility");
+        throw new NotSupportedException($"Type '{type.GetFriendlyName()}' is not supported for text transformations. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string");
     }
     #endregion
 
@@ -145,8 +144,7 @@ internal sealed class StandardTransformerStore : ITransformerStore
 
     private bool IsSupportedForTransformationCore(Type type) =>
         !type.IsGenericTypeDefinition &&
-        _transformerHandlers.FirstOrDefault(c => c.CanHandle(type)) is { } handler &&
-        handler is not SinkTransformerHandler;
+        _transformerHandlers.Any(handler => handler.CanHandle(type));
 
     #endregion
 
@@ -157,7 +155,7 @@ internal sealed class StandardTransformerStore : ITransformerStore
         var sb = new StringBuilder();
 
         foreach (var handler in _transformerHandlers)
-            if (handler.CanHandle(type) && handler is not SinkTransformerHandler)
+            if (handler.CanHandle(type))
             {
                 sb.AppendLine($"Handled by {handler.GetType().Name}: {handler.DescribeHandlerMatch()}");
                 break;

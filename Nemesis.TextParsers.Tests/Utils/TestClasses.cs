@@ -1,12 +1,10 @@
 ﻿using System.ComponentModel;
-using System.Diagnostics;
 using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Tests.Utils;
 
-#pragma warning disable IDE0250 // Make struct 'readonly'
 [Flags]
 public enum DaysOfWeek : byte
 {
@@ -378,66 +376,3 @@ internal sealed class OptionConverter : BaseTextConverter<Option>, ITransformer<
     public Option GetNull() => new(OptionEnum.None);
     public object GetNullObject() => GetNull();
 }
-
-[TypeConverter(typeof(PointConverter2))]
-[DebuggerDisplay("X = {" + nameof(X) + "}, Y = {" + nameof(Y) + "}")]
-readonly struct PointWithConverter : IEquatable<PointWithConverter>
-{
-    public int X { get; }
-    public int Y { get; }
-
-    public PointWithConverter(int x, int y) => (X, Y) = (x, y);
-
-    public bool Equals(PointWithConverter other) => X == other.X && Y == other.Y;
-
-    public override bool Equals(object obj) => obj is PointWithConverter other && Equals(other);
-
-    public override int GetHashCode() => unchecked(X * 397 ^ Y);
-}
-
-sealed class PointConverter2 : BaseTextConverter<PointWithConverter>
-{
-    private static PointWithConverter FromText(ReadOnlySpan<char> text)
-    {
-        var enumerator = text.Split(';').GetEnumerator();
-
-        if (!enumerator.MoveNext()) return default;
-        int x = Int32Transformer.Instance.Parse(enumerator.Current);
-
-        if (!enumerator.MoveNext()) return default;
-        int y = Int32Transformer.Instance.Parse(enumerator.Current);
-
-        return new PointWithConverter(x, y);
-    }
-
-    public override PointWithConverter ParseString(string text) => FromText(text.AsSpan());
-
-    public override string FormatToString(PointWithConverter pwc) => $"{pwc.X};{pwc.Y}";
-}
-
-[TypeConverter(typeof(BadPointConverter))]
-struct PointWithBadConverter
-{
-    public int X { get; }
-    public int Y { get; }
-
-    public PointWithBadConverter(int x, int y) => (X, Y) = (x, y);
-}
-
-sealed class BadPointConverter : TypeConverter
-{
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
-        sourceType != typeof(string);
-
-    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
-        destinationType != typeof(string);
-}
-
-struct PointWithoutConverter
-{
-    public int X { get; }
-    public int Y { get; }
-
-    public PointWithoutConverter(int x, int y) => (X, Y) = (x, y);
-}
-#pragma warning restore IDE0250 // Make struct 'readonly'

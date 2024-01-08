@@ -26,23 +26,6 @@ public sealed class TypeConverterTransformerHandler : ITransformerHandler
             )
         };
 
-    private sealed class ConverterTransformer<TElement> : TransformerBase<TElement>
-    {
-        private readonly TypeConverter _typeConverter;
-        public ConverterTransformer(TypeConverter typeConverter) => _typeConverter = typeConverter;
-
-
-        protected override TElement ParseCore(in ReadOnlySpan<char> input) =>
-            (TElement)_typeConverter.ConvertFromInvariantString(input.ToString());
-
-        public override string Format(TElement element) =>
-            element is null
-                ? null
-                : _typeConverter.ConvertToInvariantString(element);
-
-        public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {_typeConverter?.GetType().GetFriendlyName()}";
-    }
-
     public bool CanHandle(Type type) =>
         TypeDescriptor.GetConverter(type) is { } typeConverter && (
             typeConverter.GetType().DerivesOrImplementsGeneric(typeof(ITransformer<>))
@@ -60,4 +43,21 @@ public sealed class TypeConverterTransformerHandler : ITransformerHandler
     public override string ToString() => "Create transformer based on registered TypeConverter";
 
     string ITransformerHandler.DescribeHandlerMatch() => $"Type decorated with {nameof(TypeConverter)}";
+}
+
+sealed class ConverterTransformer<TElement> : TransformerBase<TElement>
+{
+    private readonly TypeConverter _typeConverter;
+    public ConverterTransformer(TypeConverter typeConverter) => _typeConverter = typeConverter;
+
+
+    protected override TElement ParseCore(in ReadOnlySpan<char> input) =>
+        (TElement)_typeConverter.ConvertFromInvariantString(input.ToString());
+
+    public override string Format(TElement element) =>
+        element is null
+            ? null
+            : _typeConverter.ConvertToInvariantString(element);
+
+    public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()} using {_typeConverter?.GetType().GetFriendlyName()}";
 }

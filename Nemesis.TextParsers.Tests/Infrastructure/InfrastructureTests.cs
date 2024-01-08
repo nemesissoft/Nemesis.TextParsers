@@ -1,6 +1,9 @@
-﻿using Nemesis.TextParsers.Tests.Utils;
+﻿using System.ComponentModel;
+using System.Diagnostics;
+using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
+using Sut = Nemesis.TextParsers.Tests.Utils.Sut;
 
 namespace Nemesis.TextParsers.Tests.Infrastructure;
 
@@ -59,77 +62,9 @@ public class InfrastructureTests
         typeof(BigInteger), typeof(Complex)
     };
 
-    private static IEnumerable<(Type type, bool expected)> GetIsSupportedCases()
-    {
-        static IEnumerable<(Type type, bool expected)> GetCases(IReadOnlyList<Type> types, bool expected)
-        {
-            var rand = new Random();
-
-            Type GetRandomType() => types[rand.Next(types.Count)];
-
-            var nullable = typeof(Nullable<>);
-            var coll = typeof(ICollection<>);
-            var dict = typeof(IDictionary<,>);
-            var kvp = typeof(KeyValuePair<,>);
-            var tupleTypes = new (int arity, Type tupleType)[]
-            {
-                (1, typeof(ValueTuple<>)),
-                (2, typeof(ValueTuple<,>)),
-                (3, typeof(ValueTuple<,,>)),
-                (4, typeof(ValueTuple<,,,>)),
-                (5, typeof(ValueTuple<,,,,>)),
-                (6, typeof(ValueTuple<,,,,,>)),
-                (7, typeof(ValueTuple<,,,,,,>)),
-            };
-
-
-            foreach (var type in types)
-            {
-                yield return (type, expected);
-                yield return (type.MakeArrayType(), expected);
-                yield return (type.MakeArrayType().MakeArrayType(), expected);
-                yield return (coll.MakeGenericType(type), expected);
-
-                if (type.IsValueType)
-                    yield return (nullable.MakeGenericType(type), expected);
-
-
-                yield return (kvp.MakeGenericType(type, GetRandomType()), expected);
-                yield return (kvp.MakeGenericType(GetRandomType(), type), expected);
-
-                yield return (dict.MakeGenericType(type, GetRandomType()), expected);
-                yield return (dict.MakeGenericType(GetRandomType(), type), expected);
-
-                foreach ((int arity, var tupleType) in tupleTypes)
-                    yield return (
-                        tupleType.MakeGenericType([type, .. Enumerable.Repeat(0, arity - 1).Select(i => GetRandomType())]),
-                        expected
-                   );
-            }
-        }
-
-        foreach (var @case in GetCases(_simpleTypes, true))
-            yield return @case;
-
-
-        var badTypes = new[] { typeof(object), typeof(PointWithBadConverter), typeof(PointWithoutConverter) };
-        foreach (var @case in GetCases(badTypes, false))
-            yield return @case;
-
-
-        foreach (var type in _simpleTypes)
-        {
-            yield return (type.MakeArrayType(2), false);
-            yield return (type.MakeArrayType(3), false);
-        }
-    }
-
     [Test]
     public void IsSupportedForTransformation_Exploratory()
     {
-        //static string ToTick(bool result) => result ? "✔" : "✖";
-        //Console.WriteLine($"{ToTick(actual)} as{(pass ? " " : " NOT ")}expected for {type.GetFriendlyName()}");
-
         var expected = GetIsSupportedCases().ToList();
 
         var actual = expected
@@ -139,8 +74,72 @@ public class InfrastructureTests
                 actual: Sut.DefaultStore.IsSupportedForTransformation(type)
             )).ToList();
 
-
         Assert.That(actual, Is.EqualTo(expected));
+
+        static IEnumerable<(Type type, bool expected)> GetIsSupportedCases()
+        {
+            static IEnumerable<(Type type, bool expected)> GetCases(IReadOnlyList<Type> types, bool expected)
+            {
+                var rand = new Random();
+
+                Type GetRandomType() => types[rand.Next(types.Count)];
+
+                var nullable = typeof(Nullable<>);
+                var coll = typeof(ICollection<>);
+                var dict = typeof(IDictionary<,>);
+                var kvp = typeof(KeyValuePair<,>);
+                var tupleTypes = new (int arity, Type tupleType)[]
+                {
+                (1, typeof(ValueTuple<>)),
+                (2, typeof(ValueTuple<,>)),
+                (3, typeof(ValueTuple<,,>)),
+                (4, typeof(ValueTuple<,,,>)),
+                (5, typeof(ValueTuple<,,,,>)),
+                (6, typeof(ValueTuple<,,,,,>)),
+                (7, typeof(ValueTuple<,,,,,,>)),
+                };
+
+
+                foreach (var type in types)
+                {
+                    yield return (type, expected);
+                    yield return (type.MakeArrayType(), expected);
+                    yield return (type.MakeArrayType().MakeArrayType(), expected);
+                    yield return (coll.MakeGenericType(type), expected);
+
+                    if (type.IsValueType)
+                        yield return (nullable.MakeGenericType(type), expected);
+
+
+                    yield return (kvp.MakeGenericType(type, GetRandomType()), expected);
+                    yield return (kvp.MakeGenericType(GetRandomType(), type), expected);
+
+                    yield return (dict.MakeGenericType(type, GetRandomType()), expected);
+                    yield return (dict.MakeGenericType(GetRandomType(), type), expected);
+
+                    foreach ((int arity, var tupleType) in tupleTypes)
+                        yield return (
+                            tupleType.MakeGenericType([type, .. Enumerable.Repeat(0, arity - 1).Select(i => GetRandomType())]),
+                            expected
+                       );
+                }
+            }
+
+            foreach (var @case in GetCases(_simpleTypes, true))
+                yield return @case;
+
+
+            var badTypes = new[] { typeof(object), typeof(PointWithBadConverter), typeof(PointWithoutConverter) };
+            foreach (var @case in GetCases(badTypes, false))
+                yield return @case;
+
+
+            foreach (var type in _simpleTypes)
+            {
+                yield return (type.MakeArrayType(2), false);
+                yield return (type.MakeArrayType(3), false);
+            }
+        }
     }
 
 
@@ -323,11 +322,162 @@ public class InfrastructureTests
         MISS -- Custom collection with element type supported for transformation
         MISS -- Deconstructable with properties types supported for transformation
         MISS -- Type decorated with TypeConverter
-        MISS -- Sink for Transformer handler chain of responsibility
         """)]
     public void DescribeHandlerMatch_ShouldReturnValudDiagnostics(Type type, string expectedDiagnostics)
     {
         var actual = Sut.DefaultStore.DescribeHandlerMatch(type);
-        Assert.That(actual, Is.EqualTo(expectedDiagnostics).Using(IgnoreNewLinesComparer.EqualityComparer));
+        Assert.That(actual, Is.EqualTo(expectedDiagnostics).Using(Utils.IgnoreNewLinesComparer.EqualityComparer));
+    }
+
+
+
+    [Test]
+    public void Positive_SimpleType()
+    {
+        var data = Enumerable.Range(1, 10).Select(i => new PointWithConverter(i * 10, i * -100)).ToList();
+        var sut = Sut.GetTransformer<PointWithConverter>();
+        Assert.That(sut, Is.TypeOf<ConverterTransformer<PointWithConverter>>());
+
+
+        var actualTexts = data.Select(sut.Format).ToList();
+        var actual = actualTexts.Select(sut.Parse).ToList();
+
+
+        Assert.That(actual, Is.EqualTo(data));
+    }
+
+    [Test]
+    public void Positive_Dictionary()
+    {
+        IDictionary<PointWithConverter, int> data = Enumerable.Range(1, 9)
+            .Select(i => new PointWithConverter(i * 11, i * 100))
+            .ToDictionary(p => p, p => p.X + p.Y);
+        var sut = Sut.GetTransformer<IDictionary<PointWithConverter, int>>();
+
+
+        var actualText = sut.Format(data);
+        var actual = sut.Parse(actualText);
+
+
+        Assert.That(actual, Is.EqualTo(data));
+    }
+
+    [Test]
+    public void Negative_BadConverter()
+    {
+        var conv = TypeDescriptor.GetConverter(typeof(PointWithBadConverter));
+        Assert.Multiple(() =>
+        {
+            Assert.That(conv, Is.TypeOf<NotTextConverter>());
+
+            Assert.That(
+                Sut.GetTransformer<PointWithBadConverter>,
+                Throws.TypeOf<NotSupportedException>()
+                    .With.Message.EqualTo("Type 'PointWithBadConverter' is not supported for text transformations. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+                );
+        });
+    }
+
+    [Test]
+    public void Negative_WhenNoConverterIsSpecified_ExceptionShouldBeThrown()
+    {
+        var sut = new TypeConverterTransformerHandler();
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                () => sut.CreateTransformer<PointWithoutConverter>(),
+                Throws.TypeOf<NotSupportedException>()
+                    .With.Message.EqualTo(@"Type 'PointWithoutConverter' is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
+                );
+
+            Assert.That(
+                () => sut.CreateTransformer<object>(),
+                Throws.TypeOf<NotSupportedException>()
+                    .With.Message.EqualTo(@"Type 'object' is not supported for text transformation. Type converter should be a subclass of TypeConverter but must not be TypeConverter itself")
+                );
+        });
+    }
+
+    [Test]
+    public void Negative_TypeConverterHandler_ShouldNotHandleTypesWithoutTransformerStrategy() => Assert.Multiple(() =>
+    {
+        Assert.That(
+            TypeDescriptor.GetConverter(typeof(PointWithoutConverter)),
+            Is.TypeOf<TypeConverter>()
+        );
+
+        Assert.That(
+            TypeDescriptor.GetConverter(typeof(object)),
+            Is.TypeOf<TypeConverter>()
+        );
+
+        Assert.That(
+            Sut.GetTransformer<PointWithoutConverter>,
+            Throws.TypeOf<NotSupportedException>()
+                .With.Message.EqualTo(@"Type 'PointWithoutConverter' is not supported for text transformations. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+        );
+
+        Assert.That(
+            Sut.GetTransformer<object>,
+            Throws.TypeOf<NotSupportedException>()
+                .With.Message.EqualTo(@"Type 'object' is not supported for text transformations. Create appropriate chain of responsibility pattern element or provide a TypeConverter that can parse from/to string")
+        );
+    });
+
+
+    [TypeConverter(typeof(PointConverter))]
+    [DebuggerDisplay("X = {" + nameof(X) + "}, Y = {" + nameof(Y) + "}")]
+    readonly struct PointWithConverter(int x, int y) : IEquatable<PointWithConverter>
+    {
+        public int X { get; } = x;
+        public int Y { get; } = y;
+
+        public bool Equals(PointWithConverter other) => X == other.X && Y == other.Y;
+
+        public override bool Equals(object obj) => obj is PointWithConverter other && Equals(other);
+
+        public override int GetHashCode() => unchecked(X * 397 ^ Y);
+    }
+
+    sealed class PointConverter : BaseTextConverter<PointWithConverter>
+    {
+        private static PointWithConverter FromText(ReadOnlySpan<char> text)
+        {
+            var enumerator = text.Split(';').GetEnumerator();
+
+            if (!enumerator.MoveNext()) return default;
+            int x = Int32Transformer.Instance.Parse(enumerator.Current);
+
+            if (!enumerator.MoveNext()) return default;
+            int y = Int32Transformer.Instance.Parse(enumerator.Current);
+
+            return new PointWithConverter(x, y);
+        }
+
+        public override PointWithConverter ParseString(string text) => FromText(text.AsSpan());
+
+        public override string FormatToString(PointWithConverter pwc) => $"{pwc.X};{pwc.Y}";
+    }
+
+    [TypeConverter(typeof(NotTextConverter))]
+    readonly struct PointWithBadConverter(int x, int y)
+    {
+        public int X { get; } = x;
+        public int Y { get; } = y;
+    }
+
+    sealed class NotTextConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
+            sourceType != typeof(string);
+
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) =>
+            destinationType != typeof(string);
+    }
+
+    readonly struct PointWithoutConverter(int x, int y)
+    {
+        public int X { get; } = x;
+        public int Y { get; } = y;
     }
 }
