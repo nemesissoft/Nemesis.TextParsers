@@ -8,11 +8,11 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class CollectionTransformerCreator : ICanCreateTransformer
+public sealed class CollectionTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
     private readonly CollectionSettings _settings;
-    public CollectionTransformerCreator(ITransformerStore transformerStore, CollectionSettings settings)
+    public CollectionTransformerHandler(ITransformerStore transformerStore, CollectionSettings settings)
     {
         _transformerStore = transformerStore;
         _settings = settings;
@@ -27,7 +27,7 @@ public sealed class CollectionTransformerCreator : ICanCreateTransformer
 
 
         var createMethod = Method.OfExpression<
-            Func<CollectionTransformerCreator, CollectionKind, ITransformer<List<int>>>
+            Func<CollectionTransformerHandler, CollectionKind, ITransformer<List<int>>>
         >((@this, k) => @this.CreateCollectionTransformer<int, List<int>>(k)
         ).GetGenericMethodDefinition();
 
@@ -67,6 +67,8 @@ public sealed class CollectionTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for Collection-like structures with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Collections with element type supported for transformation";
 }
 
 public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTransformerBase<TElement, TCollection>

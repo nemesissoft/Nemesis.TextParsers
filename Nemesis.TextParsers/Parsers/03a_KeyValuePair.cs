@@ -7,12 +7,12 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
+public sealed class KeyValuePairTransformerHandler : ITransformerHandler
 {
     private readonly TupleHelper _helper;
     private readonly ITransformerStore _transformerStore;
 
-    public KeyValuePairTransformerCreator(ITransformerStore transformerStore, KeyValuePairSettings settings)
+    public KeyValuePairTransformerHandler(ITransformerStore transformerStore, KeyValuePairSettings settings)
     {
         _transformerStore = transformerStore;
         _helper = settings.ToTupleHelper();
@@ -31,8 +31,8 @@ public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
     }
 
     private static readonly MethodInfo _createTransformerCoreMethod = Method.OfExpression<
-        Func<KeyValuePairTransformerCreator, ITransformer<KeyValuePair<int, int>>>
-    >(creator => creator.CreateTransformerCore<int, int>()).GetGenericMethodDefinition();
+        Func<KeyValuePairTransformerHandler, ITransformer<KeyValuePair<int, int>>>
+    >(handler => handler.CreateTransformerCore<int, int>()).GetGenericMethodDefinition();
 
     private ITransformer<KeyValuePair<TKey, TValue>> CreateTransformerCore<TKey, TValue>() =>
         new KeyValuePairTransformer<TKey, TValue>(_helper,
@@ -118,4 +118,6 @@ public sealed class KeyValuePairTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for KeyValuePair struct with settings:{_helper}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Key-value pair with properties supported for transformation";
 }

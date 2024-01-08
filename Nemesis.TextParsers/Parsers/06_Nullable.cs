@@ -4,11 +4,9 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class NullableTransformerCreator : ICanCreateTransformer
+public sealed class NullableTransformerHandler(ITransformerStore transformerStore) : ITransformerHandler
 {
-    private readonly ITransformerStore _transformerStore;
-    public NullableTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
-
+    private readonly ITransformerStore _transformerStore = transformerStore;
 
 
     public ITransformer<TNullable> CreateTransformer<TNullable>()
@@ -56,4 +54,6 @@ public sealed class NullableTransformerCreator : ICanCreateTransformer
     public sbyte Priority => 40;
 
     public override string ToString() => "Create transformer for Nullable generic realization";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Nullable with value supported for transformation";
 }

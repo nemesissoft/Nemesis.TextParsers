@@ -12,6 +12,7 @@ public interface ITransformerStore
     ITransformer GetTransformer(Type type);
 
     bool IsSupportedForTransformation(Type type);
+    string DescribeHandlerMatch(Type type);
 
     SettingsStore SettingsStore { get; }
 }
@@ -27,16 +28,16 @@ public static class TextTransformer
 
 internal sealed class StandardTransformerStore : ITransformerStore
 {
-    private readonly IEnumerable<ICanCreateTransformer> _transformerCreators;
+    private readonly IEnumerable<ITransformerHandler> _transformerHandlers;
     public SettingsStore SettingsStore { get; }
 
 
     private readonly ConcurrentDictionary<Type, ITransformer> _transformerCache = new();
 
-    public StandardTransformerStore([NotNull] IEnumerable<ICanCreateTransformer> transformerCreators,
+    public StandardTransformerStore([NotNull] IEnumerable<ITransformerHandler> transformerHandlers,
         [NotNull] SettingsStore settingsStore)
     {
-        _transformerCreators = transformerCreators ?? throw new ArgumentNullException(nameof(transformerCreators));
+        _transformerHandlers = transformerHandlers ?? throw new ArgumentNullException(nameof(transformerHandlers));
         SettingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
     }
 
@@ -51,34 +52,34 @@ internal sealed class StandardTransformerStore : ITransformerStore
         var types = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
 
-        var transformerCreators = new List<ICanCreateTransformer>(16);
-        var store = new StandardTransformerStore(transformerCreators, settingsStore);
+        var handlers = new List<ITransformerHandler>(16);
+        var store = new StandardTransformerStore(handlers, settingsStore);
 
-        transformerCreators.AddRange(
+        handlers.AddRange(
             from type in types
-            where typeof(ICanCreateTransformer).IsAssignableFrom(type)
-            select CreateTransformerCreator(type, store, settingsStore)
+            where typeof(ITransformerHandler).IsAssignableFrom(type)
+            select CreateTransformerHandler(type, store, settingsStore)
         );
 
-        if (!IsUnique(transformerCreators.Select(d => d.Priority)))
-            throw new InvalidOperationException($"All priorities registered via {nameof(ICanCreateTransformer)} have to be unique");
+        if (!IsUnique(handlers.Select(d => d.Priority)))
+            throw new InvalidOperationException($"All priorities registered via {nameof(ITransformerHandler)} have to be unique");
 
-        transformerCreators.Sort((i1, i2) => i1.Priority.CompareTo(i2.Priority));
+        handlers.Sort((i1, i2) => i1.Priority.CompareTo(i2.Priority));
 
         return store;
     }
 
-    private static ICanCreateTransformer CreateTransformerCreator(Type type, ITransformerStore transformerStore, SettingsStore settingsStore)
+    private static ITransformerHandler CreateTransformerHandler(Type type, ITransformerStore transformerStore, SettingsStore settingsStore)
     {
         var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         if (ctors.Length != 1)
-            throw new NotSupportedException($"Only single constructor is supported for transformer creator: {type.GetFriendlyName()}");
+            throw new NotSupportedException($"Only single constructor is supported for transformer handler: {type.GetFriendlyName()}");
 
         var ctor = ctors[0];
         var @params = ctor.GetParameters();
 
         if (@params.Length == 0)
-            return (ICanCreateTransformer)Activator.CreateInstance(type, true);
+            return (ITransformerHandler)Activator.CreateInstance(type, true);
         else
         {
             object GetArgument(Type argType)
@@ -96,7 +97,7 @@ internal sealed class StandardTransformerStore : ITransformerStore
                 .Select(GetArgument)
                 .ToArray();
 
-            return (ICanCreateTransformer)Activator.CreateInstance(type, arguments);
+            return (ITransformerHandler)Activator.CreateInstance(type, arguments);
         }
     }
 
@@ -125,9 +126,9 @@ internal sealed class StandardTransformerStore : ITransformerStore
         if (type.IsGenericTypeDefinition)
             throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
 
-        foreach (var creator in _transformerCreators)
-            if (creator.CanHandle(type))
-                return creator.CreateTransformer<TElement>();
+        foreach (var handler in _transformerHandlers)
+            if (handler.CanHandle(type))
+                return handler.CreateTransformer<TElement>();
 
         throw new NotSupportedException($"Type '{type.GetFriendlyName()}' is not supported for string transformations. Provide appropriate chain of responsibility");
     }
@@ -144,8 +145,30 @@ internal sealed class StandardTransformerStore : ITransformerStore
 
     private bool IsSupportedForTransformationCore(Type type) =>
         !type.IsGenericTypeDefinition &&
-        _transformerCreators.FirstOrDefault(c => c.CanHandle(type)) is { } creator &&
-        creator is not AnyTransformerCreator;
+        _transformerHandlers.FirstOrDefault(c => c.CanHandle(type)) is { } handler &&
+        handler is not SinkTransformerHandler;
+
+    #endregion
+
+    #region Diagnostics
+
+    public string DescribeHandlerMatch(Type type)
+    {
+        var sb = new StringBuilder();
+
+        foreach (var handler in _transformerHandlers)
+            if (handler.CanHandle(type) && handler is not SinkTransformerHandler)
+            {
+                sb.AppendLine($"Handled by {handler.GetType().Name}: {handler.DescribeHandlerMatch()}");
+                break;
+            }
+            else
+            {
+                sb.AppendLine($"MISS -- {handler.DescribeHandlerMatch()}");
+            }
+
+        return sb.ToString();
+    }
 
     #endregion
 }

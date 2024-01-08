@@ -6,12 +6,12 @@ using Nemesis.TextParsers.Settings;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
+public sealed class CustomDictionaryTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
     private readonly DictionarySettings _settings;
 
-    public CustomDictionaryTransformerCreator(ITransformerStore transformerStore, DictionarySettings settings)
+    public CustomDictionaryTransformerHandler(ITransformerStore transformerStore, DictionarySettings settings)
     {
         _transformerStore = transformerStore;
         _settings = settings;
@@ -149,6 +149,8 @@ public sealed class CustomDictionaryTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for custom dictionaries with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Custom dictionary structure with key/value type supported for transformation";
 }
 
 

@@ -5,7 +5,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class AnyTransformerCreator : ICanCreateTransformer
+public sealed class SinkTransformerHandler : ITransformerHandler
 {
     public ITransformer<TElement> CreateTransformer<TElement>() =>
         throw new NotSupportedException(
@@ -15,5 +15,7 @@ public sealed class AnyTransformerCreator : ICanCreateTransformer
 
     public sbyte Priority => sbyte.MaxValue;
 
-    public override string ToString() => "Sink for Transformer creator chain of responsibility";
+    public override string ToString() => "Sink for Transformer handler chain of responsibility";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Sink for Transformer handler chain of responsibility";
 }

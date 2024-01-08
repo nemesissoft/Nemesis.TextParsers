@@ -5,10 +5,10 @@ using Nemesis.TextParsers.Settings;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public class TransformableCreator : ICanCreateTransformer
+public class TransformableHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
-    public TransformableCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+    public TransformableHandler(ITransformerStore transformerStore) => _transformerStore = transformerStore;
 
     public ITransformer<TTransformable> CreateTransformer<TTransformable>()
     {
@@ -18,7 +18,7 @@ public class TransformableCreator : ICanCreateTransformer
         if (transformer == null ||
             !IsTransformerSupported(transformable, transformer)
         )
-            throw new NotSupportedException($"{transformable.GetFriendlyName()} is not supported by {nameof(TransformableCreator)}");
+            throw new NotSupportedException($"{transformable.GetFriendlyName()} is not supported by {nameof(TransformableHandler)}");
 
         transformer = PrepareGenericTransformer(transformable, transformer);
 
@@ -110,6 +110,8 @@ public class TransformableCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer based on {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => $"Type decorated with {nameof(TransformerAttribute)} pointing to valid transformer";
 }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum, Inherited = true, AllowMultiple = false)]

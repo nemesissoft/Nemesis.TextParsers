@@ -4,7 +4,7 @@ using Nemesis.TextParsers.Utils;
 using Builder = Nemesis.TextParsers.Parsers.DeconstructionTransformerBuilder;
 using PublicAPI = JetBrains.Annotations.PublicAPIAttribute;
 #if !NET
-    using NotNull = JetBrains.Annotations.NotNullAttribute;
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 #else
 using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 #endif
@@ -13,10 +13,10 @@ using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 namespace Nemesis.TextParsers.Parsers;
 
 [JetBrains.Annotations.UsedImplicitly]
-public sealed class DeconstructionTransformerCreator : ICanCreateTransformer
+public sealed class DeconstructionTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
-    public DeconstructionTransformerCreator(ITransformerStore transformerStore) => _transformerStore = transformerStore;
+    public DeconstructionTransformerHandler(ITransformerStore transformerStore) => _transformerStore = transformerStore;
 
 
     public ITransformer<TDeconstructable> CreateTransformer<TDeconstructable>()
@@ -35,6 +35,8 @@ public sealed class DeconstructionTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for Deconstructable aspect with DEFAULT settings:{_transformerStore.SettingsStore.GetSettingsFor<DeconstructableSettings>()}. Specify own settings using {nameof(DeconstructableSettingsAttribute)}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Deconstructable with properties types supported for transformation";
 }
 
 public enum DeconstructionMethod : byte

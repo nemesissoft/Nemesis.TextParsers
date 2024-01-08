@@ -7,11 +7,11 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class ArrayTransformerCreator : ICanCreateTransformer
+public sealed class ArrayTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
     private readonly ArraySettings _settings;
-    public ArrayTransformerCreator(ITransformerStore transformerStore, ArraySettings settings)
+    public ArrayTransformerHandler(ITransformerStore transformerStore, ArraySettings settings)
     {
         _transformerStore = transformerStore;
         _settings = settings;
@@ -24,7 +24,7 @@ public sealed class ArrayTransformerCreator : ICanCreateTransformer
             _transformerStore.IsSupportedForTransformation(elementType))
         {
             var createMethod = Method.OfExpression<
-                            Func<ArrayTransformerCreator, ITransformer<int[]>>
+                            Func<ArrayTransformerHandler, ITransformer<int[]>>
                         >(@this => @this.CreateArrayTransformer<int>()
                         ).GetGenericMethodDefinition();
 
@@ -36,7 +36,7 @@ public sealed class ArrayTransformerCreator : ICanCreateTransformer
                  _transformerStore.IsSupportedForTransformation(arraySegmentElementType))
         {
             var createMethod = Method.OfExpression<
-                Func<ArrayTransformerCreator, ITransformer<ArraySegment<int>>>
+                Func<ArrayTransformerHandler, ITransformer<ArraySegment<int>>>
             >(@this => @this.CreateArraySegmentTransformer<int>()
             ).GetGenericMethodDefinition();
 
@@ -100,8 +100,10 @@ public sealed class ArrayTransformerCreator : ICanCreateTransformer
 
     public sbyte Priority => 60;
 
-    public override string ToString() =>
-        $"Create transformer for array with settings:{_settings}";
+    public override string ToString() => $"Create transformer for array with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() =>
+        "Arrays (single dimensional and jagged) with element type supported for transformation";
 }
 
 public sealed class ArrayTransformer<TElement> : EnumerableTransformerBase<TElement, TElement[]>
@@ -141,7 +143,7 @@ internal class ArraySegmentTransformer
 {
     internal static readonly TupleHelper Helper = new('@', '∅', '~', '{', '}');
 }
-public class ArraySegmentTransformer<TElement> : SimpleTransformer<ArraySegment<TElement>>
+public sealed class ArraySegmentTransformer<TElement> : SimpleTransformer<ArraySegment<TElement>>
 {
     private const string TYPE_NAME = "ArraySegment";
 

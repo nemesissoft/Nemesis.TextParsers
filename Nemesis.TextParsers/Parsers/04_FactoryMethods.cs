@@ -4,7 +4,7 @@ using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public abstract class FactoryMethodTransformerCreator(FactoryMethodSettings settings) : ICanCreateTransformer
+public abstract class FactoryMethodTransformerHandler(FactoryMethodSettings settings) : ITransformerHandler
 {
     private readonly FactoryMethodSettings _settings = settings;
     protected readonly string FactoryMethodName = settings.FactoryMethodName;
@@ -106,6 +106,9 @@ public abstract class FactoryMethodTransformerCreator(FactoryMethodSettings sett
             ||
             (m.ReturnType.IsAbstract || m.ReturnType.IsInterface) && returnType.DerivesOrImplementsGeneric(m.ReturnType)
         );
+
+    string ITransformerHandler.DescribeHandlerMatch() => DescribeHandlerMatch();
+    protected abstract string DescribeHandlerMatch();
 
     private const BindingFlags STATIC_MEMBER_FLAGS = BindingFlags.Public | BindingFlags.Static;
 

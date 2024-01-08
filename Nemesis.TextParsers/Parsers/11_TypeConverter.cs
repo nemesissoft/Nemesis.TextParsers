@@ -7,7 +7,7 @@ using Nemesis.TextParsers.Runtime;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class TypeConverterTransformerCreator : ICanCreateTransformer
+public sealed class TypeConverterTransformerHandler : ITransformerHandler
 {
     public ITransformer<TElement> CreateTransformer<TElement>() =>
         TypeDescriptor.GetConverter(typeof(TElement)) switch
@@ -22,7 +22,7 @@ public sealed class TypeConverterTransformerCreator : ICanCreateTransformer
                 new ConverterTransformer<TElement>(t2),
 
             _ => throw new NotSupportedException(
-                $"Cannot create transformer for {typeof(TElement).GetFriendlyName()} based on {nameof(TypeConverterTransformerCreator)}"
+                $"Cannot create transformer for {typeof(TElement).GetFriendlyName()} based on {nameof(TypeConverterTransformerHandler)}"
             )
         };
 
@@ -58,4 +58,6 @@ public sealed class TypeConverterTransformerCreator : ICanCreateTransformer
     public sbyte Priority => 120;
 
     public override string ToString() => "Create transformer based on registered TypeConverter";
+
+    string ITransformerHandler.DescribeHandlerMatch() => $"Type decorated with {nameof(TypeConverter)}";
 }

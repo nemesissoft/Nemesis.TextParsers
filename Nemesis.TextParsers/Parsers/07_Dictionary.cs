@@ -8,11 +8,11 @@ namespace Nemesis.TextParsers.Parsers;
 
 //TODO support ILookup with null as key 
 [UsedImplicitly]
-public sealed class DictionaryTransformerCreator : ICanCreateTransformer
+public sealed class DictionaryTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
     private readonly DictionarySettings _settings;
-    public DictionaryTransformerCreator(ITransformerStore transformerStore, DictionarySettings settings)
+    public DictionaryTransformerHandler(ITransformerStore transformerStore, DictionarySettings settings)
     {
         _transformerStore = transformerStore;
         _settings = settings;
@@ -26,7 +26,7 @@ public sealed class DictionaryTransformerCreator : ICanCreateTransformer
             throw new NotSupportedException($"Type {dictType.GetFriendlyName()} is not supported by {GetType().Name}");
 
         var createMethod = Method.OfExpression<
-            Func<DictionaryTransformerCreator, DictionaryKind, ITransformer<Dictionary<int, int>>>
+            Func<DictionaryTransformerHandler, DictionaryKind, ITransformer<Dictionary<int, int>>>
         >((@this, k) => @this.CreateDictionaryTransformer<int, int, Dictionary<int, int>>(k)
         ).GetGenericMethodDefinition();
 
@@ -67,6 +67,8 @@ public sealed class DictionaryTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for Dictionary-like structures with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Dictionary-like structure with key/value supported for transformation";
 }
 
 public abstract class DictionaryTransformerBase<TKey, TValue, TDict> : TransformerBase<TDict>

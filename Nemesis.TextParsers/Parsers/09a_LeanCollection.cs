@@ -7,11 +7,11 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class LeanCollectionTransformerCreator : ICanCreateTransformer
+public sealed class LeanCollectionTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
     private readonly CollectionSettings _settings;
-    public LeanCollectionTransformerCreator(ITransformerStore transformerStore, CollectionSettings settings)
+    public LeanCollectionTransformerHandler(ITransformerStore transformerStore, CollectionSettings settings)
     {
         _transformerStore = transformerStore;
         _settings = settings;
@@ -23,7 +23,7 @@ public sealed class LeanCollectionTransformerCreator : ICanCreateTransformer
             throw new NotSupportedException($"Type {typeof(TLean).GetFriendlyName()} is not supported by {GetType().Name}");
 
         var createMethod = Method.OfExpression<
-            Func<LeanCollectionTransformerCreator, ITransformer<LeanCollection<int>>>
+            Func<LeanCollectionTransformerHandler, ITransformer<LeanCollection<int>>>
         >(@this => @this.CreateLeanCollectionTransformer<int>()
         ).GetGenericMethodDefinition();
 
@@ -58,6 +58,8 @@ public sealed class LeanCollectionTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for LeanCollection with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => $"{nameof(LeanCollection<object>)} with element type supported for transformation";
 }
 
 public sealed class LeanCollectionTransformer<TElement> : TransformerBase<LeanCollection<TElement>>

@@ -14,8 +14,8 @@ class AnyTypeConverterTests
         var sut = Sut.GetTransformer<PointWithConverter>();
 
 
-        var actualTexts = data.Select(pwc => sut.Format(pwc)).ToList();
-        var actual = actualTexts.Select(text => sut.Parse(text)).ToList();
+        var actualTexts = data.Select(sut.Format).ToList();
+        var actual = actualTexts.Select(sut.Parse).ToList();
 
 
         Assert.That(actual, Is.EqualTo(data));
@@ -56,7 +56,7 @@ class AnyTypeConverterTests
     [Test]
     public void NoConverter_NegativeTest()
     {
-        var sut = new TypeConverterTransformerCreator();
+        var sut = new TypeConverterTransformerHandler();
         Assert.Multiple(() =>
         {
             Assert.That(

@@ -6,12 +6,12 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class ValueTupleTransformerCreator : ICanCreateTransformer
+public sealed class ValueTupleTransformerHandler : ITransformerHandler
 {
     private readonly TupleHelper _helper;
 
     private readonly ITransformerStore _transformerStore;
-    public ValueTupleTransformerCreator(ITransformerStore transformerStore, ValueTupleSettings settings)
+    public ValueTupleTransformerHandler(ITransformerStore transformerStore, ValueTupleSettings settings)
     {
         _transformerStore = transformerStore;
         _helper = settings.ToTupleHelper();
@@ -80,4 +80,6 @@ public sealed class ValueTupleTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for ValueTuple struct with settings:{_helper}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Value tuple with properties supported for transformation";
 }

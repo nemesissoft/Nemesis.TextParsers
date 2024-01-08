@@ -6,10 +6,10 @@ using BF = System.Reflection.BindingFlags;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public sealed class EnumTransformerCreator : ICanCreateTransformer
+public sealed class EnumTransformerHandler : ITransformerHandler
 {
     private readonly EnumSettings _settings;
-    public EnumTransformerCreator(EnumSettings settings) => _settings = settings;
+    public EnumTransformerHandler(EnumSettings settings) => _settings = settings;
 
     public ITransformer<TEnum> CreateTransformer<TEnum>()
     {
@@ -51,6 +51,8 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
     public override string ToString() =>
         $"Create transformer for any Enum with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Enum based on system primitive number types";
 }
 
 public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : TransformerBase<TEnum>

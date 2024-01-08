@@ -4,7 +4,7 @@ using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public sealed class TextFactoryTransformerCreator(FactoryMethodSettings settings) : FactoryMethodTransformerCreator(settings)
+public sealed class TextFactoryTransformerHandler(FactoryMethodSettings settings) : FactoryMethodTransformerHandler(settings)
 {
     protected override Type? GetFactoryMethodContainingType(Type type)
     {
@@ -38,6 +38,8 @@ public sealed class TextFactoryTransformerCreator(FactoryMethodSettings settings
 
     public override string ToString() =>
         $"Create transformer using {nameof(TextFactoryAttribute)}.{nameof(TextFactoryAttribute.FactoryType)}.{FactoryMethodName}(ReadOnlySpan<char> or string)";
+
+    protected override string DescribeHandlerMatch() => $"Type decorated with {nameof(TextFactoryAttribute)} pointing to factory with method {FactoryMethodName}(ReadOnlySpan<char> or string)";
 }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]

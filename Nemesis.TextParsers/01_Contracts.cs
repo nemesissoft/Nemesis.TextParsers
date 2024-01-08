@@ -122,11 +122,12 @@ public abstract class TransformerBase<TElement> : ITransformer<TElement>
     public override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}";
 }
 
-public interface ICanCreateTransformer
+public interface ITransformerHandler
 {
     bool CanHandle(Type type);
     sbyte Priority { get; }
     ITransformer<TElement> CreateTransformer<TElement>();
+    string DescribeHandlerMatch();
 }
 
 public sealed class FormattableFormatter<TElement> : IFormatter<TElement> where TElement : IFormattable

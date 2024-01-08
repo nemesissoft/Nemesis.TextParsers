@@ -293,4 +293,41 @@ public class InfrastructureTests
         Assert.That(parsed2, Is.EqualTo(parsed1));
         Assert.That(parsed2, Is.EqualTo(expectedOutput));
     }
+
+    [TestCase(typeof(float), "Handled by SimpleTransformerHandler: Simple built-in type")]
+    [TestCase(typeof(Dictionary<decimal, string[]>), """
+        MISS -- Simple built-in type
+        MISS -- Key-value pair with properties supported for transformation
+        MISS -- Value tuple with properties supported for transformation
+        MISS -- Type decorated with TransformerAttribute pointing to valid transformer
+        MISS -- Type with method FromText(ReadOnlySpan<char> or string)
+        MISS -- Type decorated with TextFactoryAttribute pointing to factory with method FromText(ReadOnlySpan<char> or string)
+        MISS -- Enum based on system primitive number types
+        MISS -- Nullable with value supported for transformation
+        Handled by DictionaryTransformerHandler: Dictionary-like structure with key/value supported for transformation
+        """)]
+    [TestCase(typeof(PointWithoutConverter), """
+        MISS -- Simple built-in type
+        MISS -- Key-value pair with properties supported for transformation
+        MISS -- Value tuple with properties supported for transformation
+        MISS -- Type decorated with TransformerAttribute pointing to valid transformer
+        MISS -- Type with method FromText(ReadOnlySpan<char> or string)
+        MISS -- Type decorated with TextFactoryAttribute pointing to factory with method FromText(ReadOnlySpan<char> or string)
+        MISS -- Enum based on system primitive number types
+        MISS -- Nullable with value supported for transformation
+        MISS -- Dictionary-like structure with key/value supported for transformation
+        MISS -- Custom dictionary structure with key/value type supported for transformation
+        MISS -- Arrays (single dimensional and jagged) with element type supported for transformation
+        MISS -- Collections with element type supported for transformation
+        MISS -- LeanCollection with element type supported for transformation
+        MISS -- Custom collection with element type supported for transformation
+        MISS -- Deconstructable with properties types supported for transformation
+        MISS -- Type decorated with TypeConverter
+        MISS -- Sink for Transformer handler chain of responsibility
+        """)]
+    public void DescribeHandlerMatch_ShouldReturnValudDiagnostics(Type type, string expectedDiagnostics)
+    {
+        var actual = Sut.DefaultStore.DescribeHandlerMatch(type);
+        Assert.That(actual, Is.EqualTo(expectedDiagnostics).Using(IgnoreNewLinesComparer.EqualityComparer));
+    }
 }

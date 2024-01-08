@@ -9,11 +9,11 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class SimpleTransformerCreator : ICanCreateTransformer
+public sealed class SimpleTransformerHandler : ITransformerHandler
 {
     private readonly IReadOnlyDictionary<Type, ITransformer> _simpleTransformers;
 
-    public SimpleTransformerCreator() => _simpleTransformers = GetDefaultTransformers();
+    public SimpleTransformerHandler() => _simpleTransformers = GetDefaultTransformers();
 
     private static IReadOnlyDictionary<Type, ITransformer> GetDefaultTransformers(Assembly fromAssembly = null)
     {
@@ -48,7 +48,7 @@ public sealed class SimpleTransformerCreator : ICanCreateTransformer
         return _simpleTransformers.TryGetValue(typeof(TSimpleType), out var transformer)
             ? (ITransformer<TSimpleType>)transformer
             : throw new InvalidOperationException(
-                $"Internal state of {nameof(SimpleTransformerCreator)} was compromised");
+                $"Internal state of {nameof(SimpleTransformerHandler)} was compromised");
     }
 
     public bool CanHandle(Type type) => _simpleTransformers.ContainsKey(type);
@@ -57,6 +57,8 @@ public sealed class SimpleTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for simple system types: {string.Join(", ", _simpleTransformers.Keys.Select(t => t.GetFriendlyName()))}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Simple built-in type";
 }
 
 public static class NumberTransformerCache

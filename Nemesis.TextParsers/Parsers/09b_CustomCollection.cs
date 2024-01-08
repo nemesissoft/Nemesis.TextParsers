@@ -6,11 +6,11 @@ using Nemesis.TextParsers.Settings;
 namespace Nemesis.TextParsers.Parsers;
 
 [UsedImplicitly]
-public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
+public sealed class CustomCollectionTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
     private readonly CollectionSettings _settings;
-    public CustomCollectionTransformerCreator(ITransformerStore transformerStore, CollectionSettings settings)
+    public CustomCollectionTransformerHandler(ITransformerStore transformerStore, CollectionSettings settings)
     {
         _transformerStore = transformerStore;
         _settings = settings;
@@ -24,7 +24,7 @@ public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
         if (IsCustomCollection(collectionType, out var elementType))
         {
             var createMethod = Method.OfExpression<
-                Func<CustomCollectionTransformerCreator, bool, ITransformer<List<int>>>
+                Func<CustomCollectionTransformerHandler, bool, ITransformer<List<int>>>
             >((@this, supp) => @this.CreateCustomsCollectionTransformer<int, List<int>>(supp)
             ).GetGenericMethodDefinition();
 
@@ -35,7 +35,7 @@ public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
         else if (IsReadOnlyCollection(collectionType, out var meta))
         {
             var createMethod = Method.OfExpression<
-                Func<CustomCollectionTransformerCreator, bool, ConstructorInfo, ITransformer<List<int>>>
+                Func<CustomCollectionTransformerHandler, bool, ConstructorInfo, ITransformer<List<int>>>
             >((@this, supp, ci) => @this.CreateReadOnlyCollectionTransformer<int, List<int>>(supp, ci)
             ).GetGenericMethodDefinition();
 
@@ -138,6 +138,8 @@ public sealed class CustomCollectionTransformerCreator : ICanCreateTransformer
 
     public override string ToString() =>
         $"Create transformer for custom collections with settings:{_settings}";
+
+    string ITransformerHandler.DescribeHandlerMatch() => "Custom collection with element type supported for transformation";
 }
 
 
