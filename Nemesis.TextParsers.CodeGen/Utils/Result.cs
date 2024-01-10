@@ -55,6 +55,34 @@ internal readonly struct Result<TValue, TError>
         else if (IsError) failure?.Invoke(Error);
     }
 
+    public bool TryGetValue([NotNullWhen(true)] out TValue? value)
+    {
+        if (IsSuccess)
+        {
+            value = Value;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    public bool TryGetError([NotNullWhen(true)] out TError? error)
+    {
+        if (IsError)
+        {
+            error = Error;
+            return true;
+        }
+        else
+        {
+            error = default;
+            return false;
+        }
+    }
+
     public override string? ToString() => _state switch
     {
         State.Success => Value?.ToString(),

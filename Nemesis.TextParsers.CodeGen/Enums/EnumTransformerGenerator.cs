@@ -23,14 +23,17 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
            static (spc, result) => Execute(result, spc));
     }
 
-    private static void Execute(Result<EnumTransformerInput, Diagnostic> result, SourceProductionContext context) =>
-        result.Invoke(
-            input =>
-            {
-                var source = Render(in input);
-                context.AddSource($"{input.TransformerName}.g.cs", SourceText.From(source, Encoding.UTF8));
-            },
-            context.ReportDiagnostic);
+    private static void Execute(Result<EnumTransformerInput, Diagnostic> result, SourceProductionContext context)
+    {
+        if (result.TryGetValue(out var input))
+        {
+            var source = Render(in input);
+            context.AddSource($"{input.TransformerName}.g.cs", SourceText.From(source, Encoding.UTF8));
+        }
+        else if (result.TryGetError(out var error))
+            context.ReportDiagnostic(error);
+
+    }
 
     private static string Render(in EnumTransformerInput input)
     {
