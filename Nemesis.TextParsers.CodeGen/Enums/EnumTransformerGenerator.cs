@@ -23,8 +23,7 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
            static (spc, result) => Execute(result, spc));
     }
 
-    private static void Execute(Result<EnumTransformerInput, Diagnostic> result, SourceProductionContext context)
-    {
+    private static void Execute(Result<EnumTransformerInput, Diagnostic> result, SourceProductionContext context) =>
         result.Invoke(
             input =>
             {
@@ -32,7 +31,6 @@ public sealed partial class EnumTransformerGenerator : IncrementalGenerator
                 context.AddSource($"{input.TransformerName}.g.cs", SourceText.From(source, Encoding.UTF8));
             },
             context.ReportDiagnostic);
-    }
 
     private static string Render(in EnumTransformerInput input)
     {

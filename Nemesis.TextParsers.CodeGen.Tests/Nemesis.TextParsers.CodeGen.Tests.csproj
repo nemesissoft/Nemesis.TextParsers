@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>		
+	<PropertyGroup>
 		<TargetFrameworks>net6.0;net48</TargetFrameworks>
 		<IsTestProject>true</IsTestProject>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<NoWarn>$(NoWarn);NU1603</NoWarn>		
+		<NoWarn>$(NoWarn);NU1603</NoWarn>
 	</PropertyGroup>
 
-	<ItemGroup>	
+	<ItemGroup>
 		<Using Include="NUnit.Framework" />
 		<Using Include="NUnit.Framework.TestCaseData" Alias="TCD" />
 	</ItemGroup>

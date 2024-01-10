@@ -1,38 +1,42 @@
 ﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
+
 namespace Nemesis.TextParsers.CodeGen.Utils;
 
 internal readonly struct Result<TValue, TError>
 {
     private readonly State _state;
-    private readonly TValue? _value;
-    private readonly TError? _error;
+    public TValue? Value { get; }
+    public TError? Error { get; }
 
-    public TValue Value => IsSuccess ? _value! : throw new InvalidOperationException("Value can only be retrieved in 'Success' state");
-
+    [MemberNotNullWhen(true, nameof(Value))]
     public bool IsSuccess => _state == State.Success;
+
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool IsError => _state == State.Error;
+
     public bool IsNone => _state == State.None;
 
     private Result(TValue value)
     {
-        _value = value;
-        _error = default;
+        Value = value;
+        Error = default;
 
         _state = State.Success;
     }
 
     private Result(TError error)
     {
-        _value = default;
-        _error = error;
+        Value = default;
+        Error = error;
 
         _state = State.Error;
     }
 
     public Result()
     {
-        _value = default;
-        _error = default;
+        Value = default;
+        Error = default;
 
         _state = State.None;
     }
@@ -47,14 +51,14 @@ internal readonly struct Result<TValue, TError>
 
     public void Invoke(Action<TValue> success, Action<TError>? failure = null)
     {
-        if (IsSuccess) success(_value!);
-        else if (IsError) failure?.Invoke(_error!);
+        if (IsSuccess) success(Value);
+        else if (IsError) failure?.Invoke(Error);
     }
 
     public override string? ToString() => _state switch
     {
-        State.Success => _value?.ToString(),
-        State.Error => _error?.ToString(),
+        State.Success => Value?.ToString(),
+        State.Error => Error?.ToString(),
         State.None => "<None>",
         _ => throw new NotSupportedException($"State {_state} is not supported")
     };
