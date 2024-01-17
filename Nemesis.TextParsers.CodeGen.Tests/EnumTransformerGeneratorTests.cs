@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Nemesis.TextParsers.CodeGen.Enums;
 using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
@@ -55,6 +56,35 @@ internal class EnumTransformerGeneratorTests
             Assert.That(diag, Does.StartWith("(2,15)"));
             Assert.That(diag, Does.Contain("<global namespace>.Casing"));
         });
+    }
+
+    [Test]
+    public void Generate_EnsureProperCaching()
+    {
+        var compilation = CreateValidCompilation("""
+          [Auto.AutoEnumTransformer]
+          public enum State : byte { None = 0, Valid = 1, Invalid = 2 }
+          """);
+
+        var driver = new EnumTransformerGenerator().CreateGeneratorDriver(compilation);
+
+        void RunAndAssert(IncrementalStepRunReason expectedReason, string errorMessage)
+        {
+            driver = driver.RunGenerators(compilation);
+            var allSteps = driver.GetRunResult().Results.SelectMany(r => r.TrackedSteps["Inputs"]).SelectMany(step => step.Outputs).ToList();
+            Assert.That(allSteps, Has.Count.GreaterThan(0));
+            Assert.That(allSteps.Select(s => s.Reason), Has.All.EqualTo(expectedReason));
+        }
+
+        RunAndAssert(IncrementalStepRunReason.New, "Fresh compilation");
+
+
+        compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText("// dummy"));
+        RunAndAssert(IncrementalStepRunReason.Cached, "Driver shouldn't recompute the output. Fix caching of intermediary state");
+
+
+        compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText("public enum OtherState : byte { None = 0, Valid = 1, Invalid = 2 }"));
+        RunAndAssert(IncrementalStepRunReason.Cached, "Driver shouldn't recompute the output. Fix caching of intermediary state");
     }
 
     internal static readonly IEnumerable<(string name, string source, EnumTransformerInput expectedMeta, string expectedCodeGen)> EnumCodeGenCases =

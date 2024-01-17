@@ -9,12 +9,15 @@ public abstract class IncrementalGenerator : IIncrementalGenerator
 
     public abstract void Initialize(IncrementalGeneratorInitializationContext context);
 
-    public GeneratorRunResult RunIncrementalGenerator(Compilation compilation)
-    {
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+    public GeneratorDriver CreateGeneratorDriver(Compilation compilation) =>
+        CSharpGeneratorDriver.Create(
             generators: new ISourceGenerator[] { this.AsSourceGenerator() },
             parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
             driverOptions: new GeneratorDriverOptions(default, trackIncrementalGeneratorSteps: true));
+
+    public GeneratorRunResult RunIncrementalGenerator(Compilation compilation)
+    {
+        GeneratorDriver driver = CreateGeneratorDriver(compilation);
 
         driver = driver.RunGenerators(compilation);
         return driver.GetRunResult().Results.Single();

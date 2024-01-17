@@ -144,7 +144,7 @@ partial class EnumTransformerGenerator
             transformerNamespace ?? (enumSymbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : enumSymbol.ContainingNamespace.ToString()),
             caseInsensitive ?? true, allowParsingNumerics ?? true,
 
-            fullyQualifiedName, memberNames,
+            fullyQualifiedName, new(memberNames),
             enumSymbol.DeclaredAccessibility == Accessibility.Public,
             hasFlags, underlyingType);
 
@@ -165,7 +165,7 @@ internal readonly record struct EnumTransformerInput(
     string TransformerName, string TransformerNamespace,
     bool CaseInsensitive, bool AllowParsingNumerics,
 
-    string EnumFullyQualifiedName, IReadOnlyList<string> MemberNames,
+    string EnumFullyQualifiedName, ValueArray<string> MemberNames,
     bool IsPublic, bool IsFlagEnum, string UnderlyingType);
 
 file static class CurrentExtensions
