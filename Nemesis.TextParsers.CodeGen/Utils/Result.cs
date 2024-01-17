@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nemesis.TextParsers.CodeGen.Utils;
 
-internal readonly struct Result<TValue, TError>
+internal readonly struct Result<TValue, TError> : IEquatable<Result<TValue, TError>>
 {
     private readonly State _state;
     public TValue? Value { get; }
@@ -43,8 +43,26 @@ internal readonly struct Result<TValue, TError>
 
     public static Result<TValue, TError> None() => new();
 
+
+    public override bool Equals(object? obj) => obj is Result<TValue, TError> result && Equals(result);
+
+    public bool Equals(Result<TValue, TError> other) =>
+        _state == other._state && _state switch
+        {
+            State.Success => EqualityComparer<TValue?>.Default.Equals(Value, other.Value),
+            State.Error => EqualityComparer<TError?>.Default.Equals(Error, other.Error),
+            State.None => true,
+            _ => throw new NotSupportedException($"State {_state} is not supported")
+        };
+
+    public override int GetHashCode() => IsSuccess ? Value.GetHashCode() : (IsError ? Error.GetHashCode() : 0);
+
+
     public static implicit operator Result<TValue, TError>(TValue result) => new(result);
     public static implicit operator Result<TValue, TError>(TError error) => new(error);
+
+    public static bool operator ==(Result<TValue, TError> left, Result<TValue, TError> right) => left.Equals(right);
+    public static bool operator !=(Result<TValue, TError> left, Result<TValue, TError> right) => !(left == right);
 
     /*public TResult Match<TResult>(Func<TValue, TResult> success, Func<TError, TResult> failure) =>
         IsError ? failure(Error!) : success(Value!);*/
