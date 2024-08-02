@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.Runtime.Serialization;
 
 using JetBrains.Annotations;
 
@@ -112,12 +111,19 @@ public readonly struct DictionaryMeta : IEquatable<DictionaryMeta>
                 else if (TypeMeta.IsNumeric(typeOfKey))
                     return (TKey)Convert.ChangeType(nextKey % 128, typeOfKey, CultureInfo.InvariantCulture);
                 else if (typeOfKey.IsValueType && Nullable.GetUnderlyingType(typeOfKey) is { } underlyingType)
-                    return (TKey)FormatterServices.GetUninitializedObject(underlyingType);
+                    return (TKey)GetUninitializedObject(underlyingType);
                 else
-                    return (TKey)FormatterServices.GetUninitializedObject(typeOfKey);
+                    return (TKey)GetUninitializedObject(typeOfKey);
             }
             catch { return default; }
         }
+
+        static object GetUninitializedObject(Type type) =>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+            System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type);
+#else
+            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+#endif
     }
 
     private static TDest ConvertElement<TDest>(object element)
