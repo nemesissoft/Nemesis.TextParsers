@@ -1,11 +1,17 @@
-﻿namespace Nemesis.TextParsers.Settings;
+﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
 
-public sealed class EnumSettings(bool caseInsensitive, bool allowParsingNumerics) : ISettings
+namespace Nemesis.TextParsers.Settings;
+
+public sealed record EnumSettings(bool CaseInsensitive = true, bool AllowParsingNumerics = true) : ISettings<EnumSettings>
 {
-    public bool CaseInsensitive { get; private set; } = caseInsensitive;
-    public bool AllowParsingNumerics { get; private set; } = allowParsingNumerics;
+    public static EnumSettings Default { get; } = new();
 
-    public static EnumSettings Default { get; } = new(true, true);
+    public bool IsValid([NotNullWhen(false)] out string? error)
+    {
+        error = null;
+        return true;
+    }
 
     public override string ToString() => $"Value{(CaseInsensitive ? "≡" : "≠")}vAluE ; Text {(AllowParsingNumerics ? "and" : "but no")} №";
 }

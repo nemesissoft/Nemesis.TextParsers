@@ -1,50 +1,81 @@
-﻿using System.Collections.ObjectModel;
-using JetBrains.Annotations;
+﻿#nullable enable
+using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Settings;
 
-//marker interface
-public interface ISettings { }
+public interface ISettings
+{
+    bool IsValid([NotNullWhen(false)] out string? error);
+}
 
-[PublicAPI]
+public interface ISettings<T> : ISettings
+    where T : ISettings<T>
+{
+#if NET7_0_OR_GREATER
+    static abstract T Default { get; }
+#endif
+}
+
+[JetBrains.Annotations.PublicAPI]
 public sealed class SettingsStoreBuilder
 {
-    private readonly IDictionary<Type, ISettings> _settings;
+    private readonly Dictionary<Type, ISettings> _settings;
 
-    public SettingsStoreBuilder() => _settings = new Dictionary<Type, ISettings>();
+    public SettingsStoreBuilder() => _settings = [];
 
-    public SettingsStoreBuilder(IEnumerable<ISettings> settings) =>
-        _settings = settings?.ToDictionary(s => s.GetType()) ?? [];
-
-    public static SettingsStoreBuilder GetDefault(Assembly fromAssembly = null)
+    public SettingsStoreBuilder(IEnumerable<ISettings> settings)
     {
-        const BindingFlags PUB_STAT_FLAGS = BindingFlags.Public | BindingFlags.Static;
+        if (settings.Any(s => !s.IsValid(out var _)))
+        {
+            throw new NotSupportedException("Settings are not valid is not valid:" + Environment.NewLine +
+                string.Join(Environment.NewLine,
+                            settings
+                                .Where(s => !s.IsValid(out var _))
+                                .Select(s =>
+                                {
+                                    s.IsValid(out var err);
+                                    return $"\t{err} @ {s.GetType().Name} @ {s}";
+                                })
+            ));
+        }
 
+        _settings = settings?.ToDictionary(s => s.GetType()) ?? [];
+    }
+
+    public static SettingsStoreBuilder GetDefault(Assembly? fromAssembly = null)
+    {
         var types = (fromAssembly ?? Assembly.GetExecutingAssembly())
             .GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition &&
-                        typeof(ISettings).IsAssignableFrom(t)
+                        typeof(ISettings).IsAssignableFrom(t) &&
+                        t.DerivesOrImplementsGeneric(typeof(ISettings<>))
             );
 
-        var defaultInstances = types
-            .Select(t => t.GetProperty("Default", PUB_STAT_FLAGS) is { } defaultProperty &&
-                         typeof(ISettings).IsAssignableFrom(defaultProperty.PropertyType)
-                ? (ISettings)defaultProperty.GetValue(null)
-                : throw new NotSupportedException(
-                    $"Automatic settings store builder supports {nameof(ISettings)} instances with public static property named 'Default' assignable to {nameof(ISettings)}")
+        var defaultInstances = types.Select(t =>
+            t.GetProperty("Default", BindingFlags.Public | BindingFlags.Static) is { } defaultProperty &&
+            defaultProperty.PropertyType.DerivesOrImplementsGeneric(typeof(ISettings<>)) &&
+            defaultProperty.GetValue(null) is ISettings s
+            ? s
+            : throw new NotSupportedException(
+                $"Automatic settings store builder supports {nameof(ISettings)} instances with public static property named 'Default' assignable to {nameof(ISettings)}")
             );
 
         return new SettingsStoreBuilder(defaultInstances);
     }
 
-    public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings =>
+    /*public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings =>
         _settings.TryGetValue(typeof(TSettings), out var s)
             ? (TSettings)s
-            : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
+            : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");*/
 
-    public SettingsStoreBuilder AddOrUpdate<TSettings>([NotNull] TSettings settings) where TSettings : ISettings
+    public SettingsStoreBuilder AddOrUpdate<TSettings>(TSettings settings)
+        where TSettings : ISettings
     {
+        if (!settings.IsValid(out var err))
+            throw new ArgumentException($"{settings.GetType().FullName}: {err}");
+
         _settings[settings.GetType()] =
             settings ?? throw new ArgumentNullException(nameof(settings));
         return this;
@@ -59,50 +90,11 @@ public sealed class SettingsStore
 
     public SettingsStore(IReadOnlyDictionary<Type, ISettings> settings) => _settings = settings;
 
-    public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings =>
+    public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings<TSettings> =>
         (TSettings)GetSettingsFor(typeof(TSettings));
 
     public ISettings GetSettingsFor(Type settingsType) =>
         _settings.TryGetValue(settingsType, out var s)
             ? s
             : throw new NotSupportedException($"No settings registered for {settingsType.GetFriendlyName()}");
-}
-
-public static class SettingsHelper
-{
-    public static TSettings With<TSettings, TProp>(this TSettings settings, Expression<Func<TSettings, TProp>> propertyExpression, TProp newValue)
-        where TSettings : ISettings
-    {
-        static bool EqualNames(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
-
-        var property = Property.Of(propertyExpression);
-        var ctor = typeof(TSettings).GetConstructors().Select(c => (Ctor: c, Params: c.GetParameters()))
-            .Where(pair =>
-                pair.Params.Length > 0 &&
-                pair.Params.Any(p => EqualNames(p.Name, property.Name))
-            )
-            .OrderByDescending(p => p.Params.Length)
-            .FirstOrDefault().Ctor ?? throw new NotSupportedException("No suitable constructor found");
-
-        var allProperties =
-            typeof(TSettings).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-        object GetArg(string paramName)
-        {
-            if (EqualNames(paramName, property.Name))
-                return newValue;
-            else
-            {
-                var prop = allProperties.FirstOrDefault(p => EqualNames(paramName, p.Name))
-                    ?? throw new NotSupportedException($"No suitable property found: {paramName} +/- letter casing");
-                var value = prop.GetValue(settings);
-                return value;
-            }
-        }
-
-        var arguments = ctor.GetParameters()
-            .Select(p => GetArg(p.Name)).ToArray();
-
-        return (TSettings)ctor.Invoke(arguments);
-    }
 }

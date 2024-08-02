@@ -1,4 +1,5 @@
-﻿using Nemesis.TextParsers.Parsers;
+﻿using System.Collections.ObjectModel;
+using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Tests.Utils;
 
@@ -30,16 +31,16 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         new(_numberHandler, EnumSettings.Default);
 
     private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sutCaseSensitive =
-        new(_numberHandler, EnumSettings.Default.With(s => s.CaseInsensitive, false));
+        new(_numberHandler, EnumSettings.Default with { CaseInsensitive = false });
 
     private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sutOnlyEnumNames =
-        new(_numberHandler, EnumSettings.Default.With(s => s.AllowParsingNumerics, false));
+        new(_numberHandler, EnumSettings.Default with { AllowParsingNumerics = false });
 
 
     private static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
     private static readonly IReadOnlyList<(TUnderlying Number, TEnum Enum, string Text)> _testValues = GetTestValues();
-    private static IReadOnlyList<(TUnderlying Number, TEnum Enum, string Text)> GetTestValues()
+    private static ReadOnlyCollection<(TUnderlying Number, TEnum Enum, string Text)> GetTestValues()
     {
         Type enumType = typeof(TEnum);
         var values = Enum.GetValues(enumType).Cast<TUnderlying>().ToList();
@@ -324,7 +325,9 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     [Test]
     public static void CaseSensitive_Weird()
     {
-        var sut = new EnumTransformer<Casing, int, Int32Transformer>((Int32Transformer)Int32Transformer.Instance, EnumSettings.Default.With(s => s.CaseInsensitive, false));
+        var sut = new EnumTransformer<Casing, int, Int32Transformer>(
+            (Int32Transformer)Int32Transformer.Instance,
+            EnumSettings.Default with { CaseInsensitive = false });
 
         var enumValues = typeof(Casing).GetFields(BindingFlags.Public | BindingFlags.Static)
             .Select(enumField => (enumField.Name, Value: (Casing)(int)enumField.GetValue(null))).ToList();

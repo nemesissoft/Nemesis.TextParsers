@@ -1,12 +1,21 @@
-﻿namespace Nemesis.TextParsers.Settings;
+﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
 
-public sealed class FactoryMethodSettings(string factoryMethodName, string emptyPropertyName, string nullPropertyName) : ISettings
+namespace Nemesis.TextParsers.Settings;
+
+public sealed record FactoryMethodSettings(
+    string FactoryMethodName = "FromText",
+    string EmptyPropertyName = "Empty",
+    string NullPropertyName = "Null"
+) : ISettings<FactoryMethodSettings>
 {
-    public string FactoryMethodName { get; private set; } = factoryMethodName;
-    public string EmptyPropertyName { get; private set; } = emptyPropertyName;
-    public string NullPropertyName { get; private set; } = nullPropertyName;
+    public static FactoryMethodSettings Default { get; } = new();
 
-    public static FactoryMethodSettings Default { get; } = new("FromText", "Empty", "Null");
+    public bool IsValid([NotNullWhen(false)] out string? error)
+    {
+        error = null;
+        return true;
+    }
 
     public override string ToString() =>
         $"Parsed by {FactoryMethodName} Empty: {EmptyPropertyName} Null: {NullPropertyName}";

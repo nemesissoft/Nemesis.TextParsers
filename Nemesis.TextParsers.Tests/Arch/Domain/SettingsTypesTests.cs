@@ -49,6 +49,9 @@ public class SettingsTypesTests
             foreach (var type in types)
                 foreach (var p in type.GetProperties(BindingAttr))
                 {
+                    if (string.Equals(p.Name, "EqualityContract", StringComparison.Ordinal))
+                        continue;
+
                     var property = p;
                     string desc = $"{type.Name}.{property.Name}";
                     if (property.DeclaringType is not null && property.DeclaringType != type)
@@ -58,8 +61,13 @@ public class SettingsTypesTests
                          ?? throw new MissingMemberException(desc);
                     }
 
-                    Assert.That(property.GetSetMethod(true), Is.Not.Null,
-                        () => $"{desc} should have (at least) private setter to be accessible for value binding");
+                    desc = $"{desc} should have at least init/private setter to be accessible for value binding";
+
+                    Assert.That(property.CanWrite, Is.True, desc);
+                    Assert.That(property.SetMethod, Is.Not.Null, desc);
+                    Assert.That(property.SetMethod.ReturnParameter.GetRequiredCustomModifiers() is { Length: > 0 } reqMods &&
+                                Array.IndexOf(reqMods, typeof(IsExternalInit)) > -1,
+                        Is.True, desc);
                 }
         });
     }

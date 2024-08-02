@@ -1,45 +1,51 @@
-﻿using Nemesis.TextParsers.Utils;
+﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
+using Nemesis.TextParsers.Utils;
 
 using Dsa = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
 
 namespace Nemesis.TextParsers.Settings;
 
-public abstract class TupleSettings : ISettings
+public abstract record TupleSettings(
+    char Delimiter,
+    char NullElementMarker,
+    char EscapingSequenceStart,
+    char? Start,
+    char? End) : ISettings
 {
-    public char Delimiter { get; private set; }
-    public char NullElementMarker { get; private set; }
-    public char EscapingSequenceStart { get; private set; }
-    public char? Start { get; private set; }
-    public char? End { get; private set; }
-
-    protected TupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
+    public bool IsValid([NotNullWhen(false)] out string? error)
     {
-        if (delimiter == nullElementMarker ||
-            delimiter == escapingSequenceStart ||
-            delimiter == start ||
-            delimiter == end ||
+        if (Delimiter == NullElementMarker ||
+            Delimiter == EscapingSequenceStart ||
+            Delimiter == Start ||
+            Delimiter == End ||
 
-            nullElementMarker == escapingSequenceStart ||
-            nullElementMarker == start ||
-            nullElementMarker == end ||
+            NullElementMarker == EscapingSequenceStart ||
+            NullElementMarker == Start ||
+            NullElementMarker == End ||
 
-            escapingSequenceStart == start ||
-            escapingSequenceStart == end
+            EscapingSequenceStart == Start ||
+            EscapingSequenceStart == End
         )
-            throw new ArgumentException($@"{GetType().Name} requires unique characters to be used for parsing/formatting purposes. Start ('{start}') and end ('{end}') can be equal to each other
-Passed parameters: 
-{nameof(delimiter)} = '{delimiter}'
-{nameof(nullElementMarker)} = '{nullElementMarker}'
-{nameof(escapingSequenceStart)} = '{escapingSequenceStart}'
-{nameof(start)} = '{start}'
-{nameof(end)} = '{end}'");
+        {
+            error = $"""
+                {GetType().Name} requires unique characters to be used for parsing/formatting purposes. 
+                Start ('{Start}') and end ('{End}') properties can be equal to each other.
+                Passed parameters: 
+                  {nameof(Delimiter)} = '{Delimiter}'
+                  {nameof(NullElementMarker)} = '{NullElementMarker}'
+                  {nameof(EscapingSequenceStart)} = '{EscapingSequenceStart}'
+                  {nameof(Start)} = '{Start}'
+                  {nameof(End)} = '{End}'
+                """;
+            return false;
+        }
+        else
+        {
+            error = null;
+            return true;
+        }
 
-
-        Delimiter = delimiter;
-        NullElementMarker = nullElementMarker;
-        EscapingSequenceStart = escapingSequenceStart;
-        Start = start;
-        End = end;
     }
 
     public override string ToString() =>
@@ -48,37 +54,43 @@ Passed parameters:
     public TupleHelper ToTupleHelper() => new(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End);
 }
 
-public sealed class ValueTupleSettings : TupleSettings
+public sealed record ValueTupleSettings(
+    char Delimiter = ',',
+    char NullElementMarker = '∅',
+    char EscapingSequenceStart = '\\',
+    char? Start = '(',
+    char? End = ')'
+) : TupleSettings(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End),
+    ISettings<ValueTupleSettings>
 {
-    public ValueTupleSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
-        : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
-
-    public static ValueTupleSettings Default { get; } = new(',', '∅', '\\', '(', ')');
+    public static ValueTupleSettings Default { get; } = new();
 }
 
-public sealed class KeyValuePairSettings : TupleSettings
+public sealed record KeyValuePairSettings(
+    char Delimiter = '=',
+    char NullElementMarker = '∅',
+    char EscapingSequenceStart = '\\',
+    char? Start = null,
+    char? End = null
+) : TupleSettings(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End),
+    ISettings<KeyValuePairSettings>
 {
-    public KeyValuePairSettings(char delimiter, char nullElementMarker, char escapingSequenceStart, char? start, char? end)
-        : base(delimiter, nullElementMarker, escapingSequenceStart, start, end) { }
-
-    public static KeyValuePairSettings Default { get; } = new('=', '∅', '\\', null, null);
+    public static KeyValuePairSettings Default { get; } = new();
 
     public override string ToString() =>
         $"{Start}Key{Delimiter}Value{End} escaped by '{EscapingSequenceStart}', null marked by '{NullElementMarker}'";
 }
 
-public sealed class DeconstructableSettings : TupleSettings
+public sealed record DeconstructableSettings(
+    char Delimiter = Dsa.DEFAULT_DELIMITER,
+    char NullElementMarker = Dsa.DEFAULT_NULL_ELEMENT_MARKER,
+    char EscapingSequenceStart = Dsa.DEFAULT_ESCAPING_SEQUENCE_START,
+    char? Start = Dsa.DEFAULT_START,
+    char? End = Dsa.DEFAULT_END,
+    bool UseDeconstructableEmpty = Dsa.DEFAULT_USE_DECONSTRUCTABLE_EMPTY
+) : TupleSettings(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End),
+    ISettings<DeconstructableSettings>
 {
-    public bool UseDeconstructableEmpty { get; private set; }
-
-    public DeconstructableSettings(char delimiter = Dsa.DEFAULT_DELIMITER,
-            char nullElementMarker = Dsa.DEFAULT_NULL_ELEMENT_MARKER,
-            char escapingSequenceStart = Dsa.DEFAULT_ESCAPING_SEQUENCE_START,
-            char? start = Dsa.DEFAULT_START, char? end = Dsa.DEFAULT_END,
-            bool useDeconstructableEmpty = Dsa.DEFAULT_USE_DECONSTRUCTABLE_EMPTY)
-        : base(delimiter, nullElementMarker, escapingSequenceStart, start, end)
-        => UseDeconstructableEmpty = useDeconstructableEmpty;
-
     public static DeconstructableSettings Default { get; } = new();
 
     public override string ToString() =>
@@ -87,7 +99,10 @@ public sealed class DeconstructableSettings : TupleSettings
 
 public static class DeconstructableSettingsAttributeExtensions
 {
-    public static DeconstructableSettings ToSettings(this Dsa attr) => new(attr.Delimiter, attr.NullElementMarker, attr.EscapingSequenceStart,
+    public static DeconstructableSettings ToSettings(this Dsa attr) => new(
+        attr.Delimiter,
+        attr.NullElementMarker,
+        attr.EscapingSequenceStart,
         attr.Start == '\0' ? null : attr.Start,
         attr.End == '\0' ? null : attr.End,
         attr.UseDeconstructableEmpty);

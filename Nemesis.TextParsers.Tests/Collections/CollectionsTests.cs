@@ -387,14 +387,8 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         private static ITransformerStore GetBorderedSut()
         {
-            var borderedCollection = CollectionSettings.Default
-                    .With(s => s.Start, '[')
-                    .With(s => s.End, ']')
-                ;
-            var borderedArray = ArraySettings.Default
-                    .With(s => s.Start, '[')
-                    .With(s => s.End, ']')
-                ;
+            var borderedCollection = CollectionSettings.Default with { Start = '[', End = ']' };
+            var borderedArray = ArraySettings.Default with { Start = '[', End = ']' };
 
             var borderedStore = SettingsStoreBuilder.GetDefault()
                 .AddOrUpdate(borderedArray)
