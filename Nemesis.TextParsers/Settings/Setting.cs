@@ -30,14 +30,15 @@ public sealed class SettingsStoreBuilder
         if (settings.Any(s => !s.IsValid(out var _)))
         {
             throw new NotSupportedException("Settings are not valid is not valid:" + Environment.NewLine +
-                string.Join(Environment.NewLine,
-                            settings
-                                .Where(s => !s.IsValid(out var _))
-                                .Select(s =>
-                                {
-                                    s.IsValid(out var err);
-                                    return $"\t{err} @ {s.GetType().Name} @ {s}";
-                                })
+                string.Join(
+                    Environment.NewLine,
+                    settings
+                        .Where(s => !s.IsValid(out var _))
+                        .Select(s =>
+                        {
+                            s.IsValid(out var err);
+                            return $"\t{err} @ {s.GetType().Name} @ {s}";
+                        })
             ));
         }
 

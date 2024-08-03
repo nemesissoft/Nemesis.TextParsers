@@ -116,7 +116,7 @@ public class SettingsPersistenceTests
         JsonNode doc = JsonNode.Parse(ConfigJsonFile)!;
         var section = doc[settingsType.Name]?.ToString() ?? throw new InvalidDataException("Section does not exist");
 
-        var deser1 = deserializer(section);
+        var deser1 = deserializer(section) as ISettings;
         Assert.That(deser1, Is.Not.Null);
         AssertMutualEquivalence(deser1, settings);
 
@@ -124,8 +124,8 @@ public class SettingsPersistenceTests
         var fromText = serializer(deser1);
         var fromTestData = serializer(settings);
 
-        var deser2 = deserializer(fromText);
-        var deser3 = deserializer(fromTestData);
+        var deser2 = deserializer(fromText) as ISettings;
+        var deser3 = deserializer(fromTestData) as ISettings;
 
         Assert.That(deser2, Is.Not.Null);
         AssertMutualEquivalence(deser2, settings);
@@ -134,6 +134,13 @@ public class SettingsPersistenceTests
         AssertMutualEquivalence(deser3, settings);
 
         AssertMutualEquivalence(deser2, deser3);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(deser1.IsValid(out _), Is.True, "Validation 1");
+            Assert.That(deser2.IsValid(out _), Is.True, "Validation 2");
+            Assert.That(deser3.IsValid(out _), Is.True, "Validation 3");
+        });
     }
 
     [TestCaseSource(nameof(GetSettingsTestData), new object[] { "Config" })]
@@ -142,12 +149,13 @@ public class SettingsPersistenceTests
         var settingsType = settings.GetType();
         var configuration = GetConfiguration();
 
-        var actual = configuration.GetRequiredSection(settingsType.Name)
+        var actual = (ISettings)configuration.GetRequiredSection(settingsType.Name)
             .Get(settingsType,
             op => { op.BindNonPublicProperties = true; op.ErrorOnUnknownConfiguration = true; }
         )!;
 
         AssertMutualEquivalence(actual, settings);
+        Assert.That(actual.IsValid(out _), Is.True, "Validation");
 
         static IConfigurationRoot GetConfiguration()
         {
