@@ -33,12 +33,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:   
     - name: 🤘 checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
             
     - name: 🔎 setup .NET # Install the .NET SDK indicated in the global.json file
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
     
     - name: 🗎 update release notes
       if: github.event_name == 'release' 
@@ -74,7 +74,7 @@ jobs:
       run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
           
     - name: ⬆️ upload packages 
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nuget
         if-no-files-found: error
@@ -86,10 +86,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: 🤘 checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: 🔎 setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
 
     - name: 🧪 run tests and move results
       run: |
@@ -103,7 +103,7 @@ jobs:
         }
         
     - name: ⬆️ upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: success() || failure()    # run this step even if previous step failed
       with:
         name: TestResults
@@ -135,7 +135,7 @@ jobs:
           path: ${{ env.NuGetDirectory }}
                 
       - name: 🔎 setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
               
       - name: 📦 publish NuGet package
         env:
