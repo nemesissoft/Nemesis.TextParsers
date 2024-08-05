@@ -23,6 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Nemesis.TextParsers.DependencyInjection\Nemesis.TextParsers.DependencyInjection.csproj" />
 		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
 	</ItemGroup>
 

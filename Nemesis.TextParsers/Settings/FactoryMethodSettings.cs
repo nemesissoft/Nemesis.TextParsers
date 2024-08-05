@@ -9,13 +9,15 @@ public sealed record FactoryMethodSettings(
     string NullPropertyName = "Null"
 ) : ISettings<FactoryMethodSettings>
 {
-    public static FactoryMethodSettings Default { get; } = new();
-
     public bool IsValid([NotNullWhen(false)] out string? error)
     {
         error = null;
         return true;
     }
+
+    public FactoryMethodSettings DeepClone() => this with { };
+
+    public static FactoryMethodSettings Default { get; } = new();
 
     public override string ToString() =>
         $"Parsed by {FactoryMethodName} Empty: {EmptyPropertyName} Null: {NullPropertyName}";

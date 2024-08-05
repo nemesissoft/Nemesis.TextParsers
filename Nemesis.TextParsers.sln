@@ -41,6 +41,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\license-scanning.yml = .github\workflows\license-scanning.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.DependencyInjection", "Nemesis.TextParsers.DependencyInjection\Nemesis.TextParsers.DependencyInjection.csproj", "{55D14092-BD6A-4076-A5D7-B9E5C57C8D67}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D0D7B92-8060-479C-BC59-0EF5E4E85C18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55D14092-BD6A-4076-A5D7-B9E5C57C8D67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55D14092-BD6A-4076-A5D7-B9E5C57C8D67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55D14092-BD6A-4076-A5D7-B9E5C57C8D67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55D14092-BD6A-4076-A5D7-B9E5C57C8D67}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

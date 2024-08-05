@@ -18,8 +18,9 @@ public interface ITransformerStore
 
 public static class TextTransformer
 {
+    //TODO remove that to test DI
     public static ITransformerStore Default { get; } =
-        StandardTransformerStore.GetDefault(SettingsStoreBuilder.GetDefault().Build());
+        StandardTransformerStore.GetDefault(SettingsStore.GetDefault());
 
     public static ITransformerStore GetDefaultStoreWith(SettingsStore settingsStore) =>
         StandardTransformerStore.GetDefault(settingsStore);

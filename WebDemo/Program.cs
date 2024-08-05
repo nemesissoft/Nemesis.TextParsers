@@ -1,3 +1,4 @@
+using Nemesis.TextParsers.DependencyInjection;
 using WebDemo;
 using WebDemo.Services;
 
@@ -6,9 +7,16 @@ var services = builder.Services;
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen(options => { options.SchemaFilter<EnumSchemaFilter>(); });
 
+DependencyInjectionExtensions.ConfigureNemesisTextParsers(services, builder.Configuration.GetRequiredSection(nameof(ParsingSettings)));
+/*services.AddSingleton<IHandler, Handler1>();
+services.AddSingleton<IHandler, Handler2>();
+services.AddSingleton<IStore, MyStore>();*/
+
+
 var parsingSettings = builder.Configuration.GetRequiredSection(nameof(ParsingSettings))
     .Get<ParsingSettings>(op => { op.BindNonPublicProperties = true; op.ErrorOnUnknownConfiguration = true; })!;
 // TODO add validation after (make records) + check if validation triggers after Bind()
+
 
 
 var transformerStore = parsingSettings.ToTransformerStore();
@@ -65,6 +73,9 @@ app.MapPost("/parse/{type}", (string type, [FromQuery] string text) =>
     }
 }).WithName("Parse").WithOpenApi();
 
+/*var t1 = app.Services.GetRequiredService<IStore>();
+var t2 = app.Services.GetRequiredService<IStore>();*/
+
 app.Run();
 
 
@@ -76,3 +87,31 @@ app.Run();
 )]
 [JsonSerializable(typeof(ParsingSettings))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext { }
+
+
+/*
+interface IStore { }
+
+sealed class MyStore(IEnumerable<IHandler> handlers) : IStore
+{
+    private readonly IEnumerable<IHandler> transformerHandlers = handlers;
+
+    public override string ToString() => GetHashCode().ToString();
+}
+
+interface IHandler { }
+
+sealed class Handler1(IStore s) : IHandler
+{
+    private readonly IStore _s = s;
+
+    public override string ToString() => GetHashCode().ToString();
+}
+
+sealed class Handler2(IStore s) : IHandler
+{
+    private readonly IStore _s = s;
+
+    public override string ToString() => GetHashCode().ToString();
+}
+*/

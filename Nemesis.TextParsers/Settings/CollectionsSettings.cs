@@ -68,6 +68,8 @@ public sealed record CollectionSettings(
 ) : CollectionSettingsBase(ListDelimiter, NullElementMarker, EscapingSequenceStart, Start, End, DefaultCapacity),
     ISettings<CollectionSettings>
 {
+    public CollectionSettings DeepClone() => this with { };
+
     public static CollectionSettings Default { get; } = new();
 }
 
@@ -82,6 +84,8 @@ public sealed record ArraySettings(
 ) : CollectionSettingsBase(ListDelimiter, NullElementMarker, EscapingSequenceStart, Start, End, DefaultCapacity),
     ISettings<ArraySettings>
 {
+    public ArraySettings DeepClone() => this with { };
+
     public static ArraySettings Default { get; } = new();
 }
 
@@ -146,6 +150,8 @@ public sealed record DictionarySettings(
             return true;
         }
     }
+
+    public DictionarySettings DeepClone() => this with { };
 
     public static DictionarySettings Default { get; } = new();
 

@@ -6,8 +6,9 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.6.0" PrivateAssets="all" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
 		<PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-		<PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
-
+		<PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
+		
 		<!--Nemesis-->
 		<PackageVersion Include="Nemesis.Essentials" Version="1.2.2" />
 		<PackageVersion Include="Nemesis.Essentials.TypeMeta.Sources" Version="1.2.2" PrivateAssets="All" />

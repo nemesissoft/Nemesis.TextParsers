@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using Nemesis.TextParsers.Runtime;
@@ -13,26 +14,29 @@ public interface ISettings
 public interface ISettings<T> : ISettings
     where T : ISettings<T>
 {
+    T DeepClone();
+
 #if NET7_0_OR_GREATER
     static abstract T Default { get; }
-#endif
+#endif    
 }
 
-[JetBrains.Annotations.PublicAPI]
-public sealed class SettingsStoreBuilder
+public sealed class SettingsStore
 {
-    private readonly Dictionary<Type, ISettings> _settings;
+    private readonly ReadOnlyDictionary<Type, ISettings> _settings;
 
-    public SettingsStoreBuilder() => _settings = [];
+    public SettingsStore(IEnumerable<ISettings> settings)
+        : this(settings?.ToDictionary(s => s.GetType()) ?? [])
+    { }
 
-    public SettingsStoreBuilder(IEnumerable<ISettings> settings)
+    public SettingsStore(IDictionary<Type, ISettings> settingsDictionary)
     {
-        if (settings.Any(s => !s.IsValid(out var _)))
+        if (settingsDictionary.Values.Any(s => !s.IsValid(out var _)))
         {
             throw new NotSupportedException("Settings are not valid is not valid:" + Environment.NewLine +
                 string.Join(
                     Environment.NewLine,
-                    settings
+                    settingsDictionary.Values
                         .Where(s => !s.IsValid(out var _))
                         .Select(s =>
                         {
@@ -41,38 +45,44 @@ public sealed class SettingsStoreBuilder
                         })
             ));
         }
-
-        _settings = settings?.ToDictionary(s => s.GetType()) ?? [];
+        _settings = new(settingsDictionary);
     }
 
-    public static SettingsStoreBuilder GetDefault(Assembly? fromAssembly = null)
-    {
-        var types = (fromAssembly ?? Assembly.GetExecutingAssembly())
-            .GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition &&
-                        typeof(ISettings).IsAssignableFrom(t) &&
-                        t.DerivesOrImplementsGeneric(typeof(ISettings<>))
-            );
+    //public SettingsStoreBuilder ToBuilder() => new(_settings.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
 
-        var defaultInstances = types.Select(t =>
-            t.GetProperty("Default", BindingFlags.Public | BindingFlags.Static) is { } defaultProperty &&
-            defaultProperty.PropertyType.DerivesOrImplementsGeneric(typeof(ISettings<>)) &&
-            defaultProperty.GetValue(null) is ISettings s
+    public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings<TSettings> =>
+        (TSettings)GetSettingsFor(typeof(TSettings));
+
+    public ISettings GetSettingsFor(Type settingsType) =>
+        _settings.TryGetValue(settingsType, out var s)
             ? s
-            : throw new NotSupportedException(
-                $"Automatic settings store builder supports {nameof(ISettings)} instances with public static property named 'Default' assignable to {nameof(ISettings)}")
-            );
+            : throw new NotSupportedException($"No settings registered for {settingsType.GetFriendlyName()}");
 
-        return new SettingsStoreBuilder(defaultInstances);
-    }
 
-    /*public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings =>
-        _settings.TryGetValue(typeof(TSettings), out var s)
-            ? (TSettings)s
-            : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");*/
+    public static readonly IReadOnlyCollection<ISettings> DefaultSettings = [
+        CollectionSettings.Default,
+        ArraySettings.Default,
+        DictionarySettings.Default,
+        EnumSettings.Default,
+        FactoryMethodSettings.Default,
+        ValueTupleSettings.Default,
+        KeyValuePairSettings.Default,
+        DeconstructableSettings.Default
+    ];
+
+    public static SettingsStore GetDefault() => new(DefaultSettings);
+}
+
+public sealed class SettingsStoreBuilder : IEnumerable<(Type Type, ISettings Settings)>
+{
+    private readonly Dictionary<Type, ISettings> _settings;
+
+    public SettingsStoreBuilder() : this([]) { }
+
+    public SettingsStoreBuilder(Dictionary<Type, ISettings> settings) => _settings = settings;
 
     public SettingsStoreBuilder AddOrUpdate<TSettings>(TSettings settings)
-        where TSettings : ISettings
+       where TSettings : ISettings
     {
         if (!settings.IsValid(out var err))
             throw new ArgumentException($"{settings.GetType().FullName}: {err}");
@@ -82,20 +92,12 @@ public sealed class SettingsStoreBuilder
         return this;
     }
 
-    public SettingsStore Build() => new(new ReadOnlyDictionary<Type, ISettings>(_settings));
-}
+    public SettingsStore Build() => new(_settings);
 
-public sealed class SettingsStore
-{
-    private readonly IReadOnlyDictionary<Type, ISettings> _settings;
+    public static SettingsStoreBuilder GetDefault() => new(SettingsStore.DefaultSettings.ToDictionary(s => s.GetType()));
 
-    public SettingsStore(IReadOnlyDictionary<Type, ISettings> settings) => _settings = settings;
+    public IEnumerator<(Type Type, ISettings Settings)> GetEnumerator() =>
+        _settings.Select(kvp => (kvp.Key, kvp.Value)).ToList().GetEnumerator();
 
-    public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings<TSettings> =>
-        (TSettings)GetSettingsFor(typeof(TSettings));
-
-    public ISettings GetSettingsFor(Type settingsType) =>
-        _settings.TryGetValue(settingsType, out var s)
-            ? s
-            : throw new NotSupportedException($"No settings registered for {settingsType.GetFriendlyName()}");
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
