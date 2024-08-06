@@ -14,7 +14,7 @@ public sealed record EnumSettings(
         return true;
     }
 
-    public EnumSettings DeepClone() => this with { };
+    public ISettings DeepClone() => this with { };
 
     public static EnumSettings Default { get; } = new();
 

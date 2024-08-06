@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#nullable enable
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -23,43 +24,50 @@ public static class DependencyInjectionExtensions
                 var section = config.GetSection(type.Name);
                 if (!section.GetChildren().Any()) continue;
 
-                //TODO clone settings records
-                //settings = settings with { };
+                var newSettings = settings.DeepClone();
 
-                section.Bind(settings, bo => { bo.BindNonPublicProperties = true; bo.ErrorOnUnknownConfiguration = true; });
+                section.Bind(newSettings, bo => { bo.BindNonPublicProperties = true; bo.ErrorOnUnknownConfiguration = true; });
 
-                settingsStoreBuilder.AddOrUpdate(settings);
+                settingsStoreBuilder.AddOrUpdate(newSettings);
             }
         }
 
         configureSettingsStoreBuilder?.Invoke(settingsStoreBuilder);
 
-        settingsStoreBuilder.Build();
-
         foreach (var (type, settings) in settingsStoreBuilder)
+        {
             services.AddSingleton(type, settings);
+            services.AddSingleton<ISettings>(settings);
+        }
 
         services.AddSingleton<SettingsStore>(settingsStoreBuilder.Build());
 
         return services;
     }
 
-
-    public static IServiceCollection AddNemesisTextParsers(this IServiceCollection services)
+    public static IServiceCollection AddNemesisTextParsers(
+        this IServiceCollection services,
+        Action<List<Type>>? configureTransformerHandlers = null
+    )
     {
+        IEnumerable<Type> transformerHandlerTypes = TextTransformer.DefaultHandlers;
+        if (configureTransformerHandlers is not null)
+        {
+            var list = transformerHandlerTypes.ToList();
+            configureTransformerHandlers(list);
+            transformerHandlerTypes = list;
+        }
+
         services.AddSingleton<ITransformerStore>(
-            provider => TextTransformer.GetDefaultStoreWith(provider.GetRequiredService<SettingsStore>())
+            provider => StandardTransformerStore.Create(transformerHandlerTypes, provider.GetRequiredService<SettingsStore>())
         );
 
-        //TODO add settings/parameters to determine whether to register additional types 
         services.AddSingleton<TextSyntaxProvider>();
 
-
-        //TODO add generic transformer 
+        //TODO add generic transformer ?
         /*services.AddSingleton(typeof(ITransformer<>), 
             provider => TextTransformer.GetDefaultStoreWith(provider.GetRequiredService<SettingsStore>())
         );*/
-
 
         return services;
     }

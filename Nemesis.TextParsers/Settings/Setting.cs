@@ -9,19 +9,19 @@ namespace Nemesis.TextParsers.Settings;
 public interface ISettings
 {
     bool IsValid([NotNullWhen(false)] out string? error);
+    ISettings DeepClone();
 }
 
 public interface ISettings<T> : ISettings
     where T : ISettings<T>
 {
-    T DeepClone();
-
 #if NET7_0_OR_GREATER
     static abstract T Default { get; }
 #endif    
 }
 
-public sealed class SettingsStore
+//TODO rework Store and Builder (:IEnumerable<ISettings> )
+public sealed class SettingsStore : IEnumerable<ISettings>
 {
     private readonly ReadOnlyDictionary<Type, ISettings> _settings;
 
@@ -58,19 +58,9 @@ public sealed class SettingsStore
             ? s
             : throw new NotSupportedException($"No settings registered for {settingsType.GetFriendlyName()}");
 
+    public IEnumerator<ISettings> GetEnumerator() => _settings.Values.GetEnumerator();
 
-    public static readonly IReadOnlyCollection<ISettings> DefaultSettings = [
-        CollectionSettings.Default,
-        ArraySettings.Default,
-        DictionarySettings.Default,
-        EnumSettings.Default,
-        FactoryMethodSettings.Default,
-        ValueTupleSettings.Default,
-        KeyValuePairSettings.Default,
-        DeconstructableSettings.Default
-    ];
-
-    public static SettingsStore GetDefault() => new(DefaultSettings);
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public sealed class SettingsStoreBuilder : IEnumerable<(Type Type, ISettings Settings)>
@@ -92,9 +82,15 @@ public sealed class SettingsStoreBuilder : IEnumerable<(Type Type, ISettings Set
         return this;
     }
 
+    public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings<TSettings> =>
+       _settings.TryGetValue(typeof(TSettings), out var s)
+            ? (TSettings)s
+            : throw new NotSupportedException($"No settings registered for {typeof(TSettings).GetFriendlyName()}");
+
     public SettingsStore Build() => new(_settings);
 
-    public static SettingsStoreBuilder GetDefault() => new(SettingsStore.DefaultSettings.ToDictionary(s => s.GetType()));
+    //TODO check calls to that 
+    public static SettingsStoreBuilder GetDefault() => new(TextTransformer.DefaultSettings.ToDictionary(s => s.GetType()));
 
     public IEnumerator<(Type Type, ISettings Settings)> GetEnumerator() =>
         _settings.Select(kvp => (kvp.Key, kvp.Value)).ToList().GetEnumerator();

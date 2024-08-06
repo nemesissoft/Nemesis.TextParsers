@@ -11,14 +11,27 @@ public sealed record FactoryMethodSettings(
 {
     public bool IsValid([NotNullWhen(false)] out string? error)
     {
-        error = null;
-        return true;
+        if (string.IsNullOrEmpty(FactoryMethodName) || string.IsNullOrEmpty(EmptyPropertyName) || string.IsNullOrEmpty(NullPropertyName))
+        {
+            error = $"""
+                All parameters must be non-empty strings.
+                FactoryMethodName = '{FactoryMethodName}'
+                EmptyPropertyName = '{EmptyPropertyName}'
+                NullPropertyName = '{NullPropertyName}'
+                """;
+            return false;
+        }
+        else
+        {
+            error = null;
+            return true;
+        }
     }
 
-    public FactoryMethodSettings DeepClone() => this with { };
+    public ISettings DeepClone() => this with { };
 
     public static FactoryMethodSettings Default { get; } = new();
 
     public override string ToString() =>
-        $"Parsed by {FactoryMethodName} Empty: {EmptyPropertyName} Null: {NullPropertyName}";
+        $"Parsed by '{FactoryMethodName}'. Empty: '{EmptyPropertyName}'. Null: '{NullPropertyName}'";
 }

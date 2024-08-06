@@ -314,35 +314,21 @@ namespace Nemesis.TextParsers.Tests.Collections
         }
 
 
-        private static IEnumerable<TCD> InnerCollectionsData() => new[]
-        {
-            new TCD("01", new List<string>{null}, @"[∅]"),//one null element
+        private static TCD[] InnerCollectionsData() =>
+        [
+            new TCD("01", new List<string> { null }, @"[∅]"),//one null element
             new TCD("02", new List<string>(), @""),//empty list
-            new TCD("03", new List<string>{""}, @"[]"),//one empty element
+            new TCD("03", new List<string> { "" }, @"[]"),//one empty element
 
-            new TCD("04", new List<string[]>
-            {
-                new[] {"A", "B", "C"},
-                new[] {"D", "E", "F"},
-            }, @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD("05", new List<string[]>
-            {
-                Array.Empty<string>(),
-                Array.Empty<string>()
-            }, @"[|]"),
+            new TCD("04", (List<string[]>)[["A", "B", "C"], ["D", "E", "F"]],
+                @"[[A\|B\|C]|[D\|E\|F]]"),
+            new TCD("05", (List<string[]>)[[], []], @"[|]"),
             new TCD("06", new List<string[]>(), @""),
 
 
-            new TCD("07", new List<string>[]
-            {
-                ["A", "B", "C"],
-                ["D", "E", "F"],
-            }, @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD("08", new List<string>[]
-            {
-                [],
-                [],
-            }, @"[|]"),
+            new TCD("07", (List<string>[])[["A", "B", "C"], ["D", "E", "F"]],
+                @"[[A\|B\|C]|[D\|E\|F]]"),
+            new TCD("08", (List<string>[])[[], []], @"[|]"),
             new TCD("09", new List<string>[]
             {
                 [],
@@ -351,8 +337,8 @@ namespace Nemesis.TextParsers.Tests.Collections
             }, @"[|[1\|2\|3]|]"),
             new TCD("10", Array.Empty<List<string>>(), @""),
 
-            new TCD("11", new List<string[]>{null, Array.Empty<string>(), new[] {""} }, @"[∅||[]]"),//null # empty # one empty element
-        };
+            new TCD("11", (List<string[]>)[null, [], [""]], @"[∅||[]]"),//null # empty # one empty element
+        ];
 
         [TestCaseSource(nameof(InnerCollectionsData))]
         public void Bordered_ShouldProperlyHandleBoundingMarkers(string _, object instance, string text)

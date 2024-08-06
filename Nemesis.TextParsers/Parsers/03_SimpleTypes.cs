@@ -67,6 +67,7 @@ public static class NumberTransformerCache
 
     private static IReadOnlyDictionary<Type, ITransformer> BuildCache(Assembly fromAssembly = null)
     {
+        //TODO remove scanning assembly 
         var transformerTypes = (fromAssembly ?? typeof(NumberTransformer<>).Assembly)
             .GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition &&
@@ -92,9 +93,9 @@ public static class NumberTransformerCache
         _cache.TryGetValue(numberType, out var numOp) ? numOp : null;
 }
 
-internal static class Culture
+file static class Culture
 {
-    internal static CultureInfo InvCult => CultureInfo.InvariantCulture;
+    internal static CultureInfo InvCult = CultureInfo.InvariantCulture;
     internal static NumberFormatInfo InvInfo = NumberFormatInfo.InvariantInfo;
 }
 
@@ -875,17 +876,16 @@ public sealed class IpAddressTransformer : SimpleTransformer<IPAddress>
 [UsedImplicitly]
 public sealed class RegexTransformer : SimpleTransformer<Regex>
 {
-    private const string TYPE_NAME = "Regex";
     private static readonly TupleHelper _helper = new(';', '∅', '~', '{', '}');
 
     protected override Regex ParseCore(in ReadOnlySpan<char> input)
     {
-        var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
+        var enumerator = _helper.ParseStart(input, 2, nameof(Regex));
 
         var options = _helper.ParseElement(ref enumerator, RegexOptionsTransformer.Instance);
-        var pattern = _helper.ParseElement(ref enumerator, StringTransformer.Instance, 2, TYPE_NAME);
+        var pattern = _helper.ParseElement(ref enumerator, StringTransformer.Instance, 2, nameof(Regex));
 
-        _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
+        _helper.ParseEnd(ref enumerator, 2, nameof(Regex));
 
         return new(pattern, options);
     }
@@ -1034,12 +1034,12 @@ internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
 [UsedImplicitly]
 public sealed class ComplexTransformer : SimpleTransformer<Complex>
 {
-    private const string TYPE_NAME = "Complex number";
-
     private static readonly TupleHelper _helper = new(';', '∅', '\\', '(', ')');
 
     protected override Complex ParseCore(in ReadOnlySpan<char> input)
     {
+        const string TYPE_NAME = "Complex number";
+
         var doubleParser = DoubleTransformer.Instance;
 
         var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);

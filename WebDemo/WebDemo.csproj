@@ -7,12 +7,11 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 
 		<WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
-		<!--<JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>-->
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Using Include="Nemesis.TextParsers" />
-		<Using Include="Nemesis.TextParsers.Settings" />
+		<Using Include="Nemesis.TextParsers" />		
 		<Using Include="Microsoft.AspNetCore.Mvc" />
 		<Using Include="System.Text.Json.Serialization" />
 	</ItemGroup>
