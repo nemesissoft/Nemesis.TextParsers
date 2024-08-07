@@ -83,7 +83,7 @@ public static class NumberTransformerCache
     }
 
     public static NumberTransformer<TNumber> GetNumberHandler<TNumber>()
-        where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
+        where TNumber : struct, IComparable, IComparable<TNumber>, IEquatable<TNumber>, IFormattable
 #if NET7_0_OR_GREATER
     , IBinaryInteger<TNumber>
 #endif
@@ -255,11 +255,12 @@ public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer
 }
 
 public abstract class NumberTransformer<TNumber> : SimpleTransformer<TNumber>
-    where TNumber : struct, IComparable, IComparable<TNumber>, IConvertible, IEquatable<TNumber>, IFormattable
+    where TNumber : struct, IComparable, IComparable<TNumber>, IEquatable<TNumber>, IFormattable
 #if NET7_0_OR_GREATER
     , IBinaryInteger<TNumber>
 #endif
 {
+    #region Metadata and operations
     public abstract bool SupportsNegative { get; }
     public abstract TNumber Zero { get; }
     public abstract TNumber One { get; }
@@ -280,8 +281,9 @@ public abstract class NumberTransformer<TNumber> : SimpleTransformer<TNumber>
     public abstract TNumber Sub(TNumber left, TNumber right);
     public abstract TNumber Mul(TNumber left, TNumber right);
     public abstract TNumber Div(TNumber left, TNumber right);
+    #endregion
 
-    public sealed override string Format(TNumber element) => element.ToString(null, Culture.InvCult);
+    public override string Format(TNumber element) => element.ToString(null, Culture.InvCult);
 
     public void Deconstruct(out TNumber zero, out TNumber one, out TNumber min, out TNumber max)
     {
@@ -652,6 +654,133 @@ public sealed class UInt64Transformer : NumberTransformer<ulong>
     private UInt64Transformer() { }
 }
 
+#if NET7_0_OR_GREATER
+
+[UsedImplicitly]
+public sealed class Int128Transformer : NumberTransformer<Int128>
+{
+    #region NumberTransformer
+    public override bool SupportsNegative => true;
+    public override Int128 Zero => 0;
+    public override Int128 One => 1;
+    public override Int128 MinValue => Int128.MinValue;
+    public override Int128 MaxValue => Int128.MaxValue;
+
+    public override Int128 FromInt64(long value) => value;
+    public override long ToInt64(Int128 value) => (long)value;
+
+    public override Int128 Or(Int128 left, Int128 right) => left | right;
+    public override Int128 And(Int128 left, Int128 right) => left & right;
+    public override Int128 Not(Int128 value) => ~value;
+
+    public override Int128 ShR(Int128 left, byte right) => left >> right;
+    public override Int128 ShL(Int128 left, byte right) => left << right;
+
+    public override Int128 Add(Int128 left, Int128 right) => left + right;
+    public override Int128 Sub(Int128 left, Int128 right) => left - right;
+    public override Int128 Mul(Int128 left, Int128 right) => left * right;
+    public override Int128 Div(Int128 left, Int128 right) => left / right;
+    #endregion
+
+    protected override Int128 ParseCore(in ReadOnlySpan<char> input) =>
+        Int128.Parse(input, NumberStyles.Integer, Culture.InvCult);
+
+
+    public override bool TryParse(in ReadOnlySpan<char> input, out Int128 value) =>
+        Int128.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
+
+
+    public static readonly ITransformer<Int128> Instance = new Int128Transformer();
+    private Int128Transformer() { }
+}
+
+[UsedImplicitly]
+public sealed class UInt128Transformer : NumberTransformer<UInt128>
+{
+    #region NumberTransformer
+    public override bool SupportsNegative => false;
+    public override UInt128 Zero => 0;
+    public override UInt128 One => 1;
+    public override UInt128 MinValue => UInt128.MinValue;
+    public override UInt128 MaxValue => UInt128.MaxValue;
+
+    public override UInt128 FromInt64(long value) => (UInt128)value;
+    public override long ToInt64(UInt128 value) => (long)value;
+
+    public override UInt128 Or(UInt128 left, UInt128 right) => left | right;
+    public override UInt128 And(UInt128 left, UInt128 right) => left & right;
+    public override UInt128 Not(UInt128 value) => ~value;
+
+    public override UInt128 ShR(UInt128 left, byte right) => left >> right;
+    public override UInt128 ShL(UInt128 left, byte right) => left << right;
+
+    public override UInt128 Add(UInt128 left, UInt128 right) => left + right;
+    public override UInt128 Sub(UInt128 left, UInt128 right) => left - right;
+    public override UInt128 Mul(UInt128 left, UInt128 right) => left * right;
+    public override UInt128 Div(UInt128 left, UInt128 right) => left / right;
+    #endregion
+
+    protected override UInt128 ParseCore(in ReadOnlySpan<char> input) =>
+        UInt128.Parse(input, NumberStyles.Integer, Culture.InvCult);
+
+
+    public override bool TryParse(in ReadOnlySpan<char> input, out UInt128 value) =>
+        UInt128.TryParse(input, NumberStyles.Integer, Culture.InvCult, out value);
+
+
+    public static readonly ITransformer<UInt128> Instance = new UInt128Transformer();
+    private UInt128Transformer() { }
+}
+
+#endif
+
+
+[UsedImplicitly]
+public sealed class BigIntegerTransformer : NumberTransformer<BigInteger>
+{
+    public override bool SupportsNegative => true;
+
+    public override BigInteger Zero => 0;
+
+    public override BigInteger One => 1;
+
+    public override BigInteger MinValue => throw new NotSupportedException();
+
+    public override BigInteger MaxValue => throw new NotSupportedException();
+
+    public override BigInteger FromInt64(long value) => (BigInteger)value;
+    public override long ToInt64(BigInteger value) => (long)value;
+
+    public override BigInteger Or(BigInteger left, BigInteger right) => left | right;
+    public override BigInteger And(BigInteger left, BigInteger right) => left & right;
+    public override BigInteger Not(BigInteger value) => ~value;
+
+    public override BigInteger ShR(BigInteger left, byte right) => left >> right;
+    public override BigInteger ShL(BigInteger left, byte right) => left << right;
+
+    public override BigInteger Add(BigInteger left, BigInteger right) => left + right;
+    public override BigInteger Sub(BigInteger left, BigInteger right) => left - right;
+    public override BigInteger Mul(BigInteger left, BigInteger right) => left * right;
+    public override BigInteger Div(BigInteger left, BigInteger right) => left / right;
+
+    public override string Format(BigInteger element) => element.ToString("R", Culture.InvCult);
+
+    protected override BigInteger ParseCore(in ReadOnlySpan<char> input) => BigInteger.Parse(
+#if NETSTANDARD2_0 || NETFRAMEWORK
+            input.ToString()
+#else
+        input
+#endif
+        , NumberStyles.Integer, Culture.InvCult);
+
+
+    public static readonly ITransformer<BigInteger> Instance = new BigIntegerTransformer();
+
+    private BigIntegerTransformer() { }
+}
+
+
+
 #if NET
 
 [UsedImplicitly]
@@ -812,25 +941,6 @@ public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
     public static readonly ITransformer<Guid> Instance = new GuidTransformer();
 
     private GuidTransformer() { }
-}
-
-[UsedImplicitly]
-public sealed class BigIntegerTransformer : SimpleFormattableTransformer<BigInteger>
-{
-    protected override BigInteger ParseCore(in ReadOnlySpan<char> input) => BigInteger.Parse(
-#if NETSTANDARD2_0 || NETFRAMEWORK
-            input.ToString()
-#else
-        input
-#endif
-        , NumberStyles.Integer, Culture.InvCult);
-
-    protected override string FormatString { get; } = "R";
-
-
-    public static readonly ITransformer<BigInteger> Instance = new BigIntegerTransformer();
-
-    private BigIntegerTransformer() { }
 }
 
 [UsedImplicitly]

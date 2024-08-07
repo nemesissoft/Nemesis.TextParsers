@@ -3,14 +3,19 @@ using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests.BuiltInTypes;
 
-[TestFixture(TypeArgs = new[] { typeof(byte), typeof(ByteTransformer) })]
-[TestFixture(TypeArgs = new[] { typeof(sbyte), typeof(SByteTransformer) })]
-[TestFixture(TypeArgs = new[] { typeof(short), typeof(Int16Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(ushort), typeof(UInt16Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(int), typeof(Int32Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(uint), typeof(UInt32Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(long), typeof(Int64Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(ulong), typeof(UInt64Transformer) })]
+[TestFixture(TypeArgs = [typeof(byte), typeof(ByteTransformer)])]
+[TestFixture(TypeArgs = [typeof(sbyte), typeof(SByteTransformer)])]
+[TestFixture(TypeArgs = [typeof(short), typeof(Int16Transformer)])]
+[TestFixture(TypeArgs = [typeof(ushort), typeof(UInt16Transformer)])]
+[TestFixture(TypeArgs = [typeof(int), typeof(Int32Transformer)])]
+[TestFixture(TypeArgs = [typeof(uint), typeof(UInt32Transformer)])]
+[TestFixture(TypeArgs = [typeof(long), typeof(Int64Transformer)])]
+[TestFixture(TypeArgs = [typeof(ulong), typeof(UInt64Transformer)])]
+#if NET7_0_OR_GREATER
+//TODO check why that is not running 
+//[TestFixture(TypeArgs = [typeof(Int128), typeof(Int128Transformer)])]
+//[TestFixture(TypeArgs = [typeof(UInt128), typeof(UInt128Transformer)])]
+#endif
 public class NumberTests<TUnderlying, TNumberHandler>
     where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
 #if NET7_0_OR_GREATER
