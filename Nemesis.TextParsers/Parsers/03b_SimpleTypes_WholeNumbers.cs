@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Parsers;
 
@@ -88,7 +87,6 @@ public abstract class NumberTransformer<TNumber> : SimpleTransformer<TNumber>
     }
 }
 
-[UsedImplicitly]
 public sealed class ByteTransformer : NumberTransformer<byte>
 {
     #region NumberTransformer
@@ -132,7 +130,6 @@ public sealed class ByteTransformer : NumberTransformer<byte>
     private ByteTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class SByteTransformer : NumberTransformer<sbyte>
 {
     #region NumberTransformer
@@ -177,7 +174,6 @@ public sealed class SByteTransformer : NumberTransformer<sbyte>
     private SByteTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class Int16Transformer : NumberTransformer<short>
 {
     #region NumberTransformer
@@ -221,7 +217,6 @@ public sealed class Int16Transformer : NumberTransformer<short>
     private Int16Transformer() { }
 }
 
-[UsedImplicitly]
 public sealed class UInt16Transformer : NumberTransformer<ushort>
 {
     #region NumberTransformer
@@ -266,7 +261,6 @@ public sealed class UInt16Transformer : NumberTransformer<ushort>
     private UInt16Transformer() { }
 }
 
-[UsedImplicitly]
 public sealed class Int32Transformer : NumberTransformer<int>
 {
     #region NumberTransformer
@@ -312,7 +306,6 @@ public sealed class Int32Transformer : NumberTransformer<int>
     private Int32Transformer() { }
 }
 
-[UsedImplicitly]
 public sealed class UInt32Transformer : NumberTransformer<uint>
 {
     #region NumberTransformer
@@ -358,7 +351,6 @@ public sealed class UInt32Transformer : NumberTransformer<uint>
     private UInt32Transformer() { }
 }
 
-[UsedImplicitly]
 public sealed class Int64Transformer : NumberTransformer<long>
 {
     #region NumberTransformer
@@ -403,7 +395,6 @@ public sealed class Int64Transformer : NumberTransformer<long>
     private Int64Transformer() { }
 }
 
-[UsedImplicitly]
 public sealed class UInt64Transformer : NumberTransformer<ulong>
 {
     #region NumberTransformer
@@ -450,7 +441,6 @@ public sealed class UInt64Transformer : NumberTransformer<ulong>
 
 #if NET7_0_OR_GREATER
 
-[UsedImplicitly]
 public sealed class Int128Transformer : NumberTransformer<Int128>
 {
     #region NumberTransformer
@@ -488,7 +478,6 @@ public sealed class Int128Transformer : NumberTransformer<Int128>
     private Int128Transformer() { }
 }
 
-[UsedImplicitly]
 public sealed class UInt128Transformer : NumberTransformer<UInt128>
 {
     #region NumberTransformer
@@ -529,7 +518,6 @@ public sealed class UInt128Transformer : NumberTransformer<UInt128>
 #endif
 
 
-[UsedImplicitly]
 public sealed class BigIntegerTransformer : NumberTransformer<BigInteger>
 {
     public override bool SupportsNegative => true;

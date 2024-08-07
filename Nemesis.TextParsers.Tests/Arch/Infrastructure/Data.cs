@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-using Nemesis.Essentials.Design;
+﻿using Nemesis.Essentials.Design;
 
 namespace Nemesis.TextParsers.Tests.Arch.Infrastructure;
 
@@ -37,7 +35,6 @@ internal class LotsOfDeconstructableData : IEquatable<LotsOfDeconstructableData>
         D13 = d13;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out string d1, out bool d2, out int d3, out uint? d4, out float d5, out double? d6, out FileMode d7, out List<string> d8, out IReadOnlyList<int> d9, out Dictionary<string, float?> d10, out decimal[] d11, out BigInteger[][] d12, out Complex d13)
     {
         d1 = D1;
@@ -122,9 +119,8 @@ internal sealed class EmptyFactoryMethodConvention : EmptyConventionBase, IEquat
     public static EmptyConventionBase Empty => new EmptyFactoryMethodConvention(3.14f, _emptyDate);
 
     //this is just to conform to FactoryMethod convention - will not be used 
-    [UsedImplicitly]
     public static EmptyFactoryMethodConvention FromText(ReadOnlySpan<char> text) =>
-        throw new NotSupportedException("Class should only be used for empty value tests");
+    throw new NotSupportedException("Class should only be used for empty value tests");
 
     #region Equals
     public bool Equals(EmptyFactoryMethodConvention other) =>

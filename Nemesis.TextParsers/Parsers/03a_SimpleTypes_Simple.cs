@@ -1,7 +1,5 @@
 ﻿using System.Net;
 
-using JetBrains.Annotations;
-
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 
@@ -12,7 +10,6 @@ public abstract class SimpleTransformer<TElement> : TransformerBase<TElement>
     public sealed override string ToString() => $"Transform {typeof(TElement).GetFriendlyName()}";
 }
 
-[UsedImplicitly]
 public sealed class StringTransformer : SimpleTransformer<string>
 {
     protected override string ParseCore(in ReadOnlySpan<char> input) => input.ToString();
@@ -26,7 +23,6 @@ public sealed class StringTransformer : SimpleTransformer<string>
     private StringTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class BooleanTransformer : SimpleTransformer<bool>
 {
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -133,7 +129,6 @@ public sealed class BooleanTransformer : SimpleTransformer<bool>
     private BooleanTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class CharTransformer : SimpleTransformer<char>
 {
     protected override char ParseCore(in ReadOnlySpan<char> input) => input.Length switch
@@ -152,7 +147,6 @@ public sealed class CharTransformer : SimpleTransformer<char>
 }
 
 
-[UsedImplicitly]
 public sealed class VersionTransformer : SimpleTransformer<Version>
 {
     protected override Version ParseCore(in ReadOnlySpan<char> input) => Version.Parse(
@@ -172,7 +166,6 @@ public sealed class VersionTransformer : SimpleTransformer<Version>
     public override Version GetEmpty() => new(0, 0, 0, 0);
 }
 
-[UsedImplicitly]
 public sealed class IpAddressTransformer : SimpleTransformer<IPAddress>
 {
     protected override IPAddress ParseCore(in ReadOnlySpan<char> input) => IPAddress.Parse(
@@ -192,7 +185,6 @@ public sealed class IpAddressTransformer : SimpleTransformer<IPAddress>
     public override IPAddress GetEmpty() => new(0);
 }
 
-[UsedImplicitly]
 public sealed class RegexTransformer : SimpleTransformer<Regex>
 {
     private static readonly TupleHelper _helper = new(';', '∅', '~', '{', '}');
@@ -350,7 +342,6 @@ public sealed class RegexOptionsTransformer : SimpleTransformer<RegexOptions>
     }*/
 }
 
-[UsedImplicitly]
 public sealed class ComplexTransformer : SimpleTransformer<Complex>
 {
     private static readonly TupleHelper _helper = new(';', '∅', '\\', '(', ')');

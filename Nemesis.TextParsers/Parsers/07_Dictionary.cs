@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
@@ -7,7 +6,6 @@ using Nemesis.TextParsers.Utils;
 namespace Nemesis.TextParsers.Parsers;
 
 //TODO support ILookup with null as key 
-[UsedImplicitly]
 public sealed class DictionaryTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;

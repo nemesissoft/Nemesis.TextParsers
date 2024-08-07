@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using JetBrains.Annotations;
 
 namespace Nemesis.TextParsers.Parsers;
 
@@ -20,7 +19,6 @@ public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer
 
 #if NET
 
-[UsedImplicitly]
 public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
 {
     protected override Half ParseCore(in ReadOnlySpan<char> input) =>
@@ -40,7 +38,6 @@ public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
 
 #endif
 
-[UsedImplicitly]
 public sealed class SingleTransformer : SimpleFormattableTransformer<float>
 {
     protected override float ParseCore(in ReadOnlySpan<char> input) =>
@@ -64,7 +61,6 @@ public sealed class SingleTransformer : SimpleFormattableTransformer<float>
     private SingleTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class DoubleTransformer : SimpleFormattableTransformer<double>
 {
     protected override double ParseCore(in ReadOnlySpan<char> input) =>
@@ -88,7 +84,6 @@ public sealed class DoubleTransformer : SimpleFormattableTransformer<double>
     private DoubleTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class DecimalTransformer : SimpleFormattableTransformer<decimal>
 {
     protected override decimal ParseCore(in ReadOnlySpan<char> input) =>
@@ -105,7 +100,6 @@ public sealed class DecimalTransformer : SimpleFormattableTransformer<decimal>
     private DecimalTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class TimeSpanTransformer : SimpleFormattableTransformer<TimeSpan>
 {
     protected override TimeSpan ParseCore(in ReadOnlySpan<char> input) =>
@@ -123,7 +117,6 @@ public sealed class TimeSpanTransformer : SimpleFormattableTransformer<TimeSpan>
     private TimeSpanTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class DateTimeTransformer : SimpleFormattableTransformer<DateTime>
 {
     protected override DateTime ParseCore(in ReadOnlySpan<char> input) =>
@@ -142,7 +135,6 @@ public sealed class DateTimeTransformer : SimpleFormattableTransformer<DateTime>
     private DateTimeTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class DateTimeOffsetTransformer : SimpleFormattableTransformer<DateTimeOffset>
 {
     protected override DateTimeOffset ParseCore(in ReadOnlySpan<char> input) =>
@@ -161,7 +153,6 @@ public sealed class DateTimeOffsetTransformer : SimpleFormattableTransformer<Dat
     private DateTimeOffsetTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
 {
     protected override Guid ParseCore(in ReadOnlySpan<char> input) => Guid.Parse(
@@ -182,7 +173,6 @@ public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
 
 #if NET6_0_OR_GREATER
 
-[UsedImplicitly]
 public sealed class DateOnlyTransformer : SimpleFormattableTransformer<DateOnly>
 {
     protected override DateOnly ParseCore(in ReadOnlySpan<char> input) =>
@@ -195,7 +185,6 @@ public sealed class DateOnlyTransformer : SimpleFormattableTransformer<DateOnly>
     private DateOnlyTransformer() { }
 }
 
-[UsedImplicitly]
 public sealed class TimeOnlyTransformer : SimpleFormattableTransformer<TimeOnly>
 {
     protected override TimeOnly ParseCore(in ReadOnlySpan<char> input) =>

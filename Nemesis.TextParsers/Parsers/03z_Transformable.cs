@@ -4,7 +4,6 @@ using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
 public class TransformableHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;

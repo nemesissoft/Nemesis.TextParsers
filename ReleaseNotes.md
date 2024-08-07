@@ -373,8 +373,7 @@ readonly struct Address
         ZipCode = zipCode;
     }
 
-    [UsedImplicitly]
-    public void Deconstruct(out string city, out int zipCode)
+        public void Deconstruct(out string city, out int zipCode)
     {
         city = City;
         zipCode = ZipCode;

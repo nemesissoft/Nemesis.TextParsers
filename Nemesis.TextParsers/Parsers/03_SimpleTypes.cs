@@ -1,7 +1,5 @@
 ﻿using System.Net;
 
-using JetBrains.Annotations;
-
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Parsers;
@@ -11,7 +9,6 @@ public interface ITestTransformerRegistrations
     IReadOnlyDictionary<Type, ITransformer> GetTransformerRegistrationsForTests();
 }
 
-[UsedImplicitly]
 public sealed class SimpleTransformerHandler : ITransformerHandler, ITestTransformerRegistrations
 {
     private readonly Dictionary<Type, ITransformer> _simpleTransformers = new()
