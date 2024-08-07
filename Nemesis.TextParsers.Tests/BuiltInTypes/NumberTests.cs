@@ -22,7 +22,7 @@ public class NumberTests<TUnderlying, TNumberHandler>
 #endif
     where TNumberHandler : NumberTransformer<TUnderlying>
 {
-    private static readonly TNumberHandler _sut = (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
+    private static readonly TNumberHandler _sut = (TNumberHandler)NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
 
     [Test]
     public void Zero_ShouldBeLessThanOne() => Assert.That(_sut.Zero, Is.LessThan(_sut.One));

@@ -1,15 +1,11 @@
 ﻿using System.Collections.ObjectModel;
-
 using AutoFixture;
-
 using JetBrains.Annotations;
-
 using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Tests.Arch.Infrastructure;
 using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
-using Nemesis.TextParsers.Tests.Infrastructure;
 using Nemesis.TextParsers.Tests.Utils;
-
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 
 namespace Nemesis.TextParsers.Tests;

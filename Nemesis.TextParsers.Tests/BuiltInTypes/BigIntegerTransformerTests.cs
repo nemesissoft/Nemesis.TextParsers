@@ -5,7 +5,7 @@ namespace Nemesis.TextParsers.Tests.BuiltInTypes;
 [TestFixture]
 public class BigIntegerTransformerTests
 {
-    private static readonly NumberTransformer<BigInteger> _sut = NumberTransformerCache.GetNumberHandler<BigInteger>();
+    private static readonly NumberTransformer<BigInteger> _sut = NumberTransformerCache.Instance.GetNumberHandler<BigInteger>();
 
     [Test]
     public void Zero_ShouldBeLessThanOne() => Assert.That(_sut.Zero, Is.LessThan(_sut.One));

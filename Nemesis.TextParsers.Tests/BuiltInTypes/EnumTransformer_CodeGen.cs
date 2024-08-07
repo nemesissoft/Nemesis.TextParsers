@@ -21,7 +21,7 @@ public class EnumTransformer_CodeGen<TEnum, TUnderlying>
     , IBinaryInteger<TUnderlying>
 #endif    
 {
-    private static readonly NumberTransformer<TUnderlying> _numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
+    private static readonly NumberTransformer<TUnderlying> _numberHandler = NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
 
     private static readonly ITransformer<TEnum> _sut = TextTransformer.Default.GetTransformer<TEnum>();
 

@@ -25,7 +25,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     where TNumberHandler : NumberTransformer<TUnderlying>
 {
     private static readonly TNumberHandler _numberHandler =
-        (TNumberHandler)NumberTransformerCache.GetNumberHandler<TUnderlying>();
+        (TNumberHandler)NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
 
     private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
         new(_numberHandler, EnumSettings.Default);

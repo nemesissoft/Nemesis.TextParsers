@@ -296,7 +296,7 @@ internal class CollectionTestData
     , IBinaryInteger<TNumber>
 #endif
     {
-        var transformer = (NumberTransformer<TNumber>)NumberTransformerCache.GetNumberHandler(typeof(TNumber));
+        var transformer = NumberTransformerCache.Instance.GetNumberHandler<TNumber>();
         var (_, _, min, max) = transformer;
 
         var div = transformer.FromInt64(divisor);

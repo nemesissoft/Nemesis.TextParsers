@@ -59,12 +59,12 @@ internal class RandomSource
 
         if (values.Count == 0)
         {
-            var numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
+            var numberHandler = NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
             value = _rand.NextDouble() < 0.5 ? numberHandler.Zero : numberHandler.One;
         }
         else if (isFlag)
         {
-            var numberHandler = NumberTransformerCache.GetNumberHandler<TUnderlying>();
+            var numberHandler = NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
             var min = (int)numberHandler.ToInt64(values.Min());
             var max = (int)numberHandler.ToInt64(values.Max());
             value = numberHandler.FromInt64(_rand.Next(min, max * 2));

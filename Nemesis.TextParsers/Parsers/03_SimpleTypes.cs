@@ -7,41 +7,53 @@ using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers;
-
-[UsedImplicitly]
-public sealed class SimpleTransformerHandler : ITransformerHandler
+public interface ITestTransformerRegistrations
 {
-    private readonly IReadOnlyDictionary<Type, ITransformer> _simpleTransformers;
+    IReadOnlyDictionary<Type, ITransformer> GetTransformerRegistrationsForTests();
+}
 
-    public SimpleTransformerHandler() => _simpleTransformers = GetDefaultTransformers();
-
-    private static IReadOnlyDictionary<Type, ITransformer> GetDefaultTransformers(Assembly fromAssembly = null)
+//TODO move to separate files 
+[UsedImplicitly]
+public sealed class SimpleTransformerHandler : ITransformerHandler, ITestTransformerRegistrations
+{
+    private readonly Dictionary<Type, ITransformer> _simpleTransformers = new()
     {
-        var types = (fromAssembly ?? Assembly.GetExecutingAssembly())
-            .GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
-
-        var simpleTransformers = new Dictionary<Type, ITransformer>(30);
-
-        foreach (var type in types)
-        {
-            if (type.DerivesOrImplementsGeneric(typeof(ITransformer<>)) &&
-                TypeMeta.TryGetGenericRealization(type, typeof(SimpleTransformer<>), out var simpleType)
-              )
-            {
-                var elementType = simpleType.GenericTypeArguments[0];
-                var transformerElementType = typeof(ITransformer<>).MakeGenericType(elementType);
-
-
-                if (simpleTransformers.ContainsKey(elementType))
-                    throw new NotSupportedException($"Automatic registration does not support multiple simple transformers to handle type {elementType}");
-
-                simpleTransformers[elementType] = (ITransformer)ReflectionUtils.GetInstanceOrCreate(type, transformerElementType);
-            }
-        }
-
-        return simpleTransformers;
-    }
+        [typeof(string)] = StringTransformer.Instance,
+        [typeof(bool)] = BooleanTransformer.Instance,
+        [typeof(char)] = CharTransformer.Instance,
+        [typeof(byte)] = ByteTransformer.Instance,
+        [typeof(sbyte)] = SByteTransformer.Instance,
+        [typeof(short)] = Int16Transformer.Instance,
+        [typeof(ushort)] = UInt16Transformer.Instance,
+        [typeof(int)] = Int32Transformer.Instance,
+        [typeof(uint)] = UInt32Transformer.Instance,
+        [typeof(long)] = Int64Transformer.Instance,
+        [typeof(ulong)] = UInt64Transformer.Instance,
+#if NET7_0_OR_GREATER
+        [typeof(Int128)] = Int128Transformer.Instance,
+        [typeof(UInt128)] = UInt128Transformer.Instance,
+#endif
+        [typeof(BigInteger)] = BigIntegerTransformer.Instance,
+#if NET
+        [typeof(Half)] = HalfTransformer.Instance,
+#endif
+        [typeof(float)] = SingleTransformer.Instance,
+        [typeof(double)] = DoubleTransformer.Instance,
+        [typeof(decimal)] = DecimalTransformer.Instance,
+        [typeof(TimeSpan)] = TimeSpanTransformer.Instance,
+        [typeof(DateTime)] = DateTimeTransformer.Instance,
+        [typeof(DateTimeOffset)] = DateTimeOffsetTransformer.Instance,
+        [typeof(Guid)] = GuidTransformer.Instance,
+        [typeof(Version)] = VersionTransformer.Instance,
+        [typeof(IPAddress)] = IpAddressTransformer.Instance,
+        [typeof(Regex)] = RegexTransformer.Instance,
+        [typeof(RegexOptions)] = RegexOptionsTransformer.Instance,
+        [typeof(Complex)] = ComplexTransformer.Instance,
+#if NET6_0_OR_GREATER
+        [typeof(DateOnly)] = DateOnlyTransformer.Instance,
+        [typeof(TimeOnly)] = TimeOnlyTransformer.Instance,
+#endif
+    };
 
     public ITransformer<TSimpleType> CreateTransformer<TSimpleType>()
     {
@@ -59,38 +71,47 @@ public sealed class SimpleTransformerHandler : ITransformerHandler
         $"Create transformer for simple system types: {string.Join(", ", _simpleTransformers.Keys.Select(t => t.GetFriendlyName()))}";
 
     string ITransformerHandler.DescribeHandlerMatch() => "Simple built-in type";
+
+    IReadOnlyDictionary<Type, ITransformer> ITestTransformerRegistrations.GetTransformerRegistrationsForTests() => _simpleTransformers;
 }
 
-public static class NumberTransformerCache
+public class NumberTransformerCache : ITestTransformerRegistrations
 {
-    private static readonly IReadOnlyDictionary<Type, ITransformer> _cache = BuildCache();
-
-    private static IReadOnlyDictionary<Type, ITransformer> BuildCache(Assembly fromAssembly = null)
+    private readonly Dictionary<Type, ITransformer> _cache = new()
     {
-        //TODO remove scanning assembly 
-        var transformerTypes = (fromAssembly ?? typeof(NumberTransformer<>).Assembly)
-            .GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition &&
-                        t.DerivesOrImplementsGeneric(typeof(NumberTransformer<>))
-            );
+        [typeof(byte)] = ByteTransformer.Instance,
+        [typeof(sbyte)] = SByteTransformer.Instance,
+        [typeof(short)] = Int16Transformer.Instance,
+        [typeof(ushort)] = UInt16Transformer.Instance,
+        [typeof(int)] = Int32Transformer.Instance,
+        [typeof(uint)] = UInt32Transformer.Instance,
+        [typeof(long)] = Int64Transformer.Instance,
+        [typeof(ulong)] = UInt64Transformer.Instance,
+        [typeof(BigInteger)] = BigIntegerTransformer.Instance,
+#if NET7_0_OR_GREATER
+        [typeof(Int128)] = Int128Transformer.Instance,
+        [typeof(UInt128)] = UInt128Transformer.Instance,
+#endif        
+    };
 
-        var cache = transformerTypes.ToDictionary(
-            tt => TypeMeta.GetGenericRealization(tt, typeof(NumberTransformer<>)).GenericTypeArguments[0],
-            tt => (ITransformer)ReflectionUtils.GetInstanceOrCreate(tt, typeof(ITransformer))
-        );
-
-        return cache;
-    }
-
-    public static NumberTransformer<TNumber> GetNumberHandler<TNumber>()
+    public NumberTransformer<TNumber> GetNumberHandler<TNumber>()
         where TNumber : struct, IComparable, IComparable<TNumber>, IEquatable<TNumber>, IFormattable
 #if NET7_0_OR_GREATER
     , IBinaryInteger<TNumber>
 #endif
-        => _cache.TryGetValue(typeof(TNumber), out var numOp) ? (NumberTransformer<TNumber>)numOp : null;
+        => _cache.TryGetValue(typeof(TNumber), out var numOp)
+        ? (NumberTransformer<TNumber>)numOp
+        : throw new NotSupportedException($"Type {typeof(TNumber).FullName} is not supported as element for {nameof(NumberTransformer<int>)}");
 
-    public static object GetNumberHandler(Type numberType) =>
-        _cache.TryGetValue(numberType, out var numOp) ? numOp : null;
+    public object GetNumberHandler(Type numberType) =>
+        _cache.TryGetValue(numberType, out var numOp)
+        ? numOp
+        : throw new NotSupportedException($"Type {numberType.FullName} is not supported as element for {nameof(NumberTransformer<int>)}");
+
+    public static readonly NumberTransformerCache Instance = new();
+    private NumberTransformerCache() { }
+
+    IReadOnlyDictionary<Type, ITransformer> ITestTransformerRegistrations.GetTransformerRegistrationsForTests() => _cache;
 }
 
 file static class Culture
@@ -1029,7 +1050,7 @@ public sealed class RegexTransformer : SimpleTransformer<Regex>
     public override Regex GetEmpty() => new("", RegexOptions.None);
 }
 
-internal class RegexOptionsTransformer : TransformerBase<RegexOptions>
+public sealed class RegexOptionsTransformer : SimpleTransformer<RegexOptions>
 {
     private static readonly RegexOptions[] _optionValues = [
         RegexOptions.IgnoreCase,
