@@ -377,8 +377,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             var borderedArray = ArraySettings.Default with { Start = '[', End = ']' };
 
             var borderedStore = SettingsStoreBuilder.GetDefault()
-                .AddOrUpdate(borderedArray)
-                .AddOrUpdate(borderedCollection)
+                .AddOrUpdateRange([borderedArray, borderedCollection])
                 .Build();
 
             return TextTransformer.GetDefaultStoreWith(borderedStore);

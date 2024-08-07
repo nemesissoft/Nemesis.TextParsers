@@ -71,14 +71,20 @@ public sealed class SettingsStoreBuilder : IEnumerable<(Type Type, ISettings Set
 
     public SettingsStoreBuilder(Dictionary<Type, ISettings> settings) => _settings = settings;
 
-    public SettingsStoreBuilder AddOrUpdate<TSettings>(TSettings settings)
-       where TSettings : ISettings
+    public SettingsStoreBuilder AddOrUpdate(ISettings settings)
     {
         if (!settings.IsValid(out var err))
             throw new ArgumentException($"{settings.GetType().FullName}: {err}");
 
         _settings[settings.GetType()] =
             settings ?? throw new ArgumentNullException(nameof(settings));
+        return this;
+    }
+
+    public SettingsStoreBuilder AddOrUpdateRange(IEnumerable<ISettings> settingsCollection)
+    {
+        foreach (var settings in settingsCollection)
+            AddOrUpdate(settings);
         return this;
     }
 

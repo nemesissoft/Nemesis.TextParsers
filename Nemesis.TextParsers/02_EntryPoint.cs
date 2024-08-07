@@ -49,7 +49,7 @@ public static class TextTransformer
         typeof(TypeConverterTransformerHandler)
     ];
 
-    //TODO remove that to test DI
+    //TODO remove that to test DI + support injecting non standard TransformerStores to transformable code gen
     public static ITransformerStore Default { get; } =
         StandardTransformerStore.Create(DefaultHandlers, new(DefaultSettings));
 

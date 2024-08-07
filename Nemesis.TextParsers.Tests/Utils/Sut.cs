@@ -77,8 +77,7 @@ internal static class Sut
 
         var settingsStoreBuilder = SettingsStoreBuilder.GetDefault();
 
-        foreach (var s in settings)
-            settingsStoreBuilder.AddOrUpdate(s);
+        settingsStoreBuilder.AddOrUpdateRange(settings);
 
         return TextTransformer.GetDefaultStoreWith(settingsStoreBuilder.Build());
     }
@@ -112,10 +111,7 @@ internal static class Sut
             End = '/'
         };
         var borderedStore = SettingsStoreBuilder.GetDefault()
-            .AddOrUpdate(borderedArray)
-            .AddOrUpdate(borderedCollection)
-            .AddOrUpdate(borderedDictionary)
-            .AddOrUpdate(weirdTuple)
+            .AddOrUpdateRange([borderedArray, borderedCollection, borderedDictionary, weirdTuple])
             .Build();
 
         return TextTransformer.GetDefaultStoreWith(borderedStore);
