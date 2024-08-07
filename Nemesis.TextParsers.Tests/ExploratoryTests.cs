@@ -63,8 +63,7 @@ public sealed class ExploratoryTests
 
         string GetRandomString()
         {
-            Span<char> special = stackalloc char[]
-                { '\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')' };
+            Span<char> special = ['\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')'];
             return
                 "" +
                 _randomSource.NextElement(special) +
