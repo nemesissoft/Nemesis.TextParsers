@@ -12,12 +12,11 @@ namespace Nemesis.TextParsers.Tests.BuiltInTypes;
 [TestFixture(TypeArgs = [typeof(long), typeof(Int64Transformer)])]
 [TestFixture(TypeArgs = [typeof(ulong), typeof(UInt64Transformer)])]
 #if NET7_0_OR_GREATER
-//TODO check why that is not running 
-//[TestFixture(TypeArgs = [typeof(Int128), typeof(Int128Transformer)])]
-//[TestFixture(TypeArgs = [typeof(UInt128), typeof(UInt128Transformer)])]
+[TestFixture(TypeArgs = [typeof(Int128), typeof(Int128Transformer)])]
+[TestFixture(TypeArgs = [typeof(UInt128), typeof(UInt128Transformer)])]
 #endif
 public class NumberTests<TUnderlying, TNumberHandler>
-    where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
+    where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IEquatable<TUnderlying>, IFormattable
 #if NET7_0_OR_GREATER
     , IBinaryInteger<TUnderlying>
 #endif
@@ -78,12 +77,12 @@ public class NumberTests<TUnderlying, TNumberHandler>
     {
         TUnderlying min = _sut.MinValue, max = _sut.MaxValue;
 
-        var increment = _sut.FromInt64((long)(
-            (BigInteger.Parse(max.ToString(CultureInfo.InvariantCulture))
-                                           -
-             BigInteger.Parse(min.ToString(CultureInfo.InvariantCulture))
-            ) / new BigInteger(100))
-        );
+        var incBig = (BigInteger.Parse(_sut.Format(max))
+                                 -
+                      BigInteger.Parse(_sut.Format(min))
+        ) / new BigInteger(100);
+
+        var increment = _sut.Parse(incBig.ToString("R", CultureInfo.InvariantCulture));
 
         var loopFrom = _sut.Add(min, _sut.One);
         var loopMax = _sut.Sub(max, increment);
