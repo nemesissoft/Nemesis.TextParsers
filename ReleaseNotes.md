@@ -1,4 +1,5 @@
 New contentąęść456
+New contentąęść456
 New contentąęść123
 New contentąęść
 New contentąęść
@@ -600,6 +601,7 @@ Published [2020-02-18 14:07:59 GMT](https://github.com/nemesissoft/Nemesis.TextP
 
 # Release v1.0.2 - Adding net461 and net47 targets 
 Published [2019-11-08 12:58:03 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/v1.0.2) by [Leszek-Kowalski](https://github.com/Leszek-Kowalski)
+
 
 
 
