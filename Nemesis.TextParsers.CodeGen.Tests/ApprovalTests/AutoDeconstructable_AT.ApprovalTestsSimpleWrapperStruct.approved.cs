@@ -1,4 +1,4 @@
-//HEAD
+﻿//HEAD
 using System;
 using Nemesis.TextParsers;
 using Nemesis.TextParsers.Parsers;
@@ -21,9 +21,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class eDoubleStructTransformer : TransformerBase<eDoubleStruct>
     {
-        private readonly ITransformer<double> _transformer_value = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_value;
         private const int ARITY = 1;
 
+        public eDoubleStructTransformer(ITransformerStore store)
+        {
+            _transformer_value = store.GetTransformer<double>();        
+        }
 
         private readonly TupleHelper _helper;
 

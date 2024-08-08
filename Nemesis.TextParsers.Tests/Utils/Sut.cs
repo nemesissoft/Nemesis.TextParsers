@@ -74,11 +74,9 @@ internal static class Sut
             settings.Add((ISettings)ctor.Invoke(args));
         }
 
-
-        var settingsStoreBuilder = SettingsStoreBuilder.GetDefault();
-
-        foreach (var s in settings)
-            settingsStoreBuilder.AddOrUpdate(s);
+        var settingsStoreBuilder =
+            SettingsStoreBuilder.GetDefault()
+            .AddOrUpdateRange(settings);
 
         return TextTransformer.GetDefaultStoreWith(settingsStoreBuilder.Build());
     }
@@ -111,14 +109,10 @@ internal static class Sut
             Start = '/',
             End = '/'
         };
-        var borderedStore = SettingsStoreBuilder.GetDefault()
-            .AddOrUpdate(borderedArray)
-            .AddOrUpdate(borderedCollection)
-            .AddOrUpdate(borderedDictionary)
-            .AddOrUpdate(weirdTuple)
-            .Build();
+        var borderedStoreBuilder = SettingsStoreBuilder.GetDefault()
+            .AddOrUpdateRange([borderedArray, borderedCollection, borderedDictionary, weirdTuple]);
 
-        return TextTransformer.GetDefaultStoreWith(borderedStore);
+        return TextTransformer.GetDefaultStoreWith(borderedStoreBuilder.Build());
     }
 
     public static ITransformer<TElement> GetTransformer<TElement>()

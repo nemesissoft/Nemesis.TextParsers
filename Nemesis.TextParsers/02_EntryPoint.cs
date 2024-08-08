@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using JetBrains.Annotations;
+using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
@@ -18,14 +19,44 @@ public interface ITransformerStore
 
 public static class TextTransformer
 {
+    public static readonly IReadOnlyCollection<ISettings> DefaultSettings = [
+        CollectionSettings.Default,
+        ArraySettings.Default,
+        DictionarySettings.Default,
+        EnumSettings.Default,
+        FactoryMethodSettings.Default,
+        ValueTupleSettings.Default,
+        KeyValuePairSettings.Default,
+        DeconstructableSettings.Default
+    ];
+
+    public static readonly IReadOnlyCollection<Type> DefaultHandlers = [
+        typeof(SimpleTransformerHandler),
+        typeof(KeyValuePairTransformerHandler),
+        typeof(ValueTupleTransformerHandler),
+        typeof(TransformableHandler),
+        typeof(ConventionTransformerHandler),
+        typeof(TextFactoryTransformerHandler),
+        typeof(EnumTransformerHandler),
+        typeof(NullableTransformerHandler),
+        typeof(DictionaryTransformerHandler),
+        typeof(CustomDictionaryTransformerHandler),
+        typeof(ArrayTransformerHandler),
+        typeof(CollectionTransformerHandler),
+        typeof(LeanCollectionTransformerHandler),
+        typeof(CustomCollectionTransformerHandler),
+        typeof(DeconstructionTransformerHandler),
+        typeof(TypeConverterTransformerHandler)
+    ];
+
     public static ITransformerStore Default { get; } =
-        StandardTransformerStore.GetDefault(SettingsStoreBuilder.GetDefault().Build());
+        StandardTransformerStore.Create(DefaultHandlers, new(DefaultSettings));
 
     public static ITransformerStore GetDefaultStoreWith(SettingsStore settingsStore) =>
-        StandardTransformerStore.GetDefault(settingsStore);
+        StandardTransformerStore.Create(DefaultHandlers, settingsStore);
 }
 
-internal sealed class StandardTransformerStore : ITransformerStore
+public sealed class StandardTransformerStore : ITransformerStore
 {
     private readonly IEnumerable<ITransformerHandler> _transformerHandlers;
     public SettingsStore SettingsStore { get; }
@@ -40,7 +71,7 @@ internal sealed class StandardTransformerStore : ITransformerStore
         SettingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
     }
 
-    public static ITransformerStore GetDefault(SettingsStore settingsStore)
+    public static ITransformerStore Create(IEnumerable<Type> transformerHandlerTypes, SettingsStore settingsStore)
     {
         static bool IsUnique<TElement>(IEnumerable<TElement> list)
         {
@@ -48,37 +79,32 @@ internal sealed class StandardTransformerStore : ITransformerStore
             return list.All(diffChecker.Add);
         }
 
-        var types = Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition);
-
         var handlers = new List<ITransformerHandler>(16);
         var store = new StandardTransformerStore(handlers, settingsStore);
 
         handlers.AddRange(
-            from type in types
-            where typeof(ITransformerHandler).IsAssignableFrom(type)
-            select CreateTransformerHandler(type, store, settingsStore)
+            transformerHandlerTypes.Select(t => CreateTransformerHandler(t, store, settingsStore))
         );
 
         if (!IsUnique(handlers.Select(d => d.Priority)))
-            throw new InvalidOperationException($"All priorities registered via {nameof(ITransformerHandler)} have to be unique");
+            throw new InvalidOperationException($"All priorities registered via {nameof(StandardTransformerStore)} have to be unique");
 
         handlers.Sort((i1, i2) => i1.Priority.CompareTo(i2.Priority));
 
         return store;
     }
 
-    private static ITransformerHandler CreateTransformerHandler(Type type, ITransformerStore transformerStore, SettingsStore settingsStore)
+    private static ITransformerHandler CreateTransformerHandler(Type handlerType, ITransformerStore transformerStore, SettingsStore settingsStore)
     {
-        var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        var ctors = handlerType.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         if (ctors.Length != 1)
-            throw new NotSupportedException($"Only single constructor is supported for transformer handler: {type.GetFriendlyName()}");
+            throw new NotSupportedException($"Only single constructor is supported for transformer handler: {handlerType.GetFriendlyName()}");
 
         var ctor = ctors[0];
         var @params = ctor.GetParameters();
 
         if (@params.Length == 0)
-            return (ITransformerHandler)Activator.CreateInstance(type, true);
+            return (ITransformerHandler)Activator.CreateInstance(handlerType, true);
         else
         {
             object GetArgument(Type argType)
@@ -89,14 +115,14 @@ internal sealed class StandardTransformerStore : ITransformerStore
                     return settingsStore.GetSettingsFor(argType);
                 else
                     throw new NotSupportedException(
-                        $"Only supported arguments for auto-injection to {type.GetFriendlyName()} are {nameof(ITransformerStore)} or {nameof(ISettings)} implementations");
+                        $"Only supported arguments for auto-injection to {handlerType.GetFriendlyName()} are {nameof(ITransformerStore)} or {nameof(ISettings)} implementations");
             }
 
             var arguments = @params.Select(p => p.ParameterType)
                 .Select(GetArgument)
                 .ToArray();
 
-            return (ITransformerHandler)Activator.CreateInstance(type, arguments);
+            return (ITransformerHandler)Activator.CreateInstance(handlerType, arguments);
         }
     }
 

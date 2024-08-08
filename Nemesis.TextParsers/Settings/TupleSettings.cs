@@ -13,6 +13,8 @@ public abstract record TupleSettings(
     char? Start,
     char? End) : ISettings
 {
+    public abstract ISettings DeepClone();
+
     public bool IsValid([NotNullWhen(false)] out string? error)
     {
         if (Delimiter == NullElementMarker ||
@@ -63,6 +65,8 @@ public sealed record ValueTupleSettings(
 ) : TupleSettings(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End),
     ISettings<ValueTupleSettings>
 {
+    public override ISettings DeepClone() => this with { };
+
     public static ValueTupleSettings Default { get; } = new();
 }
 
@@ -75,6 +79,8 @@ public sealed record KeyValuePairSettings(
 ) : TupleSettings(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End),
     ISettings<KeyValuePairSettings>
 {
+    public override ISettings DeepClone() => this with { };
+
     public static KeyValuePairSettings Default { get; } = new();
 
     public override string ToString() =>
@@ -91,6 +97,8 @@ public sealed record DeconstructableSettings(
 ) : TupleSettings(Delimiter, NullElementMarker, EscapingSequenceStart, Start, End),
     ISettings<DeconstructableSettings>
 {
+    public override ISettings DeepClone() => this with { };
+
     public static DeconstructableSettings Default { get; } = new();
 
     public override string ToString() =>

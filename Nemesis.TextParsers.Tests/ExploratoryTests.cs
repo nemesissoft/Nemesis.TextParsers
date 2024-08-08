@@ -1,15 +1,10 @@
 ﻿using System.Collections.ObjectModel;
-
 using AutoFixture;
-
-using JetBrains.Annotations;
-
 using Nemesis.Essentials.Runtime;
+using Nemesis.TextParsers.Tests.Arch.Infrastructure;
 using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
-using Nemesis.TextParsers.Tests.Infrastructure;
 using Nemesis.TextParsers.Tests.Utils;
-
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 
 namespace Nemesis.TextParsers.Tests;
@@ -67,8 +62,7 @@ public sealed class ExploratoryTests
 
         string GetRandomString()
         {
-            Span<char> special = stackalloc char[]
-                { '\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')' };
+            Span<char> special = ['\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')'];
             return
                 "" +
                 _randomSource.NextElement(special) +
@@ -636,14 +630,12 @@ internal static class FixtureUtils
         }
     }
 
-    [UsedImplicitly]
     private static void RegisterValueTuple1<T1>(IFixture fixture)
     {
         ValueTuple<T1> TupleCreator() => new(fixture.Create<T1>());
 
         fixture.Register(TupleCreator);
     }
-    [UsedImplicitly]
     private static void RegisterValueTuple2<T1, T2>(IFixture fixture)
     {
         (T1, T2) TupleCreator() =>
@@ -654,7 +646,6 @@ internal static class FixtureUtils
 
         fixture.Register(TupleCreator);
     }
-    [UsedImplicitly]
     private static void RegisterValueTuple3<T1, T2, T3>(IFixture fixture)
     {
         (T1, T2, T3) TupleCreator() =>
@@ -666,7 +657,6 @@ internal static class FixtureUtils
 
         fixture.Register(TupleCreator);
     }
-    [UsedImplicitly]
     private static void RegisterValueTuple4<T1, T2, T3, T4>(IFixture fixture)
     {
         (T1, T2, T3, T4) TupleCreator() =>
@@ -679,7 +669,6 @@ internal static class FixtureUtils
 
         fixture.Register(TupleCreator);
     }
-    [UsedImplicitly]
     private static void RegisterValueTuple5<T1, T2, T3, T4, T5>(IFixture fixture)
     {
         (T1, T2, T3, T4, T5) TupleCreator() =>
@@ -693,7 +682,6 @@ internal static class FixtureUtils
 
         fixture.Register(TupleCreator);
     }
-    [UsedImplicitly]
     private static void RegisterValueTuple6<T1, T2, T3, T4, T5, T6>(IFixture fixture)
     {
         (T1, T2, T3, T4, T5, T6) TupleCreator() =>
@@ -708,7 +696,6 @@ internal static class FixtureUtils
 
         fixture.Register(TupleCreator);
     }
-    [UsedImplicitly]
     private static void RegisterValueTuple7<T1, T2, T3, T4, T5, T6, T7>(IFixture fixture)
     {
         (T1, T2, T3, T4, T5, T6, T7) TupleCreator() =>

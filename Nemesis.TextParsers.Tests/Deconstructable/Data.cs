@@ -20,7 +20,6 @@ internal readonly struct CarrotAndOnionFactors : IEquatable<CarrotAndOnionFactor
         Time = time;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out decimal carrot, out float[] onionFactors, out TimeSpan time)
     {
         carrot = Carrot;
@@ -55,7 +54,6 @@ internal readonly struct Person
         Address = address;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out string name, out int age, out Address address)
     {
         name = Name;
@@ -75,7 +73,6 @@ internal readonly struct Address
         ZipCode = zipCode;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out string city, out int zipCode)
     {
         city = City;
@@ -151,9 +148,8 @@ internal readonly struct LargeStruct
         N13 = n13;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out double n1, out float n2, out int n3, out uint n4, out short n5, out ushort n6,
-        out byte n7, out sbyte n8, out long n9, out ulong n10, out decimal n11, out BigInteger n12, out Complex n13)
+    out byte n7, out sbyte n8, out long n9, out ulong n10, out decimal n11, out BigInteger n12, out Complex n13)
     {
         n1 = N1;
         n2 = N2;
@@ -190,7 +186,6 @@ internal readonly struct ThreeStrings
         C = c;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out string a, out string b, out string c)
     {
         a = A;
@@ -213,7 +208,6 @@ internal readonly struct DataWithCustomDeconstructableTransformer : IEquatable<D
         Prices = prices;
     }
 
-    [UsedImplicitly]
     public void Deconstruct(out float number, out bool isEnabled, out decimal[] prices)
     {
         number = Number;
@@ -499,21 +493,18 @@ internal class RegionTransformer : CustomDeconstructionTransformer<Region>
 
 #region Negative cases
 
-[UsedImplicitly]
 internal readonly struct NoDeconstruct
 {
     public string Text { get; }
     public NoDeconstruct(string text) => Text = text;
 }
 
-[UsedImplicitly]
 internal readonly struct DeconstructWithoutMatchingCtor
 {
     public string Text { get; }
     public void Deconstruct(out string text) => text = Text;
 }
 
-[UsedImplicitly]
 internal readonly struct CtorAndDeCtorOutOfSync
 {
     public string Text { get; }
@@ -524,18 +515,15 @@ internal readonly struct CtorAndDeCtorOutOfSync
         Text = text;
         Number = number;
     }
-    [UsedImplicitly]
     public void Deconstruct(out string text) => text = Text;
 }
 
-[UsedImplicitly]
 internal readonly struct NotCompatibleCtor
 {
     public string Text { get; }
 
     public NotCompatibleCtor(int text) => Text = text.ToString();
 
-    [UsedImplicitly]
     public void Deconstruct(out string text) => text = Text;
 
     public static readonly MethodInfo DeconstructMethod =
@@ -544,14 +532,12 @@ internal readonly struct NotCompatibleCtor
     public static readonly ConstructorInfo Constructor = Ctor.Of(() => new NotCompatibleCtor(default));
 }
 
-[UsedImplicitly]
 internal readonly struct NotOutParam
 {
     public string Text { get; }
 
     public NotOutParam(string text) => Text = text;
 
-    [UsedImplicitly]
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
 #pragma warning disable IDE0060 // Remove unused parameter
     public void Deconstruct(string text) => text = Text;
@@ -564,7 +550,6 @@ internal readonly struct NotOutParam
     public static readonly ConstructorInfo Constructor = Ctor.Of(() => new NotOutParam(default));
 }
 
-[UsedImplicitly]
 internal readonly struct NotSupportedParams
 {
     public string Text { get; }
@@ -598,7 +583,6 @@ internal readonly struct NotSupportedParams
 }
 
 
-[UsedImplicitly]
 internal readonly struct StaticNotCompatibleCtor
 {
     public string Text { get; }
@@ -614,7 +598,6 @@ internal readonly struct StaticNotCompatibleCtor
 }
 
 
-[UsedImplicitly]
 internal readonly struct StaticNotOutParam
 {
     public string Text { get; }
@@ -629,7 +612,6 @@ internal readonly struct StaticNotOutParam
     public static readonly ConstructorInfo Constructor = _thisType.GetConstructors().Single();
 }
 
-[UsedImplicitly]
 internal readonly struct StaticNotSupportedParams
 {
     public string Text { get; }

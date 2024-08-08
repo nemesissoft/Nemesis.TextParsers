@@ -7,7 +7,7 @@ using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests;
 
 [TestFixture, Explicit]
-[UseReporter(typeof(VisualStudioReporter), typeof(ClipboardReporter))]
+[UseReporter(typeof(P4MergeReporter), typeof(PowerShellClipboardReporter))]
 internal class AutoDeconstructable_AT
 {
     [Test] public void ApprovalTestsRecord() => RunCase("Record");

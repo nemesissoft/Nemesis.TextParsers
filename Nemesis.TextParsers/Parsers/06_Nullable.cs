@@ -1,9 +1,7 @@
-﻿using JetBrains.Annotations;
-using Nemesis.TextParsers.Runtime;
+﻿using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
 public sealed class NullableTransformerHandler(ITransformerStore transformerStore) : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore = transformerStore;

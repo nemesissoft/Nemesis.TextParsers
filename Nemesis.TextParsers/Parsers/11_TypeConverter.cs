@@ -1,12 +1,9 @@
 ﻿using System.ComponentModel;
 
-using JetBrains.Annotations;
-
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
 public sealed class TypeConverterTransformerHandler : ITransformerHandler
 {
     public ITransformer<TElement> CreateTransformer<TElement>() =>

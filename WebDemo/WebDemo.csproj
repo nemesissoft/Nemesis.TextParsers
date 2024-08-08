@@ -6,13 +6,15 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
+		<!--<EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
+		<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>-->
+		
 		<WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
-		<!--<JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>-->
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Using Include="Nemesis.TextParsers" />
-		<Using Include="Nemesis.TextParsers.Settings" />
+		<Using Include="Nemesis.TextParsers" />		
 		<Using Include="Microsoft.AspNetCore.Mvc" />
 		<Using Include="System.Text.Json.Serialization" />
 	</ItemGroup>
@@ -23,6 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Nemesis.TextParsers.DependencyInjection\Nemesis.TextParsers.DependencyInjection.csproj" />
 		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
 	</ItemGroup>
 

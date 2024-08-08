@@ -57,9 +57,21 @@ namespace {namespaceName}
 
         foreach (var (name, type) in members)
             source.Append($@"
-        private readonly ITransformer<{type}> {GetTransformerName(name)} = TextTransformer.Default.GetTransformer<{type}>();");
+        private readonly ITransformer<{type}> {GetTransformerName(name)};");
         source.AppendLine($@"
-        private const int ARITY = {members.Count};").AppendLine();
+        private const int ARITY = {members.Count};");
+
+
+        source.Append($@"
+        public {typeName}Transformer(ITransformerStore store)
+        {{");
+
+        foreach (var (name, type) in members)
+            source.Append($@"
+            {GetTransformerName(name)} = store.GetTransformer<{type}>();");
+
+        source.AppendLine(@"        
+        }");
 
 
         if (settings is { } s)

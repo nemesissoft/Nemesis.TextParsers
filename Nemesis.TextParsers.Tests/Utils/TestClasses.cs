@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
 
@@ -130,10 +129,9 @@ internal readonly record struct ThreeLetters(char C1, char C2, char C3)
 {
     public override string ToString() => $"{C1}{C2}{C3}";
 
-    [UsedImplicitly]
     public static ThreeLetters FromText(ReadOnlySpan<char> text) =>
-        text.Length == 3 ?
-            new ThreeLetters(text[0], text[1], text[2]) : default;
+    text.Length == 3 ?
+        new ThreeLetters(text[0], text[1], text[2]) : default;
 }
 
 internal readonly record struct ThreeElements<TElement>(TElement E1, TElement E2, TElement E3)
@@ -141,7 +139,6 @@ internal readonly record struct ThreeElements<TElement>(TElement E1, TElement E2
 {
     public override string ToString() => FormattableString.Invariant($"{E1},{E2},{E3}");
 
-    [UsedImplicitly]
     public static ThreeElements<TElement> FromText(ReadOnlySpan<char> text)
     {
         var trans = Sut.GetTransformer<TElement>();
@@ -242,7 +239,6 @@ internal readonly record struct PairWithFactory<TElement>(TElement Left, TElemen
 
 internal static class PairTextFactory<TElement> where TElement : IEquatable<TElement>
 {
-    [UsedImplicitly]
     public static PairWithFactory<TElement> FromText(ReadOnlySpan<char> text)
     {
         var trans = Sut.GetTransformer<TElement>();

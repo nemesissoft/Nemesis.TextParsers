@@ -21,11 +21,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class Point3dTransformer : TransformerBase<Point3d>
     {
-        private readonly ITransformer<double> _transformer_x = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_y = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_z = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_x;
+        private readonly ITransformer<double> _transformer_y;
+        private readonly ITransformer<double> _transformer_z;
         private const int ARITY = 3;
 
+        public Point3dTransformer(ITransformerStore store)
+        {
+            _transformer_x = store.GetTransformer<double>();
+            _transformer_y = store.GetTransformer<double>();
+            _transformer_z = store.GetTransformer<double>();        
+        }
 
         private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
 

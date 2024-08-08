@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Globalization;
-using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Utils;
@@ -35,7 +34,6 @@ internal readonly struct ParsleyAndLeekFactors : IEquatable<ParsleyAndLeekFactor
         unchecked((Parsley.GetHashCode() * 397) ^ (LeekFactors?.GetHashCode() ?? 0));
 }
 
-[UsedImplicitly]
 internal sealed class ParsleyAndLeekFactorsTransformer : TransformerBase<ParsleyAndLeekFactors>
 {
     protected override ParsleyAndLeekFactors ParseCore(in ReadOnlySpan<char> text)

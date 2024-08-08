@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using JetBrains.Annotations;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
@@ -17,7 +17,7 @@ public abstract class TextTypeConverter : TypeConverter
         destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
 }
 
-[PublicAPI]
+[JetBrains.Annotations.PublicAPI]
 public abstract class BaseTextConverter<TValue> : TextTypeConverter
 {
     public sealed override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
@@ -34,7 +34,7 @@ public abstract class BaseTextConverter<TValue> : TextTypeConverter
     public abstract string FormatToString(TValue value);
 }
 
-[PublicAPI]
+[JetBrains.Annotations.PublicAPI]
 public abstract class BaseNullableTextConverter<TValue> : TextTypeConverter
 {
     public sealed override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) =>
@@ -61,12 +61,13 @@ public abstract class BaseNullableTextConverter<TValue> : TextTypeConverter
     protected abstract string FormatToString(TValue value);
 }
 
+#nullable enable
 //in future this can be taken from text transformers 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
 public sealed class TextConverterSyntaxAttribute : Attribute
 {
     public string Syntax { get; }
-    public char[] SpecialCharacters { get; }
+    public char[] SpecialCharacters { get; } = [];
 
     public TextConverterSyntaxAttribute(string syntax) => Syntax = syntax;
 
@@ -80,26 +81,23 @@ public sealed class TextConverterSyntaxAttribute : Attribute
 public class TextSyntaxProvider
 {
     private readonly SettingsStore _settingsStore;
-    public TextSyntaxProvider([NotNull] SettingsStore settingsStore) => _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+    public TextSyntaxProvider(SettingsStore settingsStore) => _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
 
-    public static TextSyntaxProvider Default { get; } = new(TextTransformer.Default.SettingsStore);
-
-    [UsedImplicitly]
-    public string GetSyntaxFor([NotNull] Type type)
+    public string GetSyntaxFor(Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
 
         if (TryGetGrammarDescription(type, out string message)) return message;
         else if (typeof(string) == type) return GetStringSyntax();
-        else if (type.IsValueType && TryGetValueTypeSyntax(type, out string valueTypeSyntax)) return valueTypeSyntax;
-        else if (TryGetDictionarySyntax(type, out string dictSyntax)) return dictSyntax;
-        else if (TryGetCollectionSyntax(type, out string collSyntax)) return collSyntax;
+        else if (type.IsValueType && TryGetValueTypeSyntax(type, out var valueTypeSyntax)) return valueTypeSyntax;
+        else if (TryGetDictionarySyntax(type, out var dictSyntax)) return dictSyntax;
+        else if (TryGetCollectionSyntax(type, out var collSyntax)) return collSyntax;
         else if (typeof(IDictionary).IsAssignableFrom(type)) return "key1=value1;key2=value2;key3=value3";
         else if (typeof(ICollection).IsAssignableFrom(type)) return "Values separated with pipe ('|')";
         return type.GetFriendlyName();
     }
 
-    protected virtual bool TryGetCollectionSyntax(Type type, out string syntax)
+    protected virtual bool TryGetCollectionSyntax(Type type, [NotNullWhen(true)] out string? syntax)
     {
         if (TypeMeta.TryGetGenericRealization(type, typeof(ICollection<>), out var collType) || type.IsArray)
         {
@@ -130,11 +128,11 @@ public class TextSyntaxProvider
         }
     }
 
-    protected virtual bool TryGetDictionarySyntax(Type type, out string syntax)
+    protected virtual bool TryGetDictionarySyntax(Type type, [NotNullWhen(true)] out string? syntax)
     {
         if (TypeMeta.TryGetGenericRealization(type, typeof(IDictionary<,>), out var dictType))
         {
-            string keySyntax = GetSyntaxFor(dictType.GenericTypeArguments[0]),
+            string keySyntax = GetSyntaxFor(dictType!.GenericTypeArguments[0]),
                    valSyntax = GetSyntaxFor(dictType.GenericTypeArguments[1]);
 
             var s = _settingsStore.GetSettingsFor<DictionarySettings>();
@@ -158,7 +156,7 @@ public class TextSyntaxProvider
         }
     }
 
-    protected virtual bool TryGetValueTypeSyntax(Type type, out string syntax)
+    protected virtual bool TryGetValueTypeSyntax(Type type, [NotNullWhen(true)] out string? syntax)
     {
         syntax = null;
 
@@ -168,7 +166,6 @@ public class TextSyntaxProvider
             isNullable = true;
             type = underlyingType;
         }
-
 
         (bool isNumeric, var min, var max, bool isFloating) = GetNumberMeta(type);
         if (isNumeric)
@@ -191,12 +188,12 @@ public class TextSyntaxProvider
             syntax = FormattableString.Invariant(
                 $"One of following: {string.Join(", ", Enum.GetValues(type).Cast<object>())}{(isNullable ? " or null" : "")}");
 
-        return syntax != null;
+        return syntax is not null;
     }
 
     protected virtual string GetStringSyntax() => "UTF-16 character string";
 
-    private string GetSyntaxFromAttribute(Type source, Type originalType)
+    private string? GetSyntaxFromAttribute(Type source, Type originalType)
     {
         var attr = source?.GetCustomAttribute<TextConverterSyntaxAttribute>(true);
         if (attr == null) return null;
@@ -219,20 +216,20 @@ public class TextSyntaxProvider
 
     private bool TryGetGrammarDescription(Type type, out string message)
     {
-        string fromType = GetSyntaxFromAttribute(type, type);
+        string? fromType = GetSyntaxFromAttribute(type, type);
 
-        string fromConverter =
+        string? fromConverter =
             type.GetCustomAttribute<TypeConverterAttribute>(true)?.ConverterTypeName is { } converterTypeName &&
             Type.GetType(converterTypeName, false) is { } converterType
                 ? GetSyntaxFromAttribute(converterType, type)
                 : null;
 
-        string fromTextFactory =
+        string? fromTextFactory =
             type.GetCustomAttribute<TextFactoryAttribute>(true)?.FactoryType is { } factoryType
                 ? GetSyntaxFromAttribute(factoryType, type)
                 : null;
 
-        string fromTransformer =
+        string? fromTransformer =
             type.GetCustomAttribute<TransformerAttribute>(true)?.TransformerType is { } transformerType
                 ? GetSyntaxFromAttribute(transformerType, type)
                 : null;
@@ -241,7 +238,7 @@ public class TextSyntaxProvider
 
         message = "";
 
-        foreach (string text in texts)
+        foreach (string? text in texts)
             if (!string.IsNullOrWhiteSpace(text))
             {
                 if (message.Length > 0)
@@ -287,3 +284,4 @@ public class TextSyntaxProvider
         return string.Join(Environment.NewLine, indented);
     }
 }
+#nullable disable

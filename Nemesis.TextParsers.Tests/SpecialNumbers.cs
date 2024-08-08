@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using JetBrains.Annotations;
 using Nemesis.Essentials.Design;
 using Nemesis.TextParsers.Parsers;
 using Nemesis.TextParsers.Tests.Utils;
@@ -22,10 +21,9 @@ readonly struct LowPrecisionFloat(float value) : IEquatable<LowPrecisionFloat>
 
     public override string ToString() => Value.ToString("G17", CultureInfo.InvariantCulture);
 
-    [UsedImplicitly]
     public static LowPrecisionFloat FromText(ReadOnlySpan<char> text) => new(
         SingleTransformer.Instance.Parse(text)
-            );
+        );
 
     private static bool AlmostEqualUlps(float a, float b, uint maxUlpsDiff = 100 * 1024)
     {
@@ -68,7 +66,6 @@ readonly struct CarrotAndOnionFactors(float carrot, float[] onionFactors) : IEqu
         $"{Carrot:G9};{(OnionFactors == null ? NULL : string.Join(",", OnionFactors.Select(of => of.ToString("G9", CultureInfo.InvariantCulture))))}"
         );
 
-    [UsedImplicitly]
     public static CarrotAndOnionFactors FromText(ReadOnlySpan<char> text)
     {
         var stream = text.Split(';').GetEnumerator();

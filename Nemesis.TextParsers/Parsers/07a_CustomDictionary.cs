@@ -1,11 +1,9 @@
 ﻿using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
 public sealed class CustomDictionaryTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;

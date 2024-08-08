@@ -22,11 +22,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class ComplexTypesTransformer : TransformerBase<ComplexTypes>
     {
-        private readonly ITransformer<double[]> _transformer_Doubles = TextTransformer.Default.GetTransformer<double[]>();
-        private readonly ITransformer<Number?> _transformer_Nullable = TextTransformer.Default.GetTransformer<Number?>();
-        private readonly ITransformer<List<Number>> _transformer_List = TextTransformer.Default.GetTransformer<List<Number>>();
+        private readonly ITransformer<double[]> _transformer_Doubles;
+        private readonly ITransformer<Number?> _transformer_Nullable;
+        private readonly ITransformer<List<Number>> _transformer_List;
         private const int ARITY = 3;
 
+        public ComplexTypesTransformer(ITransformerStore store)
+        {
+            _transformer_Doubles = store.GetTransformer<double[]>();
+            _transformer_Nullable = store.GetTransformer<Number?>();
+            _transformer_List = store.GetTransformer<List<Number>>();        
+        }
 
         private readonly TupleHelper _helper;
 

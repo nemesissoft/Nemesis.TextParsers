@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net6.0;netstandard2.0</TargetFrameworks>
+		<IsPackable>true</IsPackable>
+
+		<Nullable>enable</Nullable>
+
+		<WarningsNotAsErrors>$(WarningsNotAsErrors);NU5104</WarningsNotAsErrors>		
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -5,7 +5,7 @@ using Nemesis.TextParsers.Utils;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 using Sut = Nemesis.TextParsers.Tests.Utils.Sut;
 
-namespace Nemesis.TextParsers.Tests.Infrastructure;
+namespace Nemesis.TextParsers.Tests.Arch.Infrastructure;
 
 [TestFixture]
 public class InfrastructureTests

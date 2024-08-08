@@ -1,12 +1,9 @@
-﻿using JetBrains.Annotations;
-
-using Nemesis.TextParsers.Runtime;
+﻿using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
 public sealed class KeyValuePairTransformerHandler : ITransformerHandler
 {
     private readonly TupleHelper _helper;

@@ -45,7 +45,10 @@ public abstract record CollectionSettingsBase(
         {
             error = $"""
                 {GetType().Name} requires unique characters to be used for parsing/formatting purposes. 
-                Start ('{Start}') and end ('{End}') properties can be equal to each other
+                Start ('{Start}') and end ('{End}') properties can be equal to each other.
+                ListDelimiter         = '{ListDelimiter}'
+                NullElementMarker     = '{NullElementMarker}'
+                EscapingSequenceStart = '{EscapingSequenceStart}'
                 """;
             return false;
         }
@@ -55,6 +58,8 @@ public abstract record CollectionSettingsBase(
             return true;
         }
     }
+
+    public abstract ISettings DeepClone();
 }
 
 /// <inheritdoc/>
@@ -68,6 +73,8 @@ public sealed record CollectionSettings(
 ) : CollectionSettingsBase(ListDelimiter, NullElementMarker, EscapingSequenceStart, Start, End, DefaultCapacity),
     ISettings<CollectionSettings>
 {
+    public override ISettings DeepClone() => this with { };
+
     public static CollectionSettings Default { get; } = new();
 }
 
@@ -82,6 +89,8 @@ public sealed record ArraySettings(
 ) : CollectionSettingsBase(ListDelimiter, NullElementMarker, EscapingSequenceStart, Start, End, DefaultCapacity),
     ISettings<ArraySettings>
 {
+    public override ISettings DeepClone() => this with { };
+
     public static ArraySettings Default { get; } = new();
 }
 
@@ -123,7 +132,11 @@ public sealed record DictionarySettings(
         {
             error = $"""
                 {nameof(DictionarySettings)} requires unique characters to be used for parsing/formatting purposes. 
-                Start ('{Start}') and end ('{End}') properties can be equal to each other
+                Start ('{Start}') and end ('{End}') properties can be equal to each other.
+                DictionaryPairsDelimiter = '{DictionaryPairsDelimiter}'
+                DictionaryKeyValueDelimiter = '{DictionaryKeyValueDelimiter}'
+                NullElementMarker = '{NullElementMarker}'
+                EscapingSequenceStart = '{EscapingSequenceStart}'
                 """;
             return false;
         }
@@ -146,6 +159,8 @@ public sealed record DictionarySettings(
             return true;
         }
     }
+
+    public ISettings DeepClone() => this with { };
 
     public static DictionarySettings Default { get; } = new();
 

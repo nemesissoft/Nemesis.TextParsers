@@ -12,8 +12,8 @@ namespace Nemesis.TextParsers.Tests.Deconstructable;
 [TestFixture]
 internal class DeconstructableTests
 {
-    private static IEnumerable<TCD> CorrectData() => new[]
-    {
+    private static TCD[] CorrectData() =>
+    [
         new TCD(typeof(CarrotAndOnionFactors),
                 new CarrotAndOnionFactors(123.456789M, [1, 2, 3, (float)Math.Round(Math.PI, 2)], TimeSpan.Parse("12:34:56")),
                 @"(123.456789;1|2|3|3.14;12:34:56)"),
@@ -27,7 +27,7 @@ internal class DeconstructableTests
 
         new TCD(typeof(LargeStruct), LargeStruct.Sample, @"(3.14159265;2.718282;-123456789;123456789;-1234;1234;127;-127;-4611686018427387904;9223372036854775807;23.14069263;123456789012345678901234567890;(3.14159265\; 2.71828183))"),
 
-    };
+    ];
 
     [TestCaseSource(nameof(CorrectData))]
     public void FormatAndParse(Type type, object instance, string text)
@@ -277,10 +277,8 @@ internal class DeconstructableTests
     public void ParseAndFormat_AttributeProvidedSettings_NoAttribute()
     {
         var settings = new DeconstructableSettings('๑', '๒', '๓', '๔', '๕', false);
-        var storeStore = SettingsStoreBuilder.GetDefault()
-            .AddOrUpdate(settings)
-            .Build();
-        var sut = TextTransformer.GetDefaultStoreWith(storeStore);
+        var storeStoreBuilder = SettingsStoreBuilder.GetDefault().AddOrUpdate(settings);
+        var sut = TextTransformer.GetDefaultStoreWith(storeStoreBuilder.Build());
 
 
         var transformer = sut.GetTransformer<NoSettings>();
@@ -299,8 +297,8 @@ internal class DeconstructableTests
         });
     }
 
-    private static IEnumerable<TCD> CustomDeconstructable_Data() => new[]
-    {
+    private static TCD[] CustomDeconstructable_Data() =>
+    [
         //instance, input
         new TCD(new DataWithCustomDeconstructableTransformer(3.14f, false, [10, 20, 30]),
             @"{3.14_False_10|20|30}"),
@@ -311,7 +309,7 @@ internal class DeconstructableTests
         new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_False_␀}"),
         new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, null), @"{␀_␀_␀}"),
         new TCD(new DataWithCustomDeconstructableTransformer(0.0f, false, []), @"{__}"),
-    };
+    ];
 
     [TestCaseSource(nameof(CustomDeconstructable_Data))]
     public void Custom_ConventionTransformer_BasedOnDeconstructable(DataWithCustomDeconstructableTransformer instance, string text)
@@ -399,8 +397,8 @@ internal class DeconstructableTests
             Assert.Fail($"'{wrongInput}' should not be parseable to:{Environment.NewLine}\t{parsed}");
     }
 
-    private static IEnumerable<(Type type, Type exceptionType, B2B settingsBuilder, string expectedMessagePart)> ToTransformer_NegativeTest_Data() => new[]
-    {
+    private static (Type type, Type exceptionType, B2B settingsBuilder, string expectedMessagePart)[] ToTransformer_NegativeTest_Data() =>
+    [
         (typeof(NoDeconstruct), typeof(NotSupportedException), (B2B)null, "Deconstructable for NoDeconstruct cannot be created. Default deconstruction method supports cases with at lease one non-nullary Deconstruct method with matching constructor"),
         (typeof(DeconstructWithoutMatchingCtor), typeof(NotSupportedException), null, "Deconstructable for DeconstructWithoutMatchingCtor cannot be created. Default deconstruction method supports cases with at lease one non-nullary Deconstruct method with matching constructor"),
         (typeof(CtorAndDeCtorOutOfSync), typeof(NotSupportedException), null, "Deconstructable for CtorAndDeCtorOutOfSync cannot be created. Default deconstruction method supports cases with at lease one non-nullary Deconstruct method with matching constructor"),
@@ -425,7 +423,7 @@ internal class DeconstructableTests
 
         (typeof(StaticNotSupportedParams), typeof(NotSupportedException),
             s => s.WithCustomDeconstruction(StaticNotSupportedParams.DeconstructMethod, StaticNotSupportedParams.Constructor), @"Static Deconstruct method must have all parameter types be recognizable by TransformerStore. Not supported types:object, object[], List<object>, string[,]"),
-    };
+    ];
 
     [TestCaseSource(nameof(ToTransformer_NegativeTest_Data))]
     public void ToTransformer_NegativeTest((Type type, Type exceptionType, B2B settingsBuilder, string expectedMessagePart) data)

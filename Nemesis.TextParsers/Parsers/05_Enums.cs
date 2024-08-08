@@ -19,7 +19,7 @@ public sealed class EnumTransformerHandler : ITransformerHandler
             throw new NotSupportedException($@"Type {enumType.GetFriendlyName()} is not supported by {GetType().Name}. 
 UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numeric one");
 
-        var numberHandler = NumberTransformerCache.GetNumberHandler(underlyingType) ??
+        var numberHandler = NumberTransformerCache.Instance.GetNumberHandler(underlyingType) ??
             throw new NotSupportedException($"UnderlyingType {underlyingType.Name} was not found in parser cache");
 
         var transType = typeof(EnumTransformer<,,>).MakeGenericType(enumType, underlyingType, numberHandler.GetType());

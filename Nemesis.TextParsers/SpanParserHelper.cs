@@ -62,9 +62,6 @@ public static class SpanParserHelper
         else return input;
     }
 
-    /* TODO add tests that cover these cases i.e. escaping sequence in the end
-     private ParserInput ParseElement(in ReadOnlySpan<char> input)*/
-
     [PureMethod]
     public static ReadOnlySpan<char> UnescapeCharacter(this scoped in ReadOnlySpan<char> input, char escapingSequenceStart, char character1, char character2)
     {

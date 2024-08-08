@@ -1,12 +1,10 @@
 ﻿using System.Buffers;
-using JetBrains.Annotations;
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers;
 
-[UsedImplicitly]
 public sealed class ArrayTransformerHandler : ITransformerHandler
 {
     private readonly ITransformerStore _transformerStore;
