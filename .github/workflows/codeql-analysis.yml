@@ -6,8 +6,7 @@ on:
     branches: [ main ]
   schedule:
     - cron: '40 16 * * 0'
-  push:
-    branches: [ main ]
+
 
 run-name: "QL"
 

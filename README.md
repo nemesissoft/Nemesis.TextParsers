@@ -17,6 +17,8 @@
 [![Nuget](https://img.shields.io/nuget/v/Nemesis.TextParsers.CodeGen.svg?style=flat-square&logo=nuget&label=Nemesis.TextParsers.CodeGen&color=purple)](https://www.nuget.org/packages/Nemesis.TextParsers.CodeGen/)
 ![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.CodeGen.svg?style=flat-square&color=purple)
 
+[![Nuget](https://img.shields.io/nuget/v/Nemesis.TextParsers.DependencyInjection.svg?style=flat-square&logo=nuget&label=Nemesis.TextParsers.DependencyInjection&color=magenta)](https://www.nuget.org/packages/Nemesis.TextParsers.DependencyInjection/)
+![Downloads](https://img.shields.io/nuget/dt/Nemesis.TextParsers.DependencyInjection.svg?style=flat-square&color=magenta)
 
 ![License](https://img.shields.io/github/license/nemesissoft/Nemesis.TextParsers)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnemesissoft%2FNemesis.TextParsers?ref=badge_shield)
