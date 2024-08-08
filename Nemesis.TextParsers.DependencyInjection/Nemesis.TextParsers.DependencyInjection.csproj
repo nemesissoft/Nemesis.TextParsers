@@ -11,6 +11,8 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+
+		<PackageReference Include="MinVer" PrivateAssets="All" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Nemesis.TextParsers\Nemesis.TextParsers.csproj" />
