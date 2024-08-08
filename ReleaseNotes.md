@@ -1,3 +1,147 @@
+# Release 2.9.6 - Dependency injection support 
+Published [2024-08-08 21:47:39 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.9.6) by [MichalBrylka](https://github.com/MichalBrylka)
+
+## Highlight
+* Add support for dependency injection by @MichalBrylka in https://github.com/nemesissoft/Nemesis.TextParsers/pull/17
+```csharp
+//use Nemesis.TextParsers.DependencyInjection package
+//consider the following ASP.Net demo
+var builder = WebApplication.CreateBuilder(args);
+//...
+builder.Services.ConfigureNemesisTextParsers(builder.Configuration.GetRequiredSection("ParsingSettings"))
+        .AddNemesisTextParsers();
+
+var app = builder.Build();
+app.MapGet("/parsingConfigurations/{type}", (string type, SettingsStore store) => 
+{ 
+    //use injected SettingsStore 
+});
+
+app.MapGet("/parseType/{type}", (string type, [FromQuery] string text, ITransformerStore transformerStore) => 
+{
+    //use injected ITransformerStore 
+});
+```
+
+## What else has changed
+* Add support for transforming Int128/UInt128
+* Remove scanning assembly for standard registrations and checking proper static registrations with tests
+* Add tests for settings deserialization
+* Convert Settings types to Records
+* Upgrade to .net 8
+* Cache intermediate results for code gen
+* Add support for Wolverine-styled DescribeHandlerMatch - breaking change. Rename: ICanCreateTransformer -> ITransformerHandler, *Creator -> *Handler
+* Improve code gen tests
+
+**Full Changelog**: https://github.com/nemesissoft/Nemesis.TextParsers/compare/2.9.2...2.9.6
+
+
+# Release 2.9.2 - Update packaging options 
+Published [2024-01-03 00:02:44 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.9.2) by [MichalBrylka](https://github.com/MichalBrylka)
+
+**Full Changelog**: https://github.com/nemesissoft/Nemesis.TextParsers/compare/2.9...2.9.2
+
+
+# Release 2.9.1 - Source code generator for enum types 
+Published [2024-01-01 22:51:21 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.9.1) by [MichalBrylka](https://github.com/MichalBrylka)
+
+## What's Changed
+* Implement source code generator for enum by @MichalBrylka in https://github.com/nemesissoft/Nemesis.TextParsers/pull/16
+
+**Full Changelog**: https://github.com/nemesissoft/Nemesis.TextParsers/compare/2.8.2...2.9.1
+
+## Code generator for enum types
+With this feature it is enough to annotate enum with 2 attributes:
+```csharp
+[Auto.AutoEnumTransformer(
+    //1. optionally pass parser settings
+    CaseInsensitive = true, AllowParsingNumerics = true, 
+    //2. TransformerClassName can be left blank. In that case the name of enum is used with "Transformer" suffix
+    TransformerClassName = "MonthCodeGenTransformer",
+    //3. optionally pass namespace to generate the transformer class within. If not provided the namespace of the enum will be used
+    TransformerClassNamespace = "ABC"
+)]
+//4. decorate enum with TransformerAttribute that points to automatically generated transformer
+[Transformer(typeof(ABC.MonthCodeGenTransformer))]
+public enum Month : byte
+{
+    None = 0,
+    January = 1, February = 2, March = 3,
+    April = 4, May = 5, June = 6,
+    July = 7, August = 8, September = 9,
+    October = 10, November = 11, December = 12
+}
+```
+This in turn generates the following parser using best practices (some lines are ommited for brevity):
+
+<details>
+<summary>Source code for generated parser</summary>
+
+```csharp
+public sealed class MonthCodeGenTransformer : TransformerBase<Nemesis.TextParsers.CodeGen.Sample.Month>
+{
+    public override string Format(Nemesis.TextParsers.CodeGen.Sample.Month element) => element switch
+    {
+        Nemesis.TextParsers.CodeGen.Sample.Month.None => nameof(Nemesis.TextParsers.CodeGen.Sample.Month.None),
+        Nemesis.TextParsers.CodeGen.Sample.Month.January => nameof(Nemesis.TextParsers.CodeGen.Sample.Month.January),
+        
+        // ...
+
+        Nemesis.TextParsers.CodeGen.Sample.Month.December => nameof(Nemesis.TextParsers.CodeGen.Sample.Month.December),
+        _ => element.ToString("G"),
+    };
+
+    protected override Nemesis.TextParsers.CodeGen.Sample.Month ParseCore(in ReadOnlySpan<char> input) =>
+        input.IsWhiteSpace() ? default : (Nemesis.TextParsers.CodeGen.Sample.Month)ParseElement(input);
+
+    private static byte ParseElement(ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty || input.IsWhiteSpace()) return default;
+        input = input.Trim();
+        if (IsNumeric(input) && byte.TryParse(input
+#if NETFRAMEWORK
+    .ToString() //legacy frameworks do not support parsing from ReadOnlySpan<char>
+#endif
+            , out var number))
+            return number;
+        else
+            return ParseName(input);
+
+
+        static bool IsNumeric(ReadOnlySpan<char> input) =>
+            input.Length > 0 && input[0] is var first &&
+            (char.IsDigit(first) || first is '-' or '+');    
+    }
+
+    private static byte ParseName(ReadOnlySpan<char> input)
+    {    
+        if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.None)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.None;            
+
+        else if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.January)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.January;            
+
+        else if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.February)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.February;            
+
+        // ...         
+
+        else if (IsEqual(input, nameof(Nemesis.TextParsers.CodeGen.Sample.Month.December)))
+            return (byte)Nemesis.TextParsers.CodeGen.Sample.Month.December;            
+
+        else throw new FormatException(@$"Enum of type 'Nemesis.TextParsers.CodeGen.Sample.Month' cannot be parsed from '{input.ToString()}'.
+Valid values are: [None or January or February or March or April or May or June or July or August or September or October or November or December] or number within byte range. 
+Ignore case option on.");        
+
+        static bool IsEqual(ReadOnlySpan<char> input, string label) =>
+            MemoryExtensions.Equals(input, label.AsSpan(), StringComparison.OrdinalIgnoreCase);
+    }
+}
+```
+
+</details>
+
+
 # Release 2.8.2 - Integrate with Github Actions 
 Published [2023-12-19 10:10:43 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.8.2) by [MichalBrylka](https://github.com/MichalBrylka)
 
@@ -373,7 +517,8 @@ readonly struct Address
         ZipCode = zipCode;
     }
 
-        public void Deconstruct(out string city, out int zipCode)
+    [UsedImplicitly]
+    public void Deconstruct(out string city, out int zipCode)
     {
         city = City;
         zipCode = ZipCode;
