@@ -16,68 +16,68 @@ namespace Nemesis.TextParsers.Tests.Collections
         private static string NormalizeNullMarkers(string text) =>
             text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
 
-        private static IEnumerable<(string text, string[] collection)> ValidListData() => new[]
-        {
+        private static (string text, string[] collection)[] ValidListData() =>
+        [
             (null, null),
             ("", Array.Empty<string>()),
             //("", new []{""}), //not supported. Rare case 
-            (@"AAA|BBB|CCC", new []{"AAA","BBB","CCC"}),
-            (@"|BBB||CCC", new []{"","BBB","","CCC"}),
-            (@"|BBB|\|CCC", new []{"","BBB","|CCC"}),
-            (@"|B\\BB|\|CCC", new []{"",@"B\BB","|CCC"}),
-            (@"|BBB|", new []{"","BBB",""}),
-            (@"|BBB\|", new []{"","BBB|"}),
-            (@"\|BBB|", new []{"|BBB",""}),
-            (@"|∅||∅", new []{"",null,"",null}),
-            (@"∅", new []{(string)null}),
-            (@"B|∅|A|∅", new []{"B",null,"A",null}),
-            (@"|||", new []{"","","",""}),
-            (@"|\||", new []{"","|",""}),
-            (@"|\\\\\||", new []{"",@"\\|",""}),
-            (@"|\\\|\\\||", new []{"",@"\|\|",""}),
-            (@"\\\|\\\||", new []{@"\|\|",""}),
-            (@"\\|ABC|\\", new []{@"\","ABC", @"\"}),
-            (@"\\|ABC|\|", new []{@"\","ABC", @"|"}),
-            (@"\||ABC|\\", new []{@"|","ABC", @"\"}),
+            (@"AAA|BBB|CCC", new[] { "AAA", "BBB", "CCC" }),
+            (@"|BBB||CCC", new[] { "", "BBB", "", "CCC" }),
+            (@"|BBB|\|CCC", new[] { "", "BBB", "|CCC" }),
+            (@"|B\\BB|\|CCC", new[] { "", @"B\BB", "|CCC" }),
+            (@"|BBB|", new[] { "", "BBB", "" }),
+            (@"|BBB\|", new[] { "", "BBB|" }),
+            (@"\|BBB|", new[] { "|BBB", "" }),
+            (@"|∅||∅", new[] { "", null, "", null }),
+            (@"∅", new[] { (string)null }),
+            (@"B|∅|A|∅", new[] { "B", null, "A", null }),
+            (@"|||", new[] { "", "", "", "" }),
+            (@"|\||", new[] { "", "|", "" }),
+            (@"|\\\\\||", new[] { "", @"\\|", "" }),
+            (@"|\\\|\\\||", new[] { "", @"\|\|", "" }),
+            (@"\\\|\\\||", new[] { @"\|\|", "" }),
+            (@"\\|ABC|\\", new[] { @"\", "ABC", @"\" }),
+            (@"\\|ABC|\|", new[] { @"\", "ABC", @"|" }),
+            (@"\||ABC|\\", new[] { @"|", "ABC", @"\" }),
 
-            (@"\\\\|ABC|\\\\", new []{@"\\","ABC", @"\\"}),
-            (@"\\\\|ABC|\|", new []{@"\\","ABC", @"|"}),
-            (@"\||ABC|\\\\", new []{@"|","ABC", @"\\"}),
+            (@"\\\\|ABC|\\\\", new[] { @"\\", "ABC", @"\\" }),
+            (@"\\\\|ABC|\|", new[] { @"\\", "ABC", @"|" }),
+            (@"\||ABC|\\\\", new[] { @"|", "ABC", @"\\" }),
 
-            (@"\\1\\|ABC|\\2\\", new []{@"\1\","ABC", @"\2\"}),
-            (@"\\3\\|ABC|\|", new []{@"\3\","ABC", @"|"}),
-            (@"\||ABC|\\4\\", new []{@"|","ABC", @"\4\"}),
+            (@"\\1\\|ABC|\\2\\", new[] { @"\1\", "ABC", @"\2\" }),
+            (@"\\3\\|ABC|\|", new[] { @"\3\", "ABC", @"|" }),
+            (@"\||ABC|\\4\\", new[] { @"|", "ABC", @"\4\" }),
 
-            (@"\|", new []{@"|"}),
-            (@"|", new []{@"", ""}),
-            (@" |", new []{@" ", ""}),
-            (@"\\", new []{@"\"}),
-            (@"\∅", new []{@"∅"}),
-            (@"∅", new string[]{null}),
-            (@" ∅", new[]{" ∅"}),
-            (@" ∅ ", new[]{" ∅ "}),
-            (@" \∅ ", new[]{" ∅ "}),
-            (@"∅ ", new[]{@"∅ "}),
-            (@"\∅ ", new[]{@"∅ "}),
-            (@"A|∅|B", new[]{"A",null,"B"}),
-            (@"A| ∅ |B", new[]{"A", " ∅ ", "B"}),
-            (@"∅|B", new[]{null,"B"}),
-            (@"∅ |B", new[]{ "∅ ", "B"}),
-            (@"\∅ |B", new[]{ "∅ ", "B"}),
-            (@"A| ∅ |B", new[]{"A", " ∅ ", "B"}),
-            (@"A| \∅ |B", new[]{"A", " ∅ ", "B"}),
-            (@" A | \∅ | B ", new[]{" A ", " ∅ ", " B "}),
+            (@"\|", new[] { @"|" }),
+            (@"|", new[] { @"", "" }),
+            (@" |", new[] { @" ", "" }),
+            (@"\\", new[] { @"\" }),
+            (@"\∅", new[] { @"∅" }),
+            (@"∅", new string[] { null }),
+            (@" ∅", new[] { " ∅" }),
+            (@" ∅ ", new[] { " ∅ " }),
+            (@" \∅ ", new[] { " ∅ " }),
+            (@"∅ ", new[] { @"∅ " }),
+            (@"\∅ ", new[] { @"∅ " }),
+            (@"A|∅|B", new[] { "A", null, "B" }),
+            (@"A| ∅ |B", new[] { "A", " ∅ ", "B" }),
+            (@"∅|B", new[] { null, "B" }),
+            (@"∅ |B", new[] { "∅ ", "B" }),
+            (@"\∅ |B", new[] { "∅ ", "B" }),
+            (@"A| ∅ |B", new[] { "A", " ∅ ", "B" }),
+            (@"A| \∅ |B", new[] { "A", " ∅ ", "B" }),
+            (@" A | \∅ | B ", new[] { " A ", " ∅ ", " B " }),
 
 
 
-            (@"\|AAA\||\|BBB\||\|CCC\|", new[] {"|AAA|", "|BBB|", "|CCC|"}),
-            (@"\\DDD\\|\\EEE\\|\\FFF\\", new[] {@"\DDD\", @"\EEE\", @"\FFF\"}),
-            (@"\\GGG\||\|HHH\\|\|III\||\\JJJ\\", new[] {@"\GGG|", @"|HHH\", @"|III|", @"\JJJ\"}),
-            (@"\|AAA\|| \∅ |\|CCC\|", new[] {"|AAA|", " ∅ ", "|CCC|"}),
-            (@"\|AAA\||\∅|\|CCC\|", new[] {"|AAA|", "∅", "|CCC|"}),
-            (@"\|AAA\||∅|\|CCC\|", new[] {"|AAA|", null, "|CCC|"}),
-            (@"∅|\∅|∅|null| \∅ |\|\\\∅\|", new[] {null, "∅", null, "null", " ∅ ", @"|\∅|"}),
-        };
+            (@"\|AAA\||\|BBB\||\|CCC\|", new[] { "|AAA|", "|BBB|", "|CCC|" }),
+            (@"\\DDD\\|\\EEE\\|\\FFF\\", new[] { @"\DDD\", @"\EEE\", @"\FFF\" }),
+            (@"\\GGG\||\|HHH\\|\|III\||\\JJJ\\", new[] { @"\GGG|", @"|HHH\", @"|III|", @"\JJJ\" }),
+            (@"\|AAA\|| \∅ |\|CCC\|", new[] { "|AAA|", " ∅ ", "|CCC|" }),
+            (@"\|AAA\||\∅|\|CCC\|", new[] { "|AAA|", "∅", "|CCC|" }),
+            (@"\|AAA\||∅|\|CCC\|", new[] { "|AAA|", null, "|CCC|" }),
+            (@"∅|\∅|∅|null| \∅ |\|\\\∅\|", new[] { null, "∅", null, "null", " ∅ ", @"|\∅|" }),
+        ];
 
         [TestCaseSource(nameof(ValidListData))]
         public void List_Parse_Test((string input, string[] expectedList) data)
@@ -136,8 +136,8 @@ namespace Nemesis.TextParsers.Tests.Collections
                 Throws.ArgumentException.And.Message.Contains(expectedMessagePart));
 
 
-        private static IEnumerable<(Type elementType, string input, Type expectedException)> Bad_ListParseData() => new[]
-        {
+        private static (Type elementType, string input, Type expectedException)[] Bad_ListParseData() =>
+        [
             (typeof(IList<>), @"A|B|C", typeof(InvalidOperationException)),
             (typeof(bool), @"falsee", typeof(FormatException)),
             (typeof(bool), @"yes", typeof(FormatException)),
@@ -210,7 +210,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (typeof(float), @"-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", typeof(OverflowException)),
             (typeof(float), @" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
 #endif
-        };
+        ];
         private static IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) =>
             _store.GetTransformer<IReadOnlyCollection<TElement>>().Parse(text);
 
@@ -376,11 +376,10 @@ namespace Nemesis.TextParsers.Tests.Collections
             var borderedCollection = CollectionSettings.Default with { Start = '[', End = ']' };
             var borderedArray = ArraySettings.Default with { Start = '[', End = ']' };
 
-            var borderedStore = SettingsStoreBuilder.GetDefault()
-                .AddOrUpdateRange([borderedArray, borderedCollection])
-                .Build();
+            var borderedStoreBuilder = SettingsStoreBuilder.GetDefault()
+                .AddOrUpdateRange([borderedArray, borderedCollection]);
 
-            return TextTransformer.GetDefaultStoreWith(borderedStore);
+            return TextTransformer.GetDefaultStoreWith(borderedStoreBuilder.Build());
         }
     }
 }

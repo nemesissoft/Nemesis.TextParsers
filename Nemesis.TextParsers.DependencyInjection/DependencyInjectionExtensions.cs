@@ -64,11 +64,37 @@ public static class DependencyInjectionExtensions
 
         services.AddSingleton<TextSyntaxProvider>();
 
-        //TODO add generic transformer ?
-        /*services.AddSingleton(typeof(ITransformer<>), 
-            provider => TextTransformer.GetDefaultStoreWith(provider.GetRequiredService<SettingsStore>())
-        );*/
+        services.AddSingleton(typeof(ITransformer<>), typeof(TransformerWrapper<>));
 
         return services;
     }
+}
+
+class TransformerWrapper<T>(ITransformerStore transformerStore) : ITransformer<T>
+{
+    private readonly ITransformer<T> _transformer = transformerStore.GetTransformer<T>();
+
+    public string Format(T element) => _transformer.Format(element);
+
+    public string FormatObject(object element) => _transformer.FormatObject(element);
+
+    public T GetEmpty() => _transformer.GetEmpty();
+
+    public object GetEmptyObject() => _transformer.GetEmptyObject();
+
+    public T GetNull() => _transformer.GetNull();
+
+    public object GetNullObject() => _transformer.GetNullObject();
+
+    public T Parse(string text) => _transformer.Parse(text);
+
+    public T Parse(in ReadOnlySpan<char> input) => _transformer.Parse(input);
+
+    public object ParseObject(string text) => _transformer.ParseObject(text);
+
+    public object ParseObject(in ReadOnlySpan<char> input) => _transformer.ParseObject(input);
+
+    public bool TryParse(in ReadOnlySpan<char> input, out T result) => _transformer.TryParse(input, out result);
+
+    public bool TryParseObject(in ReadOnlySpan<char> input, out object result) => _transformer.TryParseObject(input, out result);
 }

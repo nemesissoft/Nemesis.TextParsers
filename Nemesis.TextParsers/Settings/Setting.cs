@@ -20,7 +20,6 @@ public interface ISettings<T> : ISettings
 #endif    
 }
 
-//TODO rework Store and Builder (:IEnumerable<ISettings> )
 public sealed class SettingsStore : IEnumerable<ISettings>
 {
     private readonly ReadOnlyDictionary<Type, ISettings> _settings;
@@ -47,8 +46,6 @@ public sealed class SettingsStore : IEnumerable<ISettings>
         }
         _settings = new(settingsDictionary);
     }
-
-    //public SettingsStoreBuilder ToBuilder() => new(_settings.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
 
     public TSettings GetSettingsFor<TSettings>() where TSettings : ISettings<TSettings> =>
         (TSettings)GetSettingsFor(typeof(TSettings));
@@ -95,7 +92,6 @@ public sealed class SettingsStoreBuilder : IEnumerable<(Type Type, ISettings Set
 
     public SettingsStore Build() => new(_settings);
 
-    //TODO check calls to that 
     public static SettingsStoreBuilder GetDefault() => new(TextTransformer.DefaultSettings.ToDictionary(s => s.GetType()));
 
     public IEnumerator<(Type Type, ISettings Settings)> GetEnumerator() =>

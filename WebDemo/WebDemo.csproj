@@ -6,6 +6,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
+		<!--<EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
+		<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>-->
+		
 		<WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
 		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
 	</PropertyGroup>

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Nemesis.TextParsers.DependencyInjection;
 using Nemesis.TextParsers.Settings;
@@ -71,7 +71,7 @@ configurationGroup.MapGet("{type}", (string type, SettingsStore store) =>
 }
 );
 
-app.MapPost("/parse/{type}", (string type, [FromQuery] string text, ITransformerStore transformerStore) =>
+app.MapGet("/parseType/{type}", (string type, [FromQuery] string text, ITransformerStore transformerStore) =>
 {
     var parsedType = Type.GetType(type);
     if (parsedType is null) return Results.BadRequest($"Type '{type}' cannot be parsed");
@@ -95,12 +95,24 @@ app.MapPost("/parse/{type}", (string type, [FromQuery] string text, ITransformer
     {
         return Results.Problem($"Text '{text}' failed to parse with message: {e.Message}");
     }
-}).WithName("Parse").WithOpenApi();
+}).WithOpenApi();
 
+
+//try the following: [␀,{A;B;C},{D;E;F;␀}]
+app.MapGet("/parse/listOfStringArrays", ([FromQuery] string text, [FromServices] ITransformer<List<string[]>> transformer) =>
+{
+    try
+    {
+        var parsed = transformer.Parse(text);
+        return Results.Ok(parsed);
+    }
+    catch (Exception e)
+    {
+        return Results.Problem($"Text '{text}' failed to parse with message: {e.Message}");
+    }
+}).WithOpenApi();
 
 app.Run();
-
-
 
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
