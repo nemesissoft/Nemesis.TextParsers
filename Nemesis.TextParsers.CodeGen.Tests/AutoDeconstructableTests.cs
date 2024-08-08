@@ -146,12 +146,19 @@ namespace Tests1
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class NumbersTransformer : TransformerBase<Numbers>
     {
-        private readonly ITransformer<float> _transformer_FloatNumber = TextTransformer.Default.GetTransformer<float>();
-        private readonly ITransformer<double> _transformer_DoubleNumber = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<ContainerClass2.NestedClass2> _transformer_NestedFullyQualified = TextTransformer.Default.GetTransformer<ContainerClass2.NestedClass2>();
-        private readonly ITransformer<ContainerClass3.NestedClass3> _transformer_NestedUsingStatic = TextTransformer.Default.GetTransformer<ContainerClass3.NestedClass3>();
+        private readonly ITransformer<float> _transformer_FloatNumber;
+        private readonly ITransformer<double> _transformer_DoubleNumber;
+        private readonly ITransformer<ContainerClass2.NestedClass2> _transformer_NestedFullyQualified;
+        private readonly ITransformer<ContainerClass3.NestedClass3> _transformer_NestedUsingStatic;
         private const int ARITY = 4;
 
+        public NumbersTransformer(ITransformerStore store)
+        {
+            _transformer_FloatNumber = store.GetTransformer<float>();
+            _transformer_DoubleNumber = store.GetTransformer<double>();
+            _transformer_NestedFullyQualified = store.GetTransformer<ContainerClass2.NestedClass2>();
+            _transformer_NestedUsingStatic = store.GetTransformer<ContainerClass3.NestedClass3>();        
+        }
 
         private readonly TupleHelper _helper;
 
@@ -241,9 +248,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class eDoubleRecordTransformer : TransformerBase<eDoubleRecord>
     {
-        private readonly ITransformer<double> _transformer_Value = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_Value;
         private const int ARITY = 1;
 
+        public eDoubleRecordTransformer(ITransformerStore store)
+        {
+            _transformer_Value = store.GetTransformer<double>();        
+        }
 
         private readonly TupleHelper _helper;
 
@@ -308,9 +319,13 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class eDoubleStructTransformer : TransformerBase<eDoubleStruct>
     {
-        private readonly ITransformer<double> _transformer_value = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_value;
         private const int ARITY = 1;
 
+        public eDoubleStructTransformer(ITransformerStore store)
+        {
+            _transformer_value = store.GetTransformer<double>();        
+        }
 
         private readonly TupleHelper _helper;
 
@@ -378,11 +393,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class RecordPoint3dTransformer : TransformerBase<RecordPoint3d>
     {
-        private readonly ITransformer<double> _transformer_X = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_Y = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_Z = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_X;
+        private readonly ITransformer<double> _transformer_Y;
+        private readonly ITransformer<double> _transformer_Z;
         private const int ARITY = 3;
 
+        public RecordPoint3dTransformer(ITransformerStore store)
+        {
+            _transformer_X = store.GetTransformer<double>();
+            _transformer_Y = store.GetTransformer<double>();
+            _transformer_Z = store.GetTransformer<double>();        
+        }
 
         private readonly TupleHelper _helper = new TupleHelper(',', '∅', '\\', '[', ']');
 
@@ -458,11 +479,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class Point3dTransformer : TransformerBase<Point3d>
     {
-        private readonly ITransformer<double> _transformer_x = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_y = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<double> _transformer_z = TextTransformer.Default.GetTransformer<double>();
+        private readonly ITransformer<double> _transformer_x;
+        private readonly ITransformer<double> _transformer_y;
+        private readonly ITransformer<double> _transformer_z;
         private const int ARITY = 3;
 
+        public Point3dTransformer(ITransformerStore store)
+        {
+            _transformer_x = store.GetTransformer<double>();
+            _transformer_y = store.GetTransformer<double>();
+            _transformer_z = store.GetTransformer<double>();        
+        }
 
         private readonly TupleHelper _helper = new TupleHelper(';', '∅', '\\', '(', ')');
 
@@ -556,21 +583,37 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class LargeTransformer : TransformerBase<Large>
     {
-        private readonly ITransformer<double> _transformer_n1 = TextTransformer.Default.GetTransformer<double>();
-        private readonly ITransformer<float> _transformer_n2 = TextTransformer.Default.GetTransformer<float>();
-        private readonly ITransformer<int> _transformer_n3 = TextTransformer.Default.GetTransformer<int>();
-        private readonly ITransformer<uint> _transformer_n4 = TextTransformer.Default.GetTransformer<uint>();
-        private readonly ITransformer<short> _transformer_n5 = TextTransformer.Default.GetTransformer<short>();
-        private readonly ITransformer<ushort> _transformer_n6 = TextTransformer.Default.GetTransformer<ushort>();
-        private readonly ITransformer<byte> _transformer_n7 = TextTransformer.Default.GetTransformer<byte>();
-        private readonly ITransformer<sbyte> _transformer_n8 = TextTransformer.Default.GetTransformer<sbyte>();
-        private readonly ITransformer<long> _transformer_n9 = TextTransformer.Default.GetTransformer<long>();
-        private readonly ITransformer<ulong> _transformer_n10 = TextTransformer.Default.GetTransformer<ulong>();
-        private readonly ITransformer<decimal> _transformer_n11 = TextTransformer.Default.GetTransformer<decimal>();
-        private readonly ITransformer<BigInteger> _transformer_n12 = TextTransformer.Default.GetTransformer<BigInteger>();
-        private readonly ITransformer<Complex> _transformer_n13 = TextTransformer.Default.GetTransformer<Complex>();
+        private readonly ITransformer<double> _transformer_n1;
+        private readonly ITransformer<float> _transformer_n2;
+        private readonly ITransformer<int> _transformer_n3;
+        private readonly ITransformer<uint> _transformer_n4;
+        private readonly ITransformer<short> _transformer_n5;
+        private readonly ITransformer<ushort> _transformer_n6;
+        private readonly ITransformer<byte> _transformer_n7;
+        private readonly ITransformer<sbyte> _transformer_n8;
+        private readonly ITransformer<long> _transformer_n9;
+        private readonly ITransformer<ulong> _transformer_n10;
+        private readonly ITransformer<decimal> _transformer_n11;
+        private readonly ITransformer<BigInteger> _transformer_n12;
+        private readonly ITransformer<Complex> _transformer_n13;
         private const int ARITY = 13;
 
+        public LargeTransformer(ITransformerStore store)
+        {
+            _transformer_n1 = store.GetTransformer<double>();
+            _transformer_n2 = store.GetTransformer<float>();
+            _transformer_n3 = store.GetTransformer<int>();
+            _transformer_n4 = store.GetTransformer<uint>();
+            _transformer_n5 = store.GetTransformer<short>();
+            _transformer_n6 = store.GetTransformer<ushort>();
+            _transformer_n7 = store.GetTransformer<byte>();
+            _transformer_n8 = store.GetTransformer<sbyte>();
+            _transformer_n9 = store.GetTransformer<long>();
+            _transformer_n10 = store.GetTransformer<ulong>();
+            _transformer_n11 = store.GetTransformer<decimal>();
+            _transformer_n12 = store.GetTransformer<BigInteger>();
+            _transformer_n13 = store.GetTransformer<Complex>();        
+        }
 
         private readonly TupleHelper _helper;
 
@@ -694,11 +737,17 @@ namespace Nemesis.TextParsers.CodeGen.Tests
     [System.Runtime.CompilerServices.CompilerGenerated]
     sealed class ComplexTypesTransformer : TransformerBase<ComplexTypes>
     {
-        private readonly ITransformer<double[]> _transformer_Doubles = TextTransformer.Default.GetTransformer<double[]>();
-        private readonly ITransformer<Number?> _transformer_Nullable = TextTransformer.Default.GetTransformer<Number?>();
-        private readonly ITransformer<List<Number>> _transformer_List = TextTransformer.Default.GetTransformer<List<Number>>();
+        private readonly ITransformer<double[]> _transformer_Doubles;
+        private readonly ITransformer<Number?> _transformer_Nullable;
+        private readonly ITransformer<List<Number>> _transformer_List;
         private const int ARITY = 3;
 
+        public ComplexTypesTransformer(ITransformerStore store)
+        {
+            _transformer_Doubles = store.GetTransformer<double[]>();
+            _transformer_Nullable = store.GetTransformer<Number?>();
+            _transformer_List = store.GetTransformer<List<Number>>();        
+        }
 
         private readonly TupleHelper _helper;
 

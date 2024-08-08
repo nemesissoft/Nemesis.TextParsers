@@ -6,15 +6,16 @@ namespace Nemesis.TextParsers.Tests.Transformable;
 [TestFixture]
 class TransformableTests
 {
-    private static IEnumerable<TCD> CorrectData() => new[]
-    {
+    //TODO add tests for Transformables aspect in code-gened Deconstruable
+    private static TCD[] CorrectData() =>
+    [
         new TCD(new ParsleyAndLeekFactors(100, [200, 300, 400]), @"100;200,300,400"),
         new TCD(new ParsleyAndLeekFactors(1000, [2]), @"1000;2"),
         new TCD(new ParsleyAndLeekFactors(10, [20.0f, 30.0f]), @""), //overriden in transformer
         new TCD(new ParsleyAndLeekFactors(0, [0f, 0f]), null), //overriden in transformer
         new TCD(new ParsleyAndLeekFactors(555.5f, null), @"555.5;∅"),
         new TCD(new ParsleyAndLeekFactors(666.6f, []), @"666.6;"),
-    };
+    ];
 
     [TestCaseSource(nameof(CorrectData))]
     public void Transformable_ParseAndFormat(ParsleyAndLeekFactors instance, string text)
@@ -35,13 +36,13 @@ class TransformableTests
     }
 
 
-    private static IEnumerable<TCD> GenericTransformable_Data() => new[]
-    {
+    private static TCD[] GenericTransformable_Data() =>
+    [
         new TCD(new CustomList<float>([100, 200, 300, 400]), @"100;200;300;400"),
         new TCD(new CustomList<float>([1000]), @"1000"),
         new TCD(new CustomList<float>([]), @""),//overriden in transformer
         new TCD(new CustomList<float>(null), null),//overriden in transformer 
-    };
+    ];
 
     [TestCaseSource(nameof(GenericTransformable_Data))]
     public void GenericTransformable_ParseAndFormat(ICustomList<float> instance, string text)
