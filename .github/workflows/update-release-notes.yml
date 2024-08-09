@@ -42,13 +42,13 @@ jobs:
         }
         $releaseNotes += $NL
 
-        $releaseNotes += "Published [$publishedAt]($url) by [$authorLogin]($authorUrl)" + $NL + $NL
+        $releaseNotes += "Published [$publishedAt]($url) by [$authorLogin]($authorUrl)" + $NL 
 
         if($body){
-            $releaseNotes += "`r`n`r`n $body"
+            $releaseNotes += "$NL $body"
         }
         
-        $releaseNotes += "$NL$NL$NL"
+        $releaseNotes += $NL
                 
         $releaseNotes | Set-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md"
 
@@ -78,19 +78,9 @@ jobs:
               $branchName = "build/update-release-notes-$releaseNumber-$(Get-Date -Format "yyyyMMdd_HHmmss")"
                             
               git --version
-              git config user.name "GitHub Actions Bot"
-              git config user.email "<>"
-              git status
-              git tag
-              git describe
-
-              Write-Host $branchName 
-
+              Get-ChildItem
+              
               Get-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md" -Raw
 
-
-              #git checkout -b $branchName
-        
-        
-              
+              #git checkout -b $branchName             
         
