@@ -1,3 +1,11 @@
+# Release 2.9.14 - test PR
+Published [2024-08-09 08:55:24 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.9.14) by [MichalBrylka](https://github.com/MichalBrylka)
+
+11
+22
+33
+**Full Changelog**: https://github.com/nemesissoft/Nemesis.TextParsers/compare/2.9.13...2.9.14
+
 # Release 2.9.6 - Dependency injection support 
 Published [2024-08-08 21:47:39 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.9.6) by [MichalBrylka](https://github.com/MichalBrylka)
 
@@ -596,5 +604,6 @@ Published [2020-02-18 14:07:59 GMT](https://github.com/nemesissoft/Nemesis.TextP
 
 # Release v1.0.2 - Adding net461 and net47 targets 
 Published [2019-11-08 12:58:03 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/v1.0.2) by [Leszek-Kowalski](https://github.com/Leszek-Kowalski)
+
 
 
