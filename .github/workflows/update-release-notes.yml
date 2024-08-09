@@ -1,0 +1,84 @@
+﻿# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: 'Update release notes history'
+on:
+  release:
+    types:
+      - published
+      
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  update_notes:
+    name: 📜 update notes
+    runs-on: ubuntu-latest
+    steps:   
+    - name: 🤘 checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 
+    
+    - name: 🗎 create release notes      
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_NAME: ${{ github.event.release.name }}
+        RELEASE_BODY: ${{ github.event.release.body }}
+      run: |   
+        $NL = "`r`n"
+        $name = $env:RELEASE_NAME
+        $body = $env:RELEASE_BODY
+        $releaseNumber = "${{ github.event.release.tag_name }}" 
+        $publishedAt = [DateTime]::Parse("${{ github.event.release.published_at }}").ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss') + " GMT"
+        $url = "${{ github.event.release.html_url }}"
+        $authorLogin = "${{ github.event.release.author.login }}"
+        $authorUrl = "${{ github.event.release.author.html_url }}" 
+
+        $releaseNotes = "# Release $releaseNumber"
+        
+        if($name){
+            $releaseNotes += " - $name"
+        }
+        $releaseNotes += $NL
+
+        $releaseNotes += "Published [$publishedAt]($url) by [$authorLogin]($authorUrl)" + $NL 
+
+        if($body){
+            $releaseNotes += "$NL$body"
+        }
+        
+        $releaseNotes += $NL
+                
+        $releaseNotes | Set-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md"
+
+    - name: ⬆️ upload release notes 
+      uses: actions/upload-artifact@v4
+      with:
+        name: ReleaseNotes
+        if-no-files-found: error
+        retention-days: 7
+        path: ReleaseNotesFromLastRelease.md
+    - name: 🚀 create pull request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git --version
+        git config user.name "GitHub Actions Bot"
+        git config user.email "<>"
+        
+        $releaseNumber = "${{ github.event.release.tag_name }}"
+        $branchName = "build/update-release-notes-$releaseNumber-$(Get-Date -Format "yyyyMMdd_HHmmss")"
+             
+        $lastReleaseNotes = Get-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md" -Raw
+        $lastReleaseNotes + (Get-Content .\ReleaseNotes.md -Raw -Encoding UTF8) | Set-Content .\ReleaseNotes.md -Encoding UTF8
+        Remove-Item ReleaseNotesFromLastRelease.md
+
+        $title = "Update release notes after release $releaseNumber"
+
+        git checkout -b $branchName
+        git add .
+        git commit -m $title
+        git push --set-upstream origin $branchName
+
+        gh pr create -B main -H $branchName --title $title --body 'Created by Github action'

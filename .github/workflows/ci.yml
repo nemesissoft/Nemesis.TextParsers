@@ -7,17 +7,22 @@ on:
       deploy_nuget_locally:
         type: boolean
         description: 🚀 deploy package to GH private
-        default: false        
+        default: false     
   push:
     branches:
       - 'main'
+    paths-ignore:
+      - '*.md'
+
   pull_request:
     branches:
       - '*'          
+    paths-ignore:
+      - '*.md'
   release:
     types:
       - published
-
+ 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
