@@ -20,7 +20,7 @@ jobs:
       with:
         fetch-depth: 0 
     
-    - name: 🗎 update release notes      
+    - name: 🗎 create release notes      
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_NAME: ${{ github.event.release.name }}
@@ -31,9 +31,9 @@ jobs:
         $body = $env:RELEASE_BODY
         $releaseNumber = "${{ github.event.release.tag_name }}" 
         $publishedAt = [DateTime]::Parse("${{ github.event.release.published_at }}").ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss') + " GMT"
-        $url = "${{ github.event.release.url }}"
+        $url = "${{ github.event.release.html_url }}"
         $authorLogin = "${{ github.event.release.author.login }}"
-        $authorUrl = "${{ github.event.release.author.url }}" 
+        $authorUrl = "${{ github.event.release.author.html_url }}" 
 
         $releaseNotes = "# Release $releaseNumber"
         
@@ -50,7 +50,7 @@ jobs:
         
         $releaseNotes += "$NL$NL$NL"
                 
-        $releaseNotes | Set-Content -Encoding UTF8 "NEWWWReleaseNotes.md"
+        $releaseNotes | Set-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md"
 
     - name: ⬆️ upload release notes 
       uses: actions/upload-artifact@v4
@@ -58,8 +58,38 @@ jobs:
         name: ReleaseNotes
         if-no-files-found: error
         retention-days: 7
-        path: NEWWWReleaseNotes.md       
+        path: ReleaseNotesFromLastRelease.md     
+        
+        
+  deploy:   
+      name: 🚀 create pull request      
+      runs-on: ubuntu-latest
+      needs: [ update_notes ]
+      steps:
+        - name: ⬇️ download notes
+          uses: actions/download-artifact@v4
+          with:
+            name: ReleaseNotes
+            path: .
 
+        - name: create PR
+          run: |
+              $releaseNumber = "${{ github.event.release.tag_name }}"
+              $branchName = "build/update-release-notes-$releaseNumber-$(Get-Date -Format "yyyyMMdd_HHmmss")"
+                            
+              git --version
+              git config user.name "GitHub Actions Bot"
+              git config user.email "<>"
+              git status
+              git tag
+              git describe
+
+              Write-Host $branchName 
+
+              Get-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md" -Raw
+
+
+              #git checkout -b $branchName
         
         
               
