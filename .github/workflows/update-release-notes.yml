@@ -60,6 +60,8 @@ jobs:
         retention-days: 7
         path: ReleaseNotesFromLastRelease.md
     - name: 🚀 create pull request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git --version
         git config user.name "GitHub Actions Bot"
@@ -70,8 +72,13 @@ jobs:
              
         $lastReleaseNotes = Get-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md" -Raw
         $lastReleaseNotes + (Get-Content .\ReleaseNotes.md -Raw -Encoding UTF8) | Set-Content .\ReleaseNotes.md -Encoding UTF8
+        Remove-Item ReleaseNotesFromLastRelease.md
+
+        $title = "Update release notes after release $releaseNumber"
 
         git checkout -b $branchName
         git add .
-        git commit -m "Update release notes after release $releaseNumber"
+        git commit -m $title
         git push --set-upstream origin $branchName
+
+        gh pr create -B main -H $branchName --title $title --body 'Created by Github action'
