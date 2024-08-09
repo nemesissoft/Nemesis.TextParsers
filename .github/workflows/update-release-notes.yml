@@ -71,7 +71,7 @@ jobs:
         $lastReleaseNotes = Get-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md" -Raw
         $lastReleaseNotes + (Get-Content .\ReleaseNotes.md -Raw -Encoding UTF8) | Set-Content .\ReleaseNotes.md -Encoding UTF8
 
-        #git checkout -b $branchName
+        git checkout -b $branchName
         git add .
         git commit -m "Update release notes after release $releaseNumber"
         git push --set-upstream origin $branchName
