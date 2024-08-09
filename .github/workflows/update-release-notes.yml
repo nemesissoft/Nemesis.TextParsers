@@ -26,7 +26,7 @@ jobs:
         RELEASE_NAME: ${{ github.event.release.name }}
         RELEASE_BODY: ${{ github.event.release.body }}
       run: |   
-        $NL = "`r`n`r`n"
+        $NL = "`r`n"
         $name = $env:RELEASE_NAME
         $body = $env:RELEASE_BODY
         $releaseNumber = "${{ github.event.release.tag_name }}" 
@@ -45,7 +45,7 @@ jobs:
         $releaseNotes += "Published [$publishedAt]($url) by [$authorLogin]($authorUrl)" + $NL 
 
         if($body){
-            $releaseNotes += "$NL $body"
+            $releaseNotes += "$NL$body"
         }
         
         $releaseNotes += $NL
@@ -58,29 +58,13 @@ jobs:
         name: ReleaseNotes
         if-no-files-found: error
         retention-days: 7
-        path: ReleaseNotesFromLastRelease.md     
-        
-        
-  deploy:   
-      name: 🚀 create pull request      
-      runs-on: ubuntu-latest
-      needs: [ update_notes ]
-      steps:
-        - name: ⬇️ download notes
-          uses: actions/download-artifact@v4
-          with:
-            name: ReleaseNotes
-            path: .
-
-        - name: create PR
-          run: |
-              $releaseNumber = "${{ github.event.release.tag_name }}"
-              $branchName = "build/update-release-notes-$releaseNumber-$(Get-Date -Format "yyyyMMdd_HHmmss")"
-                            
-              git --version
-              Get-ChildItem
-              
-              Get-Content -Encoding UTF8 "ReleaseNotesFromLastRelease.md" -Raw
-
-              #git checkout -b $branchName             
-        
+        path: ReleaseNotesFromLastRelease.md
+    - name: 🚀 create pull request
+      run: |
+        git --version
+        git config user.name "GitHub Actions Bot"
+        git config user.email "<>"
+        git status
+        git tag
+        git describe
+        Get-ChildItem
