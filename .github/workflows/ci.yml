@@ -12,13 +12,13 @@ on:
     branches:
       - 'main'
     paths-ignore:
-      - '*.md'
+      - '**/*.md'
 
   pull_request:
     branches:
       - '*'          
     paths-ignore:
-      - '*.md'
+      - '**/*.md'
   release:
     types:
       - published

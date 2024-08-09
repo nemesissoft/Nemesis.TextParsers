@@ -6,7 +6,7 @@ on:
     branches:
       - '*'   
     paths-ignore:
-      - '*.md'
+      - '**/*.md'
 
 run-name: "License Scanning"
 
