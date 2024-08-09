@@ -1,0 +1,66 @@
+﻿# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: 'Update release notes history'
+on:
+  release:
+    types:
+      - published
+      
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  create_nuget:
+    name: 📦 create NuGet
+    runs-on: ubuntu-latest
+    steps:   
+    - name: 🤘 checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 
+    
+    - name: 🗎 update release notes      
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_NAME: ${{ github.event.release.name }}
+        RELEASE_BODY: ${{ github.event.release.body }}
+      run: |   
+        $NL = "`r`n`r`n"
+        $name = $env:RELEASE_NAME
+        $body = $env:RELEASE_BODY
+        $releaseNumber = "${{ github.event.release.tag_name }}" 
+        $publishedAt = [DateTime]::Parse("${{ github.event.release.published_at }}").ToString('yyyy-MM-dd HH:mm:ss') + " GMT"
+        $url = "${{ github.event.release.url }}"
+        $authorLogin = "${{ github.event.release.author.login }}"
+        $authorUrl = "${{ github.event.release.author.url }}" 
+
+        $releaseNotes = "# Release $releaseNumber"
+        
+        if($name){
+            $releaseNotes += $" - $name"
+        }
+        $releaseNotes += $NL
+
+        $releaseNotes += "Published [$publishedAt]($url) by [$authorLogin]($authorUrl)" + $NL + $NL
+
+        if($body){
+            $releaseNotes += "`r`n`r`n $body"
+        }
+        
+        $releaseNotes += "$NL$NL$NL"
+                
+        $releaseNotes | Set-Content -Encoding UTF8 "NEWWWReleaseNotes.md"
+
+    - name: ⬆️ upload release notes 
+      uses: actions/upload-artifact@v4
+      with:
+        name: ReleaseNotes
+        if-no-files-found: error
+        retention-days: 7
+        path: NEWWWReleaseNotes.md       
+
+        
+        
+              
+        

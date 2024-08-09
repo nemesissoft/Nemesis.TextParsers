@@ -8,15 +8,11 @@ on:
         type: boolean
         description: 🚀 deploy package to GH private
         default: false        
-  push:
-    branches:
-      - 'main'
+
   pull_request:
     branches:
       - '*'          
-  release:
-    types:
-      - published
+
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1

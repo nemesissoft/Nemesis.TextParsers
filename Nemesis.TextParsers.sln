@@ -39,6 +39,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\ci.yml = .github\workflows\ci.yml
 		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
 		.github\workflows\license-scanning.yml = .github\workflows\license-scanning.yml
+		.github\workflows\update-release-notes.yml = .github\workflows\update-release-notes.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.TextParsers.DependencyInjection", "Nemesis.TextParsers.DependencyInjection\Nemesis.TextParsers.DependencyInjection.csproj", "{55D14092-BD6A-4076-A5D7-B9E5C57C8D67}"
