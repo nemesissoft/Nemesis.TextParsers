@@ -11,8 +11,8 @@ defaults:
     shell: pwsh
 
 jobs:
-  create_nuget:
-    name: 📦 create NuGet
+  update_notes:
+    name: 📜 update notes
     runs-on: ubuntu-latest
     steps:   
     - name: 🤘 checkout
@@ -30,7 +30,7 @@ jobs:
         $name = $env:RELEASE_NAME
         $body = $env:RELEASE_BODY
         $releaseNumber = "${{ github.event.release.tag_name }}" 
-        $publishedAt = [DateTime]::Parse("${{ github.event.release.published_at }}").ToString('yyyy-MM-dd HH:mm:ss') + " GMT"
+        $publishedAt = [DateTime]::Parse("${{ github.event.release.published_at }}").ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss') + " GMT"
         $url = "${{ github.event.release.url }}"
         $authorLogin = "${{ github.event.release.author.login }}"
         $authorUrl = "${{ github.event.release.author.url }}" 
@@ -38,7 +38,7 @@ jobs:
         $releaseNotes = "# Release $releaseNumber"
         
         if($name){
-            $releaseNotes += $" - $name"
+            $releaseNotes += " - $name"
         }
         $releaseNotes += $NL
 
