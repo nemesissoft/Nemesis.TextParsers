@@ -6,6 +6,7 @@ internal class CodeGen
 
 
 /*
+```assembly
 mono:
 Program:IsEven(System.Int32):System.Boolean:
        sub      rsp, 8

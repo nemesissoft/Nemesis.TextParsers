@@ -1,5 +1,9 @@
-﻿[Start](https://benchmarkdotnet.org/) 
+﻿[Why do we need new library](https://stackoverflow.com/questions/1047218/benchmarking-small-code-samples-in-c-can-this-implementation-be-improved)
+
+[Start](https://benchmarkdotnet.org/) 
+
 [Getting Started Guide](https://benchmarkdotnet.org/articles/guides/getting-started.html) 
+
 [Main Features List](https://benchmarkdotnet.org/#main-features)
 
 
@@ -28,5 +32,16 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 
 
 # Utils
-1. [BenchmarkInput.cs](https://github.com/nemesissoft/Nemesis.TextParsers/blob/f55f176088193de995ebb59f92420ae419d0dd36/Benchmarks/Helpers/BenchmarkInput.cs#L5)
-2. 
+1. [BenchmarkInput.cs](https://github.com/nemesissoft/Nemesis.TextParsers/blob/ef14ecc52ac0275324b70e8e89a32192d6d734a7/Benchmarks/Helpers/BenchmarkInput.cs#L5)
+
+# Samples 
+- 
+- 
+- [Kafka deser](https://michalbrylka.github.io/posts/kafka-protobuf-deserializer/)
+
+
+# Best practices
+1. Lower error == better predictability
+2. Low relative error
+3. Try replicating [.net improvements benchmarks](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/)
+4. [Awesome links](https://github.com/adamsitnik/awesome-dot-net-performance#benchmarking)
