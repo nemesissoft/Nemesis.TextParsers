@@ -25,6 +25,12 @@ public class BenchmarkInput<T>
                DateTime dt => dt.ToString("o", CultureInfo.InvariantCulture),
                IFormattable @if => @if.ToString(null, CultureInfo.InvariantCulture),
                IEnumerable ie => "[" + string.Join(", ", ie.Cast<object>().Select(FormatValue)) + "]",
+
+               (var a, var b) => $"({FormatValue(a)},{FormatValue(b)})",
+               (var a, var b, var c) => $"({FormatValue(a)},{FormatValue(b)},{FormatValue(c)})",
+               (var a, var b, var c, var d) => $"({FormatValue(a)},{FormatValue(b)},{FormatValue(c)},{FormatValue(d)})",
+               (var a, var b, var c, var d, var e) => $"({FormatValue(a)},{FormatValue(b)},{FormatValue(c)},{FormatValue(d)},{FormatValue(e)})",
+
                _ => value.ToString()
            };
 }

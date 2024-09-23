@@ -28,4 +28,5 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 
 
 # Utils
-1. [BenchmarkInput.cs](Helpers/BenchmarkInput.cs)
+1. [BenchmarkInput.cs](https://github.com/nemesissoft/Nemesis.TextParsers/blob/f55f176088193de995ebb59f92420ae419d0dd36/Benchmarks/Helpers/BenchmarkInput.cs#L5)
+2. 
