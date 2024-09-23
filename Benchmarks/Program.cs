@@ -11,7 +11,7 @@ var config = ManualConfig
     .AddValidator(ExecutionValidator.FailOnError)
     .WithSummaryStyle(SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage))
     .AddDiagnoser(MemoryDiagnoser.Default)
-    .HideColumns("Error", "StdDev", "Median", "RatioSD", "Alloc Ratio")
+    .HideColumns("Median", "RatioSD", "Alloc Ratio") //"Error", "StdDev",
     .AddJob(Job.Default.WithRuntime(CoreRuntime.Core60))
     .AddJob(Job.Default.WithRuntime(CoreRuntime.Core80))
     ;
