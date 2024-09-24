@@ -2,6 +2,8 @@
 
 [Start](https://benchmarkdotnet.org/) 
 
+[Perfolizer](https://github.com/AndreyAkinshin/perfolizer)
+
 [Getting Started Guide](https://benchmarkdotnet.org/articles/guides/getting-started.html) 
 
 [Main Features List](https://benchmarkdotnet.org/#main-features)
@@ -29,6 +31,8 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 1. [Exporters](https://benchmarkdotnet.org/articles/configs/exporters.html)
 2. [Charting](https://chartbenchmark.net/)
 3. [Plot for blogs](https://michalbrylka.github.io/posts/generic-math-matrix/#performance)
+4. [Hardware counters](https://github.com/nemesissoft/Nemesis.TextParsers/blob/main/Benchmarks/Collections/CollectionParserBench.cs#L37)
+5. [Hardware counters 2](https://benchmarkdotnet.org/articles/samples/IntroHardwareCounters.html)
 
 
 # Utils
