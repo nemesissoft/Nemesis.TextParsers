@@ -274,7 +274,7 @@ internal class EnumTransformerGeneratorTests
              {
                  if (input.IsWhiteSpace()) return default;
 
-                 var enumStream = input.Split(',').GetEnumerator();
+                 var enumStream = Nemesis.TextParsers.SpanSplitExtensions.Split(input, ',').GetEnumerator();
 
                  if (!enumStream.MoveNext()) 
                      throw new FormatException($"At least one element is expected to parse 'Months' enum");
@@ -411,7 +411,7 @@ internal class EnumTransformerGeneratorTests
              {
                  if (input.IsWhiteSpace()) return default;
 
-                 var enumStream = input.Split(',').GetEnumerator();
+                 var enumStream = Nemesis.TextParsers.SpanSplitExtensions.Split(input, ',').GetEnumerator();
 
                  if (!enumStream.MoveNext()) 
                      throw new FormatException($"At least one element is expected to parse 'DaysOfWeek' enum");

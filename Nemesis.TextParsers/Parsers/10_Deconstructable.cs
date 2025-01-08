@@ -580,7 +580,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
                 TypeMeta.TryGetGenericRealization(t.GetType(), typeof(ITransformer<>), out var realization)
                  ? realization.GenericTypeArguments[0].GetFriendlyName()
                  : "object"
-                ) ?? Enumerable.Empty<string>();
+                ) ?? [];
 
             return string.Join(", ", def);
         }

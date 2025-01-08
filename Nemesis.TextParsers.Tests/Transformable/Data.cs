@@ -121,7 +121,7 @@ internal class CustomListTransformer<TElement> : TransformerBase<ICustomList<TEl
         //i.e. by saving type name if front of serialized message 
         //Here we take one type to simplify implementation 
         if (text.IsEmpty)
-            return new CustomList<TElement>(Array.Empty<TElement>());
+            return new CustomList<TElement>([]);
 
         var stream = text.Split(';').GetEnumerator();
         var parser = _transformerStore.GetTransformer<TElement>();
@@ -145,7 +145,7 @@ internal class CustomListTransformer<TElement> : TransformerBase<ICustomList<TEl
     public override string Format(ICustomList<TElement> list) => list.IsNullContent ? null : string.Join("; ", list);
 
 
-    public override ICustomList<TElement> GetEmpty() => new CustomList<TElement>(Array.Empty<TElement>());
+    public override ICustomList<TElement> GetEmpty() => new CustomList<TElement>([]);
 
     public override ICustomList<TElement> GetNull() => new CustomList<TElement>(null);
 }

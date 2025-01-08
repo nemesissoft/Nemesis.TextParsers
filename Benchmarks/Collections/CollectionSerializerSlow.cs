@@ -114,7 +114,7 @@ public class CollectionSerializerSlow
     public IEnumerable<string> ParseCollectionOfStrings(string text)
     {
         if (text == null) return null;
-        if (text == string.Empty) return Array.Empty<string>();
+        if (text == string.Empty) return [];
 
         ThrowOnInvalidText(text, _illegalListEscapeSequencesDetector, _validListDelimiters);
 

@@ -312,7 +312,7 @@ internal class Room(string name, Dictionary<string, decimal> furniturePrices)
         furniturePrices = FurniturePrices;
     }
 
-    public override string ToString() => $"{Name}[{string.Join(", ", FurniturePrices?.Select(kvp => $"{kvp.Key}=>{kvp.Value}") ?? Enumerable.Empty<string>())}]";
+    public override string ToString() => $"{Name}[{string.Join(", ", FurniturePrices?.Select(kvp => $"{kvp.Key}=>{kvp.Value}") ?? [])}]";
 }
 
 internal class RoomTransformer([NotNull] ITransformerStore transformerStore) : CustomDeconstructionTransformer<Room>(transformerStore)

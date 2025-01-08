@@ -234,7 +234,7 @@ namespace Nemesis.TextParsers.Tests.Collections
                 AssertException(e, data.expectedException, null);
             }
             if (passed)
-                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? Array.Empty<string>())}");
+                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? [])}");
         }
 
         [TestCaseSource(typeof(CollectionTestData), nameof(CollectionTestData.ListCompoundData))]

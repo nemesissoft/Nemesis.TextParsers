@@ -147,7 +147,7 @@ public class DeconstructablesBench
             static float Parse(ReadOnlySpan<char> span) =>
                 float.Parse(span, NumberStyles.Float, CultureInfo.InvariantCulture);
 
-            var stream = text.Split(';').GetEnumerator();
+            var stream = SpanSplitExtensions.Split(text, ';').GetEnumerator();
 
             stream.MoveNext();
             var carrot = Parse(stream.Current);

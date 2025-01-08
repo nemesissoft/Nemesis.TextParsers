@@ -134,7 +134,7 @@ public sealed class ArrayTransformer<TElement> : EnumerableTransformerBase<TElem
     }
 
 
-    public override TElement[] GetEmpty() => Array.Empty<TElement>();
+    public override TElement[] GetEmpty() => [];
 }
 
 internal class ArraySegmentTransformer

@@ -114,7 +114,7 @@ public class SpanSplitExtensionsTests
     public void SplitNTest(int _, string str, char separator1, char separator2, char separator3, char separator4)
     {
         var actual = new List<string>();
-        ReadOnlySpan<char> separators = stackalloc char[] { separator1, separator2, separator3, separator4 };
+        ReadOnlySpan<char> separators = [separator1, separator2, separator3, separator4];
         foreach (ReadOnlySpan<char> part in str.AsSpan().Split(separators))
             actual.Add(part.ToString());
 

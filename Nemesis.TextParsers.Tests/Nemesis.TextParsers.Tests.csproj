@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net6.0;net48;net462</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net481;net462</TargetFrameworks>
 		<IsTestProject>true</IsTestProject>
 
 		<!--Be able to browse generated files-->
@@ -31,6 +31,11 @@
 
 		
 		<PackageReference Include="System.Text.Json" />
+		<!--Transitive vulnerability -->
+		<PackageReference Include="System.Text.RegularExpressions" />
+		<PackageReference Include="System.Net.Http" />
+		<!--/Transitive vulnerability -->		
+
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
 	</ItemGroup>

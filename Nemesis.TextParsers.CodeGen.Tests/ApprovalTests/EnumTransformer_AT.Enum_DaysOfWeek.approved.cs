@@ -27,9 +27,9 @@ internal sealed class DaysOfWeekTransformer : TransformerBase<DaysOfWeek>
     {
         if (input.IsWhiteSpace()) return default;
 
-        var enumStream = input.Split(',').GetEnumerator();
+        var enumStream = Nemesis.TextParsers.SpanSplitExtensions.Split(input, ',').GetEnumerator();
 
-        if (!enumStream.MoveNext()) 
+        if (!enumStream.MoveNext())
             throw new FormatException($"At least one element is expected to parse 'DaysOfWeek' enum");
         var currentValue = ParseElement(enumStream.Current);
 
@@ -59,47 +59,47 @@ internal sealed class DaysOfWeekTransformer : TransformerBase<DaysOfWeek>
 
         static bool IsNumeric(ReadOnlySpan<char> input) =>
             input.Length > 0 && input[0] is var first &&
-            (char.IsDigit(first) || first is '-' or '+');    
+            (char.IsDigit(first) || first is '-' or '+');
     }
 
     private static byte ParseName(ReadOnlySpan<char> input)
-    {    
+    {
         if (IsEqual(input, nameof(DaysOfWeek.None)))
-            return (byte)DaysOfWeek.None;            
+            return (byte)DaysOfWeek.None;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Monday)))
-            return (byte)DaysOfWeek.Monday;            
+            return (byte)DaysOfWeek.Monday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Tuesday)))
-            return (byte)DaysOfWeek.Tuesday;            
+            return (byte)DaysOfWeek.Tuesday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Wednesday)))
-            return (byte)DaysOfWeek.Wednesday;            
+            return (byte)DaysOfWeek.Wednesday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Thursday)))
-            return (byte)DaysOfWeek.Thursday;            
+            return (byte)DaysOfWeek.Thursday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Friday)))
-            return (byte)DaysOfWeek.Friday;            
+            return (byte)DaysOfWeek.Friday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Saturday)))
-            return (byte)DaysOfWeek.Saturday;            
+            return (byte)DaysOfWeek.Saturday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Sunday)))
-            return (byte)DaysOfWeek.Sunday;            
+            return (byte)DaysOfWeek.Sunday;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Weekdays)))
-            return (byte)DaysOfWeek.Weekdays;            
+            return (byte)DaysOfWeek.Weekdays;
 
         else if (IsEqual(input, nameof(DaysOfWeek.Weekends)))
-            return (byte)DaysOfWeek.Weekends;            
+            return (byte)DaysOfWeek.Weekends;
 
         else if (IsEqual(input, nameof(DaysOfWeek.All)))
-            return (byte)DaysOfWeek.All;            
+            return (byte)DaysOfWeek.All;
 
         else throw new FormatException(@$"Enum of type 'DaysOfWeek' cannot be parsed from '{input.ToString()}'.
 Valid values are: [None or Monday or Tuesday or Wednesday or Thursday or Friday or Saturday or Sunday or Weekdays or Weekends or All] or number within byte range. 
-Ignore case option on.");        
+Ignore case option on.");
 
         static bool IsEqual(ReadOnlySpan<char> input, string label) =>
             MemoryExtensions.Equals(input, label.AsSpan(), StringComparison.OrdinalIgnoreCase);

@@ -107,10 +107,19 @@ public class CollectionParserBench
     {
         int result = 0;
 
+#if NET9_0_OR_GREATER
+        var span = Numbers.AsSpan();
+        var split = span.Split('|');
+
+        foreach (var range in split)
+            result += int.Parse(span[range]);
+
+#else
         var split = Numbers.AsSpan().Split('|');
 
         foreach (var text in split)
             result += int.Parse(text);
+#endif
 
         return result;
     }

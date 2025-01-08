@@ -145,7 +145,7 @@ public class EnumParserBench
     {
         if (text.IsEmpty || text.IsWhiteSpace()) return default;
 
-        var enumStream = text.Split(',').GetEnumerator();
+        var enumStream = SpanSplitExtensions.Split(text, ',').GetEnumerator();
 
         if (!enumStream.MoveNext()) throw new FormatException($"At least one element is expected to parse {typeof(DaysOfWeek).Name} enum");
         byte currentValue = ParseDaysOfWeekElement(enumStream.Current);
