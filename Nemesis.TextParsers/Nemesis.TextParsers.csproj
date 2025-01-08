@@ -13,13 +13,18 @@
 
 	<!--Legacy on-->
 	<PropertyGroup>
-		<AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>
+		<ApiCompatGenerateSuppressionFile>true</ApiCompatGenerateSuppressionFile>
+		<ApiCompatPermitUnnecessarySuppressions>true</ApiCompatPermitUnnecessarySuppressions>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<AllowUnsafeBlocks Condition=" '$(TargetFramework)' == 'netstandard2.0' ">true</AllowUnsafeBlocks>		
 	</PropertyGroup>
 	
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="System.Memory" />
 	</ItemGroup>
-
+	
 	<!--Legacy off-->	
 
 </Project>

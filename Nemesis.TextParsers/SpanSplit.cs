@@ -2,13 +2,16 @@
 
 namespace Nemesis.TextParsers;
 
+#if NET9_0_OR_GREATER
+//[Obsolete("Use approprtiate System.MemoryExtensions.Split method", false)]
+#endif
 public static class SpanSplitExtensions
 {
     #region Enumerators
     public readonly ref struct Enumerable1<T> where T : IEquatable<T>
     {
         public Enumerable1(ReadOnlySpan<T> sequence, T separator, bool emptySequenceYieldsEmpty)
-        {
+        {            
             _sequence = sequence;
             _separator = separator;
             _emptySequenceYieldsEmpty = emptySequenceYieldsEmpty;

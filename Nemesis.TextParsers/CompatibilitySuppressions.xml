@@ -1,10 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- https://learn.microsoft.com/en-us/dotnet/fundamentals/package-validation/diagnostic-ids -->
-<Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
+<Suppressions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
     <Target>P:Nemesis.TextParsers.Settings.ISettings`1.Default</Target>
-    <Left>lib/net6.0/Nemesis.TextParsers.dll</Left>
+    <Left>lib/netstandard2.0/Nemesis.TextParsers.dll</Left>
+    <Right>lib/net8.0/Nemesis.TextParsers.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>M:Nemesis.TextParsers.Parsers.NumberTransformerCache.GetNumberHandler``1``0:T:System.Numerics.IBinaryInteger{``0}</Target>
+    <Left>lib/netstandard2.0/Nemesis.TextParsers.dll</Left>
+    <Right>lib/net8.0/Nemesis.TextParsers.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:Nemesis.TextParsers.Parsers.EnumTransformer`3``1:T:System.Numerics.IBinaryInteger{`1}</Target>
+    <Left>lib/netstandard2.0/Nemesis.TextParsers.dll</Left>
+    <Right>lib/net8.0/Nemesis.TextParsers.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:Nemesis.TextParsers.Parsers.NumberTransformer`1``0:T:System.Numerics.IBinaryInteger{`0}</Target>
+    <Left>lib/netstandard2.0/Nemesis.TextParsers.dll</Left>
     <Right>lib/net8.0/Nemesis.TextParsers.dll</Right>
   </Suppression>
 </Suppressions>
