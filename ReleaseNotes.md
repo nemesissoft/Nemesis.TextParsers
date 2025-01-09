@@ -1,3 +1,11 @@
+# Release 2.10.0 - Upgrade to .NET9
+Published [2025-01-08 23:59:04 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.10.0) by [MichalBrylka](https://github.com/MichalBrylka)
+
+## What's Changed
+* Upgrade to .NET9
+
+**Full Changelog**: https://github.com/nemesissoft/Nemesis.TextParsers/compare/2.9.15...2.10.0
+
 # Release 2.9.15 - Update meta
 Published [2024-08-09 09:14:20 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/2.9.15) by [MichalBrylka](https://github.com/MichalBrylka)
 
@@ -604,6 +612,7 @@ Published [2020-02-18 14:07:59 GMT](https://github.com/nemesissoft/Nemesis.TextP
 
 # Release v1.0.2 - Adding net461 and net47 targets 
 Published [2019-11-08 12:58:03 GMT](https://github.com/nemesissoft/Nemesis.TextParsers/releases/tag/v1.0.2) by [Leszek-Kowalski](https://github.com/Leszek-Kowalski)
+
 
 
 
