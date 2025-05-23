@@ -44,6 +44,8 @@ public sealed class SimpleTransformerHandler : ITransformerHandler, ITestTransfo
         [typeof(Regex)] = RegexTransformer.Instance,
         [typeof(RegexOptions)] = RegexOptionsTransformer.Instance,
         [typeof(Complex)] = ComplexTransformer.Instance,
+        [typeof(Index)] = IndexTransformer.Instance,
+        [typeof(Range)] = RangeTransformer.Instance,
 #if NET6_0_OR_GREATER
         [typeof(DateOnly)] = DateOnlyTransformer.Instance,
         [typeof(TimeOnly)] = TimeOnlyTransformer.Instance,

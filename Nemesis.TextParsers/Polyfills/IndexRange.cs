@@ -1,6 +1,7 @@
 // https://github.com/dotnet/runtime/blob/419e949d258ecee4c40a460fb09c66d974229623/src/libraries/System.Private.CoreLib/src/System/Index.cs
 // https://github.com/dotnet/runtime/blob/419e949d258ecee4c40a460fb09c66d974229623/src/libraries/System.Private.CoreLib/src/System/Range.cs
-#if !NETCOREAPP3_0_OR_GREATER
+
+#if NETSTANDARD2_0 
 #nullable enable
 using System.Runtime.CompilerServices;
 
@@ -14,7 +15,7 @@ namespace System
     /// int lastElement = someArray[^1]; // lastElement = 5
     /// </code>
     /// </remarks>
-    internal readonly struct Index : IEquatable<Index>
+    public readonly struct Index : IEquatable<Index>
     {
         private readonly int _value;
 
@@ -28,9 +29,8 @@ namespace System
         public Index(int value, bool fromEnd = false)
         {
             if (value < 0)
-            {
                 throw new ArgumentOutOfRangeException(nameof(value), "value must be non-negative");
-            }
+
 
             if (fromEnd)
                 _value = ~value;
@@ -39,10 +39,7 @@ namespace System
         }
 
         // The following private constructors mainly created for perf reason to avoid the checks
-        private Index(int value)
-        {
-            _value = value;
-        }
+        private Index(int value) => _value = value;
 
         /// <summary>Create an Index pointing at first element.</summary>
         public static Index Start => new(0);
@@ -53,21 +50,12 @@ namespace System
         /// <summary>Create an Index from the start at the position indicated by the value.</summary>
         /// <param name="value">The index value from the start.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Index FromStart(int value)
-        {
-            if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "value must be non-negative");
-            }
-
-            return new Index(value);
-        }
+        public static Index FromStart(int value) => value < 0 ? throw new ArgumentOutOfRangeException(nameof(value), "value must be non-negative") : new Index(value);
 
         /// <summary>Create an Index from the end at the position indicated by the value.</summary>
         /// <param name="value">The index value from the end.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Index FromEnd(int value) =>
-            value < 0 ? throw new ArgumentOutOfRangeException(nameof(value), "value must be non-negative") : new Index(~value);
+        public static Index FromEnd(int value) => value < 0 ? throw new ArgumentOutOfRangeException(nameof(value), "value must be non-negative") : new Index(~value);
 
         /// <summary>Returns the index value.</summary>
         public int Value => _value < 0 ? ~_value : _value;
@@ -99,7 +87,7 @@ namespace System
         }
 
         /// <summary>Indicates whether the current Index object is equal to another object of the same type.</summary>
-        /// <param name="value">An object to compare with this object</param>
+        /// <param name="value">An object to compare with this object</param>        
         public override bool Equals(object? value) => value is Index index && _value == index._value;
 
         /// <summary>Indicates whether the current Index object is equal to another Index object.</summary>
@@ -113,8 +101,7 @@ namespace System
         public static implicit operator Index(int value) => FromStart(value);
 
         /// <summary>Converts the value of the current Index object to its equivalent string representation.</summary>
-        public override string ToString() =>
-            IsFromEnd ? $"^{((uint)Value).ToString()}" : ((uint)Value).ToString();
+        public override string ToString() => IsFromEnd ? $"^{(uint)Value}" : ((uint)Value).ToString();
     }
 
     /// <summary>Represent a range has start and end indexes.</summary>
@@ -125,10 +112,11 @@ namespace System
     /// int[] subArray1 = someArray[0..2]; // { 1, 2 }
     /// int[] subArray2 = someArray[1..^0]; // { 2, 3, 4, 5 }
     /// </code>
-    /// </remarks>    
+    /// </remarks>
+    /// <remarks>Construct a Range object using the start and end indexes.</remarks>
     /// <param name="start">Represent the inclusive start index of the range.</param>
     /// <param name="end">Represent the exclusive end index of the range.</param>
-    internal readonly struct Range(Index start, Index end) : IEquatable<Range>
+    public readonly struct Range(Index start, Index end) : IEquatable<Range>
     {
         /// <summary>Represent the inclusive start index of the Range.</summary>
         public Index Start { get; } = start;
@@ -148,7 +136,7 @@ namespace System
         public override int GetHashCode() => Start.GetHashCode() * 31 + End.GetHashCode();
 
         /// <summary>Converts the value of the current Range object to its equivalent string representation.</summary>
-        public override string ToString() => $"{Start}..{End}";
+        public override string ToString() => Start + ".." + End;
 
         /// <summary>Create a Range object starting from start index to the end of the collection.</summary>
         public static Range StartAt(Index start) => new(start, Index.End);
@@ -193,7 +181,7 @@ namespace System
     }
 }
 
-namespace System.Runtime.CompilerServices
+/*namespace System.Runtime.CompilerServices
 {
     internal static class RuntimeHelpers
     {
@@ -212,7 +200,11 @@ namespace System.Runtime.CompilerServices
             if (default(T) != null || typeof(T[]) == array.GetType())
             {
                 // We know the type of the array to be exactly T[].
-                if (length == 0) return [];
+
+                if (length == 0)
+                {
+                    return Array.Empty<T>();
+                }
 
                 var dest = new T[length];
                 Array.Copy(array, offset, dest, 0, length);
@@ -227,5 +219,6 @@ namespace System.Runtime.CompilerServices
             }
         }
     }
-}
+}*/
+
 #endif

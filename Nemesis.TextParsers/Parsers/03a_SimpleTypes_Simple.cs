@@ -388,3 +388,59 @@ public sealed class ComplexTransformer : SimpleTransformer<Complex>
 
     private ComplexTransformer() { }
 }
+
+public sealed class IndexTransformer : SimpleTransformer<Index>
+{
+    protected override Index ParseCore(in ReadOnlySpan<char> input)
+    {
+        var span = input.Trim();
+
+        return span.Length switch
+        {
+            0 => GetEmpty(),
+            > 1 when span[0] == '^' && Int32Transformer.Instance.TryParse(span[1..], out int valueFromEnd)
+                => new Index(valueFromEnd, fromEnd: true),
+            > 0 when Int32Transformer.Instance.TryParse(span, out int value)
+                => new Index(value, fromEnd: false),
+            _ => throw new FormatException($"Invalid Index string representation: '{input.ToString()}'"),
+        };
+    }
+
+    public override string Format(Index element) =>
+        element.IsFromEnd ? $"^{(uint) element.Value}" : ((uint) element.Value).ToString();
+
+    public override Index GetEmpty() => Index.Start;
+
+    public static readonly ITransformer<Index> Instance = new IndexTransformer();
+
+    private IndexTransformer() { }
+}
+
+public sealed class RangeTransformer : SimpleTransformer<Range>
+{
+    protected override Range ParseCore(in ReadOnlySpan<char> input)
+    {
+        int separatorIndex = input.IndexOf('.');
+
+        if (separatorIndex == -1 || separatorIndex + 1 >= input.Length || input[separatorIndex + 1] != '.')
+            throw new FormatException(
+                $"Invalid Range string representation: '{input.ToString()}'. Expected '..' separator.");
+
+        var start = input[..separatorIndex] is var startSpan && !startSpan.IsWhiteSpace()
+            ? IndexTransformer.Instance.Parse(startSpan)
+            : Index.Start;
+
+        var end = input[(separatorIndex + 2)..] is var endSpan && !endSpan.IsWhiteSpace()
+            ? IndexTransformer.Instance.Parse(endSpan)
+            : Index.End;
+
+        return new Range(start, end);
+    }
+
+    public override string Format(Range element) => $"{element.Start}..{element.End}";
+
+    public override Range GetEmpty() => Range.All;
+
+    public static readonly ITransformer<Range> Instance = new RangeTransformer();
+    private RangeTransformer() { }
+}

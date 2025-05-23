@@ -5,17 +5,17 @@ using Nemesis.TextParsers.Tests.Utils;
 
 namespace Nemesis.TextParsers.Tests.BuiltInTypes;
 
-[TestFixture(TypeArgs = new[] { typeof(DaysOfWeek), typeof(byte), typeof(ByteTransformer) })]
-[TestFixture(TypeArgs = new[] { typeof(EmptyEnum), typeof(int), typeof(Int32Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(Enum1), typeof(int), typeof(Int32Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(Enum2), typeof(int), typeof(Int32Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(Enum3), typeof(int), typeof(Int32Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(ByteEnum), typeof(byte), typeof(ByteTransformer) })]
-[TestFixture(TypeArgs = new[] { typeof(SByteEnum), typeof(sbyte), typeof(SByteTransformer) })]
-[TestFixture(TypeArgs = new[] { typeof(Int64Enum), typeof(long), typeof(Int64Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(UInt64Enum), typeof(ulong), typeof(UInt64Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(Fruits), typeof(ushort), typeof(UInt16Transformer) })]
-[TestFixture(TypeArgs = new[] { typeof(FruitsWeirdAll), typeof(short), typeof(Int16Transformer) })]
+[TestFixture(TypeArgs = [typeof(DaysOfWeek), typeof(byte), typeof(ByteTransformer)])]
+[TestFixture(TypeArgs = [typeof(EmptyEnum), typeof(int), typeof(Int32Transformer)])]
+[TestFixture(TypeArgs = [typeof(Enum1), typeof(int), typeof(Int32Transformer)])]
+[TestFixture(TypeArgs = [typeof(Enum2), typeof(int), typeof(Int32Transformer)])]
+[TestFixture(TypeArgs = [typeof(Enum3), typeof(int), typeof(Int32Transformer)])]
+[TestFixture(TypeArgs = [typeof(ByteEnum), typeof(byte), typeof(ByteTransformer)])]
+[TestFixture(TypeArgs = [typeof(SByteEnum), typeof(sbyte), typeof(SByteTransformer)])]
+[TestFixture(TypeArgs = [typeof(Int64Enum), typeof(long), typeof(Int64Transformer)])]
+[TestFixture(TypeArgs = [typeof(UInt64Enum), typeof(ulong), typeof(UInt64Transformer)])]
+[TestFixture(TypeArgs = [typeof(Fruits), typeof(ushort), typeof(UInt16Transformer)])]
+[TestFixture(TypeArgs = [typeof(FruitsWeirdAll), typeof(short), typeof(Int16Transformer)])]
 public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     where TEnum : struct, Enum
     where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
@@ -25,21 +25,22 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     where TNumberHandler : NumberTransformer<TUnderlying>
 {
     private static readonly TNumberHandler _numberHandler =
-        (TNumberHandler)NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
+        (TNumberHandler) NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
 
     private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sut =
         new(_numberHandler, EnumSettings.Default);
 
     private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sutCaseSensitive =
-        new(_numberHandler, EnumSettings.Default with { CaseInsensitive = false });
+        new(_numberHandler, EnumSettings.Default with {CaseInsensitive = false});
 
     private static readonly EnumTransformer<TEnum, TUnderlying, TNumberHandler> _sutOnlyEnumNames =
-        new(_numberHandler, EnumSettings.Default with { AllowParsingNumerics = false });
+        new(_numberHandler, EnumSettings.Default with {AllowParsingNumerics = false});
 
 
     private static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
     private static readonly IReadOnlyList<(TUnderlying Number, TEnum Enum, string Text)> _testValues = GetTestValues();
+
     private static ReadOnlyCollection<(TUnderlying Number, TEnum Enum, string Text)> GetTestValues()
     {
         Type enumType = typeof(TEnum);
@@ -47,7 +48,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
 
 
         TUnderlying min = values.Count == 0 ? _numberHandler.Zero : values.Min(),
-                    max = values.Count == 0 ? _numberHandler.Zero : values.Max();
+            max = values.Count == 0 ? _numberHandler.Zero : values.Max();
 
         int iMin = 10, iMax = 10;
         while (iMin-- > 0)
@@ -64,7 +65,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         for (var number = min; number.CompareTo(max) <= 0; number = _numberHandler.Add(number, _numberHandler.One))
             result.Add(
                 (number, ToEnum(number), ToEnum(number).ToString("G"))
-                );
+            );
 
         return result.AsReadOnly();
     }
@@ -116,7 +117,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         Assert.Multiple(() =>
         {
             Assert.That(actual, Is.EqualTo(defaultValue));
-            Assert.That((TUnderlying)(object)actual, Is.EqualTo(_numberHandler.Zero));
+            Assert.That((TUnderlying) (object) actual, Is.EqualTo(_numberHandler.Zero));
         });
     }
 
@@ -151,7 +152,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
 
             var actual = _sut.Parse(text.AsSpan());
             //var native1 = (TEnum)Enum.Parse(typeof(TEnum), text, true);
-            var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
+            var native = (TEnum) Enum.Parse(typeof(TEnum), number.ToString() ?? "", true);
             bool pass = Equals(actual, native);
 
             string message = $"{ToTick(pass)}  '{actual}' {ToOperator(pass)} '{native}', {number} ({text})";
@@ -159,6 +160,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
             if (!pass)
                 failed.Add(message);
         }
+
         Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
     }
 
@@ -173,9 +175,9 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         {
             var actual = _sut.Parse(number.ToString().AsSpan());
 
-            var native = (TEnum)Enum.Parse(typeof(TEnum), number.ToString(), true);
+            var native = (TEnum) Enum.Parse(typeof(TEnum), number.ToString() ?? "", true);
 
-            var cast = (TEnum)(object)number;
+            var cast = (TEnum) (object) number;
 
             bool pass = Equals(actual, native) && Equals(actual, cast);
 
@@ -184,6 +186,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
             if (!pass)
                 failed.Add(message);
         }
+
         Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
     }
 
@@ -195,7 +198,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         foreach (var (_, enumValue, text) in _testValues)
         {
             var actual = _sut.Parse(text.AsSpan());
-            var actualNative = (TEnum)Enum.Parse(typeof(TEnum), text, true);
+            var actualNative = (TEnum) Enum.Parse(typeof(TEnum), text, true);
 
             bool pass = Equals(actual, enumValue) &&
                         Equals(actualNative, enumValue) &&
@@ -234,8 +237,6 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     }
 
 
-
-
     [Test]
     public void DoNotAllowParsingNumerics_Exploratory()
     {
@@ -251,8 +252,8 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
             {
                 Assert.That(() => _sutOnlyEnumNames.Parse(text),
                     Throws.TypeOf<FormatException>().And
-                    .Message.Contains("cannot be parsed. Valid values are:").And
-                    .Message.Not.Contains("or number within"),
+                        .Message.Contains("cannot be parsed. Valid values are:").And
+                        .Message.Not.Contains("or number within"),
                     () => $"Parsing '{text}'"
                 );
             }
@@ -270,14 +271,14 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         foreach (var (value, _, name) in _definedValues)
         {
             var init = _sut.Parse(name);
-            Assert.That((TUnderlying)(object)init, Is.EqualTo(value));
+            Assert.That((TUnderlying) (object) init, Is.EqualTo(value));
 
             var actual = _sutCaseSensitive.Parse(name.AsSpan());
-            var actualNative = (TEnum)Enum.Parse(typeof(TEnum), name, false);
+            var actualNative = (TEnum) Enum.Parse(typeof(TEnum), name, false);
             Assert.Multiple(() =>
             {
                 Assert.That(actual, Is.EqualTo(actualNative));
-                Assert.That((TUnderlying)(object)actual, Is.EqualTo(value));
+                Assert.That((TUnderlying) (object) actual, Is.EqualTo(value));
             });
         }
     }
@@ -286,6 +287,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     public void CaseSensitive_NegativeExploratory()
     {
         var rand = new Random();
+
         string ShuffleText(in string text)
         {
             if (text == null) throw new ArgumentNullException(nameof(text));
@@ -315,8 +317,8 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
 
             Assert.That(() => _sutCaseSensitive.Parse(name),
                 Throws.TypeOf<FormatException>().And
-                .Message.Contains("cannot be parsed. Valid values are:").And
-                .Message.Contains("Case sensitive option on"),
+                    .Message.Contains("cannot be parsed. Valid values are:").And
+                    .Message.Contains("Case sensitive option on"),
                 () => $"Parsing '{name}'"
             );
         }
@@ -326,16 +328,16 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
     public static void CaseSensitive_Weird()
     {
         var sut = new EnumTransformer<Casing, int, Int32Transformer>(
-            (Int32Transformer)Int32Transformer.Instance,
-            EnumSettings.Default with { CaseInsensitive = false });
+            (Int32Transformer) Int32Transformer.Instance,
+            EnumSettings.Default with {CaseInsensitive = false});
 
         var enumValues = typeof(Casing).GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Select(enumField => (enumField.Name, Value: (Casing)(int)enumField.GetValue(null))).ToList();
+            .Select(enumField => (enumField.Name, Value: (Casing) (int) enumField.GetValue(null))).ToList();
 
         foreach (var (name, value) in enumValues)
         {
             var actual = sut.Parse(name.AsSpan());
-            var actualNative = (Casing)Enum.Parse(typeof(Casing), name, false);
+            var actualNative = (Casing) Enum.Parse(typeof(Casing), name, false);
 
             Assert.That(actual, Is.EqualTo(actualNative));
             Assert.That(actual, Is.EqualTo(value));
