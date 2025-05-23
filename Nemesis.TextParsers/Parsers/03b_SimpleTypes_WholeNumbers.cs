@@ -36,7 +36,7 @@ public class NumberTransformerCache : ITestTransformerRegistrations
         ? (NumberTransformer<TNumber>)numOp
         : throw new NotSupportedException($"Type {typeof(TNumber).FullName} is not supported as element for {nameof(NumberTransformer<int>)}");
 
-    public object GetNumberHandler(Type numberType) =>
+    public ITransformer GetNumberHandler(Type numberType) =>
         _cache.TryGetValue(numberType, out var numOp)
         ? numOp
         : throw new NotSupportedException($"Type {numberType.FullName} is not supported as element for {nameof(NumberTransformer<int>)}");

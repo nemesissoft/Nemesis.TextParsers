@@ -3,10 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nemesis.TextParsers.Settings;
 
-public sealed record EnumSettings(
-    bool CaseInsensitive = true,
-    bool AllowParsingNumerics = true
-) : ISettings<EnumSettings>
+public sealed record EnumSettings(bool CaseInsensitive = true, bool AllowParsingNumerics = true) : ISettings<EnumSettings>
 {
     public bool IsValid([NotNullWhen(false)] out string? error)
     {

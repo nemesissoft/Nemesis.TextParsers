@@ -62,7 +62,6 @@ public abstract record CollectionSettingsBase(
     public abstract ISettings DeepClone();
 }
 
-/// <inheritdoc/>
 public sealed record CollectionSettings(
     char ListDelimiter = '|',
     char NullElementMarker = '∅',
@@ -78,7 +77,6 @@ public sealed record CollectionSettings(
     public static CollectionSettings Default { get; } = new();
 }
 
-/// <inheritdoc/>
 public sealed record ArraySettings(
     char ListDelimiter = '|',
     char NullElementMarker = '∅',

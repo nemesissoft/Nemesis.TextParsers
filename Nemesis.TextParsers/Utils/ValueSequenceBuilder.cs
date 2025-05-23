@@ -3,22 +3,15 @@
 namespace Nemesis.TextParsers.Utils;
 
 //TODO rework + add Append(ROS<>) + add ValueStringBuilder 
-public ref struct ValueSequenceBuilder<T>
+public ref struct ValueSequenceBuilder<T>(Span<T> initialSpan)
 {
-    private Span<T> _current;
+    private Span<T> _current = initialSpan;
 
-    private T[] _arrayFromPool;
+    private T[] _arrayFromPool = null;
 
-    public int Length { get; private set; }
+    public int Length { get; private set; } = 0;
 
     public ref T this[int index] => ref _current[index];
-
-    public ValueSequenceBuilder(Span<T> initialSpan)
-    {
-        _current = initialSpan;
-        _arrayFromPool = null;
-        Length = 0;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Append(T item)
@@ -36,11 +29,11 @@ public ref struct ValueSequenceBuilder<T>
     /// <summary>
     /// Return values written so far to underlying memory 
     /// </summary>
-    public readonly ReadOnlySpan<T> AsSpan() => _current.Slice(0, Length);
+    public readonly ReadOnlySpan<T> AsSpan() => _current[..Length];
 
     public readonly ReadOnlySpan<T> AsSpanFromTo(int start, int length) => _current.Slice(start, length);
 
-    public readonly ReadOnlySpan<T> AsSpanTo(int length) => _current.Slice(0, length);
+    public readonly ReadOnlySpan<T> AsSpanTo(int length) => _current[..length];
 
     public readonly ReadOnlySpan<T> AsSpanFrom(int start) => _current.Slice(start, Length - start);
 
@@ -64,13 +57,13 @@ public ref struct ValueSequenceBuilder<T>
     /// <summary>
     /// Converts this instance to string. If underlying type <paramref name="{T}"/> is <see cref="System.Char"/> then it returns text written so far
     /// </summary>
-    public override readonly string ToString() => AsSpan().ToString();
+    public readonly override string ToString() => AsSpan().ToString();
 
     private void Grow()
     {
-        T[] array = ArrayPool<T>.Shared.Rent(Math.Max(_current.Length * 2, 16));
+        var array = ArrayPool<T>.Shared.Rent(Math.Max(_current.Length * 2, 16));
         _current.CopyTo(array);
-        T[] prevFromPool = _arrayFromPool;
+        var prevFromPool = _arrayFromPool;
         _current = _arrayFromPool = array;
         if (prevFromPool != null)
             ArrayPool<T>.Shared.Return(prevFromPool);

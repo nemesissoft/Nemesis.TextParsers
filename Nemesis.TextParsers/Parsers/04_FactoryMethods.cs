@@ -21,11 +21,8 @@ public abstract class FactoryMethodTransformerHandler(FactoryMethodSettings sett
         var elementType = typeof(TElement);
         var factoryMethodContainer = GetFactoryMethodContainingType(elementType);
 
-
-        if (factoryMethodContainer != null &&
-            factoryMethodContainer.GetProperty(propertyName, STATIC_MEMBER_FLAGS) is { } property &&
-            property.PropertyType.IsAssignableFrom(elementType)
-           )
+        if (factoryMethodContainer?.GetProperty(propertyName, STATIC_MEMBER_FLAGS) is { } property &&
+            property.PropertyType.IsAssignableFrom(elementType))
         {
             Expression prop = Expression.Property(null, property);
             if (property.PropertyType != elementType)
@@ -96,8 +93,7 @@ public abstract class FactoryMethodTransformerHandler(FactoryMethodSettings sett
 
     private static bool FactoryMethodPredicate(MethodInfo m, Type returnType, string factoryMethodName) =>
         m.Name == factoryMethodName &&
-        m.GetParameters() is { Length: 1 } @params &&
-        @params[0].ParameterType is { } firstParamType &&
+        m.GetParameters() is [{ParameterType: { } firstParamType}] &&
         (firstParamType == typeof(string) || firstParamType == typeof(ReadOnlySpan<char>)) &&
         (
             m.ReturnType == returnType
@@ -106,38 +102,26 @@ public abstract class FactoryMethodTransformerHandler(FactoryMethodSettings sett
             ||
             (m.ReturnType.IsAbstract || m.ReturnType.IsInterface) && returnType.DerivesOrImplementsGeneric(m.ReturnType)
         );
-
+    
     string ITransformerHandler.DescribeHandlerMatch() => DescribeHandlerMatch();
     protected abstract string DescribeHandlerMatch();
 
     private const BindingFlags STATIC_MEMBER_FLAGS = BindingFlags.Public | BindingFlags.Static;
 
 
-
-    private abstract class FactoryTransformer<TElement> : TransformerBase<TElement>
+    private abstract class FactoryTransformer<TElement>(
+        Expression body,
+        IFormatter<TElement> formatter,
+        Func<TElement>? emptyValueProvider,
+        Func<TElement>? nullValueProvider) : TransformerBase<TElement>
     {
-        private readonly string _description;
-        private readonly IFormatter<TElement> _formatter;
-        private readonly Func<TElement>? _emptyValueProvider;
-        private readonly Func<TElement>? _nullValueProvider;
+        private readonly string _description = $"Parse {typeof(TElement).GetFriendlyName()} using {GetMethodName(body)}";
 
-        protected FactoryTransformer(Expression body, IFormatter<TElement> formatter,
-            Func<TElement>? emptyValueProvider, Func<TElement>? nullValueProvider)
-        {
-            _description = $"Parse {typeof(TElement).GetFriendlyName()} using {GetMethodName(body)}";
-            _formatter = formatter;
-            _emptyValueProvider = emptyValueProvider;
-            _nullValueProvider = nullValueProvider;
-        }
+        public override string Format(TElement element) => formatter.Format(element);
 
-        public override string Format(TElement element) => _formatter.Format(element);
+        public override TElement GetEmpty() => emptyValueProvider != null ? emptyValueProvider() : base.GetEmpty();
 
-        public override TElement GetEmpty() =>
-            _emptyValueProvider != null ? _emptyValueProvider() : base.GetEmpty();
-
-        public override TElement GetNull() =>
-            _nullValueProvider != null ? _nullValueProvider() : base.GetNull();
-
+        public override TElement GetNull() => nullValueProvider != null ? nullValueProvider() : base.GetNull();
 
         private static string GetMethodName(Expression expression)
         {
@@ -158,14 +142,15 @@ public abstract class FactoryMethodTransformerHandler(FactoryMethodSettings sett
         public sealed override string ToString() => _description;
     }
 
-    private sealed class StringFactoryTransformer<TElement> : FactoryTransformer<TElement>
+    private sealed class StringFactoryTransformer<TElement>(
+        Expression body,
+        ParameterExpression inputParameter,
+        IFormatter<TElement> formatter,
+        Func<TElement>? emptyValueProvider,
+        Func<TElement>? nullValueProvider)
+        : FactoryTransformer<TElement>(body, formatter, emptyValueProvider, nullValueProvider)
     {
-        private readonly Func<string, TElement> _parserDelegate;
-
-        public StringFactoryTransformer(Expression body, ParameterExpression inputParameter, IFormatter<TElement> formatter,
-                                        Func<TElement>? emptyValueProvider, Func<TElement>? nullValueProvider)
-            : base(body, formatter, emptyValueProvider, nullValueProvider)
-            => _parserDelegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
+        private readonly Func<string, TElement> _parserDelegate = Expression.Lambda<Func<string, TElement>>(body, inputParameter).Compile();
 
         protected override TElement ParseCore(in ReadOnlySpan<char> input) =>
             _parserDelegate(input.ToString());
@@ -173,15 +158,17 @@ public abstract class FactoryMethodTransformerHandler(FactoryMethodSettings sett
         protected override TElement ParseText(string text) => _parserDelegate(text);
     }
 
-    private sealed class SpanFactoryTransformer<TElement> : FactoryTransformer<TElement>
+    private sealed class SpanFactoryTransformer<TElement>(
+        Expression body,
+        ParameterExpression inputParameter,
+        IFormatter<TElement> formatter,
+        Func<TElement>? emptyValueProvider,
+        Func<TElement>? nullValueProvider)
+        : FactoryTransformer<TElement>(body, formatter, emptyValueProvider, nullValueProvider)
     {
         private delegate TElement ParserDelegate(ReadOnlySpan<char> input);
-        private readonly ParserDelegate _parserDelegate;
 
-        public SpanFactoryTransformer(Expression body, ParameterExpression inputParameter, IFormatter<TElement> formatter,
-                                      Func<TElement>? emptyValueProvider, Func<TElement>? nullValueProvider)
-            : base(body, formatter, emptyValueProvider, nullValueProvider)
-            => _parserDelegate = Expression.Lambda<ParserDelegate>(body, inputParameter).Compile();
+        private readonly ParserDelegate _parserDelegate = Expression.Lambda<ParserDelegate>(body, inputParameter).Compile();
 
         protected override TElement ParseCore(in ReadOnlySpan<char> input) => _parserDelegate(input);
     }

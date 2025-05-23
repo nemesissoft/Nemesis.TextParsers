@@ -5,16 +5,16 @@ using Nemesis.TextParsers.Parsers;
 
 namespace Nemesis.TextParsers.Tests.BuiltInTypes;
 
-[TestFixture(TypeArgs = new[] { typeof(Generated.Month), typeof(byte) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.Months), typeof(short) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.DaysOfWeek), typeof(byte) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.EmptyEnum), typeof(ulong) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.EmptyEnumWithNumberParsing), typeof(uint) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.SByteEnum), typeof(sbyte) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.Int64Enum), typeof(long) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.Casing), typeof(int) })]
-[TestFixture(TypeArgs = new[] { typeof(Generated.Місяць), typeof(ushort) })]
-public class EnumTransformer_CodeGen<TEnum, TUnderlying>
+[TestFixture(TypeArgs = [typeof(Generated.Month), typeof(byte)])]
+[TestFixture(TypeArgs = [typeof(Generated.Months), typeof(short)])]
+[TestFixture(TypeArgs = [typeof(Generated.DaysOfWeek), typeof(byte)])]
+[TestFixture(TypeArgs = [typeof(Generated.EmptyEnum), typeof(ulong)])]
+[TestFixture(TypeArgs = [typeof(Generated.EmptyEnumWithNumberParsing), typeof(uint)])]
+[TestFixture(TypeArgs = [typeof(Generated.SByteEnum), typeof(sbyte)])]
+[TestFixture(TypeArgs = [typeof(Generated.Int64Enum), typeof(long)])]
+[TestFixture(TypeArgs = [typeof(Generated.Casing), typeof(int)])]
+[TestFixture(TypeArgs = [typeof(Generated.Місяць), typeof(ushort)])]
+public class EnumTransformerCodeGen<TEnum, TUnderlying>
     where TEnum : struct, Enum
     where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
 #if NET7_0_OR_GREATER
@@ -30,8 +30,10 @@ public class EnumTransformer_CodeGen<TEnum, TUnderlying>
     readonly record struct EnumValue(TUnderlying Number, TEnum Enum, string Text);
 
     readonly record struct EnumMeta(
-        Type EnumType, Type TransformerType,
-        bool CaseInsensitive, bool AllowParsingNumerics, bool HasFlags,
+        Type TransformerType,
+        bool CaseInsensitive,
+        bool AllowParsingNumerics,
+        bool HasFlags,
         IReadOnlyList<EnumValue> DefinedValues)
     {
         public static EnumMeta GetEnumMeta()
@@ -43,14 +45,11 @@ public class EnumTransformer_CodeGen<TEnum, TUnderlying>
             var hasFlags = enumType.IsDefined(typeof(FlagsAttribute), false);
 
             return new(
-               enumType,
                transformerAttr.TransformerType,
                codeGenOptionsAttr.CaseInsensitive,
                codeGenOptionsAttr.AllowParsingNumerics,
                hasFlags,
-               Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>()
-                .Select(number => FromNumber(number))
-                .ToList().AsReadOnly()
+               Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().Select(FromNumber).ToList().AsReadOnly()
             );
         }
 
@@ -132,7 +131,7 @@ public class EnumTransformer_CodeGen<TEnum, TUnderlying>
 
             for (int i = 0; i < chars.Length; i++)
             {
-                if (rand.NextDouble() > 0.5 && chars[i] is char c && char.IsLetter(c))
+                if (rand.NextDouble() > 0.5 && chars[i] is var c && char.IsLetter(c))
                     chars[i] = char.IsUpper(c) ? char.ToLowerInvariant(c) : char.ToUpperInvariant(c);
             }
 
@@ -210,7 +209,7 @@ public class EnumTransformer_CodeGen<TEnum, TUnderlying>
     public void Positive_Format_CompareWithNative()
     {
         var failed = new List<string>();
-        foreach (var (number, enumValue, text) in _meta.GetValidValues())
+        foreach (var (_, enumValue, text) in _meta.GetValidValues())
         {
             var actual = _sut.Format(enumValue);
             var native = enumValue.ToString("G");
@@ -305,7 +304,7 @@ public class EnumTransformer_CodeGen<TEnum, TUnderlying>
 
                 for (int i = 0; i < chars.Length; i++)
                 {
-                    if (chars[i] is char c && char.IsLetter(c))
+                    if (chars[i] is var c && char.IsLetter(c))
                         chars[i] = char.IsUpper(c) ? char.ToLowerInvariant(c) : char.ToUpperInvariant(c);
                 }
 

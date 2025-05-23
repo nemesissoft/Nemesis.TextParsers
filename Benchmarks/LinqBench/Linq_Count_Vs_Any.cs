@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace Benchmarks;
+﻿namespace Benchmarks;
 
 /*BenchmarkDotNet=v0.13.3, OS=Windows 10 (10.0.19044.2486/21H2/November2021Update)
 Intel Core i7-8700 CPU 3.20GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical cores

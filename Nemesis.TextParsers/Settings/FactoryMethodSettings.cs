@@ -3,22 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nemesis.TextParsers.Settings;
 
-public sealed record FactoryMethodSettings(
-    string FactoryMethodName = "FromText",
-    string EmptyPropertyName = "Empty",
-    string NullPropertyName = "Null"
-) : ISettings<FactoryMethodSettings>
+public sealed record FactoryMethodSettings(string FactoryMethodName = "FromText", string EmptyPropertyName = "Empty", string NullPropertyName = "Null")
+    : ISettings<FactoryMethodSettings>
 {
     public bool IsValid([NotNullWhen(false)] out string? error)
     {
         if (string.IsNullOrEmpty(FactoryMethodName) || string.IsNullOrEmpty(EmptyPropertyName) || string.IsNullOrEmpty(NullPropertyName))
         {
-            error = $"""
-                All parameters must be non-empty strings.
-                FactoryMethodName = '{FactoryMethodName}'
-                EmptyPropertyName = '{EmptyPropertyName}'
-                NullPropertyName = '{NullPropertyName}'
-                """;
+            error =
+                $"All parameters must be non-empty strings. FactoryMethodName = '{FactoryMethodName}', EmptyPropertyName = '{EmptyPropertyName}', NullPropertyName = '{NullPropertyName}'";
             return false;
         }
         else

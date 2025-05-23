@@ -4,16 +4,9 @@ using Nemesis.TextParsers.Utils;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public sealed class KeyValuePairTransformerHandler : ITransformerHandler
+public sealed class KeyValuePairTransformerHandler(ITransformerStore transformerStore, KeyValuePairSettings settings) : ITransformerHandler
 {
-    private readonly TupleHelper _helper;
-    private readonly ITransformerStore _transformerStore;
-
-    public KeyValuePairTransformerHandler(ITransformerStore transformerStore, KeyValuePairSettings settings)
-    {
-        _transformerStore = transformerStore;
-        _helper = settings.ToTupleHelper();
-    }
+    private readonly TupleHelper _helper = settings.ToTupleHelper();
 
 
     public ITransformer<TPair> CreateTransformer<TPair>()
@@ -22,46 +15,31 @@ public sealed class KeyValuePairTransformerHandler : ITransformerHandler
             throw new NotSupportedException(
                 $"Type {typeof(TPair).GetFriendlyName()} is not supported by {GetType().Name}");
 
-        var m = _createTransformerCoreMethod.MakeGenericMethod(keyType, valueType);
+        var method = (
+            GetType().GetMethod(nameof(CreateTransformerCore), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"{nameof(KeyValuePairTransformerHandler)}.{nameof(CreateTransformerCore)} method not found.")
+        ).MakeGenericMethod(keyType, valueType);
 
-        return (ITransformer<TPair>)m.Invoke(this, null);
+        return (ITransformer<TPair>) method.Invoke(this, null);
     }
 
-    private static readonly MethodInfo _createTransformerCoreMethod = Method.OfExpression<
-        Func<KeyValuePairTransformerHandler, ITransformer<KeyValuePair<int, int>>>
-    >(handler => handler.CreateTransformerCore<int, int>()).GetGenericMethodDefinition();
-
-    private ITransformer<KeyValuePair<TKey, TValue>> CreateTransformerCore<TKey, TValue>() =>
-        new KeyValuePairTransformer<TKey, TValue>(_helper,
-            _transformerStore.GetTransformer<TKey>(),
-            _transformerStore.GetTransformer<TValue>()
-        );
+    private KeyValuePairTransformer<TKey, TValue> CreateTransformerCore<TKey, TValue>() =>
+        new(_helper, transformerStore.GetTransformer<TKey>(), transformerStore.GetTransformer<TValue>());
 
 
-    private sealed class KeyValuePairTransformer<TKey, TValue> : TransformerBase<KeyValuePair<TKey, TValue>>
+    private sealed class KeyValuePairTransformer<TKey, TValue>(TupleHelper helper, ITransformer<TKey> keyTransformer, ITransformer<TValue> valueTransformer)
+        : TransformerBase<KeyValuePair<TKey, TValue>>
     {
-        private const string TYPE_NAME = "Key-value pair";
-
-        private readonly TupleHelper _helper;
-        private readonly ITransformer<TKey> _keyTransformer;
-        private readonly ITransformer<TValue> _valueTransformer;
-
-        public KeyValuePairTransformer(TupleHelper helper, ITransformer<TKey> keyTransformer,
-            ITransformer<TValue> valueTransformer)
-        {
-            _helper = helper;
-            _keyTransformer = keyTransformer;
-            _valueTransformer = valueTransformer;
-        }
-
         protected override KeyValuePair<TKey, TValue> ParseCore(in ReadOnlySpan<char> input)
         {
-            var enumerator = _helper.ParseStart(input, 2, TYPE_NAME);
+            const string TYPE_NAME = "Key-value pair";
 
-            var key = _helper.ParseElement(ref enumerator, _keyTransformer);
-            var value = _helper.ParseElement(ref enumerator, _valueTransformer, 2, TYPE_NAME);
+            var enumerator = helper.ParseStart(input, 2, TYPE_NAME);
 
-            _helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
+            var key = helper.ParseElement(ref enumerator, keyTransformer);
+            var value = helper.ParseElement(ref enumerator, valueTransformer, 2, TYPE_NAME);
+
+            helper.ParseEnd(ref enumerator, 2, TYPE_NAME);
 
             return new KeyValuePair<TKey, TValue>(key, value);
         }
@@ -72,13 +50,13 @@ public sealed class KeyValuePairTransformerHandler : ITransformerHandler
             var accumulator = new ValueSequenceBuilder<char>(initialBuffer);
             try
             {
-                _helper.StartFormat(ref accumulator);
+                helper.StartFormat(ref accumulator);
 
-                _helper.FormatElement(_keyTransformer, element.Key, ref accumulator);
-                _helper.AddDelimiter(ref accumulator);
-                _helper.FormatElement(_valueTransformer, element.Value, ref accumulator);
+                helper.FormatElement(keyTransformer, element.Key, ref accumulator);
+                helper.AddDelimiter(ref accumulator);
+                helper.FormatElement(valueTransformer, element.Value, ref accumulator);
 
-                _helper.EndFormat(ref accumulator);
+                helper.EndFormat(ref accumulator);
                 return accumulator.AsSpan().ToString();
             }
             finally
@@ -87,18 +65,19 @@ public sealed class KeyValuePairTransformerHandler : ITransformerHandler
             }
         }
 
-        public override KeyValuePair<TKey, TValue> GetEmpty() => new(_keyTransformer.GetEmpty(), _valueTransformer.GetEmpty());
+        public override KeyValuePair<TKey, TValue> GetEmpty() => new(keyTransformer.GetEmpty(), valueTransformer.GetEmpty());
     }
 
     public bool CanHandle(Type type) =>
         TryGetElements(type, out var keyType, out var valueType) &&
-        _transformerStore.IsSupportedForTransformation(keyType) &&
-        _transformerStore.IsSupportedForTransformation(valueType);
+        transformerStore.IsSupportedForTransformation(keyType) &&
+        transformerStore.IsSupportedForTransformation(valueType);
 
     private static bool TryGetElements(Type type, out Type keyType, out Type valueType)
     {
         if (type.IsValueType && type.IsGenericType && !type.IsGenericTypeDefinition &&
-            TypeMeta.TryGetGenericRealization(type, typeof(KeyValuePair<,>), out var kvp))
+            TypeMeta.TryGetGenericRealization(type, typeof(KeyValuePair<,>), out var kvp) &&
+            kvp is not null)
         {
             keyType = kvp.GenericTypeArguments[0];
             valueType = kvp.GenericTypeArguments[1];

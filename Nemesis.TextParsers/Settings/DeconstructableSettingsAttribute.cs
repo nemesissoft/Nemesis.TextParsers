@@ -21,8 +21,8 @@ public sealed class DeconstructableSettingsAttribute : Attribute
     /// <param name="delimiter">Properties text delimiter</param>
     /// <param name="nullElementMarker">Null element marker</param>
     /// <param name="escapingSequenceStart">Escaping sequence start</param>
-    /// <param name="start">Starting character. Use default(char)=='\0' to omit this character</param>
-    /// <param name="end">End character. Use default(char)=='\0' to omit this character</param>
+    /// <param name="start">Starting character. Use <![CDATA[default(char)=='\0']]> to omit this character</param>
+    /// <param name="end">End character. Use <![CDATA[default(char)=='\0']]> to omit this character</param>
     /// <param name="useDeconstructableEmpty">When <c>true</c>, a default "empty" instance will be crated from empty string i.e. new Class(empty(parameter1), ..., empty(parameterN)) </param>
     public DeconstructableSettingsAttribute(char delimiter = DEFAULT_DELIMITER,
         char nullElementMarker = DEFAULT_NULL_ELEMENT_MARKER, char escapingSequenceStart = DEFAULT_ESCAPING_SEQUENCE_START,

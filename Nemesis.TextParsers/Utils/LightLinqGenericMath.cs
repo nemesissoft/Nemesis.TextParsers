@@ -28,7 +28,7 @@ public static class LightLinqGenericMath
         if (!enumerator.MoveNext()) return (false, TNumber.Zero);
 
         TNumber avg = enumerator.Current.ParseWith(transformer);
-        int count = 1;
+        var count = 1;
 
         while (enumerator.MoveNext())
             avg += (enumerator.Current.ParseWith(transformer) - avg)

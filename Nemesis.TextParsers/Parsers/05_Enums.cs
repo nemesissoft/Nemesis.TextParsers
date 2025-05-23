@@ -6,27 +6,25 @@ using BF = System.Reflection.BindingFlags;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public sealed class EnumTransformerHandler : ITransformerHandler
+public sealed class EnumTransformerHandler(EnumSettings settings) : ITransformerHandler
 {
-    private readonly EnumSettings _settings;
-    public EnumTransformerHandler(EnumSettings settings) => _settings = settings;
-
     public ITransformer<TEnum> CreateTransformer<TEnum>()
     {
         var enumType = typeof(TEnum);
 
-        if (!TryGetUnderlyingType(enumType, out var underlyingType) || underlyingType == null)
-            throw new NotSupportedException($@"Type {enumType.GetFriendlyName()} is not supported by {GetType().Name}. 
-UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numeric one");
-
+        if (!TryGetUnderlyingType(enumType, out var underlyingType))
+            throw new NotSupportedException($"""
+                                             Type {enumType.GetFriendlyName()} is not supported by {GetType().Name}. 
+                                             UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numeric one
+                                             """);
+        
         var numberHandler = NumberTransformerCache.Instance.GetNumberHandler(underlyingType) ??
             throw new NotSupportedException($"UnderlyingType {underlyingType.Name} was not found in parser cache");
 
         var transType = typeof(EnumTransformer<,,>).MakeGenericType(enumType, underlyingType, numberHandler.GetType());
 
-        return (ITransformer<TEnum>)(
-            Activator.CreateInstance(transType, numberHandler, _settings)
-            ?? throw new Exception($"Cannot create type '{nameof(TEnum)}'")
+        return (ITransformer<TEnum>) (Activator.CreateInstance(transType, numberHandler, settings) ??
+                                      throw new Exception($"Cannot create type '{transType}'")
        );
     }
 
@@ -49,8 +47,7 @@ UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numer
 
     public sbyte Priority => 30;
 
-    public override string ToString() =>
-        $"Create transformer for any Enum with settings:{_settings}";
+    public override string ToString() => $"Create transformer for any Enum with settings:{settings}";
 
     string ITransformerHandler.DescribeHandlerMatch() => "Enum based on system primitive number types";
 }
@@ -78,7 +75,7 @@ public sealed class EnumTransformer<TEnum, TUnderlying, TNumberHandler> : Transf
     }
 
     //check performance comparison in Benchmark project - ConvertEnumBench
-    internal static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
+    private static TEnum ToEnum(TUnderlying value) => Unsafe.As<TUnderlying, TEnum>(ref value);
 
     protected override TEnum ParseCore(in ReadOnlySpan<char> input)
     {
@@ -159,7 +156,7 @@ internal static class EnumTransformerHelper
                 Expression.Property(inputParam, nameof(ReadOnlySpan<char>.Length)),
                 Expression.Constant(name.Length)
                 );
-            var conditionElements = new List<Expression> { lengthCheck };
+            List<Expression> conditionElements = [lengthCheck];
 
             for (int i = name.Length - 1; i >= 0; i--)
             {
@@ -203,12 +200,10 @@ internal static class EnumTransformerHelper
         typeof(EnumTransformerHelper).GetMethod(charEqMethodName, BF.Public | BF.NonPublic | BF.Static)
         ?? throw new MissingMethodException(nameof(EnumTransformerHelper), charEqMethodName);
 
-    private static Expression AndAlsoJoin(IReadOnlyCollection<Expression> expressionList) =>
-        expressionList?.Count > 0
-        ? expressionList.Aggregate<Expression, Expression>(null!, (curr, elem) => curr is null ? elem : Expression.AndAlso(curr, elem))
-        : Expression.Constant(false);
+    private static Expression AndAlsoJoin(List<Expression> expressionList) =>
+        expressionList.Count > 0 ? expressionList.Aggregate(Expression.AndAlso) : Expression.Constant(false);
 
-    private static Expression IfThenElseJoin<TResult>(IReadOnlyList<(Expression Condition, TResult value)> expressionList, Expression lastElse, LabelTarget exitTarget)
+    private static Expression IfThenElseJoin<TResult>(List<(Expression Condition, TResult value)> expressionList, Expression lastElse, LabelTarget exitTarget)
     {
         if (expressionList is { Count: > 0 })
         {

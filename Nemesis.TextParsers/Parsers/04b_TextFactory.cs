@@ -10,15 +10,12 @@ public sealed class TextFactoryTransformerHandler(FactoryMethodSettings settings
     {
         var factoryType = type.GetCustomAttribute<TextFactoryAttribute>()?.FactoryType;
         if (factoryType == null) return null;
-        if (factoryType.IsGenericTypeDefinition)
-        {
-            if (type.IsGenericTypeDefinition)
-                throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
+        if (!factoryType.IsGenericTypeDefinition) return factoryType;
 
-            factoryType = type.IsGenericType ?
-                factoryType.MakeGenericType(type.GenericTypeArguments) :
-                factoryType.MakeGenericType(type);
-        }
+        if (type.IsGenericTypeDefinition)
+            throw new NotSupportedException($"Text transformation for GenericTypeDefinition is not supported: {type.GetFriendlyName()}");
+
+        factoryType = type.IsGenericType ? factoryType.MakeGenericType(type.GenericTypeArguments) : factoryType.MakeGenericType(type);
         return factoryType;
     }
 

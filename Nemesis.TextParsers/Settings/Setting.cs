@@ -12,7 +12,7 @@ public interface ISettings
     ISettings DeepClone();
 }
 
-public interface ISettings<T> : ISettings
+public interface ISettings<out T> : ISettings
     where T : ISettings<T>
 {
 #if NET7_0_OR_GREATER
@@ -24,22 +24,20 @@ public sealed class SettingsStore : IEnumerable<ISettings>
 {
     private readonly ReadOnlyDictionary<Type, ISettings> _settings;
 
-    public SettingsStore(IEnumerable<ISettings> settings)
-        : this(settings?.ToDictionary(s => s.GetType()) ?? [])
-    { }
+    public SettingsStore(IEnumerable<ISettings>? settings) : this(settings?.ToDictionary(s => s.GetType()) ?? []) { }
 
     public SettingsStore(IDictionary<Type, ISettings> settingsDictionary)
     {
-        if (settingsDictionary.Values.Any(s => !s.IsValid(out var _)))
+        if (settingsDictionary.Values.Any(s => !s.IsValid(out _)))
         {
             throw new NotSupportedException("Settings are not valid is not valid:" + Environment.NewLine +
                 string.Join(
                     Environment.NewLine,
                     settingsDictionary.Values
-                        .Where(s => !s.IsValid(out var _))
+                        .Where(s => !s.IsValid(out _))
                         .Select(s =>
                         {
-                            s.IsValid(out var err);
+                            s.IsValid(out string? err);
                             return $"\t{err} @ {s.GetType().Name} @ {s}";
                         })
             ));
@@ -60,21 +58,17 @@ public sealed class SettingsStore : IEnumerable<ISettings>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public sealed class SettingsStoreBuilder : IEnumerable<(Type Type, ISettings Settings)>
+public sealed class SettingsStoreBuilder(Dictionary<Type, ISettings>? settings) : IEnumerable<(Type Type, ISettings Settings)>
 {
-    private readonly Dictionary<Type, ISettings> _settings;
+    private readonly Dictionary<Type, ISettings> _settings = settings ?? [];
 
-    public SettingsStoreBuilder() : this([]) { }
-
-    public SettingsStoreBuilder(Dictionary<Type, ISettings> settings) => _settings = settings;
-
-    public SettingsStoreBuilder AddOrUpdate(ISettings settings)
+    public SettingsStoreBuilder AddOrUpdate(ISettings item)
     {
-        if (!settings.IsValid(out var err))
-            throw new ArgumentException($"{settings.GetType().FullName}: {err}");
+        if (!item.IsValid(out string? err))
+            throw new ArgumentException($"{item.GetType().FullName}: {err}");
 
-        _settings[settings.GetType()] =
-            settings ?? throw new ArgumentNullException(nameof(settings));
+        _settings[item.GetType()] =
+            item ?? throw new ArgumentNullException(nameof(item));
         return this;
     }
 

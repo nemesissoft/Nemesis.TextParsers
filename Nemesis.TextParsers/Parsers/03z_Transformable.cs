@@ -1,14 +1,11 @@
-﻿using JetBrains.Annotations;
+﻿#nullable enable
 using Nemesis.TextParsers.Runtime;
 using Nemesis.TextParsers.Settings;
 
 namespace Nemesis.TextParsers.Parsers;
 
-public class TransformableHandler : ITransformerHandler
+public class TransformableHandler(ITransformerStore transformerStore) : ITransformerHandler
 {
-    private readonly ITransformerStore _transformerStore;
-    public TransformableHandler(ITransformerStore transformerStore) => _transformerStore = transformerStore;
-
     public ITransformer<TTransformable> CreateTransformer<TTransformable>()
     {
         var transformable = typeof(TTransformable);
@@ -16,12 +13,12 @@ public class TransformableHandler : ITransformerHandler
 
         if (transformer == null ||
             !IsTransformerSupported(transformable, transformer)
-        )
+           )
             throw new NotSupportedException($"{transformable.GetFriendlyName()} is not supported by {nameof(TransformableHandler)}");
 
         transformer = PrepareGenericTransformer(transformable, transformer);
 
-        return (ITransformer<TTransformable>)CreateTransformer(transformer, _transformerStore);
+        return (ITransformer<TTransformable>) CreateTransformer(transformer, transformerStore);
     }
 
     private static ITransformer CreateTransformer(Type type, ITransformerStore store)
@@ -33,9 +30,10 @@ public class TransformableHandler : ITransformerHandler
         var ctor = ctors[0];
         var @params = ctor.GetParameters();
 
-        return @params.Length == 0
-            ? (ITransformer)Activator.CreateInstance(type, true)
-            : (ITransformer)Activator.CreateInstance(type, @params.Select(p => GetArguments(p.ParameterType, store)).ToArray());
+        return (@params.Length == 0
+                ? (ITransformer?) Activator.CreateInstance(type, true)
+                : (ITransformer?) Activator.CreateInstance(type, @params.Select(p => GetArguments(p.ParameterType, store)).ToArray())
+            ) ?? throw new NotSupportedException($"Type '{type.GetFriendlyName()}' cannot be created using reflection");
 
 
         static object GetArguments(Type parameterType, ITransformerStore store)
@@ -54,7 +52,8 @@ public class TransformableHandler : ITransformerHandler
 
             else if (parameterType.DerivesOrImplementsGeneric(typeof(ITransformer<>)))
             {
-                var realization = TypeMeta.GetGenericRealization(parameterType, typeof(ITransformer<>));
+                var realization = TypeMeta.GetGenericRealization(parameterType, typeof(ITransformer<>))
+                                  ?? throw new NotSupportedException($"Generic realization for '{parameterType.GetFriendlyName()}' as {typeof(ITransformer<>)} cannot be obtained");
                 var elementType = realization.GenericTypeArguments[0];
 
                 return store.GetTransformer(elementType);
@@ -62,7 +61,7 @@ public class TransformableHandler : ITransformerHandler
 
             else
                 throw new NotSupportedException(
-    $"Only supported parameters for auto-injection to transformers marked with {nameof(TransformerAttribute)} are {nameof(ITransformerStore)}, implementations of {nameof(ISettings)}, generic {nameof(NumberTransformer<int>)} or generic {nameof(ITransformer)} implementations");
+                    $"Only supported parameters for auto-injection to transformers marked with {nameof(TransformerAttribute)} are {nameof(ITransformerStore)}, implementations of {nameof(ISettings)}, generic {nameof(NumberTransformer<int>)} or generic {nameof(ITransformer)} implementations");
         }
     }
 
@@ -82,9 +81,9 @@ public class TransformableHandler : ITransformerHandler
         {
             null => false,
             { } transformer when !IsTransformerSupported(transformable, transformer) =>
-            throw new NotSupportedException(
-                $"Transformer registered via {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)} has to implement {nameof(ITransformer<int>)}<>"
-            ),
+                throw new NotSupportedException(
+                    $"Transformer registered via {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)} has to implement {nameof(ITransformer<int>)}<>"
+                ),
             _ => true
         };
 
@@ -94,12 +93,11 @@ public class TransformableHandler : ITransformerHandler
             return false;
         else
         {
-            var preparedTransformer = PrepareGenericTransformer(transformable, transformer);
-
-            return TypeMeta
-                       .TryGetGenericRealization(preparedTransformer, typeof(ITransformer<>), out var realization) &&
-                   realization.GenericTypeArguments is { } genArgs && genArgs.Length == 1 &&
-                   genArgs[0] is { } transformedElement &&
+            return TypeMeta.TryGetGenericRealization(
+                       PrepareGenericTransformer(transformable, transformer),
+                       typeof(ITransformer<>), out var realization
+                   ) &&
+                   realization?.GenericTypeArguments is [{ } transformedElement] &&
                    transformable.DerivesOrImplementsGeneric(transformedElement)
                 ;
         }
@@ -114,10 +112,7 @@ public class TransformableHandler : ITransformerHandler
 }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum, Inherited = true, AllowMultiple = false)]
-public sealed class TransformerAttribute : Attribute
+public sealed class TransformerAttribute(Type transformerType) : Attribute
 {
-    public Type TransformerType { get; }
-
-    public TransformerAttribute([NotNull] Type transformerType) =>
-        TransformerType = transformerType ?? throw new ArgumentNullException(nameof(transformerType));
+    public Type TransformerType { get; } = transformerType ?? throw new ArgumentNullException(nameof(transformerType));
 }

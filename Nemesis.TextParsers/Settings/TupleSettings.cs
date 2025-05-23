@@ -6,12 +6,7 @@ using Dsa = Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute;
 
 namespace Nemesis.TextParsers.Settings;
 
-public abstract record TupleSettings(
-    char Delimiter,
-    char NullElementMarker,
-    char EscapingSequenceStart,
-    char? Start,
-    char? End) : ISettings
+public abstract record TupleSettings(char Delimiter, char NullElementMarker, char EscapingSequenceStart, char? Start, char? End) : ISettings
 {
     public abstract ISettings DeepClone();
 
