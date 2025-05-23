@@ -35,7 +35,7 @@ defaults:
 jobs:
   create_nuget:
     name: 📦 create NuGet
-    runs-on: ubuntu-latest
+    runs-on: windows-latest # change to 'ubuntu-latest' after getting rid of legacy stuff
     steps:   
     - name: 🤘 checkout
       uses: actions/checkout@v4
