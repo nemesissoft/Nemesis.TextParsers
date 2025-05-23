@@ -376,8 +376,16 @@ namespace Nemesis.TextParsers.Tests.Collections
             var borderedCollection = CollectionSettings.Default with { Start = '[', End = ']' };
             var borderedArray = ArraySettings.Default with { Start = '[', End = ']' };
 
-            var borderedStoreBuilder = SettingsStoreBuilder.GetDefault()
+            SettingsStoreBuilder borderedStoreBuilder =
+#if !NETFRAMEWORK
+                [borderedArray, borderedCollection];
+#else
+SettingsStoreBuilder.GetDefault()
                 .AddOrUpdateRange([borderedArray, borderedCollection]);
+#endif
+
+
+
 
             return TextTransformer.GetDefaultStoreWith(borderedStoreBuilder.Build());
         }

@@ -58,9 +58,24 @@ public sealed class SettingsStore : IEnumerable<ISettings>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public sealed class SettingsStoreBuilder(Dictionary<Type, ISettings>? settings) : IEnumerable<(Type Type, ISettings Settings)>
+#if !NETSTANDARD2_0
+[CollectionBuilder(typeof(SettingsStoreBuilder), nameof(Create))]
+#endif
+public sealed class SettingsStoreBuilder(Dictionary<Type, ISettings>? settings) : IEnumerable<ISettings>
 {
     private readonly Dictionary<Type, ISettings> _settings = settings ?? [];
+
+#if !NETSTANDARD2_0
+    internal static SettingsStoreBuilder Create(ReadOnlySpan<ISettings> items)
+    {
+        var builder = GetDefault();
+
+        foreach (var settings in items)
+            builder.AddOrUpdate(settings);
+
+        return builder;
+    }
+#endif
 
     public SettingsStoreBuilder AddOrUpdate(ISettings item)
     {
@@ -88,8 +103,18 @@ public sealed class SettingsStoreBuilder(Dictionary<Type, ISettings>? settings) 
 
     public static SettingsStoreBuilder GetDefault() => new(TextTransformer.DefaultSettings.ToDictionary(s => s.GetType()));
 
-    public IEnumerator<(Type Type, ISettings Settings)> GetEnumerator() =>
-        _settings.Select(kvp => (kvp.Key, kvp.Value)).ToList().GetEnumerator();
+    public IEnumerator<ISettings> GetEnumerator()
+    {
+        foreach(var settings in _settings.Values)
+            yield return settings;
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+
+    public IEnumerable<(Type Type, ISettings Settings)> GetEntries()
+    {
+        foreach (var kvp in _settings)
+            yield return (kvp.Key, kvp.Value);
+    }
 }

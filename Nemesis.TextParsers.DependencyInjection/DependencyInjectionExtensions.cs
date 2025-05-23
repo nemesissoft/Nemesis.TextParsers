@@ -19,7 +19,7 @@ public static class DependencyInjectionExtensions
 
         if (config is not null)
         {
-            foreach (var (type, settings) in settingsStoreBuilder)
+            foreach (var (type, settings) in settingsStoreBuilder.GetEntries())
             {
                 var section = config.GetSection(type.Name);
                 if (!section.GetChildren().Any()) continue;
@@ -34,7 +34,7 @@ public static class DependencyInjectionExtensions
 
         configureSettingsStoreBuilder?.Invoke(settingsStoreBuilder);
 
-        foreach (var (type, settings) in settingsStoreBuilder)
+        foreach (var (type, settings) in settingsStoreBuilder.GetEntries())
         {
             services.AddSingleton(type, settings);
             services.AddSingleton<ISettings>(settings);
