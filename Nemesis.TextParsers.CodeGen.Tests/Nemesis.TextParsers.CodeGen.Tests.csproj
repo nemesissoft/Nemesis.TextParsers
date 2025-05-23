@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(CI)' != 'true'">$(TargetFrameworks);net481</TargetFrameworks>
+		
 		<IsTestProject>true</IsTestProject>
 		<NoWarn>$(NoWarn);NU1603</NoWarn>
 	</PropertyGroup>
