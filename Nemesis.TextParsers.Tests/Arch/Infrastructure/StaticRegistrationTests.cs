@@ -8,14 +8,12 @@ namespace Nemesis.TextParsers.Tests.Arch.Infrastructure;
 internal class StaticRegistrationTests
 {
     [Test]
-    public void CheckTypesCompatibility_SimpleTransformerHandler() =>
-        StaticRegistrations_CheckTypesCompatibility(new SimpleTransformerHandler());
+    public void CheckTypesCompatibility_SimpleTransformerHandler() => CheckTypesCompatibility(new SimpleTransformerHandler());
 
     [Test]
-    public void CheckTypesCompatibility_NumberTransformerCache() =>
-        StaticRegistrations_CheckTypesCompatibility(NumberTransformerCache.Instance);
+    public void CheckTypesCompatibility_NumberTransformerCache() => CheckTypesCompatibility(NumberTransformerCache.Instance);
 
-    private static void StaticRegistrations_CheckTypesCompatibility(ITestTransformerRegistrations testTransformerRegistrations)
+    private static void CheckTypesCompatibility(ITestTransformerRegistrations testTransformerRegistrations)
     {
         var registrations = testTransformerRegistrations.GetTransformerRegistrationsForTests();
 
@@ -27,27 +25,25 @@ internal class StaticRegistrationTests
 
             var transformerElementType = typeof(ITransformer<>).MakeGenericType(elementType);
 
-            Assert.That(transformerInstance, Is.AssignableTo(transformerElementType), () => $"""
-            Cannot transform {elementType} with {transformerInstance.GetType().GetFriendlyName()}: {(
+            Assert.That(transformerInstance, Is.AssignableTo(transformerElementType), () =>
+                $"Cannot transform {elementType} with {transformerInstance.GetType().GetFriendlyName()}: {(
                 TypeMeta.TryGetGenericRealization(transformerInstance.GetType(), typeof(ITransformer<>), out var iTransformerType)
-                ? iTransformerType.GetFriendlyName()
-                : "NOT SUPPORTED"
-            )}
-            """);
+                    ? iTransformerType.GetFriendlyName()
+                    : "NOT SUPPORTED"
+                )}");
         }
     }
 
 
-
     [Test]
     public void CheckIfAllTransformersWereRegistered_SimpleTransformerHandler() =>
-        StaticRegistrations_CheckIfAllTransformersWereRegistered(new SimpleTransformerHandler(), typeof(SimpleTransformer<>));
+        CheckIfAllTransformersWereRegistered(new SimpleTransformerHandler(), typeof(SimpleTransformer<>));
 
     [Test]
     public void CheckIfAllTransformersWereRegistered_NumberTransformerCache() =>
-        StaticRegistrations_CheckIfAllTransformersWereRegistered(NumberTransformerCache.Instance, typeof(NumberTransformer<>));
+        CheckIfAllTransformersWereRegistered(NumberTransformerCache.Instance, typeof(NumberTransformer<>));
 
-    private static void StaticRegistrations_CheckIfAllTransformersWereRegistered(ITestTransformerRegistrations testTransformerRegistrations, Type baseTransformerType)
+    private static void CheckIfAllTransformersWereRegistered(ITestTransformerRegistrations testTransformerRegistrations, Type baseTransformerType)
     {
         var expectedTransformerTypes = baseTransformerType.Assembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericType && !t.IsGenericTypeDefinition &&
@@ -58,26 +54,30 @@ internal class StaticRegistrationTests
 
         var registrations = testTransformerRegistrations.GetTransformerRegistrationsForTests();
 
-        foreach (var transformerType in expectedTransformerTypes)
+        var notProperlyRegistered = expectedTransformerTypes.Where(t => !IsProperlyRegistered(t, baseTransformerType, registrations)).ToList();
+
+        Assert.That(notProperlyRegistered, Is.Empty, () =>
+            $"There were {notProperlyRegistered.Count} transformers not properly registered:{Environment.NewLine}{
+                string.Join(Environment.NewLine,
+                    notProperlyRegistered.Select(t => $"\t{t.FullName}")
+                )}");
+
+        static bool IsProperlyRegistered(Type transformerType, Type baseTransformerType, IReadOnlyDictionary<Type, ITransformer> registrations)
         {
             var concreteBaseType = TypeMeta.GetGenericRealization(transformerType, baseTransformerType);
             var elementType = concreteBaseType.GenericTypeArguments[0];
 
-            var success = registrations.TryGetValue(elementType, out var transformerInstance);
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(success, Is.True, () => $"Transformer {transformerType.FullName} was not registered to transform {elementType.FullName}");
-                Assert.That(transformerInstance, Is.AssignableTo(concreteBaseType), () => $"{transformerInstance.GetType().FullName} cannot transform {elementType.GetFriendlyName()}");
-                Assert.That(transformerInstance, Is.TypeOf(transformerType));
-            });
+            return registrations.TryGetValue(elementType, out var transformerInstance) &&
+                   transformerInstance is not null &&
+                   concreteBaseType.IsAssignableFrom(transformerInstance.GetType()) &&
+                   transformerInstance.GetType() == transformerType;
         }
     }
 
-
     [Test]
     public void CheckIfAllTransformersWereRegistered_Settings() =>
-        Data_CheckIfAllTransformersWereRegistered(typeof(ISettings), TextTransformer.DefaultSettings.Select(s => s.GetType()).ToList());
+        Data_CheckIfAllTransformersWereRegistered(typeof(ISettings),
+            TextTransformer.DefaultSettings.Select(s => s.GetType()).ToList());
 
     [Test]
     public void CheckIfAllTransformersWereRegistered_TransformerHandler() =>

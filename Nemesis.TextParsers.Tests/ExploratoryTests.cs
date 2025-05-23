@@ -33,8 +33,7 @@ public sealed class ExploratoryTests
     static void GetTestCases(RandomSource randomSource)
     {
         var baseTypes = ExploratoryTestsData.GetStandardTypes().Concat(
-            new[]
-            {
+            [
                 typeof(ArraySegment<char>), typeof(ArraySegment<byte>), typeof(ArraySegment<string>),
                 typeof(List<string[]>), typeof(List<int[]>), typeof(List<string>[]), typeof(List<int>[]),
 
@@ -46,8 +45,8 @@ public sealed class ExploratoryTests
 
                 typeof(Dictionary<Fruits, double>),
                 typeof(SortedDictionary<Fruits, float>), typeof(SortedList<Fruits, int>),
-                typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>),
-            }
+                typeof(ReadOnlyDictionary<Fruits, IList<TimeSpan>>)
+            ]
         ).ToList();
 
         _allTestCases = ExploratoryTestsData.GetAllTestTypes(randomSource, baseTypes);
@@ -169,7 +168,7 @@ public sealed class ExploratoryTests
 
         _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
         _fixture.Register(() => new IPAddress([(byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255)]));
-
+        
 
         _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
         _fixture.Register(() => (Enum1)_randomSource.Next(0, 10));
@@ -395,9 +394,7 @@ static class ExploratoryTestsData
         var typeComparer = Comparer<Type>.Create((t1, t2) =>
             string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
         );
-
-        var allTypesCopy = new List<Type>(allTypes);
-
+        
         SortedSet<Type> Carve(Predicate<Type> condition)
         {
             var result = new SortedSet<Type>(typeComparer);
@@ -405,11 +402,9 @@ static class ExploratoryTestsData
             for (int i = allTypes.Count - 1; i >= 0; i--)
             {
                 var elem = allTypes[i];
-                if (condition(elem))
-                {
-                    result.Add(elem);
-                    allTypes.RemoveAt(i);
-                }
+                if (!condition(elem)) continue;
+                result.Add(elem);
+                allTypes.RemoveAt(i);
             }
             return result;
         }
@@ -480,9 +475,6 @@ static class ExploratoryTestsData
 
         var @return = new List<(ExploratoryTestCategory category, Type type)>();
 
-        void ProjectAndAdd(ExploratoryTestCategory category, IEnumerable<Type> types) =>
-            @return.AddRange(types.Select(t => (category, t)).Distinct());
-
         ProjectAndAdd(ExploratoryTestCategory.Enums, enums);
         ProjectAndAdd(ExploratoryTestCategory.Structs, structs);
         ProjectAndAdd(ExploratoryTestCategory.ValueTuples, valueTuples);
@@ -494,6 +486,9 @@ static class ExploratoryTestsData
         ProjectAndAdd(ExploratoryTestCategory.Remaining, remaining);
 
         return @return;
+
+        void ProjectAndAdd(ExploratoryTestCategory category, IEnumerable<Type> types) =>
+            @return.AddRange(types.Select(t => (category, t)).Distinct());
     }
 
     public static IReadOnlyCollection<Type> GetStandardTypes() => new[]
@@ -516,7 +511,7 @@ static class ExploratoryTestsData
         typeof(Guid), typeof(Guid?),
 
         //special system types
-        typeof(Regex), typeof(RegexOptions), typeof(Version), typeof(IPAddress), 
+        typeof(Regex), typeof(RegexOptions), typeof(Version), typeof(IPAddress), typeof(Index), typeof(Range), 
         
         //array + collections + dictionaries
         typeof(string[]), typeof(int?[]),
