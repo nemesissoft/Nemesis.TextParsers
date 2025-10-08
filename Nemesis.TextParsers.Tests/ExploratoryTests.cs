@@ -323,7 +323,7 @@ public sealed class ExploratoryTests
 
             //instances
             reason = "Creating fixtures";
-            IList<T> instances = _fixture.CreateMany<T>(8).ToList();
+            IList<T> instances = [.. _fixture.CreateMany<T>(8)];
             int i = 1;
             foreach (var instance in instances)
             {
@@ -429,8 +429,7 @@ static class ExploratoryTestsData
 
         Type GetRandomTupleType(int arity, Type tupleType) =>
             tupleType.MakeGenericType(
-                Enumerable.Repeat(0, arity)
-                    .Select(_ => GetRandomSimpleType()).ToArray());
+                [.. Enumerable.Repeat(0, arity).Select(_ => GetRandomSimpleType())]);
 
         var valueTuples = new List<(int arity, Type tupleType)>
         {
@@ -579,7 +578,7 @@ internal static class FixtureUtils
             return list;
         }
 
-        TElement[] ArrayCreator() => ListCreator().ToArray();
+        TElement[] ArrayCreator() => [.. ListCreator()];
         LinkedList<TElement> LinkedListCreator() => new(ListCreator());
         Stack<TElement> StackCreator() => new(ListCreator());
         Queue<TElement> QueueCreator() => new(ListCreator());

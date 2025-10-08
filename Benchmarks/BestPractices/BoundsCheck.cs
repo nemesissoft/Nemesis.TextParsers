@@ -20,8 +20,8 @@ namespace Benchmarks.BestPractices;
 public class BoundsCheck
 {
     private const int SIZE = 1000;
-    private static readonly int[] _array = Enumerable.Range(0, SIZE).ToArray();
-    private static readonly List<int> _list = Enumerable.Range(0, SIZE).ToList();
+    private static readonly int[] _array = [.. Enumerable.Range(0, SIZE)];
+    private static readonly List<int> _list = [.. Enumerable.Range(0, SIZE)];
 
     [Benchmark(Baseline = true)]
     public int Get()

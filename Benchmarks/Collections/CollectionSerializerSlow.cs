@@ -332,11 +332,11 @@ public class TextValueConverter : IStringConverter
 
     private TElement[] ParseArray<TElement>(string text) => string.IsNullOrEmpty(text)
         ? GetEmptyArray<TElement>()
-        : CollectionSerializerSlow.DefaultInstance.ParseCollection<TElement>(text).ToArray();
+        : [.. CollectionSerializerSlow.DefaultInstance.ParseCollection<TElement>(text)];
 
     private List<TElement> ParseList<TElement>(string text) => string.IsNullOrEmpty(text)
         ? GetEmptyList<TElement>()
-        : CollectionSerializerSlow.DefaultInstance.ParseCollection<TElement>(text).ToList();
+        : [.. CollectionSerializerSlow.DefaultInstance.ParseCollection<TElement>(text)];
 
     private Dictionary<TKey, TValue> ParseDictionary<TKey, TValue>(string text) => string.IsNullOrEmpty(text)
         ? GetEmptyDictionary<TKey, TValue>()

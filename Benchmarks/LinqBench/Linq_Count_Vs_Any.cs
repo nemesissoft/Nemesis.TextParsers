@@ -30,7 +30,7 @@ public class Linq_Count_Vs_Any
     public int Size { get; set; }
 
     [GlobalSetup]
-    public void Setup() => _data = Enumerable.Range(0, Size).ToArray();
+    public void Setup() => _data = [.. Enumerable.Range(0, Size)];
 
     private IEnumerable<int> GetEnumerable()
     {
@@ -86,7 +86,7 @@ public class Linq_Count_Vs_Any_WithPredicate
     public int Size { get; set; }
 
     [GlobalSetup]
-    public void Setup() => _data = Enumerable.Range(0, Size).ToArray();
+    public void Setup() => _data = [.. Enumerable.Range(0, Size)];
 
     private IEnumerable<int> GetEnumerable()
     {

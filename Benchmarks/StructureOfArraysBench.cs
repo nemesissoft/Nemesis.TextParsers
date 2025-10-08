@@ -70,19 +70,19 @@ public class StructureOfArraysBench
 
     const int N = 10;
 
-    private static readonly EmployeeClass[] _arrayOfClasses = Enumerable.Range(0, N).Select(
+    private static readonly EmployeeClass[] _arrayOfClasses = [.. Enumerable.Range(0, N).Select(
         i => new EmployeeClass((byte)(i % 7 + 160), 50.0f + (i % 8 + 1) * 10, 1.0f + (i % 9) / 10.0f, i < N / 2)
-    ).ToArray();
+    )];
 
-    private static readonly EmployeeStruct[] _arrayOfStructs = Enumerable.Range(0, N).Select(
+    private static readonly EmployeeStruct[] _arrayOfStructs = [.. Enumerable.Range(0, N).Select(
         i => new EmployeeStruct((byte)(i % 7 + 160), 50.0f + (i % 8 + 1) * 10, 1.0f + (i % 9) / 10.0f, i < N / 2)
-    ).ToArray();
+    )];
 
     private static readonly Employees _structureOfArrays = new(N,
-        Enumerable.Range(0, N).Select(i => (byte)(i % 7 + 160)).ToArray(),
-        Enumerable.Range(0, N).Select(i => 50.0f + (i % 8 + 1) * 10).ToArray(),
-        Enumerable.Range(0, N).Select(i => 1.0f + (i % 9) / 10.0f).ToArray(),
-        Enumerable.Range(0, N).Select(i => i < N / 2).ToArray()
+        [.. Enumerable.Range(0, N).Select(i => (byte)(i % 7 + 160))],
+        [.. Enumerable.Range(0, N).Select(i => 50.0f + (i % 8 + 1) * 10)],
+        [.. Enumerable.Range(0, N).Select(i => 1.0f + (i % 9) / 10.0f)],
+        [.. Enumerable.Range(0, N).Select(i => i < N / 2)]
     );
 
 

@@ -57,7 +57,7 @@ public sealed class LeanCollectionTransformerHandler : ITransformerHandler
     public override string ToString() =>
         $"Create transformer for LeanCollection with settings:{_settings}";
 
-    string ITransformerHandler.DescribeHandlerMatch() => $"{nameof(LeanCollection<object>)} with element type supported for transformation";
+    string ITransformerHandler.DescribeHandlerMatch() => $"{nameof(LeanCollection<>)} with element type supported for transformation";
 }
 
 public sealed class LeanCollectionTransformer<TElement> : TransformerBase<LeanCollection<TElement>>
