@@ -490,8 +490,8 @@ static class ExploratoryTestsData
             @return.AddRange(types.Select(t => (category, t)).Distinct());
     }
 
-    public static IReadOnlyCollection<Type> GetStandardTypes() => new[]
-    {
+    public static IReadOnlyCollection<Type> GetStandardTypes() =>
+    [
         //enum
         typeof(FileMode),
 
@@ -526,7 +526,7 @@ static class ExploratoryTestsData
         
         //class
         typeof(string), typeof(Uri),
-    };
+    ];
 }
 
 internal static class FixtureUtils

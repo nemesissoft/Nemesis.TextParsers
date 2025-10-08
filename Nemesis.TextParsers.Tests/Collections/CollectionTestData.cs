@@ -7,8 +7,8 @@ namespace Nemesis.TextParsers.Tests.Collections;
 
 internal class CollectionTestData
 {
-    public static IEnumerable<(Type elementType, IEnumerable expectedOutput, string input)> ListCompoundData() => new (Type, IEnumerable, string)[]
-    {
+    public static IEnumerable<(Type elementType, IEnumerable expectedOutput, string input)> ListCompoundData() =>
+    [
         //(typeof(int), new List<int>(), @""), (typeof(string), new List<string>(), @""),
 
         (typeof(byte), GetTestNumbers<byte>(byte.MinValue, byte.MaxValue-1, 1, (n1, n2) => (byte)(n1+n2)),
@@ -277,7 +277,7 @@ internal class CollectionTestData
                 (TimeSpan.Zero, 0, 0f, "", (decimal?)null),
             }.ToList(),
             @"(3.14:15:09,3,3.1400001,Pi,3.14)|(31.14:15:09,3,3.1400001,Pi,\∅)|(-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅)|(00:00:00,0,0,,0)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)|∅|"),
-    };
+    ];
 
     private static ReadOnlyCollection<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
             where TNumber : struct, IComparable, IComparable<TNumber>, IEquatable<TNumber>, IFormattable

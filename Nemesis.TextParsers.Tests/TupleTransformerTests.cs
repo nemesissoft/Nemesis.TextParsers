@@ -24,8 +24,8 @@ class TupleTransformerTests
         return transformer;
     }
 
-    private static IEnumerable<(ValueType instance, string input)> Correct_Tuple_Data() => new (ValueType, string)[]
-    {
+    private static IEnumerable<(ValueType instance, string input)> Correct_Tuple_Data() =>
+    [
         (new KeyValuePair<TimeSpan, int>(new TimeSpan(1,2,3,4), 0), @"1.02:03:04=∅"),
         (new KeyValuePair<TimeSpan, int>(TimeSpan.Zero, 15), @"∅=15"),
         (new KeyValuePair<TimeSpan?, int>(null, 15), @"∅=15"),
@@ -103,7 +103,7 @@ class TupleTransformerTests
         (("(A","(B","C)","D","E)"), @"((A,(B,C),D,E))"),
         //Tuple with tuple fields
         ((("N", "e"), ("s", "t") , "ed"), @"((N\,e),(s\,t),ed)"),
-    };
+    ];
 
     [TestCaseSource(nameof(Correct_Tuple_Data))]
     public void TupleTransformer_CompoundTest((ValueType instance, string input) data)
@@ -147,8 +147,8 @@ class TupleTransformerTests
     private const string NO_PARENTHESES_ERROR =
         "Tuple representation has to start with '(' and end with ')' optionally lead in the beginning or trailed in the end by whitespace";
     private static IEnumerable<(Type tupleType, string input, Type expectedException, string expectedErrorMessagePart)>
-        Bad_Tuple_Data() => new[]
-    {
+        Bad_Tuple_Data() =>
+    [
         (typeof(KeyValuePair<float?, string>), @"abc=ABC", typeof(FormatException),
 #if NET7_0_OR_GREATER
             @"The input string 'abc' was not in a correct format."
@@ -214,7 +214,7 @@ class TupleTransformerTests
 
 #endif
 
-    };
+    ];
 
     [TestCaseSource(nameof(Bad_Tuple_Data))]
     public void TupleTransformer_NegativeTest((Type tupleType, string input, Type expectedException, string expectedErrorMessagePart) data)

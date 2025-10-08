@@ -76,7 +76,7 @@ internal static class CodeGenUtils
     public static IReadOnlyList<string> GetGeneratedTreesOnly(Compilation compilation, ISourceGenerator sourceGenerator, string attributeName, int requiredCardinality = 1)
     {
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
-            generators: new ISourceGenerator[] { sourceGenerator },
+            generators: [sourceGenerator],
             parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
             driverOptions: new GeneratorDriverOptions(default, trackIncrementalGeneratorSteps: true));
 

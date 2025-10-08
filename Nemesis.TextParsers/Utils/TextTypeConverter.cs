@@ -279,7 +279,7 @@ public class TextSyntaxProvider
 
     private static string AddIndentation(string text)
     {
-        var indented = text.Split(new[] { Environment.NewLine, "\r", "\n" }, StringSplitOptions.None)
+        var indented = text.Split([Environment.NewLine, "\r", "\n"], StringSplitOptions.None)
             .Select(line => $"\t{line}");
         return string.Join(Environment.NewLine, indented);
     }
