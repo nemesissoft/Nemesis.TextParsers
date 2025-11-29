@@ -27,20 +27,22 @@
 		<PackageReference Include="AutoFixture" />
 		<PackageReference Include="FluentAssertions" />
 
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net481' OR '$(TargetFramework)' == 'net462'">
+		<!--Legacy test dependencies -->
 		<PackageReference Include="System.Memory" />
 		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
-
-		
 		<PackageReference Include="System.Text.Json" />
 		<!--Transitive vulnerability -->
 		<PackageReference Include="System.Text.RegularExpressions" />
 		<PackageReference Include="System.Net.Http" />
 		<!--/Transitive vulnerability -->		
-
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
 	</ItemGroup>
+
+
 
 
 	<ItemGroup>
