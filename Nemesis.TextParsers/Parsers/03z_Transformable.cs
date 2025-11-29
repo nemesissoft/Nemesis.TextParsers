@@ -32,7 +32,7 @@ public class TransformableHandler(ITransformerStore transformerStore) : ITransfo
 
         return (@params.Length == 0
                 ? (ITransformer?) Activator.CreateInstance(type, true)
-                : (ITransformer?) Activator.CreateInstance(type, @params.Select(p => GetArguments(p.ParameterType, store)).ToArray())
+                : (ITransformer?) Activator.CreateInstance(type, [.. @params.Select(p => GetArguments(p.ParameterType, store))])
             ) ?? throw new NotSupportedException($"Type '{type.GetFriendlyName()}' cannot be created using reflection");
 
 
@@ -61,7 +61,7 @@ public class TransformableHandler(ITransformerStore transformerStore) : ITransfo
 
             else
                 throw new NotSupportedException(
-                    $"Only supported parameters for auto-injection to transformers marked with {nameof(TransformerAttribute)} are {nameof(ITransformerStore)}, implementations of {nameof(ISettings)}, generic {nameof(NumberTransformer<int>)} or generic {nameof(ITransformer)} implementations");
+                    $"Only supported parameters for auto-injection to transformers marked with {nameof(TransformerAttribute)} are {nameof(ITransformerStore)}, implementations of {nameof(ISettings)}, generic {nameof(NumberTransformer<>)} or generic {nameof(ITransformer)} implementations");
         }
     }
 
@@ -82,7 +82,7 @@ public class TransformableHandler(ITransformerStore transformerStore) : ITransfo
             null => false,
             { } transformer when !IsTransformerSupported(transformable, transformer) =>
                 throw new NotSupportedException(
-                    $"Transformer registered via {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)} has to implement {nameof(ITransformer<int>)}<>"
+                    $"Transformer registered via {nameof(TransformerAttribute)}.{nameof(TransformerAttribute.TransformerType)} has to implement {nameof(ITransformer<>)}<>"
                 ),
             _ => true
         };

@@ -261,7 +261,7 @@ public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnume
     public static explicit operator (T, T, T)(LeanCollection<T> triple) => triple.IsMore(3) ? (triple._items[0], triple._items[1], triple._items[2]) : (triple._item1, triple._item2, triple._item3);
 
     public static explicit operator T[](LeanCollection<T> more) => more.IsMore(0)
-            ? more._items.ToArray()
+            ? [.. more._items]
             : more._size switch
             {
                 CollectionSize.Zero => [],
@@ -269,7 +269,7 @@ public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnume
                 CollectionSize.Two => [more._item1, more._item2],
                 CollectionSize.Three => [more._item1, more._item2, more._item3],
                 //this is already covered above: CollectionSize.More => more._items.ToArray(),
-                _ => throw new ArgumentOutOfRangeException(nameof(more), $"Internal state of {nameof(LeanCollection<T>)} was compromised")
+                _ => throw new ArgumentOutOfRangeException(nameof(more), $"Internal state of {nameof(LeanCollection<>)} was compromised")
             };
 
     #endregion
@@ -308,7 +308,7 @@ public readonly struct LeanCollection<T> : IEquatable<LeanCollection<T>>, IEnume
                 ((((_item1?.GetHashCode() ?? 0) * PRIME) ^ (_item2?.GetHashCode() ?? 0)) * PRIME) ^ (_item3?.GetHashCode() ?? 0)
                 ),
             CollectionSize.More => GetHashCode(_items),
-            _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<T>)} was compromised")
+            _ => throw new ArgumentOutOfRangeException($"Internal state of {nameof(LeanCollection<>)} was compromised")
         };
     }
 

@@ -34,12 +34,12 @@ public class NumberTransformerCache : ITestTransformerRegistrations
 #endif
         => _cache.TryGetValue(typeof(TNumber), out var numOp)
         ? (NumberTransformer<TNumber>)numOp
-        : throw new NotSupportedException($"Type {typeof(TNumber).FullName} is not supported as element for {nameof(NumberTransformer<int>)}");
+        : throw new NotSupportedException($"Type {typeof(TNumber).FullName} is not supported as element for {nameof(NumberTransformer<>)}");
 
     public ITransformer GetNumberHandler(Type numberType) =>
         _cache.TryGetValue(numberType, out var numOp)
         ? numOp
-        : throw new NotSupportedException($"Type {numberType.FullName} is not supported as element for {nameof(NumberTransformer<int>)}");
+        : throw new NotSupportedException($"Type {numberType.FullName} is not supported as element for {nameof(NumberTransformer<>)}");
 
     public static readonly NumberTransformerCache Instance = new();
     private NumberTransformerCache() { }

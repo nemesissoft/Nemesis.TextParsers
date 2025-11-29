@@ -25,8 +25,8 @@ namespace Nemesis.TextParsers.Tests
             return result;
         }
 
-        private static IEnumerable<(string, IEnumerable<KeyValuePair<string, string>>)> ValidDictData() => new (string, IEnumerable<KeyValuePair<string, string>>)[]
-        {
+        private static IEnumerable<(string, IEnumerable<KeyValuePair<string, string>>)> ValidDictData() =>
+        [
             (null, new Dss(0)),
             (@"", new Dss(0)),
             (@"=", new Dss{[""]=""}),
@@ -45,7 +45,7 @@ namespace Nemesis.TextParsers.Tests
             (@"key1=value1;key2=value2", new Dss{["key1"]="value1",["key2"]="value2"}),
             (@"\;key1\;=\;value1\;;\;key2\;=\;value2\;", new Dss{[";key1;"]=";value1;",[";key2;"]=";value2;"}),
             (@"\;key1\=\;=\;val\=ue1\;;\;key2\;=\;value\=2\;", new Dss{[";key1=;"]=";val=ue1;",[";key2;"]=";value=2;"}),
-        };
+        ];
 
         [TestCaseSource(nameof(ValidDictData))]
         public void Dict_Parse_Test((string input, IEnumerable<KeyValuePair<string, string>> expectedDict) data)

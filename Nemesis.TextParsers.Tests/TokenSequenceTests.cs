@@ -3,8 +3,8 @@
 [TestFixture]
 public class TokenSequenceTests
 {
-    private static IEnumerable<(string, IEnumerable<string>)> ValidListData() => new (string, IEnumerable<string>)[]
-    {
+    private static IEnumerable<(string, IEnumerable<string>)> ValidListData() =>
+    [
         ("", new []{""}),
         (@"AAA|BBB|CCC", new []{"AAA","BBB","CCC"}),
         (@"|BBB||CCC", new []{"","BBB","","CCC"}),
@@ -36,7 +36,7 @@ public class TokenSequenceTests
         (@" |\\", new []{@" ", @"\\"}),
         (@" |\", new []{@" ", @"\"}),
         (@" |\|", new []{@" ", @"\|"}),
-    };
+    ];
 
     [TestCaseSource(nameof(ValidListData))]
     public void TokenizeTest((string input, IEnumerable<string> expectedList) data)

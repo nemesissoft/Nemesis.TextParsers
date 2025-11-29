@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net9.0;net8.0</TargetFrameworks>	
+		<TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>	
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
@@ -28,8 +28,7 @@
 		<PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" />
 		<PackageReference Include="morelinq" />
 		<PackageReference Include="Enums.NET" />
-		<PackageReference Include="Newtonsoft.Json" />
-		<PackageReference Include="System.Text.Json" />
+		<PackageReference Include="Newtonsoft.Json" />		
 	</ItemGroup>
 
 	<ItemGroup>

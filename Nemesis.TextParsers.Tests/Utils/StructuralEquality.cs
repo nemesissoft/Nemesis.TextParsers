@@ -23,7 +23,7 @@ public static class StructuralEquality
             var enumerableType = typeof(IEnumerable<>).MakeGenericType(enumerableTypeArguments);
             var comparerType = typeof(EnumerableEqualityComparer<>).MakeGenericType(enumerableTypeArguments);
 
-            FieldInfo comparerInstanceField = comparerType.GetField(nameof(EnumerableEqualityComparer<string>.DefaultInstance));
+            FieldInfo comparerInstanceField = comparerType.GetField(nameof(EnumerableEqualityComparer<>.DefaultInstance));
             var comparer = comparerInstanceField.GetValue(null);
 
             MethodInfo equalsMethod = comparerInstanceField.FieldType.GetMethod(nameof(IEqualityComparer.Equals), [enumerableType, enumerableType])
@@ -39,7 +39,7 @@ public static class StructuralEquality
 
     private static Type GetIEnumerableTypeParameter([JetBrains.Annotations.NotNull] Type type)
     {
-        if (type == null) throw new ArgumentNullException(nameof(type));
+        ArgumentNullException.ThrowIfNull(type);
         var generic = typeof(IEnumerable<>);
 
         Type retType = null;

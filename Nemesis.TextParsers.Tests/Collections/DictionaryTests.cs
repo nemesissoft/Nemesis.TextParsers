@@ -11,8 +11,8 @@ public class DictionaryTests
     private static string NormalizeNullMarkers(string text) =>
         text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
 
-    private static IEnumerable<(string text, Dss dictionary)> ValidDictData() => new[]
-    {
+    private static IEnumerable<(string text, Dss dictionary)> ValidDictData() =>
+    [
         (null, null),
         (@"", new Dss()),
         (@"=", new Dss{[""]=""}),
@@ -38,7 +38,7 @@ public class DictionaryTests
         (@"\\\;\\\==\\\;\\\=;k\\\=ey2=\;\\\=A\\BC;key\;\=1=\=\;", new Dss{[@"\;\="]=@"\;\=", [@"k\=ey2"]=@";\=A\BC", ["key;=1"]="=;"}),
 
         (@"Key=Text\;Text", new Dss{{ "Key", @"Text;Text" }})
-    };
+    ];
 
     [TestCaseSource(nameof(ValidDictData))]
     public void Dict_Format_SymmetryTests((string expectedOutput, Dss inputDict) data)

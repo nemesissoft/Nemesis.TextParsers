@@ -30,7 +30,7 @@ public class Linq_WhereAndFirst_Vs_First
     public int Size { get; set; }
 
     [GlobalSetup]
-    public void Setup() => _data = Enumerable.Range(0, Size).ToArray();
+    public void Setup() => _data = [.. Enumerable.Range(0, Size)];
 
     private IEnumerable<int> GetEnumerable()
     {

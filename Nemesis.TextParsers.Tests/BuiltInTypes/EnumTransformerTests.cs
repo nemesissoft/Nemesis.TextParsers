@@ -290,7 +290,7 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
 
         string ShuffleText(in string text)
         {
-            if (text == null) throw new ArgumentNullException(nameof(text));
+            ArgumentNullException.ThrowIfNull(text);
 
             int i = 0;
             string newText;

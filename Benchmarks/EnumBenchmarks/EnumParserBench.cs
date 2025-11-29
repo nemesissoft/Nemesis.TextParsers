@@ -58,7 +58,7 @@ public class EnumParserBench
     }
 
     public static readonly string[] AllEnums =
-        Enumerable.Range(0, 130).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ", "")).ToArray();
+        [.. Enumerable.Range(0, 130).Select(i => ((DaysOfWeek)i).ToString("G").Replace(" ", ""))];
 
     private static readonly ITransformer<DaysOfWeek> _parser = TextTransformer.Default.GetTransformer<DaysOfWeek>();
 

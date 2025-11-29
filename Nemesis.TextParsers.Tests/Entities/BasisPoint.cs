@@ -80,8 +80,8 @@ internal sealed class BasisPointTransformer : TransformerBase<BasisPoint>
 [TestFixture]
 public class BasisPointTests
 {
-    private static IEnumerable<TCD> CorrectData() => new[]
-    {
+    private static IEnumerable<TCD> CorrectData() =>
+    [
         new TCD("01", BasisPoint.FromBps(0), null),
         new TCD("02", BasisPoint.FromBps(0), ""),
         new TCD("03", BasisPoint.FromBps(0), "0"),
@@ -97,7 +97,7 @@ public class BasisPointTests
         new TCD("13", BasisPoint.FromBps(Math.PI), "3.14bpS"),
         new TCD("14", BasisPoint.FromBps(Math.E), "2.72 bPS"),
         new TCD("15", BasisPoint.FromBps(10.15), "10.15 BpS"),
-    };
+    ];
 
     [TestCaseSource(nameof(CorrectData))]
     public void BasisPoint_ParseAndFormat(string _, BasisPoint instance, string text)

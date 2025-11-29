@@ -111,12 +111,12 @@ readonly struct CarrotAndOnionFactors(float carrot, float[] onionFactors) : IEqu
 public class SpecialNumbersTests
 {
     private static IEnumerable<(string, float)> ValidValuesForFactory()
-        => new[]
-        {
+        =>
+        [
             ("3.1415", 3.1415f),
             ("0.000000000001", 0.000000000001f),
             ("-0.000000000001", -0.000000000001f),
-        };
+        ];
 
     [TestCaseSource(nameof(ValidValuesForFactory))]
     public void LowPrecisionFloat_FromText_ShouldParse((string inputText, float expected) data)

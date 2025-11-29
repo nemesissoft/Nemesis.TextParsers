@@ -230,7 +230,7 @@ namespace Nemesis.TextParsers.Tests
                 Assert.That(coll1.GetHashCode(), Is.EqualTo(coll2A.GetHashCode()), "#1 != #2a");
                 Assert.That(coll1, Is.EqualTo(coll2A), "1 != 2a");
             });
-            var coll3 = LeanCollectionFactory.FromArray(new[] { 15.5f, 25.6f, 35.99f, 50, 999, 1555555 });
+            var coll3 = LeanCollectionFactory.FromArray([15.5f, 25.6f, 35.99f, 50, 999, 1555555]);
             Assert.That(coll1, Is.Not.EqualTo(coll3));
 
             if (elements?.Length > 0)

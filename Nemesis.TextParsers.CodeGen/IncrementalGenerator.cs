@@ -11,7 +11,7 @@ public abstract class IncrementalGenerator : IIncrementalGenerator
 
     public GeneratorDriver CreateGeneratorDriver(Compilation compilation) =>
         CSharpGeneratorDriver.Create(
-            generators: new ISourceGenerator[] { this.AsSourceGenerator() },
+            generators: [this.AsSourceGenerator()],
             parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
             driverOptions: new GeneratorDriverOptions(default, trackIncrementalGeneratorSteps: true));
 

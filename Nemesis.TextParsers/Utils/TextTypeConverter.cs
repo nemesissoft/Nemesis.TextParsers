@@ -85,7 +85,7 @@ public class TextSyntaxProvider
 
     public string GetSyntaxFor(Type type)
     {
-        if (type == null) throw new ArgumentNullException(nameof(type));
+        ArgumentNullException.ThrowIfNull(type);
 
         if (TryGetGrammarDescription(type, out string message)) return message;
         else if (typeof(string) == type) return GetStringSyntax();
@@ -279,7 +279,7 @@ public class TextSyntaxProvider
 
     private static string AddIndentation(string text)
     {
-        var indented = text.Split(new[] { Environment.NewLine, "\r", "\n" }, StringSplitOptions.None)
+        var indented = text.Split([Environment.NewLine, "\r", "\n"], StringSplitOptions.None)
             .Select(line => $"\t{line}");
         return string.Join(Environment.NewLine, indented);
     }

@@ -30,7 +30,7 @@ namespace Benchmarks.EnumBenchmarks;
 public class EnumParserBench_CodeGen
 {
     public static readonly string[] AllEnums =
-        Enumerable.Range(0, 15).Select(i => ((Month)i).ToString("G").Replace(" ", "")).ToArray();
+        [.. Enumerable.Range(0, 15).Select(i => ((Month)i).ToString("G").Replace(" ", ""))];
 
     private static readonly ITransformer<Month> _expressionTreesParser = TextTransformer.Default.GetTransformer<Month>();
     private static readonly TransformerWithSettings _parserWithSettings = new(new(true, true));

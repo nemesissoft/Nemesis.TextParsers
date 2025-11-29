@@ -56,7 +56,7 @@ public readonly struct CollectionMeta : IEquatable<CollectionMeta>
                                throw new MissingMethodException(nameof(CollectionMeta), nameof(CreateCollectionGeneric));
         createCollMethod = createCollMethod.MakeGenericMethod(ElementType);
 
-        return createCollMethod.Invoke(this, new object[] { sourceElements });
+        return createCollMethod.Invoke(this, [sourceElements]);
     }
 
     public IReadOnlyCollection<TDestElem?>? CreateCollectionGeneric<TDestElem>(IEnumerable sourceElements)

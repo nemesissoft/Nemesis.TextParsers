@@ -504,8 +504,8 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
                 Expression.ArrayIndex(transformers, Expression.Constant(index)),
                 transformerType
             );
-            var getEmptyMethod = transformerType.GetMethod(nameof(ITransformer<int>.GetEmpty)) ??
-                throw new MissingMethodException(nameof(ITransformer<int>), nameof(ITransformer<int>.GetEmpty));
+            var getEmptyMethod = transformerType.GetMethod(nameof(ITransformer<>.GetEmpty)) ??
+                throw new MissingMethodException(nameof(ITransformer<>), nameof(ITransformer<>.GetEmpty));
             return Expression.Call(genericTransformer, getEmptyMethod);
         }
 
@@ -529,7 +529,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
         static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
 
         var @params = deconstruct.IsStatic
-            ? deconstruct.GetParameters().Skip(1).ToArray()
+            ? [.. deconstruct.GetParameters().Skip(1)]
             : deconstruct.GetParameters();
 
         arity = @params.Length;
@@ -545,8 +545,8 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
 
 
         accumulatorToString = Expression.Call(
-            Expression.Call(accumulator, nameof(ValueSequenceBuilder<char>.AsSpan), null),
-            nameof(ReadOnlySpan<char>.ToString), null)
+            Expression.Call(accumulator, nameof(ValueSequenceBuilder<>.AsSpan), null),
+            nameof(ReadOnlySpan<>.ToString), null)
             ;
     }
 
@@ -601,7 +601,7 @@ public abstract class CustomDeconstructionTransformer<TDeconstructable> : Transf
     /// <param name="transformerStore">When used in standard way - this parameter gets injected by default</param>
     protected CustomDeconstructionTransformer([NotNull] ITransformerStore transformerStore)
     {
-        if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
+        ArgumentNullException.ThrowIfNull(transformerStore);
         var builder = Builder.GetDefault(transformerStore);
         builder = BuildSettings(builder);
 

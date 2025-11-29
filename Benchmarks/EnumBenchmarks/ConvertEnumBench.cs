@@ -29,7 +29,7 @@ public class ConvertEnumBench
         All = Weekdays | Weekends
     }
 
-    public static readonly byte[] AllEnumValues = Enumerable.Range(0, 130).Select(i => (byte)i).ToArray();
+    public static readonly byte[] AllEnumValues = [.. Enumerable.Range(0, 130).Select(i => (byte)i)];
 
     internal static Func<byte, DaysOfWeek> GetNumberConverterDynamicMethod()
     {

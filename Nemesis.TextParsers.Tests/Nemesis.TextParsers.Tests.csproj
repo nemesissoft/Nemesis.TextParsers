@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(CI)' != 'true'">$(TargetFrameworks);net481;net462</TargetFrameworks>
 
 		<IsTestProject>true</IsTestProject>
@@ -27,20 +27,22 @@
 		<PackageReference Include="AutoFixture" />
 		<PackageReference Include="FluentAssertions" />
 
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net481' OR '$(TargetFramework)' == 'net462'">
+		<!--Legacy test dependencies -->
 		<PackageReference Include="System.Memory" />
 		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
-
-		
 		<PackageReference Include="System.Text.Json" />
 		<!--Transitive vulnerability -->
 		<PackageReference Include="System.Text.RegularExpressions" />
 		<PackageReference Include="System.Net.Http" />
 		<!--/Transitive vulnerability -->		
-
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
 	</ItemGroup>
+
+
 
 
 	<ItemGroup>

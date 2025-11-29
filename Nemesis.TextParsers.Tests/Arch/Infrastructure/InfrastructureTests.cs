@@ -10,8 +10,8 @@ namespace Nemesis.TextParsers.Tests.Arch.Infrastructure;
 [TestFixture]
 public class InfrastructureTests
 {
-    private static IEnumerable<TCD> IsSupportedForTransformation_Data() => new[]
-    {
+    private static IEnumerable<TCD> IsSupportedForTransformation_Data() =>
+    [
         new TCD(typeof(PointWithConverter), true),
         new TCD(typeof(string), true),
         new TCD(typeof(TimeSpan), true),
@@ -44,7 +44,7 @@ public class InfrastructureTests
         new TCD(typeof(ValueTuple<string, object, object, object, object, object, object>), false),
         new TCD(typeof(KeyValuePair<object, object>), false),
         new TCD(typeof(KeyValuePair<object, object>[]), false),
-    };
+    ];
     [TestCaseSource(nameof(IsSupportedForTransformation_Data))]
     public void IsSupportedForTransformation(Type type, bool expected) =>
         Assert.That(
@@ -52,15 +52,15 @@ public class InfrastructureTests
             Is.EqualTo(expected)
         );
 
-    private static readonly IReadOnlyList<Type> _simpleTypes = new[]
-    {
+    private static readonly IReadOnlyList<Type> _simpleTypes =
+    [
         typeof(string), typeof(bool), typeof(char),
         typeof(byte), typeof(sbyte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong),
         typeof(float), typeof(double), typeof(decimal),
         typeof(TimeSpan), typeof(DateTime), typeof(DateTimeOffset),
         typeof(Guid), typeof(FileMode),
         typeof(BigInteger), typeof(Complex)
-    };
+    ];
 
     [Test]
     public void IsSupportedForTransformation_Exploratory()
@@ -144,8 +144,8 @@ public class InfrastructureTests
 
 
     //for type => empty, null
-    private static IEnumerable<TCD> GetEmptyNullInstance_Data() => new[]
-    {
+    private static IEnumerable<TCD> GetEmptyNullInstance_Data() =>
+    [
         new TCD(typeof(string), "", null),
         new TCD(typeof(bool), false, false),
         new TCD(typeof(char), '\0', '\0'),
@@ -223,7 +223,7 @@ public class InfrastructureTests
 
         new TCD(typeof(LotsOfDeconstructableData), LotsOfDeconstructableData.EmptyInstance, null),
         new TCD(typeof(EmptyFactoryMethodConvention), EmptyFactoryMethodConvention.Empty, null),
-    };
+    ];
 
     [TestCaseSource(nameof(GetEmptyNullInstance_Data))]
     public void GetEmptyAndNullInstanceTest(Type type, object expectedEmpty, object expectedNull)
@@ -240,8 +240,8 @@ public class InfrastructureTests
 
 
     //type, input, expectedOutput
-    private static IEnumerable<TCD> EmptyNullParsingData() => new[]
-    {
+    private static IEnumerable<TCD> EmptyNullParsingData() =>
+    [
         new TCD(typeof(ValueTuple<int, int>), "", (0, 0)),
         new TCD(typeof(ValueTuple<int, int>), null, (0, 0)),
         new TCD(typeof(ValueTuple<int, int>), "(,)", (0, 0)),
@@ -267,7 +267,7 @@ public class InfrastructureTests
         new TCD(typeof(List<int?>), @"∅", new List<int?> {default}),
         new TCD(typeof(List<int?>), @"∅|∅", new List<int?> {default, default}),
         new TCD(typeof(List<int?>), @"∅|∅|", new List<int?> {default, default, default}),
-    };
+    ];
     [TestCaseSource(nameof(EmptyNullParsingData))]
     public void EmptyNullParsingTest(Type type, string input, object expectedOutput)
     {

@@ -153,7 +153,7 @@ internal static class EnumTransformerHelper
         foreach (var (name, value) in enumValues)
         {
             var lengthCheck = Expression.Equal(
-                Expression.Property(inputParam, nameof(ReadOnlySpan<char>.Length)),
+                Expression.Property(inputParam, nameof(ReadOnlySpan<>.Length)),
                 Expression.Constant(name.Length)
                 );
             List<Expression> conditionElements = [lengthCheck];

@@ -24,8 +24,8 @@ namespace Nemesis.TextParsers.Tests
 
         #region List
 
-        private static IEnumerable<(string, IEnumerable<string>)> ValidListData() => new (string, IEnumerable<string>)[]
-        {
+        private static IEnumerable<(string, IEnumerable<string>)> ValidListData() =>
+        [
             ("", new[]{""}),
             (@"AAA|BBB|CCC", new []{"AAA","BBB","CCC"}),
             (@"|BBB||CCC", new []{"","BBB","","CCC"}),
@@ -77,7 +77,7 @@ namespace Nemesis.TextParsers.Tests
             (@" |\\\|", new []{@" ", @"\|"}),
             (@" |\\\||A", new []{@" ", @"\|", "A"}),
             (@" |\|", new []{@" ", @"|"}),
-        };
+        ];
 
         [TestCaseSource(nameof(ValidListData))]
         public void List_Parse_Test((string input, IEnumerable<string> expectedList) data)
