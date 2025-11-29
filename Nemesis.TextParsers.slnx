@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="CODE_OF_CONDUCT.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Directory.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE.txt" />
+    <File Path="Nemesis.TextParsers.Public.snk" />
+    <File Path="README.md" />
+    <File Path="ReleaseNotes.md" />
+    <File Path="Specification.md" />
+  </Folder>
+  <Folder Name="/Solution Items/workflows/">
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/codeql-analysis.yml" />
+    <File Path=".github/workflows/license-scanning.yml" />
+    <File Path=".github/workflows/update-release-notes.yml" />
+  </Folder>
+  <Project Path="Benchmarks/Benchmarks.csproj" />
+  <Project Path="Nemesis.TextParsers.CodeGen.Sample/Nemesis.TextParsers.CodeGen.Sample.csproj" />
+  <Project Path="Nemesis.TextParsers.CodeGen.Tests/Nemesis.TextParsers.CodeGen.Tests.csproj" />
+  <Project Path="Nemesis.TextParsers.CodeGen/Nemesis.TextParsers.CodeGen.csproj" />
+  <Project Path="Nemesis.TextParsers.DependencyInjection/Nemesis.TextParsers.DependencyInjection.csproj" />
+  <Project Path="Nemesis.TextParsers.Tests/Nemesis.TextParsers.Tests.csproj" />
+  <Project Path="Nemesis.TextParsers/Nemesis.TextParsers.csproj" />
+  <Project Path="WebDemo/WebDemo.csproj" />
+</Solution>
