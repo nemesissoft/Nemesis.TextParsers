@@ -38,8 +38,8 @@ public static class StructuralEquality
     }
 
     private static Type GetIEnumerableTypeParameter([JetBrains.Annotations.NotNull] Type type)
-    {        
-        if (type == null) throw new ArgumentNullException(nameof(type));
+    {
+        ArgumentNullException.ThrowIfNull(type);
         var generic = typeof(IEnumerable<>);
 
         Type retType = null;

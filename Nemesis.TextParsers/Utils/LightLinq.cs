@@ -128,7 +128,7 @@ public static class LightLinq
 
     public static (bool success, TSource? result) Aggregate<TSource>(this ParsingSequence source, ITransformer<TSource> transformer, Func<TSource, TSource, TSource> func)
     {
-        if (func == null) throw new ArgumentNullException(nameof(func));
+        ArgumentNullException.ThrowIfNull(func);
 
         var e = source.GetEnumerator();
 
@@ -144,7 +144,7 @@ public static class LightLinq
 
     public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsingSequence source, ITransformer<TSource> transformer, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
     {
-        if (func == null) throw new ArgumentNullException(nameof(func));
+        ArgumentNullException.ThrowIfNull(func);
 
         TAccumulate result = seed;
         foreach (var element in source)
@@ -160,8 +160,8 @@ public static class LightLinq
         ITransformer<TSource> transformer, TAccumulate seed,
         Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
     {
-        if (func == null) throw new ArgumentNullException(nameof(func));
-        if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+        ArgumentNullException.ThrowIfNull(func);
+        ArgumentNullException.ThrowIfNull(resultSelector);
 
         TAccumulate result = seed;
         foreach (var element in source)

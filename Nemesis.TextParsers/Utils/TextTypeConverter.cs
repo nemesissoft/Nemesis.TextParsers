@@ -85,7 +85,7 @@ public class TextSyntaxProvider
 
     public string GetSyntaxFor(Type type)
     {
-        if (type == null) throw new ArgumentNullException(nameof(type));
+        ArgumentNullException.ThrowIfNull(type);
 
         if (TryGetGrammarDescription(type, out string message)) return message;
         else if (typeof(string) == type) return GetStringSyntax();

@@ -28,8 +28,7 @@
 		<PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" />
 		<PackageReference Include="morelinq" />
 		<PackageReference Include="Enums.NET" />
-		<PackageReference Include="Newtonsoft.Json" />
-		<PackageReference Include="System.Text.Json" />
+		<PackageReference Include="Newtonsoft.Json" />		
 	</ItemGroup>
 
 	<ItemGroup>

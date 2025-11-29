@@ -3,7 +3,7 @@
 namespace Nemesis.TextParsers.Utils;
 
 //TODO rework + add Append(ROS<>) + add ValueStringBuilder 
-public ref struct ValueSequenceBuilder<T>(Span<T> initialSpan)
+public ref struct ValueSequenceBuilder<T>(Span<T> initialSpan) : IDisposable
 {
     private Span<T> _current = initialSpan;
 

@@ -601,7 +601,7 @@ public abstract class CustomDeconstructionTransformer<TDeconstructable> : Transf
     /// <param name="transformerStore">When used in standard way - this parameter gets injected by default</param>
     protected CustomDeconstructionTransformer([NotNull] ITransformerStore transformerStore)
     {
-        if (transformerStore == null) throw new ArgumentNullException(nameof(transformerStore));
+        ArgumentNullException.ThrowIfNull(transformerStore);
         var builder = Builder.GetDefault(transformerStore);
         builder = BuildSettings(builder);
 

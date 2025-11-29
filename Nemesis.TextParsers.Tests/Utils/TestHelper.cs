@@ -117,7 +117,7 @@ internal static partial class TestHelper
 
     public static void ParseAndFormatObject([NotNull] object instance, string text, ITransformerStore store = null)
     {
-        if (instance == null) throw new ArgumentNullException(nameof(instance));
+        ArgumentNullException.ThrowIfNull(instance);
 
         store ??= Sut.DefaultStore;
 
@@ -146,7 +146,7 @@ internal static partial class TestHelper
 
     public static void RoundTrip([NotNull] object instance, ITransformer sut = null)
     {
-        if (instance == null) throw new ArgumentNullException(nameof(instance));
+        ArgumentNullException.ThrowIfNull(instance);
 
         var text = sut.FormatObject(instance);
 
