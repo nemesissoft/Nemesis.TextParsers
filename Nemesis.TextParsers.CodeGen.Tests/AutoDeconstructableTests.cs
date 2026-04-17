@@ -12,22 +12,15 @@ public partial class AutoDeconstructableTests
     private static readonly IEnumerable<TCD> _endToEndCases = GetAutoDeconstructableCases()
        .Select((t, i) => new TCD(t.source, t.expectedCode)
            .SetName($"E2E_{i + 1:00}_{t.name}"));
-
-    private static IReadOnlyList<string> GetGeneratedTrees(Compilation compilation, int requiredCardinality = 1)
-        => GetGeneratedTreesOnly(compilation,
-            new AutoDeconstructableGenerator(),
-            AutoDeconstructableGenerator.ATTRIBUTE_NAME,
-            requiredCardinality
-    );
-
+        
     [TestCaseSource(nameof(_endToEndCases))]
     public void EndToEndTests(string source, string expectedCode)
     {
         var compilation = CreateValidCompilation(source);
-
-        var generatedTrees = GetGeneratedTrees(compilation);
-
-        var actual = ScrubGeneratorComments(generatedTrees.Single());
+                
+        var sources = new AutoDeconstructableGenerator().RunIncrementalGeneratorAndGetGeneratedSources(compilation);
+        
+        var actual = ScrubGeneratorComments(sources.Single());
 
         Assert.That(actual, Is.EqualTo(expectedCode).Using(IgnoreNewLinesComparer.EqualityComparer));
     }
@@ -85,9 +78,9 @@ public partial class AutoDeconstructableTests
         //arrange
         var compilation = CreateValidCompilation(source);
 
-        //act
-        var generatedTrees = GetGeneratedTrees(compilation);
-        var actual = generatedTrees.Single();
+        //act        
+        var sources = new AutoDeconstructableGenerator().RunIncrementalGeneratorAndGetGeneratedSources(compilation);
+        var actual = sources.Single();
 
 
         //assert
@@ -116,9 +109,9 @@ namespace Tests3
     public static class ContainerClass3 { public class NestedClass3 { } }
 }");
 
-        var generatedTrees = GetGeneratedTrees(compilation);
+        var sources = new AutoDeconstructableGenerator().RunIncrementalGeneratorAndGetGeneratedSources(compilation);
 
-        var actual = ScrubGeneratorComments(generatedTrees.Single());
+        var actual = ScrubGeneratorComments(sources.Single());
 
         Assert.That(actual, Is.EqualTo(@"//HEAD
 using System;

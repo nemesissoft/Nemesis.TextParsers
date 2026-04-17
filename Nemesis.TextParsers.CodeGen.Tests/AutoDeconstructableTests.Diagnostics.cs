@@ -24,9 +24,8 @@ partial class AutoDeconstructableTests
         Assert.That(initialDiagnostics, Has.Count.EqualTo(1));
         Assert.That(initialDiagnostics, Has.All.Contain("The type or namespace name 'Auto' could not be found"));
 
-
-        CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
-        Assert.That(diagnostics, Is.Empty);
+        var result = new AutoDeconstructableGenerator().RunIncrementalGenerator(compilation);
+        Assert.That(result.Diagnostics, Is.Empty);
     }
 
     [Test]
@@ -79,10 +78,10 @@ partial class AutoDeconstructableTests
             ?.GetValue(null) ?? throw new NotSupportedException($"Rule '{ruleName}' does not exist");
 
         var compilation = CreateValidCompilation(source);
-
-        CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
-
-        var diagnosticsList = diagnostics.ToList();
+                
+        var result = new AutoDeconstructableGenerator().RunIncrementalGenerator(compilation);
+        
+        var diagnosticsList = result.Diagnostics.ToList();
         Assert.That(diagnosticsList, Has.Count.EqualTo(1));
 
         var diagnostic = diagnosticsList.Single();
@@ -99,8 +98,8 @@ partial class AutoDeconstructableTests
         //Important - no NTP reference - test is about removal of NTP library and expected code gen (lack of) ability to generate code
         var compilation = CreateTestCompilation(@"[AutoDeconstructable] partial class DoesNotMatter { }");
 
-        CompilationUtils.RunGenerators(compilation, out var diagnostics, new AutoDeconstructableGenerator());
-        var diagnosticsList = diagnostics.ToList();
+        var result = new AutoDeconstructableGenerator().RunIncrementalGenerator(compilation);        
+        var diagnosticsList = result.Diagnostics.ToList();
 
         Assert.Multiple(() =>
         {

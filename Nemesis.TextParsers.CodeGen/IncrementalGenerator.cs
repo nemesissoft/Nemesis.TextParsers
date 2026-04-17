@@ -73,7 +73,10 @@ public abstract class IncrementalGenerator : IIncrementalGenerator
             throw new NotSupportedException("No generated sources");
 
         var generatedSources = result.GeneratedSources
-            .Where(gen => !gen.HintName.Equals($"{attributeNameToRemove}.g.cs"))
+            .Where(gen => 
+                !gen.HintName.Equals($"{attributeNameToRemove}.g.cs") &&
+                !gen.HintName.Equals($"{attributeNameToRemove}.cs")
+            )
             .Select(gen => gen.SourceText.ToString())
             .ToList();
 

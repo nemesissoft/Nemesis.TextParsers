@@ -1,4 +1,9 @@
 ﻿using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 #nullable enable
 
@@ -27,6 +32,9 @@ namespace Nemesis.TextParsers.CodeGen.Deconstructable
 
 
         private static void ReportDiagnostics(GeneratorExecutionContext context, DiagnosticDescriptor rule, ISymbol? symbol) =>
+            context.ReportDiagnostic(Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.Name, symbol?.ContainingNamespace?.ToString()));
+
+        private static void ReportDiagnostics(SourceProductionContext context, DiagnosticDescriptor rule, ISymbol? symbol) =>
             context.ReportDiagnostic(Diagnostic.Create(rule, symbol?.Locations[0] ?? Location.None, symbol?.Name, symbol?.ContainingNamespace?.ToString()));
 
 

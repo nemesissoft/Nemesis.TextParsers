@@ -1,11 +1,19 @@
 ﻿using Nemesis.TextParsers.CodeGen.Utils;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 #nullable enable
 
 namespace Nemesis.TextParsers.CodeGen.Deconstructable;
 
 [Generator]
-public partial class AutoDeconstructableGenerator : ISourceGenerator
+public partial class AutoDeconstructableGenerator : IncrementalGenerator
 {
     internal const string DECONSTRUCT = "Deconstruct";
     internal const string ATTRIBUTE_NAME = @"AutoDeconstructableAttribute";
@@ -16,77 +24,85 @@ namespace Auto
     sealed class " + ATTRIBUTE_NAME + @" : Attribute { }
 }
 ";
-    public void Initialize(GeneratorInitializationContext context) => context.RegisterForSyntaxNotifications(() => new DeconstructableSyntaxReceiver());
 
-    public void Execute(GeneratorExecutionContext context)
+    protected override string GetAttributeName() => ATTRIBUTE_NAME;
+
+    public override void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.CheckDebugger(nameof(AutoDeconstructableGenerator));
+        context.RegisterPostInitializationOutput(ctx => ctx.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8)));
 
-        /*if (!context.Compilation.ReferencedAssemblyNames.Any(ai => ai.Name.Equals("Nemesis.TextParsers", StringComparison.OrdinalIgnoreCase)))
-            context.ReportDiagnostic(); */
+        var typeDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
+                predicate: static (node, _) => node is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0 &&
+                                                   (tds is RecordDeclarationSyntax or StructDeclarationSyntax or ClassDeclarationSyntax),
+                transform: static (ctx, _) => (TypeDeclarationSyntax)ctx.Node)
+            .Collect();
 
-        context.AddSource("AutoDeconstructableAttribute", SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8));
+        var compilationAndTypes = context.CompilationProvider.Combine(typeDeclarations);
 
-        if (context.SyntaxReceiver is not DeconstructableSyntaxReceiver receiver || context.Compilation is not CSharpCompilation cSharpCompilation) return;
-
-        var options = cSharpCompilation.SyntaxTrees[0].Options as CSharpParseOptions;
-        var compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8), options));
-
-        var autoAttributeSymbol = compilation.GetTypeByMetadataName($"Auto.{ATTRIBUTE_NAME}");
-        if (autoAttributeSymbol is null)
+        context.RegisterSourceOutput(compilationAndTypes, (spc, source) =>
         {
-            ReportDiagnostics(context, NoAutoAttributeRule, null);
-            return;
-        }
+            var compilation = source.Left;
+            var types = source.Right;
 
-        /*var allTypes = compilation.References.Select(compilation.GetAssemblyOrModuleSymbol)
-            .OfType<IAssemblySymbol>().Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName("Nemesis.TextParsers.Settings.DeconstructableSettingsAttribute"))
-            .Where(t => t != null).ToList();*/
+            if (types.IsDefaultOrEmpty) return;
 
-        var deconstructableSettingsAttributeSymbol = compilation.GetTypeByMetadataName(DeconstructableSettingsAttributeName);
-        if (deconstructableSettingsAttributeSymbol is null)
-        {
-            ReportDiagnostics(context, NoSettingsAttributeRule, null);
-            return;
-        }
+            var options = compilation.SyntaxTrees.FirstOrDefault()?.Options as CSharpParseOptions ?? CSharpParseOptions.Default;
+            compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ATTRIBUTE_SOURCE, Encoding.UTF8), options));
 
-        foreach (var type in receiver.CandidateTypes)
-        {
-            var model = compilation.GetSemanticModel(type.SyntaxTree);
-
-            if (ShouldProcessType(type, autoAttributeSymbol, deconstructableSettingsAttributeSymbol, model, context, out var deconstructableSettingsAttributeData, out var typeSymbol)
-                && typeSymbol != null)
+            var autoAttributeSymbol = compilation.GetTypeByMetadataName($"Auto.{ATTRIBUTE_NAME}");
+            if (autoAttributeSymbol is null)
             {
-                if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+                ReportDiagnostics(spc, NoAutoAttributeRule, null);
+                return;
+            }
+
+            var deconstructableSettingsAttributeSymbol = compilation.GetTypeByMetadataName(DeconstructableSettingsAttributeName);
+            if (deconstructableSettingsAttributeSymbol is null)
+            {
+                ReportDiagnostics(spc, NoSettingsAttributeRule, null);
+                return;
+            }
+
+            foreach (var type in types)
+            {
+                if (type == null) continue;
+
+                var model = compilation.GetSemanticModel(type.SyntaxTree);
+
+                if (ShouldProcessType(type, autoAttributeSymbol, deconstructableSettingsAttributeSymbol, model, spc, out var deconstructableSettingsAttributeData, out var typeSymbol)
+                    && typeSymbol != null)
                 {
-                    ReportDiagnostics(context, NamespaceAndTypeNamesEqualRule, typeSymbol);
-                    continue;
-                }
+                    if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+                    {
+                        ReportDiagnostics(spc, NamespaceAndTypeNamesEqualRule, typeSymbol);
+                        continue;
+                    }
 
-                var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils", "Nemesis.TextParsers" };
-                if (type.SyntaxTree.GetRoot() is CompilationUnitSyntax compilationUnit)
-                {
-                    var sourceNamespacesWithoutUsing = compilationUnit.Usings.Select(u => u
-                            .WithUsingKeyword(SyntaxFactory.MissingToken(SyntaxKind.UsingKeyword))
-                            .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken))
-                            .ToString())
-                        .ToList();
+                    var namespaces = new HashSet<string> { "System", "Nemesis.TextParsers.Parsers", "Nemesis.TextParsers.Utils", "Nemesis.TextParsers" };
+                    if (type.SyntaxTree.GetRoot() is CompilationUnitSyntax compilationUnit)
+                    {
+                        var sourceNamespacesWithoutUsing = compilationUnit.Usings.Select(u => u
+                                .WithUsingKeyword(SyntaxFactory.MissingToken(SyntaxKind.UsingKeyword))
+                                .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken))
+                                .ToString())
+                            .ToList();
 
-                    foreach (var ns in sourceNamespacesWithoutUsing)
-                        namespaces.Add(ns);
-                }
+                        foreach (var ns in sourceNamespacesWithoutUsing)
+                            namespaces.Add(ns);
+                    }
 
-                if (TryGetMembers(typeSymbol, context, namespaces, out var members) && members != null)
-                {
-                    var settings = GeneratedDeconstructableSettings.FromDeconstructableSettingsAttribute(deconstructableSettingsAttributeData);
+                    if (TryGetMembers(typeSymbol, spc, namespaces, out var members) && members != null)
+                    {
+                        var settings = GeneratedDeconstructableSettings.FromDeconstructableSettingsAttribute(deconstructableSettingsAttributeData);
 
-                    string typeModifiers = GetTypeModifiers(type, typeSymbol);
+                        string typeModifiers = GetTypeModifiers(type, typeSymbol);
 
-                    string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces);
-                    context.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
+                        string classSource = RenderRecord(typeSymbol, typeModifiers, members, settings, namespaces);
+                        spc.AddSource($"{typeSymbol.Name}_AutoDeconstructable.cs", SourceText.From(classSource, Encoding.UTF8));
+                    }
                 }
             }
-        }
+        });
     }
 
     private static string GetTypeModifiers(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol) =>
@@ -99,7 +115,7 @@ namespace Auto
         };
 
     private static bool ShouldProcessType(TypeDeclarationSyntax type, ISymbol autoAttributeSymbol, ISymbol deconstructableSettingsAttributeSymbol,
-        SemanticModel? model, in GeneratorExecutionContext context, out AttributeData? deconstructableSettingsAttributeData, out INamedTypeSymbol? typeSymbol)
+        SemanticModel? model, SourceProductionContext context, out AttributeData? deconstructableSettingsAttributeData, out INamedTypeSymbol? typeSymbol)
     {
         static AttributeData? GetAttribute(ISymbol typeSymbol, ISymbol attributeSymbol) =>
             typeSymbol.GetAttributes().FirstOrDefault(ad =>
@@ -137,7 +153,7 @@ namespace Auto
         return false;
     }
 
-    private static bool TryGetMembers(INamedTypeSymbol typeSymbol, in GeneratorExecutionContext context, ISet<string> namespaces, out IReadOnlyList<(string Name, string Type)>? members)
+    private static bool TryGetMembers(INamedTypeSymbol typeSymbol, SourceProductionContext context, ISet<string> namespaces, out IReadOnlyList<(string Name, string Type)>? members)
     {
         members = default;
 

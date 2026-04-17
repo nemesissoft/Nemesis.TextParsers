@@ -37,23 +37,24 @@ public partial class AutoDeconstructableGenerator
 
         var typeName = typeSymbol.Name;
 
-        source.Append($@"
-namespace {namespaceName}
-{{
-    [Transformer(typeof({typeName}Transformer))]
-    {typeModifiers} {typeName} 
-    {{
-#if DEBUG
-#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-        internal void DebuggerHook() {{ System.Diagnostics.Debugger.Launch(); }}
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
-#endif
-    }}
+        source.Append($$"""
+            namespace {{namespaceName}}
+            {
+                [Transformer(typeof({{typeName}}Transformer))]
+                {{typeModifiers}} {{typeName}} 
+                {
+            #if DEBUG
+            #pragma warning disable CS0108 // Member hides inherited member; missing new keyword
+                    internal void DebuggerHook() { System.Diagnostics.Debugger.Launch(); }
+            #pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+            #endif
+                }
 
-    [System.CodeDom.Compiler.GeneratedCode(""AutoDeconstructableGenerator"", ""{Assembly.GetExecutingAssembly().GetName().Version}"")]
-    [System.Runtime.CompilerServices.CompilerGenerated]
-    sealed class {typeName}Transformer : TransformerBase<{typeName}>
-    {{");
+                [System.CodeDom.Compiler.GeneratedCode("AutoDeconstructableGenerator", "{{Assembly.GetExecutingAssembly().GetName().Version}}")]
+                [System.Runtime.CompilerServices.CompilerGenerated]
+                sealed class {{typeName}}Transformer : TransformerBase<{{typeName}}>
+                {
+            """);
 
         foreach (var (name, type) in members)
             source.Append($@"

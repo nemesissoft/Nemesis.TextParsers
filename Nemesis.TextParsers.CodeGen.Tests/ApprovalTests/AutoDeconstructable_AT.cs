@@ -2,6 +2,7 @@
 using ApprovalTests.Reporters;
 using ApprovalTests.Writers;
 using Nemesis.TextParsers.CodeGen.Deconstructable;
+using Nemesis.TextParsers.CodeGen.Enums;
 using static Nemesis.TextParsers.CodeGen.Tests.CodeGenUtils;
 
 namespace Nemesis.TextParsers.CodeGen.Tests.ApprovalTests;
@@ -29,9 +30,9 @@ internal class AutoDeconstructable_AT
 
         var compilation = CreateValidCompilation(source);
 
-        var generatedTrees = GetGeneratedTreesOnly(compilation, new AutoDeconstructableGenerator(), AutoDeconstructableGenerator.ATTRIBUTE_NAME);
+        var sources = new AutoDeconstructableGenerator().RunIncrementalGeneratorAndGetGeneratedSources(compilation);
 
-        var actual = ScrubGeneratorComments(generatedTrees.Single());
+        var actual = ScrubGeneratorComments(sources.Single());
 
         actual = NormalizeNewLines(actual);
 
