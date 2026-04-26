@@ -244,7 +244,10 @@ public sealed class RegexOptionsTransformer : SimpleTransformer<RegexOptions>
         RegexOptions.ECMAScript,
         RegexOptions.CultureInvariant,
 #if NET7_0_OR_GREATER
-        RegexOptions.NonBacktracking
+        RegexOptions.NonBacktracking,
+#endif
+#if NET11_0_OR_GREATER
+        RegexOptions.AnyNewLine,
 #endif
     ];
 
@@ -279,6 +282,9 @@ public sealed class RegexOptionsTransformer : SimpleTransformer<RegexOptions>
             'v' => RegexOptions.CultureInvariant,
 #if NET7_0_OR_GREATER
             'b' => RegexOptions.NonBacktracking,
+#endif
+#if NET11_0_OR_GREATER
+            'a' => RegexOptions.AnyNewLine,
 #endif
             _ => throw new NotSupportedException($"'{element}' is not supported for parsing RegexOptions")
         };
@@ -320,26 +326,12 @@ public sealed class RegexOptionsTransformer : SimpleTransformer<RegexOptions>
 #if NET7_0_OR_GREATER
             RegexOptions.NonBacktracking => 'b',
 #endif
+#if NET11_0_OR_GREATER
+            RegexOptions.AnyNewLine => 'a',
+#endif
             _ => throw new NotSupportedException($"'{option}' is not supported for formatting RegexOptions")
         };
     }
-
-    /*[Flags]
-    public enum RegexOptions
-    {
-        None                    = 0x0000, // '0'
-        IgnoreCase              = 0x0001, // 'i'
-        Multiline               = 0x0002, // 'm'
-        ExplicitCapture         = 0x0004, // 'n'
-        Compiled                = 0x0008, // 'c'
-        Singleline              = 0x0010, // 's'
-        IgnorePatternWhitespace = 0x0020, // 'x'
-        RightToLeft             = 0x0040, // 'r'
-
-        ECMAScript              = 0x0100, // 'e'
-        CultureInvariant        = 0x0200, // 'v'
-        NonBacktracking         = 0x0400, // 'b'
-    }*/
 }
 
 public sealed class ComplexTransformer : SimpleTransformer<Complex>

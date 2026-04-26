@@ -158,7 +158,11 @@ public sealed class ExploratoryTests
             } while ((options & RegexOptions.ECMAScript) != 0
                      && (options & ~(RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.Multiline |
                                      RegexOptions.Compiled | RegexOptions.CultureInvariant)) != 0);
-#if NET7_0_OR_GREATER
+
+#if NET11_0_OR_GREATER
+            if ((options & RegexOptions.NonBacktracking) != 0)
+                options &= ~(RegexOptions.ECMAScript | RegexOptions.RightToLeft | RegexOptions.AnyNewLine);
+#elif NET7_0_OR_GREATER
             if ((options & RegexOptions.NonBacktracking) != 0)
                 options &= ~(RegexOptions.ECMAScript | RegexOptions.RightToLeft);
 #endif
@@ -168,7 +172,7 @@ public sealed class ExploratoryTests
 
         _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
         _fixture.Register(() => new IPAddress([(byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255)]));
-        
+
 
         _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
         _fixture.Register(() => (Enum1)_randomSource.Next(0, 10));
@@ -394,7 +398,7 @@ static class ExploratoryTestsData
         var typeComparer = Comparer<Type>.Create((t1, t2) =>
             string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
         );
-        
+
         SortedSet<Type> Carve(Predicate<Type> condition)
         {
             var result = new SortedSet<Type>(typeComparer);
