@@ -29,8 +29,11 @@ public sealed class SimpleTransformerHandler : ITransformerHandler, ITestTransfo
         [typeof(UInt128)] = UInt128Transformer.Instance,
 #endif
         [typeof(BigInteger)] = BigIntegerTransformer.Instance,
-#if NET
+#if NET5_0_OR_GREATER
         [typeof(Half)] = HalfTransformer.Instance,
+#endif
+#if NET11_0_OR_GREATER
+        [typeof(BFloat16)] = BFloat16Transformer.Instance,
 #endif
         [typeof(float)] = SingleTransformer.Instance,
         [typeof(double)] = DoubleTransformer.Instance,

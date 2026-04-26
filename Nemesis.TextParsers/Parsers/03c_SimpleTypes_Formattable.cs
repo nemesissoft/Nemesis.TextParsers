@@ -17,7 +17,7 @@ public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer
     protected virtual string FormatString { get; }
 }
 
-#if NET
+#if NET5_0_OR_GREATER
 
 public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
 {
@@ -34,6 +34,27 @@ public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
     public static readonly ITransformer<Half> Instance = new HalfTransformer();
 
     private HalfTransformer() { }
+}
+
+#endif
+
+#if NET11_0_OR_GREATER
+
+public sealed class BFloat16Transformer : SimpleFormattableTransformer<BFloat16>
+{
+    protected override BFloat16 ParseCore(in ReadOnlySpan<char> input) =>
+        input.Length switch
+        {
+            1 when input[0] == '∞' => BFloat16.PositiveInfinity,
+            2 when input[0] == '-' && input[1] == '∞' => BFloat16.NegativeInfinity,
+            _ => BFloat16.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+        };
+
+    protected override string FormatString { get; } = "G17";
+
+    public static readonly ITransformer<BFloat16> Instance = new BFloat16Transformer();
+
+    private BFloat16Transformer() { }
 }
 
 #endif

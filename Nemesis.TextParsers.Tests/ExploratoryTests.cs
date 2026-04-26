@@ -1,10 +1,10 @@
-﻿using System.Collections.ObjectModel;
-using AutoFixture;
+﻿using AutoFixture;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Arch.Infrastructure;
 using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
 using Nemesis.TextParsers.Tests.Utils;
+using System.Collections.ObjectModel;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 
 namespace Nemesis.TextParsers.Tests;
@@ -88,6 +88,13 @@ public sealed class ExploratoryTests
         _fixture.Register(() => _randomSource.NextFloatingNumber());
         _fixture.Register(() => (float)_randomSource.NextFloatingNumber());
         _fixture.Register(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
+#if NET5_0_OR_GREATER
+        _fixture.Register(() => (Half)_randomSource.NextFloatingNumber(10000, true));
+#endif
+#if NET11_0_OR_GREATER
+        _fixture.Register(() => (BFloat16)_randomSource.NextFloatingNumber(10000, true));
+#endif
+
         _fixture.Register(() => new Complex(
             _randomSource.NextFloatingNumber(1000, false),
             _randomSource.NextFloatingNumber(1000, false)
@@ -502,6 +509,12 @@ static class ExploratoryTestsData
         //struct
         typeof(bool), typeof(char),
         typeof(float), typeof(double), typeof(decimal),
+#if NET5_0_OR_GREATER
+        typeof(Half),
+#endif
+#if NET11_0_OR_GREATER
+        typeof(BFloat16),
+#endif
         typeof(byte), typeof(sbyte),
         typeof(short), typeof(ushort),
         typeof(int), typeof(uint),
