@@ -221,5 +221,5 @@ public sealed class ReadOnlyCollectionTransformer<TElement, TCollection> : Custo
         return result;
     }
 
-    public override TCollection GetEmpty() => _listConversion(new List<TElement>());
+    public override TCollection GetEmpty() => _listConversion([]);
 }

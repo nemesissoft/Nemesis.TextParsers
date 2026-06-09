@@ -180,7 +180,7 @@ public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTra
     public override TCollection GetEmpty() =>
         (TCollection)(_kind switch
         {
-            CollectionKind.ReadOnlyCollection => new ReadOnlyCollection<TElement>(new List<TElement>(0)),
+            CollectionKind.ReadOnlyCollection => new ReadOnlyCollection<TElement>([]),
             CollectionKind.HashSet => new HashSet<TElement>(),
             CollectionKind.SortedSet => new SortedSet<TElement>(),
             CollectionKind.LinkedList => new LinkedList<TElement>(),
@@ -190,7 +190,7 @@ public sealed class CollectionTransformer<TElement, TCollection> : EnumerableTra
             CollectionKind.ReadOnlyObservableCollection => new ReadOnlyObservableCollection<TElement>([]),
             CollectionKind.Unknown => throw new NotSupportedException($"Collection kind {_kind} is not supported for empty element query"),
             //CollectionKind.List
-            _ => (IEnumerable<TElement>)new List<TElement>(0),
+            _ => (IEnumerable<TElement>)[],
         });
 
 

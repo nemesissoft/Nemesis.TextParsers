@@ -243,7 +243,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
             if (cp.Length == 0 || dp.Length != cp.Length + 1 ||
                 !dp[0].ParameterType.IsAssignableFrom(typeof(TDeconstructable)) ||
-                !IsCompatible(dp.Skip(1).ToList(), cp)
+                !IsCompatible([.. dp.Skip(1)], cp)
             )
                 throw new NotSupportedException(
                     $"Static {DECONSTRUCT} method has to be compatible with provided constructor and should have one additional parameter in the beginning - deconstructable instance");
@@ -293,11 +293,11 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
 
     private static Type FlattenRef(Type type) => type.IsByRef ? type.GetElementType() : type;
 
-    private static bool IsCompatible(IReadOnlyList<ParameterInfo> left, IReadOnlyList<ParameterInfo> right)
+    private static bool IsCompatible(ParameterInfo[] left, ParameterInfo[] right)
     {
         bool AreEqualByParamTypes()
         {
-            for (var i = 0; i < left.Count; i++)
+            for (var i = 0; i < left.Length; i++)
                 if (FlattenRef(left[i].ParameterType)
                     !=
                     FlattenRef(right[i].ParameterType)
@@ -306,7 +306,7 @@ Constructed by {(Ctor == null ? "<default>" : $"new {Ctor.DeclaringType.GetFrien
             return true;
         }
 
-        return left != null && right != null && left.Count == right.Count && AreEqualByParamTypes();
+        return left != null && right != null && left.Length == right.Length && AreEqualByParamTypes();
     }
 }
 
@@ -520,7 +520,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
     }
 
 
-    private static void CreateFormatterData(MethodBase deconstruct, out int arity,
+    private static void CreateFormatterData(MethodInfo deconstruct, out int arity,
         out ParameterExpression element, out ParameterExpression accumulator,
         out ParameterExpression helper, out ParameterExpression transformers,
         out IReadOnlyList<ParameterExpression> temps,
@@ -540,7 +540,7 @@ internal sealed class DeconstructionTransformer<TDeconstructable> : TransformerB
         transformers = Expression.Parameter(typeof(ITransformer[]), "transformers");
 
 
-        temps = @params.Select((p, i) => Expression.Variable(FlattenRef(p.ParameterType), $"temp{i + 1}")).ToList();
+        temps = [.. @params.Select((p, i) => Expression.Variable(FlattenRef(p.ParameterType), $"temp{i + 1}"))];
 
 
 
