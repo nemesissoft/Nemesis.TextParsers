@@ -19,17 +19,18 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
     where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
 #if NET7_0_OR_GREATER
     , IBinaryInteger<TUnderlying>
-#endif    
+#endif
 {
-    private static readonly NumberTransformer<TUnderlying> _numberHandler = NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
+    private static readonly NumberTransformer<TUnderlying> _numberHandler =
+        NumberTransformerCache.Instance.GetNumberHandler<TUnderlying>();
 
     private static readonly ITransformer<TEnum> _sut = TextTransformer.Default.GetTransformer<TEnum>();
 
     private static readonly EnumMeta _meta = EnumMeta.GetEnumMeta();
 
-    readonly record struct EnumValue(TUnderlying Number, TEnum Enum, string Text);
+    private readonly record struct EnumValue(TUnderlying Number, TEnum Enum, string Text);
 
-    readonly record struct EnumMeta(
+    private readonly record struct EnumMeta(
         Type TransformerType,
         bool CaseInsensitive,
         bool AllowParsingNumerics,
@@ -40,20 +41,23 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
         {
             Type enumType = typeof(TEnum);
 
-            var transformerAttr = enumType.GetCustomAttribute<TransformerAttribute>() ?? throw new NotSupportedException("No TransformerAttribute present");
-            var codeGenOptionsAttr = enumType.GetCustomAttribute<Auto.AutoEnumTransformerAttribute>() ?? throw new NotSupportedException("No CodeGenOptionsAttribute present");
+            var transformerAttr = enumType.GetCustomAttribute<TransformerAttribute>() ??
+                                  throw new NotSupportedException("No TransformerAttribute present");
+            var codeGenOptionsAttr = enumType.GetCustomAttribute<Auto.AutoEnumTransformerAttribute>() ??
+                                     throw new NotSupportedException("No CodeGenOptionsAttribute present");
             var hasFlags = enumType.IsDefined(typeof(FlagsAttribute), false);
 
             return new(
-               transformerAttr.TransformerType,
-               codeGenOptionsAttr.CaseInsensitive,
-               codeGenOptionsAttr.AllowParsingNumerics,
-               hasFlags,
-               Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().Select(FromNumber).ToList().AsReadOnly()
+                transformerAttr.TransformerType,
+                codeGenOptionsAttr.CaseInsensitive,
+                codeGenOptionsAttr.AllowParsingNumerics,
+                hasFlags,
+                Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().Select(FromNumber).ToList().AsReadOnly()
             );
         }
 
-        private static EnumValue FromNumber(TUnderlying number) => new(number, ToEnum(number), ToEnum(number).ToString("G"));
+        private static EnumValue FromNumber(TUnderlying number) =>
+            new(number, ToEnum(number), ToEnum(number).ToString("G"));
 
         public IReadOnlyList<EnumValue> GetValidValues()
         {
@@ -93,7 +97,7 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
                 var values = DefinedValues.Select(v => v.Number).ToList();
 
                 TUnderlying min = values.Count == 0 ? zero : values.Min(),
-                            max = values.Count == 0 ? zero : values.Max();
+                    max = values.Count == 0 ? zero : values.Max();
 
                 int iMin = 10, iMax = 10;
                 while (iMin-- > 0)
@@ -125,7 +129,7 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
             return result.AsReadOnly();
         }
 
-        public static string RandomizeCase(Random rand, string text)
+        private static string RandomizeCase(Random rand, string text)
         {
             var chars = text.ToCharArray();
 
@@ -166,19 +170,18 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
         });
     }
 
+    private static IEnumerable<TCD> EmptySourceData() => [new(default(string)), new(""), new(" ")];
 
-    [TestCase(default(string))]
-    [TestCase("")]
-    [TestCase(" ")]
+    [TestCaseSource(nameof(EmptySourceData))]
     public void EmptySource_ShouldReturnDefaultValue(string input)
     {
         var actual = _sut.Parse(input.AsSpan());
         var defaultValue = EnumMeta.ToEnum(_numberHandler.Zero);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(actual, Is.EqualTo(defaultValue));
             Assert.That((TUnderlying)(object)actual, Is.EqualTo(_numberHandler.Zero));
-        });
+        }
     }
 
     [Test]
@@ -202,6 +205,7 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
             if (!pass)
                 failed.Add($"✖ '{actual}' != '{native}', '{enumValue}', '{cast}', {number}, {number:D}, 0x{number:X}");
         }
+
         Assert.That(failed, Is.Empty, GetFailedMessageBuilder(failed));
     }
 
@@ -215,7 +219,8 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
             var native = enumValue.ToString("G");
 
             static bool IsEqual(string left, string right) =>
-                string.Equals(left, right, _meta.CaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                string.Equals(left, right,
+                    _meta.CaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
             bool pass = string.Equals(actual, native, StringComparison.Ordinal) &&
                         IsEqual(actual, text) &&
@@ -251,9 +256,9 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
                 {
                     Assert.That(() => _sut.Parse(num),
                         Throws.TypeOf<FormatException>().And
-                        .Message.Contain($"cannot be parsed from '{num.ToString(cult)}'").And
-                        .Message.Contain($"or number within {typeof(TUnderlying).GetFriendlyName()} range")
-                   );
+                            .Message.Contain($"cannot be parsed from '{num.ToString(cult)}'").And
+                            .Message.Contain($"or number within {typeof(TUnderlying).GetFriendlyName()} range")
+                    );
                 }
             });
         }
@@ -261,8 +266,8 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
         {
             Assert.That(() => _sut.Parse("69"),
                 Throws.TypeOf<FormatException>().And
-                .Message.Contain($"cannot be parsed from '69'").And
-                .Message.Not.Contain($"or number within {typeof(TUnderlying).GetFriendlyName()} range")
+                    .Message.Contain($"cannot be parsed from '69'").And
+                    .Message.Not.Contain($"or number within {typeof(TUnderlying).GetFriendlyName()} range")
             );
         }
     }
@@ -283,18 +288,18 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
                 foreach (var text in definedValuesTexts)
                 {
                     if (definedValuesTexts.Any(v =>
-                        string.Equals(v, text, StringComparison.Ordinal) == false &&
-                        string.Equals(v, text, StringComparison.OrdinalIgnoreCase)
-                    ))
+                            string.Equals(v, text, StringComparison.Ordinal) == false &&
+                            string.Equals(v, text, StringComparison.OrdinalIgnoreCase)
+                        ))
                         continue;
 
                     var flippedCase = FlipCase(text);
 
                     Assert.That(() => _sut.Parse(flippedCase),
                         Throws.TypeOf<FormatException>().And
-                        .Message.Contain($"cannot be parsed from '{flippedCase}'"),
+                            .Message.Contain($"cannot be parsed from '{flippedCase}'"),
                         () => $"Case '{text}' => '{flippedCase}'"
-                   );
+                    );
                 }
             });
 
@@ -326,11 +331,10 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
                 {
                     Assert.That(() => _sut.Parse(input),
                         Throws.TypeOf<FormatException>().And
-                        .Message.Contain($"cannot be parsed from '{input}'")
-                   );
+                            .Message.Contain($"cannot be parsed from '{input}'")
+                    );
                 }
             });
         }
     }
 }
-
