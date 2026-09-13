@@ -270,7 +270,7 @@ internal class CollectionTestData
             ],
             @"(3.14:15:09,3,3.1400001,Pi,3.14)|(31.14:15:09,3,3.1400001,Pi,\∅)|(-10675199.02:48:05.4775808,3,3.1400001,Pi,\∅)|(00:00:00,0,0,,0)|(00:00:00,0,0,\∅,\∅)|(00:00:00,0,0,\∅,\∅)|∅|"),
     ]
-        ).Select((t, i) => t.SetName($"{i + 1:00}_{nameof(ListCompoundData)}_{t.TypeArgs?[0].GetFriendlyName()}"));
+        );
 
     private static ReadOnlyCollection<TNumber> GetTestNumbers<TNumber>(TNumber from, TNumber to, TNumber increment, Func<TNumber, TNumber, TNumber> addFunc)
         where TNumber : struct, IComparable, IComparable<TNumber>, IEquatable<TNumber>, IFormattable
