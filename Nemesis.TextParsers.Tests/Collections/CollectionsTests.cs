@@ -2,17 +2,26 @@
 using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Tests.Utils;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
-
+using T_bool = NUnit.Framework.TestCaseData<bool, string, System.Type>;
+using T_byte = NUnit.Framework.TestCaseData<byte, string, System.Type>;
+using T_sbyte = NUnit.Framework.TestCaseData<sbyte, string, System.Type>;
+using T_short = NUnit.Framework.TestCaseData<short, string, System.Type>;
+using T_ushort = NUnit.Framework.TestCaseData<ushort, string, System.Type>;
+using T_int = NUnit.Framework.TestCaseData<int, string, System.Type>;
+using T_uint = NUnit.Framework.TestCaseData<uint, string, System.Type>;
+using T_long = NUnit.Framework.TestCaseData<long, string, System.Type>;
+using T_ulong = NUnit.Framework.TestCaseData<ulong, string, System.Type>;
+using T_float = NUnit.Framework.TestCaseData<float, string, System.Type>;
 
 namespace Nemesis.TextParsers.Tests.Collections
 {
     [TestFixture]
     public class CollectionsTests
     {
-        private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
         private static readonly ITransformerStore _store = Sut.DefaultStore;
 
         private const string NULL_PLACEHOLDER = "维基百科";
+
         private static string NormalizeNullMarkers(string text) =>
             text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
 
@@ -29,7 +38,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             (@"|BBB\|", ["", "BBB|"]),
             (@"\|BBB|", ["|BBB", ""]),
             (@"|∅||∅", ["", null, "", null]),
-            (@"∅", [(string)null]),
+            (@"∅", [null]),
             (@"B|∅|A|∅", ["B", null, "A", null]),
             ("|||", ["", "", "", ""]),
             (@"|\||", ["", "|", ""]),
@@ -116,6 +125,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         }
 
         #region Negative tests
+
         //unfinished escaping sequence
         [TestCase("01", @"\", "Unfinished escaping sequence detected at the end of input")]
         [TestCase("02", @"\\\", "Unfinished escaping sequence detected at the end of input")]
@@ -129,111 +139,110 @@ namespace Nemesis.TextParsers.Tests.Collections
         [TestCase("09", @"\AAA|BB\\\B", "Illegal escape sequence found in input: 'A'")]
         [TestCase("10", @"\r", "Illegal escape sequence found in input: 'r'")]
         [TestCase("11", @"\xAAA|BBB\n", "Illegal escape sequence found in input: 'x'")]
+
         #endregion
+
         public void List_Parse_NegativeTest(string _, string input, string expectedMessagePart) =>
             Assert.That(() => _store.GetTransformer<IList<string>>().Parse(input),
                 Throws.ArgumentException.And.Message.Contains(expectedMessagePart));
 
 
-        private static (Type elementType, string input, Type expectedException)[] Bad_ListParseData() =>
-        [
-            (typeof(IList<>), "A|B|C", typeof(InvalidOperationException)),
-            (typeof(bool), "falsee", typeof(FormatException)),
-            (typeof(bool), "yes", typeof(FormatException)),
-            (typeof(bool), "no", typeof(FormatException)),
-            (typeof(bool), "0", typeof(FormatException)),
+        private static readonly Type
+            _format = typeof(FormatException),
+            _overflow = typeof(OverflowException);
+
+        private static IEnumerable<TCD> Parse_ShouldFail_Data() =>
+        ((IEnumerable<TCD>)[
+            new T_int(0, "A|B|C", _format),
+
+            new T_bool(false, "falsee", _format),
+            new T_bool(false, "yes", _format),
+            new T_bool(false, "no", _format),
+            new T_bool(false, "0", _format),
+
+            new T_byte(0, "abc", _format),
+            new T_byte(0, "17| ", _format),
+            new T_byte(0, "17abc", _format),
+
+            new T_sbyte(0, "abc", _format),
+            new T_sbyte(0, "17| ", _format),
+            new T_sbyte(0, "17abc", _format),
+
+            new T_short(0, "abc", _format),
+            new T_short(0, "17| ", _format),
+            new T_short(0, "17abc", _format),
+
+            new T_ushort(0, "abc", _format),
+            new T_ushort(0, "17| ", _format),
+            new T_ushort(0, "17abc", _format),
+
+            new T_int(0, "abc", _format),
+            new T_int(0, "17| ", _format),
+            new T_int(0, "17abc", _format),
+
+            new T_uint(0, "abc", _format),
+            new T_uint(0, "17| ", _format),
+            new T_uint(0, "17abc", _format),
+
+            new T_long(0, "abc", _format),
+            new T_long(0, "17| ", _format),
+            new T_long(0, "17abc", _format),
+
+            new T_ulong(0, "abc", _format),
+            new T_ulong(0, "17| ", _format),
+            new T_ulong(0, "17abc", _format),
+
+            new T_float(0, "abc", _format),
+            new T_float(0, "17| ", _format),
+            new T_float(0, "17abc", _format),
 
 
-            (typeof(byte), "abc", typeof(FormatException)),
-            (typeof(byte), "17| ", typeof(FormatException)),
-            (typeof(byte), "17abc", typeof(FormatException)),
+            new T_byte(0, "-1|0", _overflow),
+            new T_byte(0, "255|256", _overflow),
 
-            (typeof(sbyte), "abc", typeof(FormatException)),
-            (typeof(sbyte), "17| ", typeof(FormatException)),
-            (typeof(sbyte), "17abc", typeof(FormatException)),
+            new T_sbyte(0, "-129|-128", _overflow),
+            new T_sbyte(0, "127|128", _overflow),
 
-            (typeof(short), "abc", typeof(FormatException)),
-            (typeof(short), "17| ", typeof(FormatException)),
-            (typeof(short), "17abc", typeof(FormatException)),
+            new T_short(0, "-32769|-32768", _overflow),
+            new T_short(0, "32767|32768", _overflow),
 
-            (typeof(ushort), "abc", typeof(FormatException)),
-            (typeof(ushort), "17| ", typeof(FormatException)),
-            (typeof(ushort), "17abc", typeof(FormatException)),
+            new T_ushort(0, "-1|0", _overflow),
+            new T_ushort(0, "65535|65536|65537", _overflow),
 
-            (typeof(int), "abc", typeof(FormatException)),
-            (typeof(int), "17| ", typeof(FormatException)),
-            (typeof(int), "17abc", typeof(FormatException)),
+            new T_int(0, "-2147483649|-2147483648", _overflow),
+            new T_int(0, "2147483647|2147483648", _overflow),
 
-            (typeof(uint), "abc", typeof(FormatException)),
-            (typeof(uint), "17| ", typeof(FormatException)),
-            (typeof(uint), "17abc", typeof(FormatException)),
+            new T_uint(0, "-1|0", _overflow),
+            new T_uint(0, "4294967295|4294967296", _overflow),
 
-            (typeof(long), "abc", typeof(FormatException)),
-            (typeof(long), "17| ", typeof(FormatException)),
-            (typeof(long), "17abc", typeof(FormatException)),
+            new T_long(0, "-9223372036854775809|-9223372036854775808", _overflow),
+            new T_long(0, "9223372036854775807|9223372036854775808", _overflow),
 
-            (typeof(ulong), "abc", typeof(FormatException)),
-            (typeof(ulong), "17| ", typeof(FormatException)),
-            (typeof(ulong), "17abc", typeof(FormatException)),
-
-            (typeof(float), "abc", typeof(FormatException)),
-            (typeof(float), "17| ", typeof(FormatException)),
-            (typeof(float), "17abc", typeof(FormatException)),
-
-
-            (typeof(byte), "-1|0", typeof(OverflowException)),
-            (typeof(byte), "255|256", typeof(OverflowException)),
-
-            (typeof(sbyte), "-129|-128", typeof(OverflowException)),
-            (typeof(sbyte), "127|128", typeof(OverflowException)),
-
-            (typeof(short), "-32769|-32768", typeof(OverflowException)),
-            (typeof(short), "32767|32768", typeof(OverflowException)),
-
-            (typeof(ushort), "-1|0", typeof(OverflowException)),
-            (typeof(ushort), "65535|65536|65537", typeof(OverflowException)),
-
-            (typeof(int), "-2147483649|-2147483648", typeof(OverflowException)),
-            (typeof(int), "2147483647|2147483648", typeof(OverflowException)),
-
-            (typeof(uint), "-1|0", typeof(OverflowException)),
-            (typeof(uint), "4294967295|4294967296", typeof(OverflowException)),
-
-            (typeof(long), "-9223372036854775809|-9223372036854775808", typeof(OverflowException)),
-            (typeof(long), "9223372036854775807|9223372036854775808", typeof(OverflowException)),
-
-            (typeof(ulong), "-1|0", typeof(OverflowException)),
-            (typeof(ulong), "18446744073709551615|18446744073709551616", typeof(OverflowException)),
+            new T_ulong(0, "-1|0", _overflow),
+            new T_ulong(0, "18446744073709551615|18446744073709551616", _overflow),
 
 #if !NETCOREAPP3_1_OR_GREATER //core 3.1 removed overflow errors for float to be consistent with IEEE
-            (typeof(float), "-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", typeof(OverflowException)),
-            (typeof(float), " 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
+            new T_float(0, "-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", _overflow),
+            new T_float(0, " 340282347000000000000000000000000000000|340283347000000000000000000000000000000", _overflow),
 #endif
-        ];
-        private static IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) =>
-            _store.GetTransformer<IReadOnlyCollection<TElement>>().Parse(text);
+        ]).Select((t, i) => t.SetName($"{i+1:00}_{nameof(Parse_ShouldFail)}_{t.TypeArgs?[0].Name}"));
 
-        [TestCaseSource(nameof(Bad_ListParseData))]
-        public void List_Parse_NegativeCompoundTests((Type elementType, string input, Type expectedException) data)
+        [TestCaseSource(nameof(Parse_ShouldFail_Data))]
+        public void Parse_ShouldFail<TElement, TInput, TException>(TElement elementType, TInput inputGeneric,
+            TException expectedExceptionGeneric)
         {
-            var parseMethod = (GetType().GetMethods(ALL_FLAGS).SingleOrDefault(mi =>
-                  mi.Name == nameof(ParseCollection))
-                  ?? throw new MissingMethodException("Method ParseList does not exist"))
-                .MakeGenericMethod(data.elementType);
+            var input = inputGeneric as string;
+            var expectedException = expectedExceptionGeneric as Type;
 
-            bool passed = false;
-            IEnumerable parsed = null;
-            try
+            using (Assert.EnterMultipleScope())
             {
-                parsed = (IEnumerable)parseMethod.Invoke(this, [data.input]);
-                passed = true;
+                Assert.That(input, Is.Not.Null);
+                Assert.That(expectedException, Is.Not.Null);
             }
-            catch (Exception e)
-            {
-                AssertException(e, data.expectedException, null);
-            }
-            if (passed)
-                Assert.Fail($"'{data.input}' should not be parseable to:{Environment.NewLine} {string.Join(Environment.NewLine, parsed?.Cast<object>().Select(r => $"'{r}'") ?? [])}");
+
+            var sut = _store.GetTransformer<IReadOnlyCollection<TElement>>();
+
+            Assert.Throws(expectedException, () => sut.Parse(input));
         }
 
         [TestCaseSource(typeof(CollectionTestData), nameof(CollectionTestData.ListCompoundData))]
@@ -334,7 +343,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             new("09", new List<string>[]
             {
                 [],
-                ["1","2","3"],
+                ["1", "2", "3"],
                 [],
             }, @"[|[1\|2\|3]|]"),
             new("10", Array.Empty<List<string>>(), ""),

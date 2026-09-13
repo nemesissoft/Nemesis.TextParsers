@@ -234,20 +234,20 @@ internal class CollectionTestData
             @"A=10.5\|11.5\|12.5\|13.5;B=100.5\|101.5\|102.5\|103.5|D=20.5\|21.5\|22.5\|23.5;E=200.5\|201.5\|202.5\|203.5|G=30.5\|31.5\|32.5\|33.5;H=300.5\|301.5\|302.5\|303.5"),
 
         (typeof(KeyValuePair<string, float?>),
-            new[]
+            new KeyValuePair<string, float?>[]
             {
-                new KeyValuePair<string, float?>("PI", 3.14f),
-                new KeyValuePair<string, float?>("PI", null),
-                new KeyValuePair<string, float?>("", 3.14f),
-                new KeyValuePair<string, float?>(null, 3.14f),
+                new("PI", 3.14f),
+                new("PI", null),
+                new("", 3.14f),
+                new(null, 3.14f),
 
-                new KeyValuePair<string, float?>("", null),
-                new KeyValuePair<string, float?>(null, null),
-                new KeyValuePair<string, float?>("", null),
+                new("", null),
+                new(null, null),
+                new("", null),
 
                 default,
-                new KeyValuePair<string, float?>("", null),
-                new KeyValuePair<string, float?>("", 0),
+                new("", null),
+                new("", 0),
                 default
             }.ToList(),
             @"PI=3.14|PI=∅|=3.14|∅=3.14||∅=∅||∅=∅|=∅|=0|∅"),

@@ -9,7 +9,7 @@ internal static partial class TestHelper
 {
     public static string AssertException(Exception actual, Type expectedException, string expectedErrorMessagePart, bool logMessage = false)
     {
-        if (actual is TargetInvocationException tie && tie.InnerException is { } inner)
+        if (actual is TargetInvocationException { InnerException: { } inner })
             actual = inner;
 
         Assert.That(actual, Is.TypeOf(expectedException), () => $@"Unexpected external exception: {actual}");
