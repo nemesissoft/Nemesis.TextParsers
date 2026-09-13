@@ -9,8 +9,6 @@ internal class CollectionTestData
 {
     public static IEnumerable<(Type elementType, IEnumerable expectedOutput, string input)> ListCompoundData() =>
     [
-        //(typeof(int), new List<int>(), @""), (typeof(string), new List<string>(), @""),
-
         (typeof(byte), GetTestNumbers<byte>(byte.MinValue, byte.MaxValue-1, 1, (n1, n2) => (byte)(n1+n2)),
             @"∅|  1 | 2 |3 | 4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89|90|91|92|93|94|95|96|97|98|99|100|101|102|103|104|105|106|107|108|109|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|128|129|130|131|132|133|134|135|136|137|138|139|140|141|142|143|144|145|146|147|148|149|150|151|152|153|154|155|156|157|158|159|160|161|162|163|164|165|166|167|168|169|170|171|172|173|174|175|176|177|178|179|180|181|182|183|184|185|186|187|188|189|190|191|192|193|194|195|196|197|198|199|200|201|202|203|204|205|206|207|208|209|210|211|212|213|214|215|216|217|218|219|220|221|222|223|224|225|226|227|228|229|230|231|232|233|234|235|236|237|238|239|240|241|242|243|244|245|246|247|248|249|250|251|252|253|254" ),
 
@@ -54,7 +52,7 @@ internal class CollectionTestData
 
         (typeof(Half), GetTestNumbers(1, 0b11_1111_1111, 100, (n1, n2) => n1+n2).Select(i=>
             {
-                ushort variable = (ushort)i;
+                var variable = (ushort)i;
                 return Unsafe.As<ushort, Half>(ref variable);
             }
         ).ToList(),
@@ -62,9 +60,9 @@ internal class CollectionTestData
 #endif
 
 #if NET11_0_OR_GREATER
-        (typeof(BFloat16), GetTestNumbers(BFloat16.MinValue, BFloat16.MaxValue,
-                (float)Half.MaxValue / 10, (n1, n2) => n1 + n2).Select(f => (Half)f).ToList(),
-            @"123"),
+        (typeof(BFloat16), 
+            (List<BFloat16>)[BFloat16.NegativeInfinity, .. GetTestNumbers(BFloat16.MinValue, BFloat16.MaxValue, BFloat16.MaxValue / (BFloat16)10.0f, (n1, n2) => n1 + n2), BFloat16.PositiveInfinity],
+            @"-∞|-3.3895313892515355E+38|-3.0572243903053065E+38|-2.7116251114012284E+38|-2.3660258324971503E+38|-2.0204265535930721E+38|-1.6814734146679186E+38|-1.342520275742765E+38|-1.0035671368176115E+38|-6.6461399789245794E+37|-3.2566085896730439E+37|1.3292279957849159E+36|3.5224541888300271E+37|6.9119855780815625E+37|1.0301516967333098E+38|1.3691048356584633E+38|1.7014118346046923E+38|2.0470111135087704E+38|2.3926103924128486E+38|2.7382096713169267E+38|3.0838089502210048E+38|∞"),
 #endif
  
         (typeof(float), GetTestNumbers(float.MinValue+float.MaxValue/10, float.MaxValue-float.MaxValue/10, float.MaxValue/10, (n1, n2) => n1+n2),
@@ -306,12 +304,11 @@ internal class CollectionTestData
         var div = transformer.FromInt64(divisor);
         var inc = transformer.Div(max, div);
 
-        var from = min;
         var result = new List<TNumber>();
         var to = transformer.Sub(
                     max,
                     transformer.Div(max, div));
-        for (var i = from; i.CompareTo(to) <= 0; i = transformer.Add(i, inc))
+        for (var i = min; i.CompareTo(to) <= 0; i = transformer.Add(i, inc))
             result.Add(i);
 
         return result.AsReadOnly();

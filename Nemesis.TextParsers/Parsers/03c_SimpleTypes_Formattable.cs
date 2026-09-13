@@ -5,35 +5,34 @@ namespace Nemesis.TextParsers.Parsers;
 file static class Culture
 {
     internal static CultureInfo InvCult => CultureInfo.InvariantCulture;
-    internal static NumberFormatInfo InvInfo => NumberFormatInfo.InvariantInfo;
 }
 
 public abstract class SimpleFormattableTransformer<TElement> : SimpleTransformer<TElement>
     where TElement : struct, IFormattable
 {
-    public sealed override string Format(TElement element) =>
-    element.ToString(FormatString, Culture.InvCult);
+    public sealed override string Format(TElement element) => element.ToString(FormatString, Culture.InvCult);
 
-    protected virtual string FormatString { get; }
+    protected virtual string FormatString => null;
 }
 
 #if NET5_0_OR_GREATER
 
 public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
 {
-    protected override Half ParseCore(in ReadOnlySpan<char> input) =>
-        input.Length switch
-        {
-            1 when input[0] == '∞' => Half.PositiveInfinity,
-            2 when input[0] == '-' && input[1] == '∞' => Half.NegativeInfinity,
-            _ => Half.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
-        };
+    protected override Half ParseCore(in ReadOnlySpan<char> input) => input switch
+    {
+        "∞" => Half.PositiveInfinity,
+        "-∞" => Half.NegativeInfinity,
+        _ => Half.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+    };
 
-    protected override string FormatString { get; } = "G17";
+    protected override string FormatString => "G17";
 
     public static readonly ITransformer<Half> Instance = new HalfTransformer();
 
-    private HalfTransformer() { }
+    private HalfTransformer()
+    {
+    }
 }
 
 #endif
@@ -42,67 +41,70 @@ public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
 
 public sealed class BFloat16Transformer : SimpleFormattableTransformer<BFloat16>
 {
-    protected override BFloat16 ParseCore(in ReadOnlySpan<char> input) =>
-        input.Length switch
-        {
-            1 when input[0] == '∞' => BFloat16.PositiveInfinity,
-            2 when input[0] == '-' && input[1] == '∞' => BFloat16.NegativeInfinity,
-            _ => BFloat16.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
-        };
+    protected override BFloat16 ParseCore(in ReadOnlySpan<char> input) => input switch
+    {
+        "∞" => BFloat16.PositiveInfinity,
+        "-∞" => BFloat16.NegativeInfinity,
+        _ => BFloat16.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+    };
 
-    protected override string FormatString { get; } = "G17";
+    protected override string FormatString => "R";
 
     public static readonly ITransformer<BFloat16> Instance = new BFloat16Transformer();
 
-    private BFloat16Transformer() { }
+    private BFloat16Transformer()
+    {
+    }
 }
 
 #endif
 
 public sealed class SingleTransformer : SimpleFormattableTransformer<float>
 {
-    protected override float ParseCore(in ReadOnlySpan<char> input) =>
-        input.Length switch
-        {
-            1 when input[0] == '∞' => float.PositiveInfinity,
-            2 when input[0] == '-' && input[1] == '∞' => float.NegativeInfinity,
-            _ => float.Parse(
+    protected override float ParseCore(in ReadOnlySpan<char> input) => input switch
+    {
+        "∞" => float.PositiveInfinity,
+        "-∞" => float.NegativeInfinity,
+        _ => float.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
 #else
-                input
+            input
 #endif
-                , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
-        };
+            , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+    };
 
-    protected override string FormatString { get; } = "R";
+    protected override string FormatString => "R";
 
     public static readonly ITransformer<float> Instance = new SingleTransformer();
 
-    private SingleTransformer() { }
+    private SingleTransformer()
+    {
+    }
 }
 
 public sealed class DoubleTransformer : SimpleFormattableTransformer<double>
 {
-    protected override double ParseCore(in ReadOnlySpan<char> input) =>
-        input.Length switch
-        {
-            1 when input[0] == '∞' => double.PositiveInfinity,
-            2 when input[0] == '-' && input[1] == '∞' => double.NegativeInfinity,
-            _ => double.Parse(
+    protected override double ParseCore(in ReadOnlySpan<char> input) => input switch
+    {
+        "∞" => double.PositiveInfinity,
+        "-∞" => double.NegativeInfinity,
+        _ => double.Parse(
 #if NETSTANDARD2_0 || NETFRAMEWORK
                 input.ToString()
 #else
-                input
+            input
 #endif
-                , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
-        };
+            , NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+    };
 
-    protected override string FormatString { get; } = "R";
+    protected override string FormatString => "R";
 
     public static readonly ITransformer<double> Instance = new DoubleTransformer();
 
-    private DoubleTransformer() { }
+    private DoubleTransformer()
+    {
+    }
 }
 
 public sealed class DecimalTransformer : SimpleFormattableTransformer<decimal>
@@ -118,7 +120,9 @@ public sealed class DecimalTransformer : SimpleFormattableTransformer<decimal>
 
     public static readonly ITransformer<decimal> Instance = new DecimalTransformer();
 
-    private DecimalTransformer() { }
+    private DecimalTransformer()
+    {
+    }
 }
 
 public sealed class TimeSpanTransformer : SimpleFormattableTransformer<TimeSpan>
@@ -135,7 +139,9 @@ public sealed class TimeSpanTransformer : SimpleFormattableTransformer<TimeSpan>
 
     public static readonly ITransformer<TimeSpan> Instance = new TimeSpanTransformer();
 
-    private TimeSpanTransformer() { }
+    private TimeSpanTransformer()
+    {
+    }
 }
 
 public sealed class DateTimeTransformer : SimpleFormattableTransformer<DateTime>
@@ -149,11 +155,13 @@ public sealed class DateTimeTransformer : SimpleFormattableTransformer<DateTime>
 #endif
             , Culture.InvCult, DateTimeStyles.RoundtripKind);
 
-    protected override string FormatString { get; } = "o";
+    protected override string FormatString => "o";
 
     public static readonly ITransformer<DateTime> Instance = new DateTimeTransformer();
 
-    private DateTimeTransformer() { }
+    private DateTimeTransformer()
+    {
+    }
 }
 
 public sealed class DateTimeOffsetTransformer : SimpleFormattableTransformer<DateTimeOffset>
@@ -167,11 +175,13 @@ public sealed class DateTimeOffsetTransformer : SimpleFormattableTransformer<Dat
 #endif
             , Culture.InvCult, DateTimeStyles.RoundtripKind);
 
-    protected override string FormatString { get; } = "o";
+    protected override string FormatString => "o";
 
     public static readonly ITransformer<DateTimeOffset> Instance = new DateTimeOffsetTransformer();
 
-    private DateTimeOffsetTransformer() { }
+    private DateTimeOffsetTransformer()
+    {
+    }
 }
 
 public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
@@ -182,14 +192,16 @@ public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
 #else
         input
 #endif
-        );
+    );
 
-    protected override string FormatString { get; } = "D";
+    protected override string FormatString => "D";
 
 
     public static readonly ITransformer<Guid> Instance = new GuidTransformer();
 
-    private GuidTransformer() { }
+    private GuidTransformer()
+    {
+    }
 }
 
 #if NET6_0_OR_GREATER
@@ -197,25 +209,33 @@ public sealed class GuidTransformer : SimpleFormattableTransformer<Guid>
 public sealed class DateOnlyTransformer : SimpleFormattableTransformer<DateOnly>
 {
     protected override DateOnly ParseCore(in ReadOnlySpan<char> input) =>
-        DateOnly.Parse(input, Culture.InvCult, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowInnerWhite);
+        DateOnly.Parse(input, Culture.InvCult,
+            DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite | DateTimeStyles.AllowLeadingWhite |
+            DateTimeStyles.AllowInnerWhite);
 
-    protected override string FormatString { get; } = "o";
+    protected override string FormatString => "o";
 
     public static readonly ITransformer<DateOnly> Instance = new DateOnlyTransformer();
 
-    private DateOnlyTransformer() { }
+    private DateOnlyTransformer()
+    {
+    }
 }
 
 public sealed class TimeOnlyTransformer : SimpleFormattableTransformer<TimeOnly>
 {
     protected override TimeOnly ParseCore(in ReadOnlySpan<char> input) =>
-        TimeOnly.Parse(input, Culture.InvCult, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowInnerWhite);
+        TimeOnly.Parse(input, Culture.InvCult,
+            DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite | DateTimeStyles.AllowLeadingWhite |
+            DateTimeStyles.AllowInnerWhite);
 
-    protected override string FormatString { get; } = "o";
+    protected override string FormatString => "o";
 
     public static readonly ITransformer<TimeOnly> Instance = new TimeOnlyTransformer();
 
-    private TimeOnlyTransformer() { }
+    private TimeOnlyTransformer()
+    {
+    }
 }
 
 #endif

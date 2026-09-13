@@ -12,7 +12,7 @@ namespace Nemesis.TextParsers.Tests.Collections
         private const BindingFlags ALL_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
         private static readonly ITransformerStore _store = Sut.DefaultStore;
 
-        const string NULL_PLACEHOLDER = "维基百科";
+        private const string NULL_PLACEHOLDER = "维基百科";
         private static string NormalizeNullMarkers(string text) =>
             text.Replace(@"\∅", NULL_PLACEHOLDER).Replace(@"∅", NULL_PLACEHOLDER).Replace(NULL_PLACEHOLDER, @"\∅");
 
@@ -21,36 +21,36 @@ namespace Nemesis.TextParsers.Tests.Collections
             (null, null),
             ("", []),
             //("", new []{""}), //not supported. Rare case 
-            (@"AAA|BBB|CCC", ["AAA", "BBB", "CCC"]),
-            (@"|BBB||CCC", ["", "BBB", "", "CCC"]),
+            ("AAA|BBB|CCC", ["AAA", "BBB", "CCC"]),
+            ("|BBB||CCC", ["", "BBB", "", "CCC"]),
             (@"|BBB|\|CCC", ["", "BBB", "|CCC"]),
             (@"|B\\BB|\|CCC", ["", @"B\BB", "|CCC"]),
-            (@"|BBB|", ["", "BBB", ""]),
+            ("|BBB|", ["", "BBB", ""]),
             (@"|BBB\|", ["", "BBB|"]),
             (@"\|BBB|", ["|BBB", ""]),
             (@"|∅||∅", ["", null, "", null]),
             (@"∅", [(string)null]),
             (@"B|∅|A|∅", ["B", null, "A", null]),
-            (@"|||", ["", "", "", ""]),
+            ("|||", ["", "", "", ""]),
             (@"|\||", ["", "|", ""]),
             (@"|\\\\\||", ["", @"\\|", ""]),
             (@"|\\\|\\\||", ["", @"\|\|", ""]),
             (@"\\\|\\\||", [@"\|\|", ""]),
             (@"\\|ABC|\\", [@"\", "ABC", @"\"]),
-            (@"\\|ABC|\|", [@"\", "ABC", @"|"]),
-            (@"\||ABC|\\", [@"|", "ABC", @"\"]),
+            (@"\\|ABC|\|", [@"\", "ABC", "|"]),
+            (@"\||ABC|\\", ["|", "ABC", @"\"]),
 
             (@"\\\\|ABC|\\\\", [@"\\", "ABC", @"\\"]),
-            (@"\\\\|ABC|\|", [@"\\", "ABC", @"|"]),
-            (@"\||ABC|\\\\", [@"|", "ABC", @"\\"]),
+            (@"\\\\|ABC|\|", [@"\\", "ABC", "|"]),
+            (@"\||ABC|\\\\", ["|", "ABC", @"\\"]),
 
             (@"\\1\\|ABC|\\2\\", [@"\1\", "ABC", @"\2\"]),
-            (@"\\3\\|ABC|\|", [@"\3\", "ABC", @"|"]),
-            (@"\||ABC|\\4\\", [@"|", "ABC", @"\4\"]),
+            (@"\\3\\|ABC|\|", [@"\3\", "ABC", "|"]),
+            (@"\||ABC|\\4\\", ["|", "ABC", @"\4\"]),
 
-            (@"\|", [@"|"]),
-            (@"|", [@"", ""]),
-            (@" |", [@" ", ""]),
+            (@"\|", ["|"]),
+            ("|", ["", ""]),
+            (" |", [" ", ""]),
             (@"\\", [@"\"]),
             (@"\∅", [@"∅"]),
             (@"∅", [null]),
@@ -71,7 +71,7 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             (@"\|AAA\||\|BBB\||\|CCC\|", ["|AAA|", "|BBB|", "|CCC|"]),
             (@"\\DDD\\|\\EEE\\|\\FFF\\", [@"\DDD\", @"\EEE\", @"\FFF\"]),
-            (@"\\GGG\||\|HHH\\|\|III\||\\JJJ\\", [@"\GGG|", @"|HHH\", @"|III|", @"\JJJ\"]),
+            (@"\\GGG\||\|HHH\\|\|III\||\\JJJ\\", [@"\GGG|", @"|HHH\", "|III|", @"\JJJ\"]),
             (@"\|AAA\|| \∅ |\|CCC\|", ["|AAA|", " ∅ ", "|CCC|"]),
             (@"\|AAA\||\∅|\|CCC\|", ["|AAA|", "∅", "|CCC|"]),
             (@"\|AAA\||∅|\|CCC\|", ["|AAA|", null, "|CCC|"]),
@@ -137,77 +137,77 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         private static (Type elementType, string input, Type expectedException)[] Bad_ListParseData() =>
         [
-            (typeof(IList<>), @"A|B|C", typeof(InvalidOperationException)),
-            (typeof(bool), @"falsee", typeof(FormatException)),
-            (typeof(bool), @"yes", typeof(FormatException)),
-            (typeof(bool), @"no", typeof(FormatException)),
-            (typeof(bool), @"0", typeof(FormatException)),
+            (typeof(IList<>), "A|B|C", typeof(InvalidOperationException)),
+            (typeof(bool), "falsee", typeof(FormatException)),
+            (typeof(bool), "yes", typeof(FormatException)),
+            (typeof(bool), "no", typeof(FormatException)),
+            (typeof(bool), "0", typeof(FormatException)),
 
 
-            (typeof(byte), @"abc", typeof(FormatException)),
-            (typeof(byte), @"17| ", typeof(FormatException)),
-            (typeof(byte), @"17abc", typeof(FormatException)),
+            (typeof(byte), "abc", typeof(FormatException)),
+            (typeof(byte), "17| ", typeof(FormatException)),
+            (typeof(byte), "17abc", typeof(FormatException)),
 
-            (typeof(sbyte), @"abc", typeof(FormatException)),
-            (typeof(sbyte), @"17| ", typeof(FormatException)),
-            (typeof(sbyte), @"17abc", typeof(FormatException)),
+            (typeof(sbyte), "abc", typeof(FormatException)),
+            (typeof(sbyte), "17| ", typeof(FormatException)),
+            (typeof(sbyte), "17abc", typeof(FormatException)),
 
-            (typeof(short), @"abc", typeof(FormatException)),
-            (typeof(short), @"17| ", typeof(FormatException)),
-            (typeof(short), @"17abc", typeof(FormatException)),
+            (typeof(short), "abc", typeof(FormatException)),
+            (typeof(short), "17| ", typeof(FormatException)),
+            (typeof(short), "17abc", typeof(FormatException)),
 
-            (typeof(ushort), @"abc", typeof(FormatException)),
-            (typeof(ushort), @"17| ", typeof(FormatException)),
-            (typeof(ushort), @"17abc", typeof(FormatException)),
+            (typeof(ushort), "abc", typeof(FormatException)),
+            (typeof(ushort), "17| ", typeof(FormatException)),
+            (typeof(ushort), "17abc", typeof(FormatException)),
 
-            (typeof(int), @"abc", typeof(FormatException)),
-            (typeof(int), @"17| ", typeof(FormatException)),
-            (typeof(int), @"17abc", typeof(FormatException)),
+            (typeof(int), "abc", typeof(FormatException)),
+            (typeof(int), "17| ", typeof(FormatException)),
+            (typeof(int), "17abc", typeof(FormatException)),
 
-            (typeof(uint), @"abc", typeof(FormatException)),
-            (typeof(uint), @"17| ", typeof(FormatException)),
-            (typeof(uint), @"17abc", typeof(FormatException)),
+            (typeof(uint), "abc", typeof(FormatException)),
+            (typeof(uint), "17| ", typeof(FormatException)),
+            (typeof(uint), "17abc", typeof(FormatException)),
 
-            (typeof(long), @"abc", typeof(FormatException)),
-            (typeof(long), @"17| ", typeof(FormatException)),
-            (typeof(long), @"17abc", typeof(FormatException)),
+            (typeof(long), "abc", typeof(FormatException)),
+            (typeof(long), "17| ", typeof(FormatException)),
+            (typeof(long), "17abc", typeof(FormatException)),
 
-            (typeof(ulong), @"abc", typeof(FormatException)),
-            (typeof(ulong), @"17| ", typeof(FormatException)),
-            (typeof(ulong), @"17abc", typeof(FormatException)),
+            (typeof(ulong), "abc", typeof(FormatException)),
+            (typeof(ulong), "17| ", typeof(FormatException)),
+            (typeof(ulong), "17abc", typeof(FormatException)),
 
-            (typeof(float), @"abc", typeof(FormatException)),
-            (typeof(float), @"17| ", typeof(FormatException)),
-            (typeof(float), @"17abc", typeof(FormatException)),
+            (typeof(float), "abc", typeof(FormatException)),
+            (typeof(float), "17| ", typeof(FormatException)),
+            (typeof(float), "17abc", typeof(FormatException)),
 
 
-            (typeof(byte), @"-1|0", typeof(OverflowException)),
-            (typeof(byte), @"255|256", typeof(OverflowException)),
+            (typeof(byte), "-1|0", typeof(OverflowException)),
+            (typeof(byte), "255|256", typeof(OverflowException)),
 
-            (typeof(sbyte), @"-129|-128", typeof(OverflowException)),
-            (typeof(sbyte), @"127|128", typeof(OverflowException)),
+            (typeof(sbyte), "-129|-128", typeof(OverflowException)),
+            (typeof(sbyte), "127|128", typeof(OverflowException)),
 
-            (typeof(short), @"-32769|-32768", typeof(OverflowException)),
-            (typeof(short), @"32767|32768", typeof(OverflowException)),
+            (typeof(short), "-32769|-32768", typeof(OverflowException)),
+            (typeof(short), "32767|32768", typeof(OverflowException)),
 
-            (typeof(ushort), @"-1|0", typeof(OverflowException)),
-            (typeof(ushort), @"65535|65536|65537", typeof(OverflowException)),
+            (typeof(ushort), "-1|0", typeof(OverflowException)),
+            (typeof(ushort), "65535|65536|65537", typeof(OverflowException)),
 
-            (typeof(int), @"-2147483649|-2147483648", typeof(OverflowException)),
-            (typeof(int), @"2147483647|2147483648", typeof(OverflowException)),
+            (typeof(int), "-2147483649|-2147483648", typeof(OverflowException)),
+            (typeof(int), "2147483647|2147483648", typeof(OverflowException)),
 
-            (typeof(uint), @"-1|0", typeof(OverflowException)),
-            (typeof(uint), @"4294967295|4294967296", typeof(OverflowException)),
+            (typeof(uint), "-1|0", typeof(OverflowException)),
+            (typeof(uint), "4294967295|4294967296", typeof(OverflowException)),
 
-            (typeof(long), @"-9223372036854775809|-9223372036854775808", typeof(OverflowException)),
-            (typeof(long), @"9223372036854775807|9223372036854775808", typeof(OverflowException)),
+            (typeof(long), "-9223372036854775809|-9223372036854775808", typeof(OverflowException)),
+            (typeof(long), "9223372036854775807|9223372036854775808", typeof(OverflowException)),
 
-            (typeof(ulong), @"-1|0", typeof(OverflowException)),
-            (typeof(ulong), @"18446744073709551615|18446744073709551616", typeof(OverflowException)),
+            (typeof(ulong), "-1|0", typeof(OverflowException)),
+            (typeof(ulong), "18446744073709551615|18446744073709551616", typeof(OverflowException)),
 
 #if !NETCOREAPP3_1_OR_GREATER //core 3.1 removed overflow errors for float to be consistent with IEEE
-            (typeof(float), @"-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", typeof(OverflowException)),
-            (typeof(float), @" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
+            (typeof(float), "-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", typeof(OverflowException)),
+            (typeof(float), " 340282347000000000000000000000000000000|340283347000000000000000000000000000000", typeof(OverflowException)),
 #endif
         ];
         private static IReadOnlyCollection<TElement> ParseCollection<TElement>(string text) =>
@@ -290,11 +290,11 @@ namespace Nemesis.TextParsers.Tests.Collections
         [Test]
         public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long
         {
-            const string allDaysOfWeek =
-                @"255|None|Monday|Tuesday|Monday, Tuesday|Wednesday|Monday, Wednesday|Tuesday, Wednesday|Monday, Tuesday, Wednesday|Thursday|Monday, Thursday|Tuesday, Thursday|Monday, Tuesday, Thursday|Wednesday, Thursday|Monday, Wednesday, Thursday|Tuesday, Wednesday, Thursday|Monday, Tuesday, Wednesday, Thursday|Friday|Monday, Friday|Tuesday, Friday|Monday, Tuesday, Friday|Wednesday, Friday|Monday, Wednesday, Friday|Tuesday, Wednesday, Friday|Monday, Tuesday, Wednesday, Friday|Thursday, Friday|Monday, Thursday, Friday|Tuesday, Thursday, Friday|Monday, Tuesday, Thursday, Friday|Wednesday, Thursday, Friday|Monday, Wednesday, Thursday, Friday|Tuesday, Wednesday, Thursday, Friday|Weekdays|Saturday|Monday, Saturday|Tuesday, Saturday|Monday, Tuesday, Saturday|Wednesday, Saturday|Monday, Wednesday, Saturday|Tuesday, Wednesday, Saturday|Monday, Tuesday, Wednesday, Saturday|Thursday, Saturday|Monday, Thursday, Saturday|Tuesday, Thursday, Saturday|Monday, Tuesday, Thursday, Saturday|Wednesday, Thursday, Saturday|Monday, Wednesday, Thursday, Saturday|Tuesday, Wednesday, Thursday, Saturday|Monday, Tuesday, Wednesday, Thursday, Saturday|Friday, Saturday|Monday, Friday, Saturday|Tuesday, Friday, Saturday|Monday, Tuesday, Friday, Saturday|Wednesday, Friday, Saturday|Monday, Wednesday, Friday, Saturday|Tuesday, Wednesday, Friday, Saturday|Monday, Tuesday, Wednesday, Friday, Saturday|Thursday, Friday, Saturday|Monday, Thursday, Friday, Saturday|Tuesday, Thursday, Friday, Saturday|Monday, Tuesday, Thursday, Friday, Saturday|Wednesday, Thursday, Friday, Saturday|Monday, Wednesday, Thursday, Friday, Saturday|Tuesday, Wednesday, Thursday, Friday, Saturday|Weekdays, Saturday|Sunday|Monday, Sunday|Tuesday, Sunday|Monday, Tuesday, Sunday|Wednesday, Sunday|Monday, Wednesday, Sunday|Tuesday, Wednesday, Sunday|Monday, Tuesday, Wednesday, Sunday|Thursday, Sunday|Monday, Thursday, Sunday|Tuesday, Thursday, Sunday|Monday, Tuesday, Thursday, Sunday|Wednesday, Thursday, Sunday|Monday, Wednesday, Thursday, Sunday|Tuesday, Wednesday, Thursday, Sunday|Monday, Tuesday, Wednesday, Thursday, Sunday|Friday, Sunday|Monday, Friday, Sunday|Tuesday, Friday, Sunday|Monday, Tuesday, Friday, Sunday|Wednesday, Friday, Sunday|Monday, Wednesday, Friday, Sunday|Tuesday, Wednesday, Friday, Sunday|Monday, Tuesday, Wednesday, Friday, Sunday|Thursday, Friday, Sunday|Monday, Thursday, Friday, Sunday|Tuesday, Thursday, Friday, Sunday|Monday, Tuesday, Thursday, Friday, Sunday|Wednesday, Thursday, Friday, Sunday|Monday, Wednesday, Thursday, Friday, Sunday|Tuesday, Wednesday, Thursday, Friday, Sunday|Weekdays, Sunday|Weekends|Monday, Weekends|Tuesday, Weekends|Monday, Tuesday, Weekends|Wednesday, Weekends|Monday, Wednesday, Weekends|Tuesday, Wednesday, Weekends|Monday, Tuesday, Wednesday, Weekends|Thursday, Weekends|Monday, Thursday, Weekends|Tuesday, Thursday, Weekends|Monday, Tuesday, Thursday, Weekends|Wednesday, Thursday, Weekends|Monday, Wednesday, Thursday, Weekends|Tuesday, Wednesday, Thursday, Weekends|Monday, Tuesday, Wednesday, Thursday, Weekends|Friday, Weekends|Monday, Friday, Weekends|Tuesday, Friday, Weekends|Monday, Tuesday, Friday, Weekends|Wednesday, Friday, Weekends|Monday, Wednesday, Friday, Weekends|Tuesday, Wednesday, Friday, Weekends|Monday, Tuesday, Wednesday, Friday, Weekends|Thursday, Friday, Weekends|Monday, Thursday, Friday, Weekends|Tuesday, Thursday, Friday, Weekends|Monday, Tuesday, Thursday, Friday, Weekends|Wednesday, Thursday, Friday, Weekends|Monday, Wednesday, Thursday, Friday, Weekends|Tuesday, Wednesday, Thursday, Friday, Weekends|All|128";
+            const string ALL_DAYS_OF_WEEK =
+                "255|None|Monday|Tuesday|Monday, Tuesday|Wednesday|Monday, Wednesday|Tuesday, Wednesday|Monday, Tuesday, Wednesday|Thursday|Monday, Thursday|Tuesday, Thursday|Monday, Tuesday, Thursday|Wednesday, Thursday|Monday, Wednesday, Thursday|Tuesday, Wednesday, Thursday|Monday, Tuesday, Wednesday, Thursday|Friday|Monday, Friday|Tuesday, Friday|Monday, Tuesday, Friday|Wednesday, Friday|Monday, Wednesday, Friday|Tuesday, Wednesday, Friday|Monday, Tuesday, Wednesday, Friday|Thursday, Friday|Monday, Thursday, Friday|Tuesday, Thursday, Friday|Monday, Tuesday, Thursday, Friday|Wednesday, Thursday, Friday|Monday, Wednesday, Thursday, Friday|Tuesday, Wednesday, Thursday, Friday|Weekdays|Saturday|Monday, Saturday|Tuesday, Saturday|Monday, Tuesday, Saturday|Wednesday, Saturday|Monday, Wednesday, Saturday|Tuesday, Wednesday, Saturday|Monday, Tuesday, Wednesday, Saturday|Thursday, Saturday|Monday, Thursday, Saturday|Tuesday, Thursday, Saturday|Monday, Tuesday, Thursday, Saturday|Wednesday, Thursday, Saturday|Monday, Wednesday, Thursday, Saturday|Tuesday, Wednesday, Thursday, Saturday|Monday, Tuesday, Wednesday, Thursday, Saturday|Friday, Saturday|Monday, Friday, Saturday|Tuesday, Friday, Saturday|Monday, Tuesday, Friday, Saturday|Wednesday, Friday, Saturday|Monday, Wednesday, Friday, Saturday|Tuesday, Wednesday, Friday, Saturday|Monday, Tuesday, Wednesday, Friday, Saturday|Thursday, Friday, Saturday|Monday, Thursday, Friday, Saturday|Tuesday, Thursday, Friday, Saturday|Monday, Tuesday, Thursday, Friday, Saturday|Wednesday, Thursday, Friday, Saturday|Monday, Wednesday, Thursday, Friday, Saturday|Tuesday, Wednesday, Thursday, Friday, Saturday|Weekdays, Saturday|Sunday|Monday, Sunday|Tuesday, Sunday|Monday, Tuesday, Sunday|Wednesday, Sunday|Monday, Wednesday, Sunday|Tuesday, Wednesday, Sunday|Monday, Tuesday, Wednesday, Sunday|Thursday, Sunday|Monday, Thursday, Sunday|Tuesday, Thursday, Sunday|Monday, Tuesday, Thursday, Sunday|Wednesday, Thursday, Sunday|Monday, Wednesday, Thursday, Sunday|Tuesday, Wednesday, Thursday, Sunday|Monday, Tuesday, Wednesday, Thursday, Sunday|Friday, Sunday|Monday, Friday, Sunday|Tuesday, Friday, Sunday|Monday, Tuesday, Friday, Sunday|Wednesday, Friday, Sunday|Monday, Wednesday, Friday, Sunday|Tuesday, Wednesday, Friday, Sunday|Monday, Tuesday, Wednesday, Friday, Sunday|Thursday, Friday, Sunday|Monday, Thursday, Friday, Sunday|Tuesday, Thursday, Friday, Sunday|Monday, Tuesday, Thursday, Friday, Sunday|Wednesday, Thursday, Friday, Sunday|Monday, Wednesday, Thursday, Friday, Sunday|Tuesday, Wednesday, Thursday, Friday, Sunday|Weekdays, Sunday|Weekends|Monday, Weekends|Tuesday, Weekends|Monday, Tuesday, Weekends|Wednesday, Weekends|Monday, Wednesday, Weekends|Tuesday, Wednesday, Weekends|Monday, Tuesday, Wednesday, Weekends|Thursday, Weekends|Monday, Thursday, Weekends|Tuesday, Thursday, Weekends|Monday, Tuesday, Thursday, Weekends|Wednesday, Thursday, Weekends|Monday, Wednesday, Thursday, Weekends|Tuesday, Wednesday, Thursday, Weekends|Monday, Tuesday, Wednesday, Thursday, Weekends|Friday, Weekends|Monday, Friday, Weekends|Tuesday, Friday, Weekends|Monday, Tuesday, Friday, Weekends|Wednesday, Friday, Weekends|Monday, Wednesday, Friday, Weekends|Tuesday, Wednesday, Friday, Weekends|Monday, Tuesday, Wednesday, Friday, Weekends|Thursday, Friday, Weekends|Monday, Thursday, Friday, Weekends|Tuesday, Thursday, Friday, Weekends|Monday, Tuesday, Thursday, Friday, Weekends|Wednesday, Thursday, Friday, Weekends|Monday, Wednesday, Thursday, Friday, Weekends|Tuesday, Wednesday, Thursday, Friday, Weekends|All|128";
 
             List_CompoundTests((typeof(DaysOfWeek), Enumerable.Range(-1, 130).Select(i => (DaysOfWeek)i).ToList(),
-                allDaysOfWeek));
+                ALL_DAYS_OF_WEEK));
         }
 
         [Test]
@@ -311,7 +311,7 @@ namespace Nemesis.TextParsers.Tests.Collections
             var parsed = arrayTrans.Parse(text);
             Assert.That(parsed, Is.EqualTo(array));
 
-            var parsed2 = arrayTrans.Parse(@"300|||400");
+            var parsed2 = arrayTrans.Parse("300|||400");
             Assert.That(parsed2, Is.EqualTo(new int?[] { 300, null, null, 400 }));
         }
 
@@ -319,25 +319,25 @@ namespace Nemesis.TextParsers.Tests.Collections
         private static TCD[] InnerCollectionsData() =>
         [
             new("01", new List<string> { null }, @"[∅]"), //one null element
-            new("02", new List<string>(), @""), //empty list
-            new("03", new List<string> { "" }, @"[]"), //one empty element
+            new("02", new List<string>(), ""), //empty list
+            new("03", new List<string> { "" }, "[]"), //one empty element
 
             new("04", (List<string[]>)[["A", "B", "C"], ["D", "E", "F"]],
                 @"[[A\|B\|C]|[D\|E\|F]]"),
-            new("05", (List<string[]>)[[], []], @"[|]"),
-            new("06", new List<string[]>(), @""),
+            new("05", (List<string[]>)[[], []], "[|]"),
+            new("06", new List<string[]>(), ""),
 
 
             new("07", (List<string>[])[["A", "B", "C"], ["D", "E", "F"]],
                 @"[[A\|B\|C]|[D\|E\|F]]"),
-            new("08", (List<string>[])[[], []], @"[|]"),
+            new("08", (List<string>[])[[], []], "[|]"),
             new("09", new List<string>[]
             {
                 [],
                 ["1","2","3"],
                 [],
             }, @"[|[1\|2\|3]|]"),
-            new("10", Array.Empty<List<string>>(), @""),
+            new("10", Array.Empty<List<string>>(), ""),
 
             new("11", (List<string[]>)[null, [], [""]], @"[∅||[]]"), //null # empty # one empty element
         ];
