@@ -167,7 +167,7 @@ public class EnumTransformerCodeGen<TEnum, TUnderlying>
     }
 
 
-    [TestCase(null)]
+    [TestCase(default(string))]
     [TestCase("")]
     [TestCase(" ")]
     public void EmptySource_ShouldReturnDefaultValue(string input)
