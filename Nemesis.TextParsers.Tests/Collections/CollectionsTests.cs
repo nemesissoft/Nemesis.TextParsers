@@ -1,20 +1,11 @@
-﻿using System.Collections;
-using Nemesis.TextParsers.Settings;
+﻿using Nemesis.TextParsers.Settings;
 using Nemesis.TextParsers.Tests.Utils;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
-using T_bool = NUnit.Framework.TestCaseData<bool, string, System.Type>;
-using T_byte = NUnit.Framework.TestCaseData<byte, string, System.Type>;
-using T_sbyte = NUnit.Framework.TestCaseData<sbyte, string, System.Type>;
-using T_short = NUnit.Framework.TestCaseData<short, string, System.Type>;
-using T_ushort = NUnit.Framework.TestCaseData<ushort, string, System.Type>;
-using T_int = NUnit.Framework.TestCaseData<int, string, System.Type>;
-using T_uint = NUnit.Framework.TestCaseData<uint, string, System.Type>;
-using T_long = NUnit.Framework.TestCaseData<long, string, System.Type>;
-using T_ulong = NUnit.Framework.TestCaseData<ulong, string, System.Type>;
-using T_float = NUnit.Framework.TestCaseData<float, string, System.Type>;
 
 namespace Nemesis.TextParsers.Tests.Collections
 {
+    file class FailTest<T>(string argument2, Type argument3) : TestCaseData<T, string, Type>(default, argument2, argument3);
+
     [TestFixture]
     public class CollectionsTests
     {
@@ -96,15 +87,6 @@ namespace Nemesis.TextParsers.Tests.Collections
                 Assert.That(result, Is.Null);
             else
                 Assert.That(result, Is.EqualTo(data.expectedList));
-
-
-            /*if (data.expectedList == null)
-                Console.WriteLine(@"NULL list");
-            else if (!data.expectedList.Any())
-                Console.WriteLine(@"Empty list");
-            else
-                foreach (string elem in data.expectedList)
-                    Console.WriteLine($@"'{elem ?? "<null>"}'");*/
         }
 
         [TestCaseSource(nameof(ValidListData))]
@@ -147,133 +129,63 @@ namespace Nemesis.TextParsers.Tests.Collections
                 Throws.ArgumentException.And.Message.Contains(expectedMessagePart));
 
 
-        private static readonly Type
-            _format = typeof(FormatException),
-            _overflow = typeof(OverflowException);
+        private static IEnumerable<TCD> Parse_ShouldFail_Data()
+        {
+            Type f = typeof(FormatException), o = typeof(OverflowException);
 
-        private static IEnumerable<TCD> Parse_ShouldFail_Data() =>
-        ((IEnumerable<TCD>)[
-            new T_int(0, "A|B|C", _format),
+            return ((IEnumerable<TCD>)
+            [
+                new FailTest<int>("A|B|C", f),
 
-            new T_bool(false, "falsee", _format),
-            new T_bool(false, "yes", _format),
-            new T_bool(false, "no", _format),
-            new T_bool(false, "0", _format),
+                new FailTest<bool>("falsee", f), new FailTest<bool>("yes", f), new FailTest<bool>("no", f),
+                new FailTest<bool>("0", f),
+                new FailTest<byte>("abc", f), new FailTest<byte>("17| ", f), new FailTest<byte>("17abc", f),
+                new FailTest<sbyte>("abc", f), new FailTest<sbyte>("17| ", f), new FailTest<sbyte>("17abc", f),
+                new FailTest<short>("abc", f), new FailTest<short>("17| ", f), new FailTest<short>("17abc", f),
+                new FailTest<ushort>("abc", f), new FailTest<ushort>("17| ", f), new FailTest<ushort>("17abc", f),
+                new FailTest<int>("abc", f), new FailTest<int>("17| ", f), new FailTest<int>("17abc", f),
+                new FailTest<uint>("abc", f), new FailTest<uint>("17| ", f), new FailTest<uint>("17abc", f),
+                new FailTest<long>("abc", f), new FailTest<long>("17| ", f), new FailTest<long>("17abc", f),
+                new FailTest<ulong>("abc", f), new FailTest<ulong>("17| ", f), new FailTest<ulong>("17abc", f),
+                new FailTest<float>("abc", f), new FailTest<float>("17| ", f), new FailTest<float>("17abc", f),
 
-            new T_byte(0, "abc", _format),
-            new T_byte(0, "17| ", _format),
-            new T_byte(0, "17abc", _format),
-
-            new T_sbyte(0, "abc", _format),
-            new T_sbyte(0, "17| ", _format),
-            new T_sbyte(0, "17abc", _format),
-
-            new T_short(0, "abc", _format),
-            new T_short(0, "17| ", _format),
-            new T_short(0, "17abc", _format),
-
-            new T_ushort(0, "abc", _format),
-            new T_ushort(0, "17| ", _format),
-            new T_ushort(0, "17abc", _format),
-
-            new T_int(0, "abc", _format),
-            new T_int(0, "17| ", _format),
-            new T_int(0, "17abc", _format),
-
-            new T_uint(0, "abc", _format),
-            new T_uint(0, "17| ", _format),
-            new T_uint(0, "17abc", _format),
-
-            new T_long(0, "abc", _format),
-            new T_long(0, "17| ", _format),
-            new T_long(0, "17abc", _format),
-
-            new T_ulong(0, "abc", _format),
-            new T_ulong(0, "17| ", _format),
-            new T_ulong(0, "17abc", _format),
-
-            new T_float(0, "abc", _format),
-            new T_float(0, "17| ", _format),
-            new T_float(0, "17abc", _format),
-
-
-            new T_byte(0, "-1|0", _overflow),
-            new T_byte(0, "255|256", _overflow),
-
-            new T_sbyte(0, "-129|-128", _overflow),
-            new T_sbyte(0, "127|128", _overflow),
-
-            new T_short(0, "-32769|-32768", _overflow),
-            new T_short(0, "32767|32768", _overflow),
-
-            new T_ushort(0, "-1|0", _overflow),
-            new T_ushort(0, "65535|65536|65537", _overflow),
-
-            new T_int(0, "-2147483649|-2147483648", _overflow),
-            new T_int(0, "2147483647|2147483648", _overflow),
-
-            new T_uint(0, "-1|0", _overflow),
-            new T_uint(0, "4294967295|4294967296", _overflow),
-
-            new T_long(0, "-9223372036854775809|-9223372036854775808", _overflow),
-            new T_long(0, "9223372036854775807|9223372036854775808", _overflow),
-
-            new T_ulong(0, "-1|0", _overflow),
-            new T_ulong(0, "18446744073709551615|18446744073709551616", _overflow),
-
+                new FailTest<byte>("-1|0", o), new FailTest<byte>("255|256", o),
+                new FailTest<sbyte>("-129|-128", o), new FailTest<sbyte>("127|128", o),
+                new FailTest<short>("-32769|-32768", o), new FailTest<short>("32767|32768", o),
+                new FailTest<ushort>("-1|0", o), new FailTest<ushort>("65535|65536|65537", o),
+                new FailTest<int>("-2147483649|-2147483648", o), new FailTest<int>("2147483647|2147483648", o),
+                new FailTest<uint>("-1|0", o), new FailTest<uint>("4294967295|4294967296", o),
+                new FailTest<long>("-9223372036854775809|-9223372036854775808", o), new FailTest<long>("9223372036854775807|9223372036854775808", o),
+                new FailTest<ulong>("-1|0", o), new FailTest<ulong>("18446744073709551615|18446744073709551616", o),
 #if !NETCOREAPP3_1_OR_GREATER //core 3.1 removed overflow errors for float to be consistent with IEEE
-            new T_float(0, "-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", _overflow),
-            new T_float(0, " 340282347000000000000000000000000000000|340283347000000000000000000000000000000", _overflow),
+                new FailTest<float>("-340282357000000000000000000000000000000|-340282347000000000000000000000000000000", o),
+                new FailTest<float>(" 340282347000000000000000000000000000000|340283347000000000000000000000000000000", o),
 #endif
-        ]).Select((t, i) => t.SetName($"{i+1:00}_{nameof(Parse_ShouldFail)}_{t.TypeArgs?[0].Name}"));
+            ]).Select((t, i) => t.SetName($"{i + 1:00}_{nameof(Parse_ShouldFail)}_{t.TypeArgs?[0].Name}"));
+        }
 
         [TestCaseSource(nameof(Parse_ShouldFail_Data))]
-        public void Parse_ShouldFail<TElement, TInput, TException>(TElement elementType, TInput inputGeneric,
-            TException expectedExceptionGeneric)
+        public void Parse_ShouldFail<TElement, TInput, TException>(TElement _, string input, Type expectedException)
         {
-            var input = inputGeneric as string;
-            var expectedException = expectedExceptionGeneric as Type;
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(input, Is.Not.Null);
-                Assert.That(expectedException, Is.Not.Null);
-            }
-
             var sut = _store.GetTransformer<IReadOnlyCollection<TElement>>();
-
             Assert.Throws(expectedException, () => sut.Parse(input));
         }
 
         [TestCaseSource(typeof(CollectionTestData), nameof(CollectionTestData.ListCompoundData))]
-        public void List_CompoundTests((Type elementType, IEnumerable expectedOutput, string input) data)
-        {
-            var listCompound = MakeDelegate<Action<IEnumerable, string>>(
-                (p1, p2) => List_CompoundTestsHelper<int>(p1, p2), data.elementType
-            );
-
-            listCompound(data.expectedOutput, data.input);
-        }
-
-        private static void List_CompoundTestsHelper<TElement>(IEnumerable expectedOutput, string input)
+        public void List_CompoundTests<TElement, TExpectedEnumerable, TText>(TElement _, TExpectedEnumerable expectedOutput, string input)
+            where TExpectedEnumerable : IEnumerable<TElement>
         {
             var sut = _store.GetTransformer<List<TElement>>();
 
-            var expectedList = expectedOutput?.Cast<TElement>().ToList();
+            var expectedList = expectedOutput?.ToList();
+            string textExpected = sut.Format(expectedList);
 
-            var trans = Sut.GetTransformer<IReadOnlyCollection<TElement>>();
-
-            string textExpected = trans.Format(expectedList);
 
             var parsed1 = sut.Parse(input);
             CheckEquivalency(parsed1, expectedList);
 
 
-            string text = trans.Format(parsed1);
-            //Console.WriteLine($"EXP:{textExpected}");
-            //Console.WriteLine($"INP:{input}");
-            //Console.WriteLine($"TEX:{text}");
-
+            string text = sut.Format(parsed1);
 
             var parsed2 = sut.Parse(text);
             CheckEquivalency(parsed2, expectedList);
@@ -285,25 +197,24 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             CheckEquivalency(parsed1, parsed2);
             CheckEquivalency(parsed1, parsed3);
+
+
+            var borderedStore = TextTransformer.GetDefaultStoreWith(SettingsStoreBuilder.GetDefault()
+                .AddOrUpdateRange(
+                    CollectionSettings.Default with { Start = '{', End = '}' },
+                    ArraySettings.Default with { Start = '[', End = ']' },
+                    DictionarySettings.Default with { Start = '<', End = '>' }
+                )
+                .Build());
+            var borderedSut = borderedStore.GetTransformer<List<TElement>>();
+            var borderedText = borderedSut.Format(expectedList);
+
+            var parsedBordered = borderedSut.Parse(borderedText);
+            CheckEquivalency(parsedBordered, expectedList);
+
             return;
 
-            static void CheckEquivalency(IReadOnlyCollection<TElement> left, IReadOnlyCollection<TElement> right)
-            {
-                if (left is null)
-                    Assert.That(right, Is.Null);
-                else
-                    Assert.That(left, Is.EqualTo(right));
-            }
-        }
-
-        [Test]
-        public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long
-        {
-            const string ALL_DAYS_OF_WEEK =
-                "255|None|Monday|Tuesday|Monday, Tuesday|Wednesday|Monday, Wednesday|Tuesday, Wednesday|Monday, Tuesday, Wednesday|Thursday|Monday, Thursday|Tuesday, Thursday|Monday, Tuesday, Thursday|Wednesday, Thursday|Monday, Wednesday, Thursday|Tuesday, Wednesday, Thursday|Monday, Tuesday, Wednesday, Thursday|Friday|Monday, Friday|Tuesday, Friday|Monday, Tuesday, Friday|Wednesday, Friday|Monday, Wednesday, Friday|Tuesday, Wednesday, Friday|Monday, Tuesday, Wednesday, Friday|Thursday, Friday|Monday, Thursday, Friday|Tuesday, Thursday, Friday|Monday, Tuesday, Thursday, Friday|Wednesday, Thursday, Friday|Monday, Wednesday, Thursday, Friday|Tuesday, Wednesday, Thursday, Friday|Weekdays|Saturday|Monday, Saturday|Tuesday, Saturday|Monday, Tuesday, Saturday|Wednesday, Saturday|Monday, Wednesday, Saturday|Tuesday, Wednesday, Saturday|Monday, Tuesday, Wednesday, Saturday|Thursday, Saturday|Monday, Thursday, Saturday|Tuesday, Thursday, Saturday|Monday, Tuesday, Thursday, Saturday|Wednesday, Thursday, Saturday|Monday, Wednesday, Thursday, Saturday|Tuesday, Wednesday, Thursday, Saturday|Monday, Tuesday, Wednesday, Thursday, Saturday|Friday, Saturday|Monday, Friday, Saturday|Tuesday, Friday, Saturday|Monday, Tuesday, Friday, Saturday|Wednesday, Friday, Saturday|Monday, Wednesday, Friday, Saturday|Tuesday, Wednesday, Friday, Saturday|Monday, Tuesday, Wednesday, Friday, Saturday|Thursday, Friday, Saturday|Monday, Thursday, Friday, Saturday|Tuesday, Thursday, Friday, Saturday|Monday, Tuesday, Thursday, Friday, Saturday|Wednesday, Thursday, Friday, Saturday|Monday, Wednesday, Thursday, Friday, Saturday|Tuesday, Wednesday, Thursday, Friday, Saturday|Weekdays, Saturday|Sunday|Monday, Sunday|Tuesday, Sunday|Monday, Tuesday, Sunday|Wednesday, Sunday|Monday, Wednesday, Sunday|Tuesday, Wednesday, Sunday|Monday, Tuesday, Wednesday, Sunday|Thursday, Sunday|Monday, Thursday, Sunday|Tuesday, Thursday, Sunday|Monday, Tuesday, Thursday, Sunday|Wednesday, Thursday, Sunday|Monday, Wednesday, Thursday, Sunday|Tuesday, Wednesday, Thursday, Sunday|Monday, Tuesday, Wednesday, Thursday, Sunday|Friday, Sunday|Monday, Friday, Sunday|Tuesday, Friday, Sunday|Monday, Tuesday, Friday, Sunday|Wednesday, Friday, Sunday|Monday, Wednesday, Friday, Sunday|Tuesday, Wednesday, Friday, Sunday|Monday, Tuesday, Wednesday, Friday, Sunday|Thursday, Friday, Sunday|Monday, Thursday, Friday, Sunday|Tuesday, Thursday, Friday, Sunday|Monday, Tuesday, Thursday, Friday, Sunday|Wednesday, Thursday, Friday, Sunday|Monday, Wednesday, Thursday, Friday, Sunday|Tuesday, Wednesday, Thursday, Friday, Sunday|Weekdays, Sunday|Weekends|Monday, Weekends|Tuesday, Weekends|Monday, Tuesday, Weekends|Wednesday, Weekends|Monday, Wednesday, Weekends|Tuesday, Wednesday, Weekends|Monday, Tuesday, Wednesday, Weekends|Thursday, Weekends|Monday, Thursday, Weekends|Tuesday, Thursday, Weekends|Monday, Tuesday, Thursday, Weekends|Wednesday, Thursday, Weekends|Monday, Wednesday, Thursday, Weekends|Tuesday, Wednesday, Thursday, Weekends|Monday, Tuesday, Wednesday, Thursday, Weekends|Friday, Weekends|Monday, Friday, Weekends|Tuesday, Friday, Weekends|Monday, Tuesday, Friday, Weekends|Wednesday, Friday, Weekends|Monday, Wednesday, Friday, Weekends|Tuesday, Wednesday, Friday, Weekends|Monday, Tuesday, Wednesday, Friday, Weekends|Thursday, Friday, Weekends|Monday, Thursday, Friday, Weekends|Tuesday, Thursday, Friday, Weekends|Monday, Tuesday, Thursday, Friday, Weekends|Wednesday, Thursday, Friday, Weekends|Monday, Wednesday, Thursday, Friday, Weekends|Tuesday, Wednesday, Thursday, Friday, Weekends|All|128";
-
-            List_CompoundTests((typeof(DaysOfWeek), Enumerable.Range(-1, 130).Select(i => (DaysOfWeek)i).ToList(),
-                ALL_DAYS_OF_WEEK));
+            static void CheckEquivalency<T>(T left, T right) => Assert.That(left, Is.EqualTo(right));
         }
 
         [Test]
@@ -356,30 +267,6 @@ namespace Nemesis.TextParsers.Tests.Collections
         {
             var sut = GetBorderedSut();
             ParseAndFormatObject(instance, text, sut);
-        }
-
-
-        [TestCaseSource(typeof(CollectionTestData), nameof(CollectionTestData.ListCompoundData))]
-        public void Bordered_Compound((Type _, IEnumerable expectedOutput, string text) data)
-        {
-            var borderedStore = GetBorderedSut();
-            object instance = data.expectedOutput;
-            RoundTrip(instance, borderedStore);
-
-
-            var defaultTrans = _store.GetTransformer(instance.GetType());
-            var borderedTrans = borderedStore.GetTransformer(instance.GetType());
-
-
-            var parsedDefault = defaultTrans.ParseObject(data.text);
-
-            var borderedText = borderedTrans.FormatObject(instance);
-            var parsedBordered = borderedTrans.ParseObject(borderedText);
-
-
-            IsMutuallyEquivalent(parsedDefault, instance);
-            IsMutuallyEquivalent(parsedBordered, instance);
-            IsMutuallyEquivalent(parsedDefault, parsedBordered);
         }
 
         private static ITransformerStore GetBorderedSut()

@@ -72,7 +72,7 @@ public sealed class SettingsStoreBuilder(Dictionary<Type, ISettings>? settings) 
         return this;
     }
 
-    public SettingsStoreBuilder AddOrUpdateRange(IEnumerable<ISettings> settingsCollection)
+    public SettingsStoreBuilder AddOrUpdateRange(params IEnumerable<ISettings> settingsCollection)
     {
         foreach (var settings in settingsCollection)
             AddOrUpdate(settings);

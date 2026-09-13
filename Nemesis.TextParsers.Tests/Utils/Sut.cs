@@ -25,35 +25,14 @@ internal static class Sut
 
     private static ITransformerStore BuildRandomStore()
     {
-        static bool IsChar(Type t) => t == typeof(char) || t == typeof(char?);
-
         var settingTypes = new[]
         {
             typeof(ArraySettings), typeof(CollectionSettings), typeof(DictionarySettings),
             typeof(DeconstructableSettings), typeof(KeyValuePairSettings), typeof(ValueTupleSettings),
         };
-        int seed = Environment.TickCount / 10;
-        var special = new[] { '\\', '|', ';', '=', '∅', ',', '{', '}', '[', ']', '(', ')', '⮿', '␀', '!', '@', '#', '$', '%', '&' };
-
-        Stack<char> GetRandomChars(int length, string reason)
-        {
-            seed += 10;
-            var rand = new Random(seed);
-            var result = new HashSet<char>(
-#if !NET462
-                length
-#endif
-                );
-            do
-            {
-                result.Add(
-                    special[rand.Next(special.Length)]
-                );
-            } while (result.Count < length);
-            Console.WriteLine($"Seed for {reason} = {seed} [{string.Join(", ", result.Select(c => $"'{c}'"))}]");
-            return new Stack<char>(result);
-        }
-
+        var seed = DateTime.Today.Year * 10_000
+                   + DateTime.Today.Month * 100
+                   + DateTime.Today.Day;
 
         var settings = new List<ISettings>();
 
@@ -65,7 +44,7 @@ internal static class Sut
                 .FirstOrDefault().Ctor ?? throw new NotSupportedException($"No suitable constructor found for {settingType}");
             var @params = ctor.GetParameters();
             var charNum = @params.Count(p => IsChar(p.ParameterType));
-            var chars = GetRandomChars(charNum, settingType.Name);
+            var chars = GetRandomChars(charNum, seed += 10);
 
             var args = @params
                 .Select(p => p.ParameterType)
@@ -74,11 +53,24 @@ internal static class Sut
             settings.Add((ISettings)ctor.Invoke(args));
         }
 
-        var settingsStoreBuilder =
-            SettingsStoreBuilder.GetDefault()
-            .AddOrUpdateRange(settings);
+        var settingsStoreBuilder = SettingsStoreBuilder.GetDefault().AddOrUpdateRange(settings);
 
         return TextTransformer.GetDefaultStoreWith(settingsStoreBuilder.Build());
+
+        static bool IsChar(Type t) => t == typeof(char) || t == typeof(char?);
+
+        static Stack<char> GetRandomChars(in int length, int seed)
+        {
+            const string SPECIAL = """\|;=∅,{}[]()⮿␀!@#$%&""";
+            var rand = new Random(seed);
+            var result = new HashSet<char>(length);
+            do
+            {
+                result.Add(SPECIAL[rand.Next(SPECIAL.Length)]);
+            } while (result.Count < length);
+
+            return new Stack<char>(result);
+        }
     }
 
     private static ITransformerStore BuildBorderedStore()

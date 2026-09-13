@@ -144,7 +144,7 @@ internal static partial class TestHelper
         RoundTrip(instance, (store ?? Sut.DefaultStore).GetTransformer(instance.GetType()));
 
 
-    public static void RoundTrip([NotNull] object instance, ITransformer sut = null)
+    public static void RoundTrip([NotNull] object instance, ITransformer sut)
     {
         ArgumentNullException.ThrowIfNull(instance);
 
