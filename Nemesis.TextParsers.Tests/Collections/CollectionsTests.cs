@@ -19,64 +19,63 @@ namespace Nemesis.TextParsers.Tests.Collections
         private static (string text, string[] collection)[] ValidListData() =>
         [
             (null, null),
-            ("", Array.Empty<string>()),
+            ("", []),
             //("", new []{""}), //not supported. Rare case 
-            (@"AAA|BBB|CCC", new[] { "AAA", "BBB", "CCC" }),
-            (@"|BBB||CCC", new[] { "", "BBB", "", "CCC" }),
-            (@"|BBB|\|CCC", new[] { "", "BBB", "|CCC" }),
-            (@"|B\\BB|\|CCC", new[] { "", @"B\BB", "|CCC" }),
-            (@"|BBB|", new[] { "", "BBB", "" }),
-            (@"|BBB\|", new[] { "", "BBB|" }),
-            (@"\|BBB|", new[] { "|BBB", "" }),
-            (@"|∅||∅", new[] { "", null, "", null }),
-            (@"∅", new[] { (string)null }),
-            (@"B|∅|A|∅", new[] { "B", null, "A", null }),
-            (@"|||", new[] { "", "", "", "" }),
-            (@"|\||", new[] { "", "|", "" }),
-            (@"|\\\\\||", new[] { "", @"\\|", "" }),
-            (@"|\\\|\\\||", new[] { "", @"\|\|", "" }),
-            (@"\\\|\\\||", new[] { @"\|\|", "" }),
-            (@"\\|ABC|\\", new[] { @"\", "ABC", @"\" }),
-            (@"\\|ABC|\|", new[] { @"\", "ABC", @"|" }),
-            (@"\||ABC|\\", new[] { @"|", "ABC", @"\" }),
+            (@"AAA|BBB|CCC", ["AAA", "BBB", "CCC"]),
+            (@"|BBB||CCC", ["", "BBB", "", "CCC"]),
+            (@"|BBB|\|CCC", ["", "BBB", "|CCC"]),
+            (@"|B\\BB|\|CCC", ["", @"B\BB", "|CCC"]),
+            (@"|BBB|", ["", "BBB", ""]),
+            (@"|BBB\|", ["", "BBB|"]),
+            (@"\|BBB|", ["|BBB", ""]),
+            (@"|∅||∅", ["", null, "", null]),
+            (@"∅", [(string)null]),
+            (@"B|∅|A|∅", ["B", null, "A", null]),
+            (@"|||", ["", "", "", ""]),
+            (@"|\||", ["", "|", ""]),
+            (@"|\\\\\||", ["", @"\\|", ""]),
+            (@"|\\\|\\\||", ["", @"\|\|", ""]),
+            (@"\\\|\\\||", [@"\|\|", ""]),
+            (@"\\|ABC|\\", [@"\", "ABC", @"\"]),
+            (@"\\|ABC|\|", [@"\", "ABC", @"|"]),
+            (@"\||ABC|\\", [@"|", "ABC", @"\"]),
 
-            (@"\\\\|ABC|\\\\", new[] { @"\\", "ABC", @"\\" }),
-            (@"\\\\|ABC|\|", new[] { @"\\", "ABC", @"|" }),
-            (@"\||ABC|\\\\", new[] { @"|", "ABC", @"\\" }),
+            (@"\\\\|ABC|\\\\", [@"\\", "ABC", @"\\"]),
+            (@"\\\\|ABC|\|", [@"\\", "ABC", @"|"]),
+            (@"\||ABC|\\\\", [@"|", "ABC", @"\\"]),
 
-            (@"\\1\\|ABC|\\2\\", new[] { @"\1\", "ABC", @"\2\" }),
-            (@"\\3\\|ABC|\|", new[] { @"\3\", "ABC", @"|" }),
-            (@"\||ABC|\\4\\", new[] { @"|", "ABC", @"\4\" }),
+            (@"\\1\\|ABC|\\2\\", [@"\1\", "ABC", @"\2\"]),
+            (@"\\3\\|ABC|\|", [@"\3\", "ABC", @"|"]),
+            (@"\||ABC|\\4\\", [@"|", "ABC", @"\4\"]),
 
-            (@"\|", new[] { @"|" }),
-            (@"|", new[] { @"", "" }),
-            (@" |", new[] { @" ", "" }),
-            (@"\\", new[] { @"\" }),
-            (@"\∅", new[] { @"∅" }),
-            (@"∅", new string[] { null }),
-            (@" ∅", new[] { " ∅" }),
-            (@" ∅ ", new[] { " ∅ " }),
-            (@" \∅ ", new[] { " ∅ " }),
-            (@"∅ ", new[] { @"∅ " }),
-            (@"\∅ ", new[] { @"∅ " }),
-            (@"A|∅|B", new[] { "A", null, "B" }),
-            (@"A| ∅ |B", new[] { "A", " ∅ ", "B" }),
-            (@"∅|B", new[] { null, "B" }),
-            (@"∅ |B", new[] { "∅ ", "B" }),
-            (@"\∅ |B", new[] { "∅ ", "B" }),
-            (@"A| ∅ |B", new[] { "A", " ∅ ", "B" }),
-            (@"A| \∅ |B", new[] { "A", " ∅ ", "B" }),
-            (@" A | \∅ | B ", new[] { " A ", " ∅ ", " B " }),
+            (@"\|", [@"|"]),
+            (@"|", [@"", ""]),
+            (@" |", [@" ", ""]),
+            (@"\\", [@"\"]),
+            (@"\∅", [@"∅"]),
+            (@"∅", [null]),
+            (@" ∅", [" ∅"]),
+            (@" ∅ ", [" ∅ "]),
+            (@" \∅ ", [" ∅ "]),
+            (@"∅ ", [@"∅ "]),
+            (@"\∅ ", [@"∅ "]),
+            (@"A|∅|B", ["A", null, "B"]),
+            (@"A| ∅ |B", ["A", " ∅ ", "B"]),
+            (@"∅|B", [null, "B"]),
+            (@"∅ |B", ["∅ ", "B"]),
+            (@"\∅ |B", ["∅ ", "B"]),
+            (@"A| ∅ |B", ["A", " ∅ ", "B"]),
+            (@"A| \∅ |B", ["A", " ∅ ", "B"]),
+            (@" A | \∅ | B ", [" A ", " ∅ ", " B "]),
 
 
-
-            (@"\|AAA\||\|BBB\||\|CCC\|", new[] { "|AAA|", "|BBB|", "|CCC|" }),
-            (@"\\DDD\\|\\EEE\\|\\FFF\\", new[] { @"\DDD\", @"\EEE\", @"\FFF\" }),
-            (@"\\GGG\||\|HHH\\|\|III\||\\JJJ\\", new[] { @"\GGG|", @"|HHH\", @"|III|", @"\JJJ\" }),
-            (@"\|AAA\|| \∅ |\|CCC\|", new[] { "|AAA|", " ∅ ", "|CCC|" }),
-            (@"\|AAA\||\∅|\|CCC\|", new[] { "|AAA|", "∅", "|CCC|" }),
-            (@"\|AAA\||∅|\|CCC\|", new[] { "|AAA|", null, "|CCC|" }),
-            (@"∅|\∅|∅|null| \∅ |\|\\\∅\|", new[] { null, "∅", null, "null", " ∅ ", @"|\∅|" }),
+            (@"\|AAA\||\|BBB\||\|CCC\|", ["|AAA|", "|BBB|", "|CCC|"]),
+            (@"\\DDD\\|\\EEE\\|\\FFF\\", [@"\DDD\", @"\EEE\", @"\FFF\"]),
+            (@"\\GGG\||\|HHH\\|\|III\||\\JJJ\\", [@"\GGG|", @"|HHH\", @"|III|", @"\JJJ\"]),
+            (@"\|AAA\|| \∅ |\|CCC\|", ["|AAA|", " ∅ ", "|CCC|"]),
+            (@"\|AAA\||\∅|\|CCC\|", ["|AAA|", "∅", "|CCC|"]),
+            (@"\|AAA\||∅|\|CCC\|", ["|AAA|", null, "|CCC|"]),
+            (@"∅|\∅|∅|null| \∅ |\|\\\∅\|", [null, "∅", null, "null", " ∅ ", @"|\∅|"]),
         ];
 
         [TestCaseSource(nameof(ValidListData))]
@@ -249,14 +248,6 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         private static void List_CompoundTestsHelper<TElement>(IEnumerable expectedOutput, string input)
         {
-            static void CheckEquivalency(IReadOnlyCollection<TElement> left, IReadOnlyCollection<TElement> right)
-            {
-                if (left is null)
-                    Assert.That(right, Is.Null);
-                else
-                    Assert.That(left, Is.EqualTo(right));
-            }
-
             var sut = _store.GetTransformer<List<TElement>>();
 
             var expectedList = expectedOutput?.Cast<TElement>().ToList();
@@ -285,14 +276,25 @@ namespace Nemesis.TextParsers.Tests.Collections
 
             CheckEquivalency(parsed1, parsed2);
             CheckEquivalency(parsed1, parsed3);
+            return;
+
+            static void CheckEquivalency(IReadOnlyCollection<TElement> left, IReadOnlyCollection<TElement> right)
+            {
+                if (left is null)
+                    Assert.That(right, Is.Null);
+                else
+                    Assert.That(left, Is.EqualTo(right));
+            }
         }
 
         [Test]
         public void List_CompoundTests_ComplexFlagEnum() //cannot attach this to ListCompoundData as test name becomes too long
         {
-            const string ALL_DAYS_OF_WEEK = @"255|None|Monday|Tuesday|Monday, Tuesday|Wednesday|Monday, Wednesday|Tuesday, Wednesday|Monday, Tuesday, Wednesday|Thursday|Monday, Thursday|Tuesday, Thursday|Monday, Tuesday, Thursday|Wednesday, Thursday|Monday, Wednesday, Thursday|Tuesday, Wednesday, Thursday|Monday, Tuesday, Wednesday, Thursday|Friday|Monday, Friday|Tuesday, Friday|Monday, Tuesday, Friday|Wednesday, Friday|Monday, Wednesday, Friday|Tuesday, Wednesday, Friday|Monday, Tuesday, Wednesday, Friday|Thursday, Friday|Monday, Thursday, Friday|Tuesday, Thursday, Friday|Monday, Tuesday, Thursday, Friday|Wednesday, Thursday, Friday|Monday, Wednesday, Thursday, Friday|Tuesday, Wednesday, Thursday, Friday|Weekdays|Saturday|Monday, Saturday|Tuesday, Saturday|Monday, Tuesday, Saturday|Wednesday, Saturday|Monday, Wednesday, Saturday|Tuesday, Wednesday, Saturday|Monday, Tuesday, Wednesday, Saturday|Thursday, Saturday|Monday, Thursday, Saturday|Tuesday, Thursday, Saturday|Monday, Tuesday, Thursday, Saturday|Wednesday, Thursday, Saturday|Monday, Wednesday, Thursday, Saturday|Tuesday, Wednesday, Thursday, Saturday|Monday, Tuesday, Wednesday, Thursday, Saturday|Friday, Saturday|Monday, Friday, Saturday|Tuesday, Friday, Saturday|Monday, Tuesday, Friday, Saturday|Wednesday, Friday, Saturday|Monday, Wednesday, Friday, Saturday|Tuesday, Wednesday, Friday, Saturday|Monday, Tuesday, Wednesday, Friday, Saturday|Thursday, Friday, Saturday|Monday, Thursday, Friday, Saturday|Tuesday, Thursday, Friday, Saturday|Monday, Tuesday, Thursday, Friday, Saturday|Wednesday, Thursday, Friday, Saturday|Monday, Wednesday, Thursday, Friday, Saturday|Tuesday, Wednesday, Thursday, Friday, Saturday|Weekdays, Saturday|Sunday|Monday, Sunday|Tuesday, Sunday|Monday, Tuesday, Sunday|Wednesday, Sunday|Monday, Wednesday, Sunday|Tuesday, Wednesday, Sunday|Monday, Tuesday, Wednesday, Sunday|Thursday, Sunday|Monday, Thursday, Sunday|Tuesday, Thursday, Sunday|Monday, Tuesday, Thursday, Sunday|Wednesday, Thursday, Sunday|Monday, Wednesday, Thursday, Sunday|Tuesday, Wednesday, Thursday, Sunday|Monday, Tuesday, Wednesday, Thursday, Sunday|Friday, Sunday|Monday, Friday, Sunday|Tuesday, Friday, Sunday|Monday, Tuesday, Friday, Sunday|Wednesday, Friday, Sunday|Monday, Wednesday, Friday, Sunday|Tuesday, Wednesday, Friday, Sunday|Monday, Tuesday, Wednesday, Friday, Sunday|Thursday, Friday, Sunday|Monday, Thursday, Friday, Sunday|Tuesday, Thursday, Friday, Sunday|Monday, Tuesday, Thursday, Friday, Sunday|Wednesday, Thursday, Friday, Sunday|Monday, Wednesday, Thursday, Friday, Sunday|Tuesday, Wednesday, Thursday, Friday, Sunday|Weekdays, Sunday|Weekends|Monday, Weekends|Tuesday, Weekends|Monday, Tuesday, Weekends|Wednesday, Weekends|Monday, Wednesday, Weekends|Tuesday, Wednesday, Weekends|Monday, Tuesday, Wednesday, Weekends|Thursday, Weekends|Monday, Thursday, Weekends|Tuesday, Thursday, Weekends|Monday, Tuesday, Thursday, Weekends|Wednesday, Thursday, Weekends|Monday, Wednesday, Thursday, Weekends|Tuesday, Wednesday, Thursday, Weekends|Monday, Tuesday, Wednesday, Thursday, Weekends|Friday, Weekends|Monday, Friday, Weekends|Tuesday, Friday, Weekends|Monday, Tuesday, Friday, Weekends|Wednesday, Friday, Weekends|Monday, Wednesday, Friday, Weekends|Tuesday, Wednesday, Friday, Weekends|Monday, Tuesday, Wednesday, Friday, Weekends|Thursday, Friday, Weekends|Monday, Thursday, Friday, Weekends|Tuesday, Thursday, Friday, Weekends|Monday, Tuesday, Thursday, Friday, Weekends|Wednesday, Thursday, Friday, Weekends|Monday, Wednesday, Thursday, Friday, Weekends|Tuesday, Wednesday, Thursday, Friday, Weekends|All|128";
+            const string allDaysOfWeek =
+                @"255|None|Monday|Tuesday|Monday, Tuesday|Wednesday|Monday, Wednesday|Tuesday, Wednesday|Monday, Tuesday, Wednesday|Thursday|Monday, Thursday|Tuesday, Thursday|Monday, Tuesday, Thursday|Wednesday, Thursday|Monday, Wednesday, Thursday|Tuesday, Wednesday, Thursday|Monday, Tuesday, Wednesday, Thursday|Friday|Monday, Friday|Tuesday, Friday|Monday, Tuesday, Friday|Wednesday, Friday|Monday, Wednesday, Friday|Tuesday, Wednesday, Friday|Monday, Tuesday, Wednesday, Friday|Thursday, Friday|Monday, Thursday, Friday|Tuesday, Thursday, Friday|Monday, Tuesday, Thursday, Friday|Wednesday, Thursday, Friday|Monday, Wednesday, Thursday, Friday|Tuesday, Wednesday, Thursday, Friday|Weekdays|Saturday|Monday, Saturday|Tuesday, Saturday|Monday, Tuesday, Saturday|Wednesday, Saturday|Monday, Wednesday, Saturday|Tuesday, Wednesday, Saturday|Monday, Tuesday, Wednesday, Saturday|Thursday, Saturday|Monday, Thursday, Saturday|Tuesday, Thursday, Saturday|Monday, Tuesday, Thursday, Saturday|Wednesday, Thursday, Saturday|Monday, Wednesday, Thursday, Saturday|Tuesday, Wednesday, Thursday, Saturday|Monday, Tuesday, Wednesday, Thursday, Saturday|Friday, Saturday|Monday, Friday, Saturday|Tuesday, Friday, Saturday|Monday, Tuesday, Friday, Saturday|Wednesday, Friday, Saturday|Monday, Wednesday, Friday, Saturday|Tuesday, Wednesday, Friday, Saturday|Monday, Tuesday, Wednesday, Friday, Saturday|Thursday, Friday, Saturday|Monday, Thursday, Friday, Saturday|Tuesday, Thursday, Friday, Saturday|Monday, Tuesday, Thursday, Friday, Saturday|Wednesday, Thursday, Friday, Saturday|Monday, Wednesday, Thursday, Friday, Saturday|Tuesday, Wednesday, Thursday, Friday, Saturday|Weekdays, Saturday|Sunday|Monday, Sunday|Tuesday, Sunday|Monday, Tuesday, Sunday|Wednesday, Sunday|Monday, Wednesday, Sunday|Tuesday, Wednesday, Sunday|Monday, Tuesday, Wednesday, Sunday|Thursday, Sunday|Monday, Thursday, Sunday|Tuesday, Thursday, Sunday|Monday, Tuesday, Thursday, Sunday|Wednesday, Thursday, Sunday|Monday, Wednesday, Thursday, Sunday|Tuesday, Wednesday, Thursday, Sunday|Monday, Tuesday, Wednesday, Thursday, Sunday|Friday, Sunday|Monday, Friday, Sunday|Tuesday, Friday, Sunday|Monday, Tuesday, Friday, Sunday|Wednesday, Friday, Sunday|Monday, Wednesday, Friday, Sunday|Tuesday, Wednesday, Friday, Sunday|Monday, Tuesday, Wednesday, Friday, Sunday|Thursday, Friday, Sunday|Monday, Thursday, Friday, Sunday|Tuesday, Thursday, Friday, Sunday|Monday, Tuesday, Thursday, Friday, Sunday|Wednesday, Thursday, Friday, Sunday|Monday, Wednesday, Thursday, Friday, Sunday|Tuesday, Wednesday, Thursday, Friday, Sunday|Weekdays, Sunday|Weekends|Monday, Weekends|Tuesday, Weekends|Monday, Tuesday, Weekends|Wednesday, Weekends|Monday, Wednesday, Weekends|Tuesday, Wednesday, Weekends|Monday, Tuesday, Wednesday, Weekends|Thursday, Weekends|Monday, Thursday, Weekends|Tuesday, Thursday, Weekends|Monday, Tuesday, Thursday, Weekends|Wednesday, Thursday, Weekends|Monday, Wednesday, Thursday, Weekends|Tuesday, Wednesday, Thursday, Weekends|Monday, Tuesday, Wednesday, Thursday, Weekends|Friday, Weekends|Monday, Friday, Weekends|Tuesday, Friday, Weekends|Monday, Tuesday, Friday, Weekends|Wednesday, Friday, Weekends|Monday, Wednesday, Friday, Weekends|Tuesday, Wednesday, Friday, Weekends|Monday, Tuesday, Wednesday, Friday, Weekends|Thursday, Friday, Weekends|Monday, Thursday, Friday, Weekends|Tuesday, Thursday, Friday, Weekends|Monday, Tuesday, Thursday, Friday, Weekends|Wednesday, Thursday, Friday, Weekends|Monday, Wednesday, Thursday, Friday, Weekends|Tuesday, Wednesday, Thursday, Friday, Weekends|All|128";
 
-            List_CompoundTests((typeof(DaysOfWeek), Enumerable.Range(-1, 130).Select(i => (DaysOfWeek)i).ToList(), ALL_DAYS_OF_WEEK));
+            List_CompoundTests((typeof(DaysOfWeek), Enumerable.Range(-1, 130).Select(i => (DaysOfWeek)i).ToList(),
+                allDaysOfWeek));
         }
 
         [Test]
@@ -316,28 +318,28 @@ namespace Nemesis.TextParsers.Tests.Collections
 
         private static TCD[] InnerCollectionsData() =>
         [
-            new TCD("01", new List<string> { null }, @"[∅]"),//one null element
-            new TCD("02", new List<string>(), @""),//empty list
-            new TCD("03", new List<string> { "" }, @"[]"),//one empty element
+            new("01", new List<string> { null }, @"[∅]"), //one null element
+            new("02", new List<string>(), @""), //empty list
+            new("03", new List<string> { "" }, @"[]"), //one empty element
 
-            new TCD("04", (List<string[]>)[["A", "B", "C"], ["D", "E", "F"]],
+            new("04", (List<string[]>)[["A", "B", "C"], ["D", "E", "F"]],
                 @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD("05", (List<string[]>)[[], []], @"[|]"),
-            new TCD("06", new List<string[]>(), @""),
+            new("05", (List<string[]>)[[], []], @"[|]"),
+            new("06", new List<string[]>(), @""),
 
 
-            new TCD("07", (List<string>[])[["A", "B", "C"], ["D", "E", "F"]],
+            new("07", (List<string>[])[["A", "B", "C"], ["D", "E", "F"]],
                 @"[[A\|B\|C]|[D\|E\|F]]"),
-            new TCD("08", (List<string>[])[[], []], @"[|]"),
-            new TCD("09", new List<string>[]
+            new("08", (List<string>[])[[], []], @"[|]"),
+            new("09", new List<string>[]
             {
                 [],
                 ["1","2","3"],
                 [],
             }, @"[|[1\|2\|3]|]"),
-            new TCD("10", Array.Empty<List<string>>(), @""),
+            new("10", Array.Empty<List<string>>(), @""),
 
-            new TCD("11", (List<string[]>)[null, [], [""]], @"[∅||[]]"),//null # empty # one empty element
+            new("11", (List<string[]>)[null, [], [""]], @"[∅||[]]"), //null # empty # one empty element
         ];
 
         [TestCaseSource(nameof(InnerCollectionsData))]

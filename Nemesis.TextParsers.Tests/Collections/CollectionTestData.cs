@@ -55,10 +55,16 @@ internal class CollectionTestData
         (typeof(Half), GetTestNumbers(1, 0b11_1111_1111, 100, (n1, n2) => n1+n2).Select(i=>
             {
                 ushort variable = (ushort)i;
-                return System.Runtime.CompilerServices.Unsafe.As<ushort, Half>(ref variable);
+                return Unsafe.As<ushort, Half>(ref variable);
             }
         ).ToList(),
             @"5.9604644775390625E-08|6.0200691223144531E-06|1.1980533599853516E-05|1.7940998077392578E-05|2.3901462554931641E-05|2.9861927032470703E-05|3.5822391510009766E-05|4.1782855987548828E-05|4.7743320465087891E-05|5.3703784942626953E-05|5.9664249420166016E-05" ),
+#endif
+
+#if NET11_0_OR_GREATER
+        (typeof(BFloat16), GetTestNumbers(BFloat16.MinValue, BFloat16.MaxValue,
+                (float)Half.MaxValue / 10, (n1, n2) => n1 + n2).Select(f => (Half)f).ToList(),
+            @"123"),
 #endif
  
         (typeof(float), GetTestNumbers(float.MinValue+float.MaxValue/10, float.MaxValue-float.MaxValue/10, float.MaxValue/10, (n1, n2) => n1+n2),
@@ -285,9 +291,7 @@ internal class CollectionTestData
         var result = new List<TNumber>();
         for (var i = from; i.CompareTo(to) <= 0; i = addFunc(i, increment))
             result.Add(i);
-
         return result.AsReadOnly();
-
     }
 
     private static ReadOnlyCollection<TNumber> GetTestNumbers<TNumber>(long divisor)

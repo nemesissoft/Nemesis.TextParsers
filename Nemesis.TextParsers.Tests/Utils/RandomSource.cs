@@ -32,23 +32,22 @@ internal class RandomSource
 
     public TElement NextElement<TElement>(Span<TElement> span) => span[Next(span.Length)];
 
-    public double NextFloatingNumber(int magnitude = 1000, bool generateSpecialValues = true)
-    {
-        if (generateSpecialValues && _rand.NextDouble() is { } chance && chance < 0.1)
-        {
-            if (chance < 0.045) return double.PositiveInfinity;
-            else if (chance < 0.09) return double.NegativeInfinity;
-            else return double.NaN;
-        }
-        else
-            return Math.Round((_rand.NextDouble() - 0.5) * 2 * magnitude, 3);
-    }
+    public double NextFloatingNumber(int magnitude = 1000, bool generateSpecialValues = true) =>
+        generateSpecialValues && _rand.NextDouble() is { } chance and < 0.1
+            ? chance switch
+            {
+                < 0.045 => double.PositiveInfinity,
+                < 0.09 => double.NegativeInfinity,
+                _ => double.NaN
+            }
+            : Math.Round((_rand.NextDouble() - 0.5) * 2 * magnitude, 3);
 
     public TEnum NextEnum<TEnum, TUnderlying>()
         where TEnum : Enum
-        where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>, IFormattable
+        where TUnderlying : struct, IComparable, IComparable<TUnderlying>, IConvertible, IEquatable<TUnderlying>,
+        IFormattable
 #if NET7_0_OR_GREATER
-    , IBinaryInteger<TUnderlying>
+        , IBinaryInteger<TUnderlying>
 #endif
     {
         var values = Enum.GetValues(typeof(TEnum)).Cast<TUnderlying>().ToList();
