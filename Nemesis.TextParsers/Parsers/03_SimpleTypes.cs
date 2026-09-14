@@ -1,5 +1,4 @@
 ﻿using System.Net;
-
 using Nemesis.TextParsers.Runtime;
 
 namespace Nemesis.TextParsers.Parsers;
@@ -32,12 +31,15 @@ public sealed class SimpleTransformerHandler : ITransformerHandler, ITestTransfo
 #if NET5_0_OR_GREATER
         [typeof(Half)] = HalfTransformer.Instance,
 #endif
-#if NET11_0_OR_GREATER
-        [typeof(BFloat16)] = BFloat16Transformer.Instance,
-#endif
         [typeof(float)] = SingleTransformer.Instance,
         [typeof(double)] = DoubleTransformer.Instance,
         [typeof(decimal)] = DecimalTransformer.Instance,
+#if NET11_0_OR_GREATER
+        [typeof(BFloat16)] = BFloat16Transformer.Instance,
+        [typeof(Decimal32)] = Decimal32Transformer.Instance,
+        [typeof(Decimal64)] = Decimal64Transformer.Instance,
+        [typeof(Decimal128)] = Decimal128Transformer.Instance,
+#endif
         [typeof(TimeSpan)] = TimeSpanTransformer.Instance,
         [typeof(DateTime)] = DateTimeTransformer.Instance,
         [typeof(DateTimeOffset)] = DateTimeOffsetTransformer.Instance,

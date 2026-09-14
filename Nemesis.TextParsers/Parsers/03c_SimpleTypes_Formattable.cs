@@ -37,28 +37,6 @@ public sealed class HalfTransformer : SimpleFormattableTransformer<Half>
 
 #endif
 
-#if NET11_0_OR_GREATER
-
-public sealed class BFloat16Transformer : SimpleFormattableTransformer<BFloat16>
-{
-    protected override BFloat16 ParseCore(in ReadOnlySpan<char> input) => input switch
-    {
-        "∞" => BFloat16.PositiveInfinity,
-        "-∞" => BFloat16.NegativeInfinity,
-        _ => BFloat16.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
-    };
-
-    protected override string FormatString => "R";
-
-    public static readonly ITransformer<BFloat16> Instance = new BFloat16Transformer();
-
-    private BFloat16Transformer()
-    {
-    }
-}
-
-#endif
-
 public sealed class SingleTransformer : SimpleFormattableTransformer<float>
 {
     protected override float ParseCore(in ReadOnlySpan<char> input) => input switch
@@ -124,6 +102,69 @@ public sealed class DecimalTransformer : SimpleFormattableTransformer<decimal>
     {
     }
 }
+
+#if NET11_0_OR_GREATER
+
+public sealed class BFloat16Transformer : IeeeTransformer<BFloat16>
+{
+    public static readonly ITransformer<BFloat16> Instance = new BFloat16Transformer();
+
+    private BFloat16Transformer()
+    {
+    }
+}
+
+public sealed class Decimal32Transformer : IeeeTransformer<Decimal32>
+{
+    public static readonly ITransformer<Decimal32> Instance = new Decimal32Transformer();
+
+    private Decimal32Transformer()
+    {
+    }
+}
+
+public sealed class Decimal64Transformer : IeeeTransformer<Decimal64>
+{
+    public static readonly ITransformer<Decimal64> Instance = new Decimal64Transformer();
+
+    private Decimal64Transformer()
+    {
+    }
+}
+
+public sealed class Decimal128Transformer : IeeeTransformer<Decimal128>
+{
+    public static readonly ITransformer<Decimal128> Instance = new Decimal128Transformer();
+
+    private Decimal128Transformer()
+    {
+    }
+}
+
+public abstract class IeeeTransformer<TNumber> : SimpleTransformer<TNumber>
+    where TNumber : IFloatingPointIeee754<TNumber>
+{
+    protected sealed override TNumber ParseCore(in ReadOnlySpan<char> input) => input switch
+    {
+        "∞" => TNumber.PositiveInfinity,
+        "-∞" => TNumber.NegativeInfinity,
+        "NaN" => TNumber.NaN,
+        _ => TNumber.Parse(input, NumberStyles.Float | NumberStyles.AllowThousands, Culture.InvCult)
+    };
+
+    public sealed override string Format(TNumber element)
+    {
+        if (TNumber.IsPositiveInfinity(element))
+            return "∞";
+
+        if (TNumber.IsNegativeInfinity(element))
+            return "-∞";
+
+        return TNumber.IsNaN(element) ? "NaN" : element.ToString("R", Culture.InvCult);
+    }
+}
+
+#endif
 
 public sealed class TimeSpanTransformer : SimpleFormattableTransformer<TimeSpan>
 {
