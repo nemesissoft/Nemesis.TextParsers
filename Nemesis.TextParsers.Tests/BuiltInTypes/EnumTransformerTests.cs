@@ -107,18 +107,19 @@ public class EnumTransformerTests<TEnum, TUnderlying, TNumberHandler>
         }
     }
 
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase(" ")]
+
+    private static IEnumerable<TCD> EmptySourceData() => [new(default(string)), new(""), new(" ")];
+
+    [TestCaseSource(nameof(EmptySourceData))]
     public void EmptySource_ShouldReturnDefaultValue(string input)
     {
         var actual = _sut.Parse(input.AsSpan());
         var defaultValue = ToEnum(_numberHandler.Zero);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(actual, Is.EqualTo(defaultValue));
             Assert.That((TUnderlying) (object) actual, Is.EqualTo(_numberHandler.Zero));
-        });
+        }
     }
 
     [Test]

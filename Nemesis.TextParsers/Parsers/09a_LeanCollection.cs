@@ -18,7 +18,7 @@ public sealed class LeanCollectionTransformerHandler : ITransformerHandler
     public ITransformer<TLean> CreateTransformer<TLean>()
     {
         if (!TryGetElements(typeof(TLean), out var elementType) || elementType == null)
-            throw new NotSupportedException($"Type {typeof(TLean).GetFriendlyName()} is not supported by {GetType().Name}");
+            throw new NotSupportedException($"Type {typeof(TLean).GetFriendlyName()} is not supported by {nameof(LeanCollectionTransformerHandler)}");
 
         var createMethod = Method.OfExpression<
             Func<LeanCollectionTransformerHandler, ITransformer<LeanCollection<int>>>

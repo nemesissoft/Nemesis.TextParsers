@@ -398,7 +398,7 @@ public class TextValueConverter : IStringConverter
 
     private static MethodInfo GetMethod(string name) =>
         typeof(TextValueConverter).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) ??
-        throw new MissingMethodException($"Method {typeof(TextValueConverter).Name}.{name} does not exist");
+        throw new MissingMethodException($"Method {nameof(TextValueConverter)}.{name} does not exist");
 
     private static bool ImplementsGenericInterface(Type type, Type generic) =>
         type == generic ||

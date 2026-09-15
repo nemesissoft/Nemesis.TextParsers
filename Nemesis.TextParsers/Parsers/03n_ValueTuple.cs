@@ -18,7 +18,7 @@ public sealed class ValueTupleTransformerHandler : ITransformerHandler
     public ITransformer<TTuple> CreateTransformer<TTuple>()
     {
         if (!IsSupported(typeof(TTuple), out var elementTypes))
-            throw new NotSupportedException($"Type {typeof(TTuple).GetFriendlyName()} is not supported by {GetType().Name}");
+            throw new NotSupportedException($"Type {typeof(TTuple).GetFriendlyName()} is not supported by {nameof(ValueTupleTransformerHandler)}");
 
         int arity = elementTypes.Length;
 
@@ -48,20 +48,19 @@ public sealed class ValueTupleTransformerHandler : ITransformerHandler
     {
         var ctors = transformerType.GetConstructors();
         if (ctors.Length != 1)
-            throw new NotSupportedException($"Only single public constructor is supported by {GetType().Name}");
+            throw new NotSupportedException($"Only single public constructor is supported by {nameof(ValueTupleTransformerHandler)}");
         var ctor = ctors[0];
 
         var ctorParams = ctor.GetParameters();
         if (ctorParams.Length != arity + 1 || ctorParams[0].ParameterType != typeof(TupleHelper))
-            throw new NotSupportedException($"Constructor with {arity + 1} parameters with first being {nameof(TupleHelper)} is supported by {GetType().Name}");
+            throw new NotSupportedException($"Only constructor with {arity + 1} parameters with first being {nameof(TupleHelper)} is supported by {nameof(ValueTupleTransformerHandler)}");
 
         var expectedParameters = elementTypes.Select(t => typeof(ITransformer<>).MakeGenericType(t));
         var actualParameters = ctorParams.Skip(1).Select(p => p.ParameterType);
 
-        if (false == expectedParameters.SequenceEqual(actualParameters))
-            throw new NotSupportedException($"Remaining parameters are expected to be transformers for types (in order): {string.Join(", ", elementTypes.Select(t => t.GetFriendlyName()))}");
-
-        return ctor;
+        return !expectedParameters.SequenceEqual(actualParameters) ? 
+            throw new NotSupportedException($"Remaining parameters are expected to be transformers for types (in order): {string.Join(", ", elementTypes.Select(t => t.GetFriendlyName()))}") 
+            : ctor;
     }
 
 

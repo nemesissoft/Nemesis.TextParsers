@@ -1,10 +1,10 @@
-﻿using System.Collections.ObjectModel;
-using AutoFixture;
+﻿using AutoFixture;
 using Nemesis.Essentials.Runtime;
 using Nemesis.TextParsers.Tests.Arch.Infrastructure;
 using Nemesis.TextParsers.Tests.Deconstructable;
 using Nemesis.TextParsers.Tests.Entities;
 using Nemesis.TextParsers.Tests.Utils;
+using System.Collections.ObjectModel;
 using static Nemesis.TextParsers.Tests.Utils.TestHelper;
 
 namespace Nemesis.TextParsers.Tests;
@@ -56,7 +56,7 @@ public sealed class ExploratoryTests
     public void BeforeAllTest()
     {
         _randomSource.SetNewSeed();
-        Console.WriteLine($"{GetType().Name} initial seed = {_randomSource.Seed}");
+        Console.WriteLine($"{nameof(ExploratoryTests)} initial seed = {_randomSource.Seed}");
         GetTestCases(_randomSource);
 
         string GetRandomString()
@@ -88,6 +88,13 @@ public sealed class ExploratoryTests
         _fixture.Register(() => _randomSource.NextFloatingNumber());
         _fixture.Register(() => (float)_randomSource.NextFloatingNumber());
         _fixture.Register(() => (decimal)_randomSource.NextFloatingNumber(10000, false));
+#if NET5_0_OR_GREATER
+        _fixture.Register(() => (Half)_randomSource.NextFloatingNumber(10000, true));
+#endif
+#if NET11_0_OR_GREATER
+        _fixture.Register(() => (BFloat16)_randomSource.NextFloatingNumber(10000, true));
+#endif
+
         _fixture.Register(() => new Complex(
             _randomSource.NextFloatingNumber(1000, false),
             _randomSource.NextFloatingNumber(1000, false)
@@ -158,7 +165,11 @@ public sealed class ExploratoryTests
             } while ((options & RegexOptions.ECMAScript) != 0
                      && (options & ~(RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.Multiline |
                                      RegexOptions.Compiled | RegexOptions.CultureInvariant)) != 0);
-#if NET7_0_OR_GREATER
+
+#if NET11_0_OR_GREATER
+            if ((options & RegexOptions.NonBacktracking) != 0)
+                options &= ~(RegexOptions.ECMAScript | RegexOptions.RightToLeft | RegexOptions.AnyNewLine);
+#elif NET7_0_OR_GREATER
             if ((options & RegexOptions.NonBacktracking) != 0)
                 options &= ~(RegexOptions.ECMAScript | RegexOptions.RightToLeft);
 #endif
@@ -168,7 +179,7 @@ public sealed class ExploratoryTests
 
         _fixture.Register(() => new Version(_randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10), _randomSource.Next(10)));
         _fixture.Register(() => new IPAddress([(byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255), (byte)_randomSource.Next(255)]));
-        
+
 
         _fixture.Register(() => (EmptyEnum)_randomSource.Next(0, 2));
         _fixture.Register(() => (Enum1)_randomSource.Next(0, 10));
@@ -394,7 +405,7 @@ static class ExploratoryTestsData
         var typeComparer = Comparer<Type>.Create((t1, t2) =>
             string.Compare(t1.GetFriendlyName(), t2.GetFriendlyName(), StringComparison.OrdinalIgnoreCase)
         );
-        
+
         SortedSet<Type> Carve(Predicate<Type> condition)
         {
             var result = new SortedSet<Type>(typeComparer);
@@ -498,6 +509,12 @@ static class ExploratoryTestsData
         //struct
         typeof(bool), typeof(char),
         typeof(float), typeof(double), typeof(decimal),
+#if NET5_0_OR_GREATER
+        typeof(Half),
+#endif
+#if NET11_0_OR_GREATER
+        typeof(BFloat16),
+#endif
         typeof(byte), typeof(sbyte),
         typeof(short), typeof(ushort),
         typeof(int), typeof(uint),

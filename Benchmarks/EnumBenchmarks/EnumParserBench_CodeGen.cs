@@ -151,7 +151,7 @@ public class EnumParserBench_CodeGen
                 : StringComparison.Ordinal;
         }
 
-        public override string ToString() => $"Transform {nameof(Month)} based on {typeof(byte).Name} ({_enumSettings})";
+        public override string ToString() => $"Transform {nameof(Month)} based on {nameof(Byte)} ({_enumSettings})";
 
         public override string Format(Month element) => element switch
         {
@@ -261,7 +261,7 @@ public class EnumParserBench_CodeGen
             else throw new FormatException(
               $"Enum of type '{nameof(Month)}' cannot be parsed. " +
               $"Valid values are: None or January or February or March or April or May or June or July or August or September or October or November or December" +
-              (_enumSettings.AllowParsingNumerics ? $" or number within {typeof(byte).Name} range. " : ". ") +
+              (_enumSettings.AllowParsingNumerics ? $" or number within {nameof(Byte)} range. " : ". ") +
               (_enumSettings.CaseInsensitive ? "Ignore case option on." : "Case sensitive option on.")
             );
 

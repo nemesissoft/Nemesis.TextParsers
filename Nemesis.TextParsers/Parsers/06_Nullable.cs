@@ -4,25 +4,20 @@ namespace Nemesis.TextParsers.Parsers;
 
 public sealed class NullableTransformerHandler(ITransformerStore transformerStore) : ITransformerHandler
 {
-    private readonly ITransformerStore _transformerStore = transformerStore;
-
-
     public ITransformer<TNullable> CreateTransformer<TNullable>()
     {
         if (!TryGetElement(typeof(TNullable), out var underlyingType) || underlyingType == null)
-            throw new NotSupportedException($"Type {typeof(TNullable).GetFriendlyName()} is not supported by {GetType().Name}");
+            throw new NotSupportedException($"Type {typeof(TNullable).GetFriendlyName()} is not supported by {nameof(NullableTransformerHandler)}");
 
         var transType = typeof(InnerNullableTransformer<>).MakeGenericType(underlyingType);
 
-        return (ITransformer<TNullable>)Activator.CreateInstance(transType, _transformerStore);
+        return (ITransformer<TNullable>)Activator.CreateInstance(transType, transformerStore);
     }
 
-    private sealed class InnerNullableTransformer<TElement> : TransformerBase<TElement?> where TElement : struct
+    private sealed class InnerNullableTransformer<TElement>(ITransformerStore transformerStore) : TransformerBase<TElement?>
+        where TElement : struct
     {
-        private readonly ITransformer<TElement> _elementParser;
-
-        public InnerNullableTransformer(ITransformerStore transformerStore) =>
-            _elementParser = transformerStore.GetTransformer<TElement>();
+        private readonly ITransformer<TElement> _elementParser = transformerStore.GetTransformer<TElement>();
 
 
         protected override TElement? ParseCore(in ReadOnlySpan<char> input) => _elementParser.Parse(input);
@@ -33,7 +28,7 @@ public sealed class NullableTransformerHandler(ITransformerStore transformerStor
 
     public bool CanHandle(Type type) =>
         TryGetElement(type, out var underlyingType) &&
-        _transformerStore.IsSupportedForTransformation(underlyingType);
+        transformerStore.IsSupportedForTransformation(underlyingType);
 
     private static bool TryGetElement(Type type, out Type underlyingType)
     {

@@ -4,173 +4,191 @@ namespace Nemesis.TextParsers.Utils;
 
 public static class LightLinq
 {
-    public static (bool success, double result) Sum(this ParsingSequence values, ITransformer<double> transformer)
+#if NET7_0_OR_GREATER
+    extension(ParsingSequence values)
     {
-        var enumerator = values.GetEnumerator();
-        if (!enumerator.MoveNext()) return (false, 0);
-
-        double sum = 0;
-
-        do
-            sum += enumerator.Current.ParseWith(transformer);
-        while (enumerator.MoveNext());
-
-
-        return (true, sum);
-    }
-
-    public static (bool success, double result) Average(this ParsingSequence values, ITransformer<double> transformer)
-    {
-        var e = values.GetEnumerator();
-        if (!e.MoveNext()) return (false, 0);
-
-        double sum = e.Current.ParseWith(transformer);
-        long count = 1;
-        while (e.MoveNext())
+        public TNumber Sum<TNumber>(ITransformer<TNumber> transformer)
+            where TNumber : INumberBase<TNumber>
         {
-            checked { sum += e.Current.ParseWith(transformer); }
-            count++;
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext()) return TNumber.Zero;
+
+            var sum = TNumber.Zero;
+
+            do
+                sum += enumerator.Current.ParseWith(transformer);
+            while (enumerator.MoveNext());
+
+            return sum;
         }
 
-        return (true, sum / count);
-    }
-
-    public static (bool success, double result) WalkingAverage(this ParsingSequence values, ITransformer<double> transformer)
-    {
-        var enumerator = values.GetEnumerator();
-        if (!enumerator.MoveNext()) return (false, 0);
-
-        double avg = enumerator.Current.ParseWith(transformer);
-        int count = 1;
-
-        while (enumerator.MoveNext())
-            avg += (enumerator.Current.ParseWith(transformer) - avg) / ++count;
-        return (true, avg);
-    }
-
-    public static (bool success, double result) Variance(this ParsingSequence values, ITransformer<double> transformer)
-    {
-        var enumerator = values.GetEnumerator();
-        if (!enumerator.MoveNext()) return (false, 0);
-
-        double mean = 0;
-        double sum = 0;
-        uint i = 0;
-
-        double current;
-        do
+        public TNumber WalkingAverage<TNumber>(ITransformer<TNumber> transformer)
+            where TNumber : IFloatingPointIeee754<TNumber>
         {
-            current = enumerator.Current.ParseWith(transformer);
-            i++;
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext()) return TNumber.NaN;
 
-            var delta = current - mean;
+            var avg = enumerator.Current.ParseWith(transformer);
+            var count = 1;
 
-            mean += delta / i;
-            sum += delta * (current - mean);
-        } while (enumerator.MoveNext());
+            while (enumerator.MoveNext())
+                avg += (enumerator.Current.ParseWith(transformer) - avg)
+                       /
+                       TNumber.CreateChecked(++count);
+            return avg;
+        }
 
-        return (true,
-            i == 1 ?
-                current :
-                sum / (i - 1)
-            );
-    }
-
-    public static (bool success, double result) StdDev(this ParsingSequence values, ITransformer<double> transformer)
-    {
-        var (success, result) = Variance(values, transformer);
-
-        return (success, success ? Math.Sqrt(result) : 0);
-    }
-
-
-    public static (bool success, double result) Max(this ParsingSequence values, ITransformer<double> transformer)
-    {
-        var e = values.GetEnumerator();
-        if (!e.MoveNext()) return (false, 0);
-
-        double max = e.Current.ParseWith(transformer);
-
-        while (double.IsNaN(max))
+        public (bool success, TResult result) Average<TSource, TResult>(ITransformer<TSource> transformer)
+            where TSource : INumberBase<TSource>
+            where TResult : INumberBase<TResult>
         {
+            var e = values.GetEnumerator();
+            if (!e.MoveNext()) return (false, TResult.Zero);
+
+            TResult sum = TResult.CreateChecked(e.Current.ParseWith(transformer));
+            long count = 1;
+            while (e.MoveNext())
+            {
+                checked
+                {
+                    sum += TResult.CreateChecked(e.Current.ParseWith(transformer));
+                }
+                count++;
+            }
+
+            return (true, TResult.CreateChecked(sum) / TResult.CreateChecked(count));
+        }
+
+        public (bool success, TResult result) Variance<TNumber, TResult>(ITransformer<TNumber> transformer)
+            where TNumber : INumberBase<TNumber>
+            where TResult : IFloatingPoint<TResult>
+        {
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext()) return (false, TResult.Zero);
+
+            TResult mean = TResult.Zero;
+            TResult sum = TResult.Zero;
+            uint i = 0;
+
+            TResult current;
+            do
+            {
+                current = TResult.CreateChecked(enumerator.Current.ParseWith(transformer));
+                i++;
+
+                var delta = current - mean;
+
+                mean += delta / TResult.CreateChecked(i);
+                sum += delta * (current - mean);
+            } while (enumerator.MoveNext());
+
+            return (true,
+                    i == 1 ? current : sum / TResult.CreateChecked(i - 1)
+                );
+        }
+
+        public (bool success, TResult result) StdDev<TNumber, TResult>(ITransformer<TNumber> transformer)
+            where TNumber : INumberBase<TNumber>
+            where TResult : IFloatingPoint<TResult>, IRootFunctions<TResult>
+        {
+            var (success, result) = values.Variance<TNumber, TResult>(transformer);
+
+            return (success, success ? TResult.Sqrt(result) : TResult.Zero);
+        }
+
+        public (bool success, TNumber result) Max<TNumber>(ITransformer<TNumber> transformer)
+            where TNumber : INumberBase<TNumber>, IComparisonOperators<TNumber, TNumber, bool>
+        {
+            var e = values.GetEnumerator();
+            if (!e.MoveNext()) return (false, TNumber.Zero);
+
+            TNumber max = e.Current.ParseWith(transformer);
+            while (TNumber.IsNaN(max))
+            {
+                if (!e.MoveNext())
+                    return (true, max);
+                max = e.Current.ParseWith(transformer);
+            }
+
+            while (e.MoveNext())
+            {
+                TNumber x = e.Current.ParseWith(transformer);
+                if (x > max)
+                    max = x;
+            }
+
+            return (true, max);
+        }
+
+        public (bool success, TNumber result) Min<TNumber>(ITransformer<TNumber> transformer)
+            where TNumber : INumberBase<TNumber>, IComparisonOperators<TNumber, TNumber, bool>
+        {
+            var e = values.GetEnumerator();
+            if (!e.MoveNext()) return (false, TNumber.Zero);
+
+            TNumber min = e.Current.ParseWith(transformer);
+            if (TNumber.IsNaN(min))
+                return (true, min);
+
+            while (e.MoveNext())
+            {
+                TNumber x = e.Current.ParseWith(transformer);
+                if (x < min)
+                    min = x;
+                else if (TNumber.IsNaN(x))
+                    return (true, x);
+            }
+
+            return (true, min);
+        }
+
+        public (bool success, TSource? result) Aggregate<TSource>(ITransformer<TSource> transformer,
+            Func<TSource, TSource, TSource> func)
+        {
+            ArgumentNullException.ThrowIfNull(func);
+
+            var e = values.GetEnumerator();
+
             if (!e.MoveNext())
-                return (true, max);
-            max = e.Current.ParseWith(transformer);
+                return (false, default);
+
+            TSource result = e.Current.ParseWith(transformer);
+            while (e.MoveNext())
+                result = func(result, e.Current.ParseWith(transformer));
+
+            return (true, result);
         }
 
-        while (e.MoveNext())
+        public TAccumulate Aggregate<TSource, TAccumulate>(ITransformer<TSource> transformer, TAccumulate seed,
+            Func<TAccumulate, TSource, TAccumulate> func)
         {
-            double current = e.Current.ParseWith(transformer);
-            if (max < current)
-                max = current;
+            ArgumentNullException.ThrowIfNull(func);
+
+            TAccumulate result = seed;
+            foreach (var element in values)
+            {
+                var parsed = element.ParseWith(transformer);
+                result = func(result, parsed);
+            }
+
+            return result;
         }
 
-        return (true, max);
-    }
-
-    public static (bool success, double result) Min(this ParsingSequence values, ITransformer<double> transformer)
-    {
-        var e = values.GetEnumerator();
-        if (!e.MoveNext()) return (false, 0);
-
-        double min = e.Current.ParseWith(transformer);
-        while (e.MoveNext())
+        public TResult Aggregate<TSource, TAccumulate, TResult>(ITransformer<TSource> transformer, TAccumulate seed,
+            Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
         {
-            double current = e.Current.ParseWith(transformer);
-            if (min > current)
-                min = current;
-            else if (double.IsNaN(current))
-                return (true, current);
+            ArgumentNullException.ThrowIfNull(func);
+            ArgumentNullException.ThrowIfNull(resultSelector);
+
+            TAccumulate result = seed;
+            foreach (var element in values)
+            {
+                var parsed = element.ParseWith(transformer);
+                result = func(result, parsed);
+            }
+
+            return resultSelector(result);
         }
-
-        return (true, min);
     }
-
-    public static (bool success, TSource? result) Aggregate<TSource>(this ParsingSequence source, ITransformer<TSource> transformer, Func<TSource, TSource, TSource> func)
-    {
-        ArgumentNullException.ThrowIfNull(func);
-
-        var e = source.GetEnumerator();
-
-        if (!e.MoveNext())
-            return (false, default);
-
-        TSource result = e.Current.ParseWith(transformer);
-        while (e.MoveNext())
-            result = func(result, e.Current.ParseWith(transformer));
-
-        return (true, result);
-    }
-
-    public static TAccumulate Aggregate<TSource, TAccumulate>(this ParsingSequence source, ITransformer<TSource> transformer, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-    {
-        ArgumentNullException.ThrowIfNull(func);
-
-        TAccumulate result = seed;
-        foreach (var element in source)
-        {
-            var parsed = element.ParseWith(transformer);
-            result = func(result, parsed);
-        }
-
-        return result;
-    }
-
-    public static TResult Aggregate<TSource, TAccumulate, TResult>(this ParsingSequence source,
-        ITransformer<TSource> transformer, TAccumulate seed,
-        Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
-    {
-        ArgumentNullException.ThrowIfNull(func);
-        ArgumentNullException.ThrowIfNull(resultSelector);
-
-        TAccumulate result = seed;
-        foreach (var element in source)
-        {
-            var parsed = element.ParseWith(transformer);
-            result = func(result, parsed);
-        }
-
-        return resultSelector(result);
-    }
+#endif
 }
-

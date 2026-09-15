@@ -21,7 +21,7 @@ public sealed class CollectionTransformerHandler : ITransformerHandler
         var collectionType = typeof(TCollection);
 
         if (!TryGetElements(collectionType, out var kind, out var elementType) || elementType == null)
-            throw new NotSupportedException($"Type {collectionType.GetFriendlyName()} is not supported by {GetType().Name}");
+            throw new NotSupportedException($"Type {collectionType.GetFriendlyName()} is not supported by {nameof(CollectionTransformerHandler)}");
 
 
         var createMethod = Method.OfExpression<

@@ -9,7 +9,7 @@ internal static partial class TestHelper
 {
     public static string AssertException(Exception actual, Type expectedException, string expectedErrorMessagePart, bool logMessage = false)
     {
-        if (actual is TargetInvocationException tie && tie.InnerException is { } inner)
+        if (actual is TargetInvocationException { InnerException: { } inner })
             actual = inner;
 
         Assert.That(actual, Is.TypeOf(expectedException), () => $@"Unexpected external exception: {actual}");
@@ -144,7 +144,7 @@ internal static partial class TestHelper
         RoundTrip(instance, (store ?? Sut.DefaultStore).GetTransformer(instance.GetType()));
 
 
-    public static void RoundTrip([NotNull] object instance, ITransformer sut = null)
+    public static void RoundTrip([NotNull] object instance, ITransformer sut)
     {
         ArgumentNullException.ThrowIfNull(instance);
 
