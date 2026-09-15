@@ -21,7 +21,7 @@ public sealed class DictionaryTransformerHandler : ITransformerHandler
     {
         var dictType = typeof(TDictionary);
         if (!TryGetDictMeta(dictType, out var kind, out var keyType, out var valueType))
-            throw new NotSupportedException($"Type {dictType.GetFriendlyName()} is not supported by {GetType().Name}");
+            throw new NotSupportedException($"Type {dictType.GetFriendlyName()} is not supported by {nameof(DictionaryTransformerHandler)}");
 
         var createMethod = Method.OfExpression<
             Func<DictionaryTransformerHandler, DictionaryKind, ITransformer<Dictionary<int, int>>>
@@ -56,7 +56,7 @@ public sealed class DictionaryTransformerHandler : ITransformerHandler
         }
         else
         {
-            (kind, keyType, valueType) = (default, default, default);
+            (kind, keyType, valueType) = (default, null, null);
             return false;
         }
     }

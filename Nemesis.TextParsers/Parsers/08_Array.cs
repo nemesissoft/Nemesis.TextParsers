@@ -43,7 +43,7 @@ public sealed class ArrayTransformerHandler : ITransformerHandler
             return (ITransformer<TArray>)createMethod.Invoke(this, null);
         }
         else
-            throw new NotSupportedException($"Type {typeof(TArray).GetFriendlyName()} is not supported by {GetType().Name}");
+            throw new NotSupportedException($"Type {typeof(TArray).GetFriendlyName()} is not supported by {nameof(ArrayTransformerHandler)}");
     }
 
     private ITransformer<TElement[]> CreateArrayTransformer<TElement>() =>

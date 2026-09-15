@@ -14,7 +14,7 @@ public sealed class EnumTransformerHandler(EnumSettings settings) : ITransformer
 
         if (!TryGetUnderlyingType(enumType, out var underlyingType))
             throw new NotSupportedException($"""
-                                             Type {enumType.GetFriendlyName()} is not supported by {GetType().Name}. 
+                                             Type {enumType.GetFriendlyName()} is not supported by {nameof(EnumTransformerHandler)}. 
                                              UnderlyingType {underlyingType?.GetFriendlyName() ?? "<none>"} should be a numeric one
                                              """);
         

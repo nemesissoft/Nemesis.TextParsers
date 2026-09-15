@@ -13,7 +13,7 @@ public sealed class KeyValuePairTransformerHandler(ITransformerStore transformer
     {
         if (!TryGetElements(typeof(TPair), out var keyType, out var valueType))
             throw new NotSupportedException(
-                $"Type {typeof(TPair).GetFriendlyName()} is not supported by {GetType().Name}");
+                $"Type {typeof(TPair).GetFriendlyName()} is not supported by {nameof(KeyValuePairTransformerHandler)}");
 
         var method = (
             GetType().GetMethod(nameof(CreateTransformerCore), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

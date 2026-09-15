@@ -56,7 +56,7 @@ public sealed class ExploratoryTests
     public void BeforeAllTest()
     {
         _randomSource.SetNewSeed();
-        Console.WriteLine($"{GetType().Name} initial seed = {_randomSource.Seed}");
+        Console.WriteLine($"{nameof(ExploratoryTests)} initial seed = {_randomSource.Seed}");
         GetTestCases(_randomSource);
 
         string GetRandomString()

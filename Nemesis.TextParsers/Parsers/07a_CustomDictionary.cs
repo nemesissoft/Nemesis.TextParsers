@@ -27,7 +27,7 @@ public sealed class CustomDictionaryTransformerHandler : ITransformerHandler
         {
             var createMethod =
                 (GetType().GetMethod(nameof(CreateCustomDictionaryTransformer), FLAGS)
-                    ?? throw new MissingMethodException(GetType().Name, nameof(CreateCustomDictionaryTransformer))
+                    ?? throw new MissingMethodException(nameof(CustomDictionaryTransformerHandler), nameof(CreateCustomDictionaryTransformer))
                 ).GetGenericMethodDefinition();
 
             createMethod = createMethod.MakeGenericMethod(meta1.keyType, meta1.valueType, dictType);
@@ -38,7 +38,7 @@ public sealed class CustomDictionaryTransformerHandler : ITransformerHandler
         {
             var createMethod =
                 (GetType().GetMethod(nameof(CreateReadOnlyDictionaryTransformer), FLAGS)
-                 ?? throw new MissingMethodException(GetType().Name, nameof(CreateReadOnlyDictionaryTransformer))
+                 ?? throw new MissingMethodException(nameof(CustomDictionaryTransformerHandler), nameof(CreateReadOnlyDictionaryTransformer))
                 ).GetGenericMethodDefinition();
 
             createMethod = createMethod.MakeGenericMethod(meta2.keyType, meta2.valueType, dictType);
